@@ -1,0 +1,757 @@
+/* ==========================================================================
+   GLOBAL RESET & BLINK PREVENTION
+   ========================================================================== */
+html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+:root {
+    --grid-gap: 16px;
+}
+
+/* ==========================================================================
+   ১. ডাইনামিক প্রোডাক্ট গ্রিড ইঞ্জিন (CSS Grid)
+   ========================================================================== */
+.dynamic-product-grid {
+    display: grid !important;
+    gap: var(--grid-gap) !important;
+    width: 100% !important;
+    grid-template-columns: repeat(var(--col-pc, 4), minmax(0, 1fr));
+}
+
+.dynamic-product-grid .product-card-wrap {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.dynamic-product-grid .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+}
+
+.dynamic-product-grid .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ==========================================================================
+   ২. চেকআউট, মেমো ও ড্যাশবোর্ড বেসিক স্টাইল (গ্লোবাল)
+   ========================================================================== */
+.checkout-wrapper, .invoice-wrapper, .account-dashboard-bg {
+    background-color: #f8fafc;
+    min-height: 85vh;
+}
+
+.surface-card, .invoice-card, .user-nav-card {
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04);
+}
+
+.stepper-track {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+}
+
+.stepper-item {
+    display: flex !important;
+    align-items: center !important;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.stepper-item.active {
+    color: #2563eb !important;
+    font-weight: 700;
+}
+
+.stepper-item .badge-step {
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f1f5f9;
+    color: #64748b;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.stepper-item.active .badge-step {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.stepper-arrow {
+    color: #cbd5e1;
+}
+
+.payment-radio-box {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.payment-radio-box:hover {
+    border-color: #93c5fd;
+    background-color: #f8fafc;
+}
+
+.payment-radio-box.selected {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.co-qty-btn {
+    width: 22px;
+    height: 22px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.co-qty-btn:hover {
+    background: #e2e8f0;
+}
+
+.checkout-live-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    z-index: 1050;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.co-search-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.15s;
+}
+
+.co-search-row:hover {
+    background: #f8fafc;
+}
+
+.system-barcode-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.system-barcode-box svg {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* ==========================================================================
+   ৩. ডেস্কটপ ও ল্যাপটপ (Screen Width: >= 992px)
+   ========================================================================== */
+@media (min-width: 992px) {
+    :root {
+        --grid-gap: 16px;
+    }
+
+    .container {
+        max-width: 1280px !important;
+    }
+
+    #shop-products-column .dynamic-product-grid {
+        grid-template-columns: repeat(var(--col-pc, 3), minmax(0, 1fr)) !important;
+    }
+
+    .checkout-sticky-panel {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 95px !important;
+        z-index: 10 !important;
+    }
+
+    .surface-card, .invoice-card {
+        padding: 28px !important;
+    }
+
+    .stepper-track {
+        gap: 25px !important;
+        margin-bottom: 25px !important;
+    }
+
+    .stepper-item {
+        gap: 8px !important;
+        font-size: 14px !important;
+    }
+
+    .stepper-item .badge-step {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 13px !important;
+    }
+
+    .stepper-arrow {
+        font-size: 12px !important;
+    }
+
+    .co-main-title {
+        font-size: 26px !important;
+    }
+
+    .payment-radio-box {
+        padding: 14px 16px !important;
+    }
+
+    .system-barcode-box svg {
+        height: 48px !important;
+    }
+}
+
+/* ==========================================================================
+   ৪. ট্যাবলেট স্ক্রিন (Screen Width: 768px to 991.98px)
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    :root {
+        --grid-gap: 12px;
+    }
+
+    .dynamic-product-grid {
+        grid-template-columns: repeat(var(--col-tab, 3), minmax(0, 1fr)) !important;
+    }
+
+    #shop-sidebar-column {
+        width: 35% !important;
+    }
+
+    #shop-products-column {
+        width: 65% !important;
+    }
+
+    #product-gallery-column {
+        width: 45% !important;
+    }
+
+    #product-info-column {
+        width: 55% !important;
+    }
+
+    #product-delivery-sidebar-column {
+        width: 100% !important;
+        margin-top: 20px !important;
+    }
+
+    .checkout-sticky-panel {
+        position: static !important;
+        top: 0 !important;
+    }
+
+    .stepper-track {
+        gap: 15px !important;
+    }
+
+    .stepper-item {
+        gap: 6px !important;
+        font-size: 12px !important;
+    }
+
+    .stepper-item .badge-step {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 11px !important;
+    }
+
+    .surface-card, .invoice-card {
+        padding: 20px !important;
+    }
+
+    .system-barcode-box svg {
+        height: 40px !important;
+    }
+}
+
+/* ==========================================================================
+   ৫. মোবাইল স্ক্রিন (Screen Width: <= 767.98px)
+   ========================================================================== */
+@media (max-width: 767.98px) {
+    :root {
+        --grid-gap: 8px;
+    }
+
+    .container {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    /* হেডার ও আইকন */
+    .master-site-header a img {
+        max-width: 110px !important;
+        max-height: 35px !important;
+    }
+
+    .header-order-btn,
+    .header-action-btn span:not(.header-badge-count),
+    .header-action-btn.dropdown-toggle::after {
+        display: none !important;
+    }
+
+    .header-action-btn i {
+        font-size: 17px !important;
+    }
+
+    .header-badge-count {
+        top: -5px !important;
+        right: -6px !important;
+        font-size: 9px !important;
+        padding: 1px 4px !important;
+    }
+
+    .mobile-menu-toggle-btn {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 16px !important;
+    }
+
+    /* শপ পেজ */
+    #shop-sidebar-column {
+        display: none !important;
+    }
+
+    #shop-products-column {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    .dynamic-product-grid {
+        grid-template-columns: repeat(var(--col-mobile, 2), minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    .dynamic-product-grid .card-body {
+        padding: 8px !important;
+    }
+
+    .dynamic-product-grid .card-title {
+        font-size: 12px !important;
+    }
+
+    .dynamic-product-grid .btn {
+        font-size: 10px !important;
+        padding: 5px 4px !important;
+    }
+
+    /* চেকআউট পেজ */
+    .checkout-wrapper {
+        padding: 10px 0 !important;
+    }
+
+    .co-badge-top {
+        font-size: 10px !important;
+        padding: 3px 8px !important;
+    }
+
+    .co-main-title {
+        font-size: 17px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 6px !important;
+    }
+
+    .stepper-track {
+        gap: 8px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .stepper-item {
+        font-size: 11px !important;
+        gap: 5px !important;
+    }
+
+    .stepper-item .badge-step {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+    }
+
+    .stepper-arrow {
+        font-size: 9px !important;
+    }
+
+    .surface-card {
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    .co-section-heading {
+        font-size: 14px !important;
+    }
+
+    .form-label {
+        font-size: 12px !important;
+        margin-bottom: 3px !important;
+    }
+
+    .form-control, .form-select {
+        font-size: 13px !important;
+        padding: 7px 10px !important;
+    }
+
+    .payment-radio-box {
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+    }
+
+    .payment-radio-box label {
+        font-size: 12.5px !important;
+    }
+
+    .checkout-footer-buttons {
+        flex-direction: row !important;
+        gap: 8px !important;
+    }
+
+    .co-action-btn {
+        font-size: 11px !important;
+        padding: 8px 4px !important;
+        white-space: nowrap !important;
+        border-radius: 8px !important;
+    }
+
+    .checkout-sticky-panel {
+        position: static !important;
+        top: 0 !important;
+    }
+
+    #confirm-order-submit-btn {
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+
+    /* ইনভয়েস পেজ */
+    .invoice-wrapper {
+        padding: 10px 0 !important;
+    }
+
+    .invoice-card {
+        padding: 14px !important;
+        border-radius: 14px !important;
+    }
+
+    .co-confirm-heading {
+        font-size: 16px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .co-confirm-subtitle {
+        font-size: 11.5px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .co-memo-brand {
+        font-size: 14px !important;
+    }
+
+    .co-memo-tagline {
+        font-size: 10px !important;
+    }
+
+    .co-memo-inv {
+        font-size: 12px !important;
+    }
+
+    .co-memo-date {
+        font-size: 10px !important;
+    }
+
+    .co-info-grid {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+    }
+
+    .memo-table {
+        font-size: 10.5px !important;
+    }
+
+    .memo-table th, .memo-table td {
+        padding: 5px 3px !important;
+    }
+
+    .co-grand-total {
+        font-size: 13px !important;
+    }
+
+    .system-barcode-box svg {
+        max-width: 90% !important;
+        height: 32px !important;
+    }
+
+    /* ==========================================================================
+       ৬. অ্যাকাউন্ট ও ড্যাশবোর্ড এরিয়া স্পেসিফিক মোবাইল ফিক্স
+       ========================================================================== */
+    .account-dashboard-bg {
+        padding-top: 12px !important;
+        padding-bottom: 20px !important;
+    }
+
+    /* ইউজার প্রোফাইল হেডার কার্ড */
+    .user-nav-card {
+        padding: 10px 8px !important;
+        border-radius: 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .user-nav-card .d-flex.align-items-center.p-3 {
+        padding: 6px 8px 10px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .user-nav-card .bg-primary.text-white.rounded-circle {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 15px !important;
+    }
+
+    .user-nav-card h6 {
+        font-size: 13.5px !important;
+    }
+
+    /* মোবাইলে লম্বা সাইডবার ক্যাটাগরি টাইটেল হাইড করা */
+    .nav-category-title {
+        display: none !important;
+    }
+
+    /* মেনু লিঙ্কগুলোকে মোবাইলে হরাইজন্টাল স্ক্রলিং পিলসে রূপান্তর */
+    .user-nav-card {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .user-nav-card > div.border-top {
+        margin-top: 6px !important;
+        padding-top: 6px !important;
+        border-top: 1px dashed #e2e8f0 !important;
+    }
+
+    .user-menu-link {
+        padding: 7px 12px !important;
+        font-size: 12px !important;
+        margin: 2px 0 !important;
+        border-radius: 8px !important;
+    }
+
+    .user-menu-link i {
+        font-size: 14px !important;
+        width: 16px !important;
+    }
+
+    /* ড্যাশবোর্ড ওয়েলকাম ব্যানার */
+    .welcome-hero-card {
+        padding: 16px !important;
+        border-radius: 14px !important;
+        margin-bottom: 14px !important;
+    }
+
+    .welcome-hero-card h3 {
+        font-size: 16px !important;
+    }
+
+    .welcome-hero-card p {
+        font-size: 11.5px !important;
+    }
+
+    .welcome-hero-card .btn {
+        width: 100% !important;
+        margin-top: 10px !important;
+        padding: 6px 14px !important;
+        font-size: 12px !important;
+    }
+
+    /* ড্যাশবোর্ড স্ট্যাটাস কার্ডস (Active Orders, Points, Wishlist) */
+    .stat-box-card {
+        padding: 12px 14px !important;
+        gap: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .stat-icon-circle {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
+        border-radius: 10px !important;
+    }
+
+    .stat-box-card h4 {
+        font-size: 17px !important;
+    }
+
+    .stat-box-card span {
+        font-size: 11px !important;
+    }
+
+    /* রিসেন্ট অর্ডার ও হিস্ট্রি কার্ড */
+    .recent-orders-card,
+    .account-dashboard-bg .card {
+        padding: 14px 12px !important;
+        border-radius: 14px !important;
+    }
+
+    .recent-orders-card h5,
+    .account-dashboard-bg .card h5 {
+        font-size: 14.5px !important;
+    }
+
+    /* অর্ডার ফিল্টারিং বাটন গ্রুপ ফিক্স (All, Pending, Processing, Delivered) */
+    .account-dashboard-bg .d-flex.flex-wrap.gap-2 {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        padding-bottom: 4px !important;
+        gap: 6px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .account-dashboard-bg .d-flex.flex-wrap.gap-2 .btn {
+        flex-shrink: 0 !important;
+        font-size: 11px !important;
+        padding: 4px 10px !important;
+        border-radius: 20px !important;
+    }
+
+    /* টেবিল রেসপনসিভনেস */
+    .account-dashboard-bg .table {
+        font-size: 11.5px !important;
+    }
+
+    .account-dashboard-bg .table th {
+        font-size: 10px !important;
+        padding: 6px 4px !important;
+    }
+
+    .account-dashboard-bg .table td {
+        padding: 8px 4px !important;
+    }
+
+    .account-dashboard-bg .table .badge {
+        font-size: 8.5px !important;
+        padding: 2px 5px !important;
+    }
+
+    .account-dashboard-bg .table .btn-sm {
+        font-size: 10.5px !important;
+        padding: 3px 8px !important;
+    }
+
+    /* কাস্টমার সাপোর্ট সেকশন (Helpline, Email, Working Hours) */
+    .account-dashboard-bg .row.g-3.mb-4 > .col-md-4 {
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+
+    .account-dashboard-bg .p-3.bg-light.rounded-3.text-center {
+        display: flex !important;
+        align-items: center !important;
+        text-align: left !important;
+        padding: 10px 14px !important;
+        gap: 12px !important;
+    }
+
+    .account-dashboard-bg .p-3.bg-light.rounded-3.text-center i {
+        font-size: 20px !important;
+        margin-bottom: 0 !important;
+        width: 32px !important;
+    }
+
+    .account-dashboard-bg .p-3.bg-light.rounded-3.text-center h6 {
+        font-size: 12.5px !important;
+        margin-bottom: 1px !important;
+    }
+
+    .account-dashboard-bg .p-3.bg-light.rounded-3.text-center p {
+        font-size: 11px !important;
+    }
+
+    /* সাপোর্ট টিকেট ফর্ম */
+    .account-dashboard-bg .p-4.border.rounded-4.bg-light {
+        padding: 14px !important;
+        border-radius: 12px !important;
+    }
+
+    .account-dashboard-bg .p-4.border.rounded-4.bg-light h6 {
+        font-size: 13px !important;
+    }
+
+    /* কুপন কার্ডস */
+    .account-dashboard-bg .border.border-success,
+    .account-dashboard-bg .border.border-primary {
+        padding: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    .account-dashboard-bg .border.border-success h6,
+    .account-dashboard-bg .border.border-primary h6 {
+        font-size: 13.5px !important;
+    }
+
+    /* ট্র্যাক অর্ডার প্রোগ্রেস লাইন ও সার্কেল ফিক্স */
+    .track-stepper-container {
+        padding: 15px 0 10px !important;
+    }
+
+    .track-progress-line {
+        top: 32px !important;
+        left: 5% !important;
+        right: 5% !important;
+        height: 3px !important;
+    }
+
+    .step-circle {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 12px !important;
+        margin-bottom: 6px !important;
+        border-width: 2px !important;
+    }
+
+    .track-stepper-container span.small {
+        font-size: 9.5px !important;
+        line-height: 1.1 !important;
+    }
+
+    .track-stepper-container span.d-block {
+        font-size: 8.5px !important;
+    }
+
+    /* ফুটার */
+    #site-footer {
+        text-align: center !important;
+    }
+
+    #footer-social-links {
+        justify-content: center !important;
+    }
+}

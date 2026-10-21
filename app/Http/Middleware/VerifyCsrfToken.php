@@ -1,0 +1,3 @@
+protected $except = [
+    '/payment/sslcommerz/*',
+];

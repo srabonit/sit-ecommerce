@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('purchase_orders', function (Blueprint $table) {
+            $table->id();
+            $table->string('po_number')->unique(); // , PO-20260903-001
+            $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
+            $table->foreignId('warehouse_id')->constrained()->onDelete('cascade');
+            $table->decimal('total_amount', 12, 2);
+            $table->enum('status', ['pending', 'received', 'cancelled'])->default('pending');
+            $table->timestamp('received_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('purchase_orders');
+    }
+};
