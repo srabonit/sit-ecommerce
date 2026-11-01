@@ -1,45 +1,118 @@
 @php
+    // Ensure $errors variable is always available for widgets, popups & shortcodes
+    $errors = $errors ?? (session()->has('errors') ? session()->get('errors') : new \Illuminate\Support\ViewErrorBag);
+
     $formInstanceId = 'dynamic-form-' . $form->id . '-' . uniqid();
 
     // Universal Helper for resolving form assets or default files
     $resolveFormAsset = function($path, $fallback = '') {
         if (empty($path)) return $fallback;
         if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
-        $clean = ltrim(str_replace(['storage/', 'public/'], '', $path), '/');
+
+        if (class_exists(\App\Services\ImagePathService::class)) {
+            $serviceUrl = \App\Services\ImagePathService::resolveUrl($path, $fallback);
+            if (!empty($serviceUrl)) return $serviceUrl;
+        }
+
+        if (function_exists('show_image')) {
+            $showUrl = show_image($path, $fallback);
+            if (!empty($showUrl)) return $showUrl;
+        }
+
+        $clean = ltrim(str_replace(['public_html/', 'public/'], '', $path), '/');
+
         if (file_exists(public_path($clean))) return asset($clean);
         if (file_exists(public_path('uploads/' . $clean))) return asset('uploads/' . $clean);
+        if (file_exists(public_path('storage/' . $clean))) return asset('storage/' . $clean);
+
+        if (str_starts_with($clean, 'storage/') || str_starts_with($clean, 'uploads/')) {
+            return asset($clean);
+        }
+
+        $cleanWithoutStorage = ltrim(str_replace('storage/', '', $clean), '/');
+        if (file_exists(storage_path('app/public/' . $cleanWithoutStorage))) {
+            return asset('storage/' . $cleanWithoutStorage);
+        }
+
         return asset($clean);
     };
+
+    // Styling & Appearance Settings Extraction (Safely Parsed for PHP 8.3+)
+    $styles = is_array($form->styles) ? $form->styles : (json_decode($form->styles ?? '', true) ?? []);
+
+    // Custom HTML ID and Custom Container CSS Class
+    $customId    = !empty($styles['custom_id']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $styles['custom_id']) : null;
+    $customClass = $styles['custom_class'] ?? '';
+    $wrapperId   = $customId ?: 'form-wrapper-' . $formInstanceId;
+
+    // Layout, Flow & Label Controls
+    $layoutDir    = $styles['layout'] ?? 'vertical';
+    $fieldFlow    = $styles['field_flow'] ?? ($layoutDir === 'horizontal' ? 'single_line' : 'inline');
+    $showLabels   = isset($styles['show_labels']) ? (bool)$styles['show_labels'] : true;
+    $btnAlign     = $styles['button_align'] ?? 'left'; // left, center, right, full, inline_last
+    $btnSize      = $styles['button_size'] ?? 'md';
+    $btnText      = !empty($styles['button_text']) ? $styles['button_text'] : ($form->submit_button_text ?: 'Submit');
+
+    // Form Container Styling
+    $formBg       = $styles['form_bg'] ?? '#ffffff';
+    $formBorder   = $styles['border_color'] ?? '#e2e8f0';
+    $formRadius   = isset($styles['border_radius']) ? (int)$styles['border_radius'] : 8;
+    $formPadding  = isset($styles['form_padding']) ? (int)$styles['form_padding'] : 24;
+
+    // Field & Typography Styling
+    $inputBg      = $styles['input_bg'] ?? '#ffffff';
+    $inputText    = $styles['input_text'] ?? '#0f172a';
+    $inputBorder  = $styles['input_border'] ?? '#cbd5e1';
+    $inputRadius  = isset($styles['input_radius']) ? (int)$styles['input_radius'] : 6;
+    $labelColor   = $styles['label_color'] ?? '#1e293b';
+
+    // Button Styling
+    $btnBg        = $styles['btn_bg'] ?? '#2563eb';
+    $btnTextCol   = $styles['btn_text'] ?? '#ffffff';
+    $btnHoverBg   = $styles['btn_hover_bg'] ?? '#1d4ed8';
+    $btnHoverText = $styles['btn_hover_text'] ?? '#ffffff';
+    $btnRadius    = isset($styles['btn_radius']) ? (int)$styles['btn_radius'] : 6;
+
+    $btnSizeStyle = match($btnSize) {
+        'sm'    => 'min-height: 36px; padding: 6px 16px; font-size: 12.5px;',
+        'lg'    => 'min-height: 52px; padding: 13px 32px; font-size: 16px;',
+        default => 'min-height: 45px; padding: 10px 24px; font-size: 14px;',
+    };
+
+    // Header Logo Resolver (Checks direct logo column, banner, and fallback styles array)
+    $formLogoRaw = $form->logo ?? ($form->banner ?? ($styles['logo'] ?? ($styles['header_logo'] ?? null)));
+    $formLogoUrl = !empty($formLogoRaw) ? $resolveFormAsset($formLogoRaw) : null;
 @endphp
 
 <div
-    class="dynamic-form-wrapper"
-    id="form-wrapper-{{ $formInstanceId }}"
+    class="dynamic-form-wrapper df-flow-{{ $fieldFlow }} {{ $layoutDir === 'horizontal' ? 'form-layout-inline' : '' }} {{ $customClass }}"
+    id="{{ $wrapperId }}"
+    data-instance-id="{{ $formInstanceId }}"
 >
 
     {{-- =========================================================
-        FORM HEADER
+        FORM HEADER (LOGO, TITLE & DESCRIPTION)
     ========================================================== --}}
-
-    @if($form->name || $form->description)
+    @if($formLogoUrl || (($form->show_title ?? true) && !empty($form->name)) || (($form->show_description ?? true) && !empty($form->description)))
 
         <div class="dynamic-form-header">
 
-            @if($form->name)
-
-                <h2 class="dynamic-form-title">
-                    {{ $form->name }}
-                </h2>
-
+            @if($formLogoUrl)
+                <div class="dynamic-form-logo-box">
+                    <img src="{{ $formLogoUrl }}" alt="{{ $form->name }}" class="dynamic-form-logo img-fluid" onerror="this.onerror=null; this.src='{{ asset(ltrim($formLogoRaw, '/')) }}';">
+                </div>
             @endif
 
+            @if(($form->show_title ?? true) && !empty($form->name))
+                <h2 class="dynamic-form-title theme-section-title">
+                    {{ $form->name }}
+                </h2>
+            @endif
 
-            @if($form->description)
-
+            @if(($form->show_description ?? true) && !empty($form->description))
                 <div class="dynamic-form-description">
                     {!! nl2br(e($form->description)) !!}
                 </div>
-
             @endif
 
         </div>
@@ -60,7 +133,7 @@
 
 
     {{-- =========================================================
-        SUCCESS MESSAGE
+        SUCCESS MESSAGE (WITH INSTANT COUPON REVEAL & COPY)
     ========================================================== --}}
 
     <div
@@ -73,7 +146,7 @@
             ✓
         </div>
 
-        <h3>
+        <h3 id="form-success-title-{{ $formInstanceId }}">
             Message Sent Successfully!
         </h3>
 
@@ -81,6 +154,22 @@
             class="dynamic-form-success-text"
             id="form-success-text-{{ $formInstanceId }}"
         ></p>
+
+        {{-- Instant Coupon Reveal Card (Shown automatically when Coupon form is submitted) --}}
+        <div class="dynamic-form-coupon-reveal" id="form-coupon-wrap-{{ $formInstanceId }}" style="display:none;">
+            <div class="dynamic-form-coupon-card">
+                <span class="dynamic-form-coupon-badge">
+                    <i class="fas fa-gift me-1"></i> Special Discount Voucher
+                </span>
+                <div class="dynamic-form-coupon-code-row">
+                    <span class="dynamic-form-coupon-code" id="form-coupon-code-{{ $formInstanceId }}">CODE</span>
+                    <button type="button" class="dynamic-form-coupon-copy" id="form-coupon-copy-{{ $formInstanceId }}">
+                        <i class="fas fa-copy me-1"></i> Copy Code
+                    </button>
+                </div>
+                <small class="dynamic-form-coupon-hint">Use this promo code at checkout to claim your discount!</small>
+            </div>
+        </div>
 
         <button
             type="button"
@@ -110,7 +199,7 @@
 
 
         {{-- =====================================================
-            FIELDS
+            FIELDS (GRID SUPPORT WITH 50%+50% INLINE OR STACKED)
         ====================================================== --}}
 
         <div class="dynamic-form-grid">
@@ -118,20 +207,9 @@
             @forelse($form->fields as $field)
 
                 @php
-
-                    $fieldName =
-                        trim((string) $field->name);
-
-                    $fieldId =
-                        'form-field-' .
-                        $field->id .
-                        '-' .
-                        uniqid();
-
-                    $columnWidth =
-                        (int) (
-                            $field->column_width ?: 12
-                        );
+                    $fieldName = trim((string) $field->name);
+                    $fieldId = 'form-field-' . $field->id . '-' . uniqid();
+                    $columnWidth = (int) ($field->column_width ?: 12);
 
                     if ($columnWidth < 1) {
                         $columnWidth = 12;
@@ -141,12 +219,7 @@
                         $columnWidth = 12;
                     }
 
-                    $oldValue =
-                        old(
-                            $fieldName,
-                            $field->default_value
-                        );
-
+                    $oldValue = old($fieldName, $field->default_value);
                 @endphp
 
 
@@ -203,9 +276,10 @@
                     data-field-name="{{ $fieldName }}"
                 >
 
-                    {{-- LABEL --}}
+                    {{-- LABEL (CONTROLLED BY SHOW/HIDE TOGGLE) --}}
 
                     @if(
+                        $showLabels &&
                         in_array(
                             $field->type,
                             [
@@ -254,7 +328,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -282,7 +356,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -310,7 +384,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -338,7 +412,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -364,7 +438,7 @@
                         <textarea
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -400,7 +474,7 @@
                         >
 
                             <option value="">
-                                {{ $field->placeholder ?: 'Select an option' }}
+                                {{ $field->placeholder ?: (!$showLabels ? 'Select ' . $field->label : 'Select an option') }}
                             </option>
 
                             @foreach(
@@ -409,7 +483,6 @@
                             )
 
                                 @php
-
                                     $optionLabel =
                                         is_array($option)
                                             ? ($option['label'] ?? '')
@@ -419,7 +492,6 @@
                                         is_array($option)
                                             ? ($option['value'] ?? $optionLabel)
                                             : $option;
-
                                 @endphp
 
                                 <option
@@ -451,7 +523,6 @@
                             )
 
                                 @php
-
                                     $optionLabel =
                                         is_array($option)
                                             ? ($option['label'] ?? '')
@@ -466,7 +537,6 @@
                                         $fieldId .
                                         '-' .
                                         $index;
-
                                 @endphp
 
                                 <label
@@ -513,7 +583,6 @@
                             )
 
                                 @php
-
                                     $optionLabel =
                                         is_array($option)
                                             ? ($option['label'] ?? '')
@@ -542,7 +611,6 @@
                                     ) {
                                         $selectedValues = [];
                                     }
-
                                 @endphp
 
                                 <label
@@ -672,7 +740,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -694,7 +762,7 @@
                             id="{{ $fieldId }}"
                             name="{{ $fieldName }}"
                             value="{{ $oldValue }}"
-                            placeholder="{{ $field->placeholder }}"
+                            placeholder="{{ $field->placeholder ?: (!$showLabels ? $field->label : '') }}"
                             class="
                                 dynamic-form-control
                                 {{ $field->css_class }}
@@ -721,16 +789,16 @@
 
 
                     {{-- =================================================
-                        SERVER ERROR
+                        SERVER ERROR (SAFE CHECK PREVENTING UNDEFINED $errors)
                     ================================================== --}}
 
-                    @error($fieldName)
+                    @if(isset($errors) && $errors->has($fieldName))
 
                         <div class="dynamic-form-field-error">
-                            {{ $message }}
+                            {{ $errors->first($fieldName) }}
                         </div>
 
-                    @enderror
+                    @endif
 
                 </div>
 
@@ -745,28 +813,63 @@
 
             @endforelse
 
+
+            {{-- =====================================================
+                INLINE LAST SUBMIT BUTTON (SAME ROW BESIDE LAST FIELD)
+            ====================================================== --}}
+
+            @if(
+                $form->fields->where('type', '!=', 'html')->count() > 0 &&
+                $btnAlign === 'inline_last'
+            )
+
+                <div class="dynamic-form-field dynamic-form-submit-inline">
+
+                    <button
+                        type="submit"
+                        class="dynamic-form-submit-button"
+                        style="{{ $btnSizeStyle }}"
+                    >
+
+                        <span class="dynamic-form-submit-text">
+                            {{ $btnText }}
+                        </span>
+
+                        <span
+                            class="dynamic-form-submit-loading"
+                            style="display:none;"
+                        >
+                            Sending...
+                        </span>
+
+                    </button>
+
+                </div>
+
+            @endif
+
         </div>
 
 
         {{-- =========================================================
-            SUBMIT
+            STANDARD SUBMIT AREA (LEFT, CENTER, RIGHT, FULL WIDTH)
         ========================================================== --}}
 
         @if(
-            $form->fields
-                ->where('type', '!=', 'html')
-                ->count() > 0
+            $form->fields->where('type', '!=', 'html')->count() > 0 &&
+            $btnAlign !== 'inline_last'
         )
 
-            <div class="dynamic-form-submit-area">
+            <div class="dynamic-form-submit-area align-{{ $btnAlign }}">
 
                 <button
                     type="submit"
-                    class="dynamic-form-submit-button"
+                    class="dynamic-form-submit-button {{ $btnAlign === 'full' ? 'btn-w-100' : '' }}"
+                    style="{{ $btnSizeStyle }}"
                 >
 
                     <span class="dynamic-form-submit-text">
-                        Submit
+                        {{ $btnText }}
                     </span>
 
                     <span
@@ -787,113 +890,161 @@
 </div>
 
 
+{{-- =========================================================
+    100% STRICTLY SCOPED CSS (ZERO LEAKAGE TO OTHER FORMS)
+========================================================== --}}
 <style>
 
-.dynamic-form-wrapper {
+#{{ $wrapperId }},
+#form-wrapper-{{ $formInstanceId }} {
     width: 100%;
     box-sizing: border-box;
+    background-color: {{ $formBg }} !important;
+    border: 1px solid {{ $formBorder }} !important;
+    border-radius: {{ $formRadius }}px !important;
+    padding: {{ $formPadding }}px !important;
+    font-family: inherit;
 }
 
-.dynamic-form-header {
+#{{ $wrapperId }} .dynamic-form-header,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-header {
     margin-bottom: 25px;
 }
 
-.dynamic-form-title {
+#{{ $wrapperId }} .dynamic-form-logo-box,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-logo-box {
+    margin-bottom: 12px;
+}
+
+#{{ $wrapperId }} .dynamic-form-logo,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-logo {
+    max-height: 65px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+#{{ $wrapperId }} .dynamic-form-title,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-title {
     margin: 0 0 8px;
     font-size: 28px;
     line-height: 1.3;
     font-weight: 700;
-    color: #111827;
+    color: {{ $labelColor }} !important;
 }
 
-.dynamic-form-description {
+#{{ $wrapperId }} .dynamic-form-description,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-description {
     font-size: 15px;
     line-height: 1.7;
     color: #6b7280;
 }
 
-.dynamic-form-grid {
-    display: grid;
-    grid-template-columns:
-        repeat(12, minmax(0, 1fr));
-    gap: 20px;
+/* =========================================================
+   1. FLOW: PASAPASI (INLINE GRID)
+========================================================= */
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-grid,
+#form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-grid {
+    display: grid !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+    gap: 16px 20px !important;
+    width: 100% !important;
 }
 
-.dynamic-form-field {
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-field,
+#form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-field {
     min-width: 0;
 }
 
-.dynamic-form-column-1 {
-    grid-column: span 1;
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-1,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-1  { grid-column: span 1 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-2,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-2  { grid-column: span 2 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-3,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-3  { grid-column: span 3 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-4,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-4  { grid-column: span 4 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-5,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-5  { grid-column: span 5 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-6,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-6  { grid-column: span 6 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-7,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-7  { grid-column: span 7 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-8,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-8  { grid-column: span 8 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-9,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-9  { grid-column: span 9 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-10, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-10 { grid-column: span 10 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-11, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-11 { grid-column: span 11 !important; }
+#{{ $wrapperId }}.df-flow-inline .dynamic-form-column-12, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-12 { grid-column: span 12 !important; }
+
+/* Inline Last Submit Button Styling (Sits in same row beside field) */
+#{{ $wrapperId }} .dynamic-form-submit-inline,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-inline {
+    grid-column: span auto !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
 }
 
-.dynamic-form-column-2 {
-    grid-column: span 2;
+/* =========================================================
+   2. FLOW: UPOR-NICE (STACKED VERTICAL 100% WIDTH)
+========================================================= */
+#{{ $wrapperId }}.df-flow-stacked .dynamic-form-grid,
+#form-wrapper-{{ $formInstanceId }}.df-flow-stacked .dynamic-form-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
 }
 
-.dynamic-form-column-3 {
-    grid-column: span 3;
+#{{ $wrapperId }}.df-flow-stacked .dynamic-form-field,
+#form-wrapper-{{ $formInstanceId }}.df-flow-stacked .dynamic-form-field {
+    width: 100% !important;
+    flex: 1 1 100% !important;
 }
 
-.dynamic-form-column-4 {
-    grid-column: span 4;
+/* =========================================================
+   3. FLOW: SINGLE LINE (INLINE ROW)
+========================================================= */
+#{{ $wrapperId }}.df-flow-single_line .dynamic-form-grid,
+#form-wrapper-{{ $formInstanceId }}.df-flow-single_line .dynamic-form-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
 }
 
-.dynamic-form-column-5 {
-    grid-column: span 5;
+#{{ $wrapperId }}.df-flow-single_line .dynamic-form-field,
+#form-wrapper-{{ $formInstanceId }}.df-flow-single_line .dynamic-form-field {
+    flex: 1 1 200px !important;
 }
 
-.dynamic-form-column-6 {
-    grid-column: span 6;
+#{{ $wrapperId }}.df-flow-single_line .dynamic-form-submit-area,
+#form-wrapper-{{ $formInstanceId }}.df-flow-single_line .dynamic-form-submit-area {
+    margin-top: 0 !important;
+    width: auto !important;
 }
 
-.dynamic-form-column-7 {
-    grid-column: span 7;
-}
-
-.dynamic-form-column-8 {
-    grid-column: span 8;
-}
-
-.dynamic-form-column-9 {
-    grid-column: span 9;
-}
-
-.dynamic-form-column-10 {
-    grid-column: span 10;
-}
-
-.dynamic-form-column-11 {
-    grid-column: span 11;
-}
-
-.dynamic-form-column-12 {
-    grid-column: span 12;
-}
-
-.dynamic-form-label {
+/* =========================================================
+   FIELD & INPUT STYLING
+========================================================= */
+#{{ $wrapperId }} .dynamic-form-label,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-label {
     display: block;
     margin-bottom: 8px;
     font-size: 14px;
     line-height: 1.4;
     font-weight: 600;
-    color: #222;
+    color: {{ $labelColor }} !important;
 }
 
-.dynamic-form-required {
+#{{ $wrapperId }} .dynamic-form-required,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-required {
     color: #dc2626;
     margin-left: 3px;
 }
 
-.dynamic-form-control {
+#{{ $wrapperId }} .dynamic-form-control,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-control {
     display: block;
     width: 100%;
     min-height: 45px;
     padding: 10px 13px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    background: #fff;
-    color: #111827;
+    border: 1px solid {{ $inputBorder }} !important;
+    border-radius: {{ $inputRadius }}px !important;
+    background: {{ $inputBg }} !important;
+    color: {{ $inputText }} !important;
     font-size: 14px;
     line-height: 1.5;
     outline: none;
@@ -903,126 +1054,165 @@
         box-shadow .2s ease;
 }
 
-textarea.dynamic-form-control {
+#{{ $wrapperId }} textarea.dynamic-form-control,
+#form-wrapper-{{ $formInstanceId }} textarea.dynamic-form-control {
     min-height: 120px;
     resize: vertical;
 }
 
-.dynamic-form-control:focus {
-    border-color: #2563eb;
+#{{ $wrapperId }} .dynamic-form-control:focus,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-control:focus {
+    border-color: {{ $btnBg }} !important;
     box-shadow:
         0 0 0 3px
-        rgba(37, 99, 235, .10);
+        rgba(37, 99, 235, .12) !important;
 }
 
-.dynamic-form-control.is-invalid {
+#{{ $wrapperId }} .dynamic-form-control.is-invalid,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-control.is-invalid {
     border-color: #dc2626 !important;
     box-shadow:
         0 0 0 3px
-        rgba(220, 38, 38, .08);
+        rgba(220, 38, 38, .08) !important;
 }
 
-.dynamic-form-options {
+#{{ $wrapperId }} .dynamic-form-options,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-options {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.dynamic-form-option {
+#{{ $wrapperId }} .dynamic-form-option,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-option {
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
     font-size: 14px;
-    color: #333;
+    color: {{ $labelColor }} !important;
 }
 
-.dynamic-form-option input {
+#{{ $wrapperId }} .dynamic-form-option input,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-option input {
     margin: 0;
 }
 
-.dynamic-form-help {
+#{{ $wrapperId }} .dynamic-form-help,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-help {
     margin-top: 6px;
     font-size: 12px;
     color: #6b7280;
 }
 
-.dynamic-form-file-info {
+#{{ $wrapperId }} .dynamic-form-file-info,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-file-info {
     margin-top: 6px;
     font-size: 12px;
     line-height: 1.6;
     color: #6b7280;
 }
 
-.dynamic-form-field-error {
+#{{ $wrapperId }} .dynamic-form-field-error,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-field-error {
     margin-top: 6px;
     font-size: 13px;
     color: #dc2626;
 }
 
-.dynamic-form-submit-area {
-    margin-top: 25px;
+/* =========================================================
+   BUTTON ALIGNMENT & DESIGN
+========================================================= */
+#{{ $wrapperId }} .dynamic-form-submit-area,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-area {
+    margin-top: 24px;
+    display: flex;
+    width: 100%;
 }
 
-.dynamic-form-submit-button {
+#{{ $wrapperId }} .dynamic-form-submit-area.align-left,   #form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-area.align-left   { justify-content: flex-start; }
+#{{ $wrapperId }} .dynamic-form-submit-area.align-center, #form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-area.align-center { justify-content: center; }
+#{{ $wrapperId }} .dynamic-form-submit-area.align-right,  #form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-area.align-right  { justify-content: flex-end; }
+#{{ $wrapperId }} .dynamic-form-submit-area.align-full,   #form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-area.align-full   { justify-content: stretch; }
+
+#{{ $wrapperId }} .dynamic-form-submit-button,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 45px;
-    min-width: 110px;
-    padding: 10px 24px;
     border: 0;
-    border-radius: 6px;
-    background: #2563eb;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
+    border-radius: {{ $btnRadius }}px !important;
+    background: {{ $btnBg }} !important;
+    color: {{ $btnTextCol }} !important;
+    font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     transition:
-        opacity .2s ease,
-        transform .2s ease;
+        background-color .2s ease,
+        transform .2s ease,
+        opacity .2s ease;
 }
 
-.dynamic-form-submit-button:hover {
-    opacity: .9;
+#{{ $wrapperId }} .dynamic-form-submit-button:hover,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-button:hover {
+    background: {{ $btnHoverBg }} !important;
+    color: {{ $btnHoverText }} !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
-.dynamic-form-submit-button:active {
+#{{ $wrapperId }} .dynamic-form-submit-button:active,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-button:active {
     transform: translateY(1px);
 }
 
-.dynamic-form-submit-button:disabled {
+#{{ $wrapperId }} .dynamic-form-submit-button:disabled,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-button:disabled {
     opacity: .65;
     cursor: not-allowed;
 }
 
-.dynamic-form-ajax-message {
+#{{ $wrapperId }} .btn-w-100,
+#form-wrapper-{{ $formInstanceId }} .btn-w-100 {
+    width: 100% !important;
+}
+
+/* =========================================================
+   MESSAGES & COUPON STYLES
+========================================================= */
+#{{ $wrapperId }} .dynamic-form-ajax-message,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-ajax-message {
     margin-bottom: 20px;
 }
 
-.dynamic-form-alert {
+#{{ $wrapperId }} .dynamic-form-alert,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-alert {
     padding: 15px 17px;
     border-radius: 8px;
     font-size: 14px;
     line-height: 1.6;
 }
 
-.dynamic-form-alert-error {
+#{{ $wrapperId }} .dynamic-form-alert-error,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-alert-error {
     border: 1px solid #fecaca;
     background: #fef2f2;
     color: #991b1b;
 }
 
-.dynamic-form-alert-error ul {
+#{{ $wrapperId }} .dynamic-form-alert-error ul,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-alert-error ul {
     margin: 8px 0 0;
     padding-left: 20px;
 }
 
-.dynamic-form-alert-error li {
+#{{ $wrapperId }} .dynamic-form-alert-error li,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-alert-error li {
     margin-bottom: 3px;
 }
 
-.dynamic-form-success {
+#{{ $wrapperId }} .dynamic-form-success,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success {
     padding: 45px 25px;
     margin: 10px 0;
     border: 1px solid #bbf7d0;
@@ -1031,7 +1221,8 @@ textarea.dynamic-form-control {
     text-align: center;
 }
 
-.dynamic-form-success-icon {
+#{{ $wrapperId }} .dynamic-form-success-icon,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success-icon {
     width: 70px;
     height: 70px;
     margin: 0 auto 20px;
@@ -1046,14 +1237,16 @@ textarea.dynamic-form-control {
     line-height: 1;
 }
 
-.dynamic-form-success h3 {
+#{{ $wrapperId }} .dynamic-form-success h3,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success h3 {
     margin: 0 0 10px;
     color: #166534;
     font-size: 24px;
     line-height: 1.3;
 }
 
-.dynamic-form-success-text {
+#{{ $wrapperId }} .dynamic-form-success-text,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success-text {
     max-width: 600px;
     margin: 0 auto 22px;
     color: #4b5563;
@@ -1061,7 +1254,97 @@ textarea.dynamic-form-control {
     line-height: 1.7;
 }
 
-.dynamic-form-success-again {
+/* Coupon Reveal Card Styles */
+#{{ $wrapperId }} .dynamic-form-coupon-reveal,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-reveal {
+    margin: 18px auto 22px;
+    max-width: 380px;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-card,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-card {
+    background: #ffffff;
+    border: 2px dashed #16a34a;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.08);
+    text-align: center;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-badge,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-badge {
+    display: inline-block;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-code-row,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-code-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-code,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-code {
+    font-family: monospace, sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 1.5px;
+    background: #f1f5f9;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    user-select: all;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-copy,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-copy {
+    border: 0;
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-copy:hover,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-copy:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-copy.copied,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-copy.copied {
+    background: #047857 !important;
+}
+
+#{{ $wrapperId }} .dynamic-form-coupon-hint,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-coupon-hint {
+    display: block;
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+#{{ $wrapperId }} .dynamic-form-success-again,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success-again {
     min-height: 44px;
     padding: 10px 22px;
     border: 0;
@@ -1073,11 +1356,13 @@ textarea.dynamic-form-control {
     cursor: pointer;
 }
 
-.dynamic-form-success-again:hover {
+#{{ $wrapperId }} .dynamic-form-success-again:hover,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-success-again:hover {
     opacity: .9;
 }
 
-.dynamic-form-no-fields {
+#{{ $wrapperId }} .dynamic-form-no-fields,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-no-fields {
     grid-column: span 12;
     padding: 20px;
     border: 1px dashed #d1d5db;
@@ -1086,51 +1371,69 @@ textarea.dynamic-form-control {
     color: #6b7280;
 }
 
-.dynamic-form-html {
+#{{ $wrapperId }} .dynamic-form-html,
+#form-wrapper-{{ $formInstanceId }} .dynamic-form-html {
     width: 100%;
 }
 
 @media (max-width: 768px) {
 
-    .dynamic-form-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-grid,
+    #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
     }
 
-    .dynamic-form-column-1,
-    .dynamic-form-column-2,
-    .dynamic-form-column-3,
-    .dynamic-form-column-4,
-    .dynamic-form-column-5,
-    .dynamic-form-column-6,
-    .dynamic-form-column-7,
-    .dynamic-form-column-8,
-    .dynamic-form-column-9,
-    .dynamic-form-column-10,
-    .dynamic-form-column-11,
-    .dynamic-form-column-12 {
-        grid-column: span 1;
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-1,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-1,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-2,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-2,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-3,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-3,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-4,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-4,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-5,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-5,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-6,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-6,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-7,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-7,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-8,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-8,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-9,  #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-9,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-10, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-10,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-11, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-11,
+    #{{ $wrapperId }}.df-flow-inline .dynamic-form-column-12, #form-wrapper-{{ $formInstanceId }}.df-flow-inline .dynamic-form-column-12 {
+        grid-column: span 1 !important;
     }
 
-    .dynamic-form-title {
+    #{{ $wrapperId }} .dynamic-form-submit-inline,
+    #form-wrapper-{{ $formInstanceId }} .dynamic-form-submit-inline {
+        grid-column: span 1 !important;
+    }
+
+    #{{ $wrapperId }} .dynamic-form-title,
+    #form-wrapper-{{ $formInstanceId }} .dynamic-form-title {
         font-size: 24px;
     }
 
-    .dynamic-form-success {
+    #{{ $wrapperId }} .dynamic-form-success,
+    #form-wrapper-{{ $formInstanceId }} .dynamic-form-success {
         padding: 35px 18px;
     }
 
-    .dynamic-form-success h3 {
+    #{{ $wrapperId }} .dynamic-form-success h3,
+    #form-wrapper-{{ $formInstanceId }} .dynamic-form-success h3 {
         font-size: 21px;
     }
 
-    .dynamic-form-success-icon {
+    #{{ $wrapperId }} .dynamic-form-success-icon,
+    #form-wrapper-{{ $formInstanceId }} .dynamic-form-success-icon {
         width: 60px;
         height: 60px;
         font-size: 32px;
     }
 
+    #{{ $wrapperId }},
+    #form-wrapper-{{ $formInstanceId }} {
+        padding: 16px !important;
+    }
+
 }
+
+{!! $form->custom_css ?? '' !!}
 
 </style>
 
@@ -1189,6 +1492,21 @@ textarea.dynamic-form-control {
     const loadingText =
         form.querySelector(
             '.dynamic-form-submit-loading'
+        );
+
+    const couponWrap =
+        wrapper.querySelector(
+            '.dynamic-form-coupon-reveal'
+        );
+
+    const couponCodeEl =
+        wrapper.querySelector(
+            '.dynamic-form-coupon-code'
+        );
+
+    const couponCopyBtn =
+        wrapper.querySelector(
+            '.dynamic-form-coupon-copy'
         );
 
 
@@ -1575,6 +1893,50 @@ textarea.dynamic-form-control {
                         data.message ||
                         'Your message has been sent successfully.';
 
+                    // Reveal Coupon Code if returned by lead sync
+                    if (data.coupon_code && couponWrap && couponCodeEl) {
+                        couponCodeEl.textContent = data.coupon_code;
+                        couponWrap.style.display = 'block';
+
+                        if (couponCopyBtn) {
+                            couponCopyBtn.onclick = function() {
+                                const copyCode = data.coupon_code;
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    navigator.clipboard.writeText(copyCode).then(() => {
+                                        markCopied();
+                                    }).catch(() => fallbackCopy(copyCode));
+                                } else {
+                                    fallbackCopy(copyCode);
+                                }
+                            };
+                        }
+                    } else if (couponWrap) {
+                        couponWrap.style.display = 'none';
+                    }
+
+                    function markCopied() {
+                        if (!couponCopyBtn) return;
+                        const originalHtml = couponCopyBtn.innerHTML;
+                        couponCopyBtn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+                        couponCopyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            couponCopyBtn.innerHTML = originalHtml;
+                            couponCopyBtn.classList.remove('copied');
+                        }, 2500);
+                    }
+
+                    function fallbackCopy(text) {
+                        const tempInput = document.createElement('input');
+                        tempInput.value = text;
+                        document.body.appendChild(tempInput);
+                        tempInput.select();
+                        try {
+                            document.execCommand('copy');
+                            markCopied();
+                        } catch (err) {}
+                        document.body.removeChild(tempInput);
+                    }
+
 
                     form.style.display =
                         'none';
@@ -1662,6 +2024,10 @@ textarea.dynamic-form-control {
         successAgain.addEventListener(
             'click',
             function () {
+
+                if (couponWrap) {
+                    couponWrap.style.display = 'none';
+                }
 
                 successBox.style.display =
                     'none';

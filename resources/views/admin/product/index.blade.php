@@ -115,18 +115,19 @@
             text-overflow: ellipsis !important;
         }
 
-        /* 12 Columns Proportional Distribution Summing to Exactly 100% */
+        /* 13 Columns Proportional Distribution Summing to Exactly 100% */
         .col-checkbox       { width: 2.5%; }
         .col-id             { width: 3.5%; }
         .col-thumb          { width: 4.5%; }
-        .col-title          { width: 23%; }
-        .col-sku            { width: 10%; }
-        .col-category       { width: 10%; }
-        .col-brand          { width: 8%; }
-        .col-stock          { width: 8%; }
-        .col-price          { width: 8.5%; }
-        .col-purchase-price { width: 8.5%; }
-        .col-featured       { width: 5%; }
+        .col-title          { width: 20%; }
+        .col-sku            { width: 8.5%; }
+        .col-category       { width: 8.5%; }
+        .col-brand          { width: 7%; }
+        .col-stock          { width: 7%; }
+        .col-price          { width: 8%; }
+        .col-purchase-price { width: 7.5%; }
+        .col-tax            { width: 8%; }
+        .col-featured       { width: 4.5%; }
         .col-action         { width: 8.5%; }
     }
 
@@ -138,7 +139,7 @@
     }
     .column-dropdown-menu {
         min-width: 220px;
-        max-height: 320px;
+        max-height: 340px;
         overflow-y: auto;
         font-size: 12px;
         border-radius: 5px !important;
@@ -357,7 +358,7 @@
             -webkit-overflow-scrolling: touch;
         }
         .woo-table {
-            min-width: 900px !important;
+            min-width: 960px !important;
             table-layout: auto !important;
         }
         #product-pagination-links {
@@ -399,7 +400,7 @@
                     {{ $totalProductsCount ?? $products->total() }}
                 </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage catalog inventory, advanced filters, pricing and 1-click exports.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage catalog inventory, tax &amp; VAT filters, pricing and 1-click exports.</small>
         </div>
 
         <div class="header-action-group d-flex flex-wrap gap-2 align-self-start align-self-md-auto">
@@ -454,6 +455,11 @@
                     <div class="form-check mb-1">
                         <input class="form-check-input col-toggle-cb" type="checkbox" data-target="col-purchase-price" id="toggle-col-purch-price" checked>
                         <label class="form-check-label" for="toggle-col-purch-price">Purchase Price</label>
+                    </div>
+                    <!-- VAT / Tax Column Toggle -->
+                    <div class="form-check mb-1">
+                        <input class="form-check-input col-toggle-cb" type="checkbox" data-target="col-tax" id="toggle-col-tax" checked>
+                        <label class="form-check-label fw-bold text-primary" for="toggle-col-tax">VAT / Tax</label>
                     </div>
                     <div class="form-check mb-1">
                         <input class="form-check-input col-toggle-cb" type="checkbox" data-target="col-featured" id="toggle-col-featured" checked>
@@ -535,10 +541,10 @@
                 </div>
             </div>
 
-            <!-- Second Filter Row: Sorting, Price Range & Per Page -->
+            <!-- Second Filter Row: Sorting, VAT & Tax Controls, Product Type & Per Page -->
             <div class="row g-2 align-items-center mt-2 pt-2 border-top">
-                <!-- Sorting Controller -->
-                <div class="col-6 col-md-3">
+                <!-- Sorting Controller with VAT Sorting Options -->
+                <div class="col-6 col-md-2">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text product-addon-text text-muted small"><i class="fas fa-sort me-1" style="font-size: 10px;"></i> Sort</span>
                         <select name="sort_by" id="filter-sort-by" class="form-select product-filter-control filter-trigger">
@@ -548,16 +554,28 @@
                             <option value="name_desc">Name: Z to A</option>
                             <option value="high_mrp">Price: High to Low</option>
                             <option value="low_mrp">Price: Low to High</option>
+                            <option value="vat_high">VAT: High to Low</option>
+                            <option value="vat_low">VAT: Low to High</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Price Range Trigger Button -->
-                <div class="col-6 col-md-3">
-                    <button type="button" class="btn btn-outline-secondary btn-compact w-100 d-flex justify-content-between align-items-center" onclick="togglePriceRangePanel()">
-                        <span><i class="fas fa-money-bill-wave text-success me-1"></i> Filter by Price Range</span>
-                        <i class="fas fa-chevron-down small" id="price-panel-chevron"></i>
-                    </button>
+                <!-- VAT / Tax Status Filter (With Tax vs Tax Free) -->
+                <div class="col-6 col-md-2">
+                    <select name="vat_status" id="filter-vat-status" class="form-select product-filter-control filter-trigger">
+                        <option value="">VAT: All Products</option>
+                        <option value="with_vat">With VAT / Tax</option>
+                        <option value="without_vat">Without VAT (Zero/None)</option>
+                    </select>
+                </div>
+
+                <!-- VAT Calculation Type Filter (% vs Flat) -->
+                <div class="col-6 col-md-2">
+                    <select name="vat_type" id="filter-vat-type" class="form-select product-filter-control filter-trigger">
+                        <option value="">VAT Type: All</option>
+                        <option value="percent">Percentage (%)</option>
+                        <option value="flat">Flat Amount (৳)</option>
+                    </select>
                 </div>
 
                 <!-- Product Type Filter -->
@@ -585,10 +603,27 @@
                 </div>
 
                 <!-- Reset Filters Button -->
-                <div class="col-12 col-md-2 d-flex justify-content-md-end">
-                    <button type="button" class="btn btn-light border btn-compact w-100 w-md-auto text-secondary shadow-xs" onclick="resetAllProductFilters()">
+                <div class="col-6 col-md-2 d-flex justify-content-md-end">
+                    <button type="button" class="btn btn-light border btn-compact w-100 text-secondary shadow-xs" onclick="resetAllProductFilters()">
                         <i class="fas fa-rotate-left me-1"></i>
                         <span>Reset All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Third Row: Expandable Specific Range Panels (Price & VAT Rate) -->
+            <div class="row g-2 align-items-center mt-2 pt-2 border-top">
+                <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-outline-secondary btn-compact w-100 d-flex justify-content-between align-items-center" onclick="togglePriceRangePanel()">
+                        <span><i class="fas fa-money-bill-wave text-success me-1"></i> Filter by Price Range</span>
+                        <i class="fas fa-chevron-down small" id="price-panel-chevron"></i>
+                    </button>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-outline-primary btn-compact w-100 d-flex justify-content-between align-items-center" onclick="toggleVatRangePanel()">
+                        <span><i class="fas fa-percent text-primary me-1"></i> Filter by VAT Rate / Amount</span>
+                        <i class="fas fa-chevron-down small" id="vat-panel-chevron"></i>
                     </button>
                 </div>
             </div>
@@ -670,6 +705,34 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Option D: Specific VAT Rate / Amount Range Panel (Min VAT - Max VAT) -->
+            <div id="vatRangeWrapper" class="row g-2 align-items-center mt-2 pt-2 border-top d-none">
+                <div class="col-12 col-sm-auto small fw-bold text-muted" style="font-size: 11.5px;">
+                    <i class="fas fa-percent text-primary me-1"></i> Specific VAT Rate / Amount Range:
+                </div>
+                <div class="col-6 col-sm-auto">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text product-addon-text text-muted small bn-digit">Min</span>
+                        <input type="number" step="0.01" min="0" name="min_vat" id="filter-min-vat" class="form-control product-filter-control bn-digit font-monospace" placeholder="0">
+                    </div>
+                </div>
+                <div class="col-6 col-sm-auto">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text product-addon-text text-muted small bn-digit">Max</span>
+                        <input type="number" step="0.01" min="0" name="max_vat" id="filter-max-vat" class="form-control product-filter-control bn-digit font-monospace" placeholder="100">
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-compact" onclick="fetchFilteredProducts(1)">
+                        <i class="fas fa-check me-1"></i>
+                        <span>Apply VAT Range</span>
+                    </button>
+                    <button type="button" class="btn btn-light border btn-compact" onclick="resetVatFields()">
+                        Reset
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -687,7 +750,7 @@
             <span class="badge bg-light text-primary border bn-digit ms-1" id="selected-items-badge" style="display: none; font-size: 11px;">0 items selected</span>
         </div>
         <div class="small text-muted d-none d-lg-block" style="font-size: 11.5px;">
-            <i class="fas fa-check-circle text-success me-1"></i> Screen optimized: All 12 columns fit directly without horizontal scroll
+            <i class="fas fa-check-circle text-success me-1"></i> Screen optimized: 13 columns fit directly without horizontal scroll
         </div>
     </div>
 
@@ -709,6 +772,7 @@
                         <th class="col-stock">Stock</th>
                         <th class="col-price">Price</th>
                         <th class="col-purchase-price">Cost</th>
+                        <th class="col-tax">VAT / Tax</th>
                         <th class="col-featured text-center">Featured</th>
                         <th class="col-action text-end pe-2">Action</th>
                     </tr>
@@ -737,7 +801,7 @@
             </div>
             <div>
                 <small class="text-muted bn-digit font-monospace" id="showing-entries-text" style="font-size: 11px;">
-                    Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{$products->total() }} entries
+                    Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} entries
                 </small>
             </div>
         </div>
@@ -846,7 +910,7 @@
             tbody.innerHTML = data.table_html;
             tbody.style.opacity = '1';
 
-            // Pagination handling (Always clean and visible when pages exist)
+            // Pagination handling
             const paginationContainer = document.getElementById('product-pagination-footer');
             const paginationLinks = document.getElementById('product-pagination-links');
             const perPageVal = document.getElementById('filter-per-page').value;
@@ -964,17 +1028,37 @@
         fetchFilteredProducts(1);
     }
 
-    // 5. Reset All Filters
+    // 5. VAT Range Panel Toggle & Reset
+    function toggleVatRangePanel() {
+        const vBox = document.getElementById('vatRangeWrapper');
+        const chevron = document.getElementById('vat-panel-chevron');
+        vBox.classList.toggle('d-none');
+        if (vBox.classList.contains('d-none')) {
+            chevron.className = 'fas fa-chevron-down small';
+        } else {
+            chevron.className = 'fas fa-chevron-up small';
+        }
+    }
+
+    function resetVatFields() {
+        document.getElementById('filter-min-vat').value = '';
+        document.getElementById('filter-max-vat').value = '';
+        fetchFilteredProducts(1);
+    }
+
+    // 6. Reset All Filters
     function resetAllProductFilters() {
         document.getElementById('product-filter-form').reset();
         document.getElementById('singleDateWrapper').classList.add('d-none');
         document.getElementById('customDateRangeWrapper').classList.add('d-none');
         document.getElementById('priceRangeWrapper').classList.add('d-none');
+        document.getElementById('vatRangeWrapper').classList.add('d-none');
         document.getElementById('price-panel-chevron').className = 'fas fa-chevron-down small';
+        document.getElementById('vat-panel-chevron').className = 'fas fa-chevron-down small';
         fetchFilteredProducts(1);
     }
 
-    // 6. Live Search & Trigger Listeners
+    // 7. Live Search & Trigger Listeners
     document.getElementById('filter-search-input').addEventListener('input', function() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => fetchFilteredProducts(1), 350);
@@ -984,7 +1068,7 @@
         el.addEventListener('change', () => fetchFilteredProducts(1));
     });
 
-    // 7. Pagination Interceptor
+    // 8. Pagination Interceptor
     document.addEventListener('click', function(e) {
         const pageLink = e.target.closest('#product-pagination-links .page-link');
         if (pageLink) {
@@ -999,7 +1083,7 @@
         }
     });
 
-    // 8. Delete Button Click Handler
+    // 9. Delete Button Click Handler
     document.addEventListener('click', function(e) {
         const delBtn = e.target.closest('.btn-delete-product');
         if (delBtn) {
@@ -1045,7 +1129,7 @@
         }
     });
 
-    // 9. Bulk Action Handler
+    // 10. Bulk Action Handler
     function triggerBulkActionModal() {
         const action = document.getElementById('bulk-action-selector').value;
         if (!action) {
@@ -1104,7 +1188,7 @@
         openModalSafely('customConfirmModal');
     }
 
-    // 10. Selection Binding
+    // 11. Selection Binding
     document.getElementById('check-all-products').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('.product-select-checkbox');
         checkboxes.forEach(cb => cb.checked = this.checked);
@@ -1128,7 +1212,7 @@
         }
     }
 
-    // 11. Column Toggle Filter
+    // 12. Column Toggle Filter
     document.querySelectorAll('.col-toggle-cb').forEach(cb => {
         cb.addEventListener('change', function() {
             const targetClass = this.getAttribute('data-target');
@@ -1139,7 +1223,7 @@
         });
     });
 
-    // 12. Featured Star Toggle
+    // 13. Featured Star Toggle
     function toggleFeaturedAjax(productId, btn) {
         fetch("{{ url('admin/product/toggle-featured') }}/" + productId, {
             method: 'POST',
@@ -1163,7 +1247,7 @@
         });
     }
 
-    // 13. Global Media Chooser & Lightbox Helpers
+    // 14. Global Media Chooser & Lightbox Helpers
     function zoomProductImage(url, title = 'Product Image') {
         const titleEl = document.getElementById('productZoomModalTitle');
         const imgTag  = document.getElementById('productZoomModalImgTag');

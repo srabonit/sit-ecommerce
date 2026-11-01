@@ -281,7 +281,7 @@
                         <span class="input-group-text bg-light text-muted border-end-0">
                             <i class="fas fa-barcode" style="font-size: 11px;"></i>
                         </span>
-                        <input type="text" id="liveSearchInput" class="form-control border-start-0" placeholder="Type product name, scan barcode, or enter SKU (e.g. PRD-102)..." autocomplete="off">
+                        <input type="text" id="liveSearchInput" class="form-control border-start-0" placeholder="Type product name, scan barcode, or enter SKU (PRD-102)..." autocomplete="off">
                         <button type="button" class="btn btn-light border" id="btnClearSearch" onclick="clearProductSelection()" style="display: none;">
                             <i class="fas fa-times text-muted"></i>
                         </button>
@@ -389,7 +389,7 @@
                         <!-- Supplier Invoice Memo -->
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="form_supplier_invoice_no">Supplier Memo / Invoice #</label>
-                            <input type="text" name="supplier_invoice_no" id="form_supplier_invoice_no" class="form-control font-monospace shadow-none" placeholder="e.g. SUP-INV-9901">
+                            <input type="text" name="supplier_invoice_no" id="form_supplier_invoice_no" class="form-control font-monospace shadow-none" placeholder="SUP-INV-9901">
                         </div>
                     </div>
 
@@ -400,7 +400,7 @@
                                 Inbound Quantity <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <input type="number" name="quantity" id="form_quantity" class="form-control font-monospace bn-digit fw-bold text-success shadow-none" min="1" placeholder="e.g. 50" required oninput="recalculatePreview()">
+                                <input type="number" name="quantity" id="form_quantity" class="form-control font-monospace bn-digit fw-bold text-success shadow-none" min="1" placeholder="50" required oninput="recalculatePreview()">
                                 <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">Units</span>
                             </div>
                         </div>
@@ -410,7 +410,7 @@
                             <label class="form-label" for="form_purchase_cost">Unit Purchase Cost (৳)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">৳</span>
-                                <input type="number" step="0.01" name="purchase_cost" id="form_purchase_cost" class="form-control font-monospace bn-digit shadow-none" placeholder="e.g. 350.00" oninput="recalculatePreview()">
+                                <input type="number" step="0.01" name="purchase_cost" id="form_purchase_cost" class="form-control font-monospace bn-digit shadow-none" placeholder="350.00" oninput="recalculatePreview()">
                             </div>
                             <small class="text-muted d-block mt-1" style="font-size: 10px;">Leave blank to maintain current unit cost.</small>
                         </div>
@@ -422,7 +422,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">৳</span>
-                                <input type="number" step="0.01" name="selling_price" id="form_selling_price" class="form-control font-monospace bn-digit shadow-none" placeholder="e.g. 499.00">
+                                <input type="number" step="0.01" name="selling_price" id="form_selling_price" class="form-control font-monospace bn-digit shadow-none" placeholder="499.00">
                             </div>
                         </div>
                     </div>

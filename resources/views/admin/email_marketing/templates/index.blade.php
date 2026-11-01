@@ -532,7 +532,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text template-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                            <input type="text" id="templateSearchInput" class="form-control border-start-0 ps-0 template-filter-control shadow-none font-monospace" placeholder="e.g. Flash Sale, Welcome Email, Cart Reminder..." onkeyup="filterTemplatesTable()">
+                            <input type="text" id="templateSearchInput" class="form-control border-start-0 ps-0 template-filter-control shadow-none font-monospace" placeholder="Flash Sale, Welcome Email, Cart Reminder..." onkeyup="filterTemplatesTable()">
                         </div>
                     </div>
 

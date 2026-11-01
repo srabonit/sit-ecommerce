@@ -557,7 +557,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="productSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="e.g. Georgette Dress, SKU-1049..." onkeyup="filterProductsTable()">
+                            <input type="text" id="productSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="Georgette Dress, SKU-1049..." onkeyup="filterProductsTable()">
                         </div>
                     </div>
 

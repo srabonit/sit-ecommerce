@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @php
-    // ১. show_image() ফাংশন স্বয়ংক্রিয়ভাবে নিশ্চিতকরণ (Composer dump-autoload ছাড়াও যাতে কাজ করে)
+    // ১. show_image() ফাংশন স্বয়ংক্রিয়ভাবে নিশ্চিতকরণ
     if (!function_exists('show_image')) {
         if (file_exists(app_path('Helpers/helpers.php'))) {
             require_once app_path('Helpers/helpers.php');
@@ -27,14 +27,81 @@
         }
     }
 
-    $globalSettings = DB::table('settings')->pluck('value', 'key');
+    static $homeGlobalSettings = null;
+    if ($homeGlobalSettings === null) {
+        $homeGlobalSettings = \Illuminate\Support\Facades\Cache::remember('global_settings_cache', 86400, function() {
+            return DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $globalSettings = $homeGlobalSettings ?? [];
 
     $colMobile = $globalSettings['grid_mobile'] ?? '2';
     $colTab    = $globalSettings['grid_tab'] ?? '3';
     $colPc     = $colPc ?? ($globalSettings['grid_pc'] ?? '4');
 
-    $showCategoryMenu = !isset($globalSettings['show_home_category_menu']) || $globalSettings['show_home_category_menu'] == '1';
+    $showCategoryMenu      = !isset($globalSettings['show_home_category_menu']) || $globalSettings['show_home_category_menu'] == '1';
     $showPopularCatSection = !isset($globalSettings['show_popular_categories_section']) || $globalSettings['show_popular_categories_section'] == '1';
+
+    // 1. Home Category Sidebar Widget Colors
+    $homeCatMenuBg         = $globalSettings['color_home_cat_menu_bg'] ?? '#ffffff';
+    $homeCatMenuBorder     = $globalSettings['color_home_cat_menu_border'] ?? '#edf2f7';
+    $homeCatHeaderTxt      = $globalSettings['color_home_cat_header_text'] ?? '#0f172a';
+    $homeCatHeaderIco      = $globalSettings['color_home_cat_header_icon'] ?? '#2563eb';
+    $homeCatBadgeBg        = $globalSettings['color_home_cat_header_badge_bg'] ?? '#eff6ff';
+    $homeCatBadgeTxt       = $globalSettings['color_home_cat_header_badge_text'] ?? '#2563eb';
+    $homeCatItemTxt        = $globalSettings['color_home_cat_item_text'] ?? '#334155';
+    $homeCatItemHovBg      = $globalSettings['color_home_cat_item_hover_bg'] ?? '#f1f5f9';
+    $homeCatItemHovTxt     = $globalSettings['color_home_cat_item_hover_text'] ?? '#2563eb';
+    $homeCatItemActBg      = $globalSettings['color_home_cat_item_active_bg'] ?? '#eff6ff';
+    $homeCatItemActTxt     = $globalSettings['color_home_cat_item_active_text'] ?? '#2563eb';
+    $homeCatFlyoutBg       = $globalSettings['color_home_cat_flyout_bg'] ?? '#ffffff';
+    $homeCatFlyoutBorder   = $globalSettings['color_home_cat_flyout_border'] ?? '#e2e8f0';
+    $homeCatFlyoutTxt      = $globalSettings['color_home_cat_flyout_item_text'] ?? '#475569';
+    $homeCatFlyoutHovBg    = $globalSettings['color_home_cat_flyout_item_hover_bg'] ?? '#f8fafc';
+    $homeCatFlyoutHovTxt   = $globalSettings['color_home_cat_flyout_item_hover_text'] ?? '#2563eb';
+
+    // 2. Deals & Offers Banner Colors
+    $homeDealsCardBg       = $globalSettings['color_home_deals_card_bg'] ?? '#ffffff';
+    $homeDealsCardBorder   = $globalSettings['color_home_deals_card_border'] ?? '#fee2e2';
+    $homeDealsTimerBoxBg   = $globalSettings['color_home_deals_timer_box_bg'] ?? '#0f172a';
+    $homeDealsBadgeBg      = $globalSettings['color_home_deals_badge_bg'] ?? '#ef4444';
+    $homeDealsBadgeTxt     = $globalSettings['color_home_deals_badge_text'] ?? '#ffffff';
+    $homeDealsTitle        = $globalSettings['color_home_deals_title'] ?? '#ffffff';
+    $homeDealsSubtitle     = $globalSettings['color_home_deals_subtitle'] ?? 'rgba(255, 255, 255, 0.7)';
+    $homeDealsTileBg       = $globalSettings['color_home_deals_tile_bg'] ?? '#ffffff';
+    $homeDealsTileTxt      = $globalSettings['color_home_deals_tile_text'] ?? '#0f172a';
+    $homeDealsTileLbl      = $globalSettings['color_home_deals_tile_label'] ?? 'rgba(255, 255, 255, 0.7)';
+
+    // 3. Popular Categories Slider Colors
+    $homePopCardBg         = $globalSettings['color_home_pop_card_bg'] ?? '#ffffff';
+    $homePopCardBorder     = $globalSettings['color_home_pop_card_border'] ?? '#edf2f7';
+    $homePopTitle          = $globalSettings['color_home_pop_title'] ?? '#0f172a';
+    $homePopTitleIco       = $globalSettings['color_home_pop_title_icon'] ?? '#2563eb';
+    $homePopBtnTxt         = $globalSettings['color_home_pop_btn_text'] ?? '#2563eb';
+    $homePopBtnBorder      = $globalSettings['color_home_pop_btn_border'] ?? '#2563eb';
+    $homePopBtnHovBg       = $globalSettings['color_home_pop_btn_hover_bg'] ?? '#2563eb';
+    $homePopBtnHovTxt      = $globalSettings['color_home_pop_btn_hover_text'] ?? '#ffffff';
+    $homePopPillBg         = $globalSettings['color_home_pop_pill_bg'] ?? '#ffffff';
+    $homePopPillBorder     = $globalSettings['color_home_pop_pill_border'] ?? '#edf2f7';
+    $homePopPillHovBorder  = $globalSettings['color_home_pop_pill_hover_border'] ?? '#3b82f6';
+    $homePopPillIconBg     = $globalSettings['color_home_pop_pill_icon_bg'] ?? '#f1f5f9';
+    $homePopPillIcon       = $globalSettings['color_home_pop_pill_icon'] ?? '#475569';
+    $homePopPillTxt        = $globalSettings['color_home_pop_pill_text'] ?? '#0f172a';
+    $homePopPillCount      = $globalSettings['color_home_pop_pill_count'] ?? '#94a3b8';
+
+    // 4. Featured Products Section Colors
+    $homeFeatCardBg        = $globalSettings['color_home_feat_card_bg'] ?? '#ffffff';
+    $homeFeatCardBorder    = $globalSettings['color_home_feat_card_border'] ?? '#edf2f7';
+    $homeFeatTitle         = $globalSettings['color_home_feat_title'] ?? '#0f172a';
+    $homeFeatTitleIco      = $globalSettings['color_home_feat_title_icon'] ?? '#ef4444';
+    $homeFeatSubtitle      = $globalSettings['color_home_feat_subtitle'] ?? '#64748b';
+    $homeFeatFilterActBg   = $globalSettings['color_home_feat_filter_active_bg'] ?? '#2563eb';
+    $homeFeatFilterActTxt  = $globalSettings['color_home_feat_filter_active_text'] ?? '#ffffff';
+    $homeFeatFilterBtnBg   = $globalSettings['color_home_feat_filter_btn_bg'] ?? '#ffffff';
+    $homeFeatFilterBtnTxt  = $globalSettings['color_home_feat_filter_btn_text'] ?? '#475569';
+    $homeFeatFilterBtnBrd  = $globalSettings['color_home_feat_filter_btn_border'] ?? '#e2e8f0';
+    $homeFeatFilterHovBg   = $globalSettings['color_home_feat_filter_btn_hover_bg'] ?? '#eff6ff';
+    $homeFeatFilterHovTxt  = $globalSettings['color_home_feat_filter_btn_hover_text'] ?? '#2563eb';
 
     $catMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile_categories')->first();
     if (!$catMenuRow) {
@@ -95,18 +162,89 @@
 
 @section('content')
 <style>
+    :root {
+        --home-cat-bg: {{ $homeCatMenuBg }};
+        --home-cat-border: {{ $homeCatMenuBorder }};
+        --home-cat-head-text: {{ $homeCatHeaderTxt }};
+        --home-cat-head-icon: {{ $homeCatHeaderIco }};
+        --home-cat-badge-bg: {{ $homeCatBadgeBg }};
+        --home-cat-badge-text: {{ $homeCatBadgeTxt }};
+        --home-cat-item-text: {{ $homeCatItemTxt }};
+        --home-cat-item-hover-bg: {{ $homeCatItemHovBg }};
+        --home-cat-item-hover-text: {{ $homeCatItemHovTxt }};
+        --home-cat-item-act-bg: {{ $homeCatItemActBg }};
+        --home-cat-item-act-text: {{ $homeCatItemActTxt }};
+        --home-cat-flyout-bg: {{ $homeCatFlyoutBg }};
+        --home-cat-flyout-border: {{ $homeCatFlyoutBorder }};
+        --home-cat-flyout-text: {{ $homeCatFlyoutTxt }};
+        --home-cat-flyout-hover-bg: {{ $homeCatFlyoutHovBg }};
+        --home-cat-flyout-hover-text: {{ $homeCatFlyoutHovTxt }};
+
+        --home-deals-card-bg: {{ $homeDealsCardBg }};
+        --home-deals-card-border: {{ $homeDealsCardBorder }};
+        --home-deals-timer-bg: {{ $homeDealsTimerBoxBg }};
+        --home-deals-badge-bg: {{ $homeDealsBadgeBg }};
+        --home-deals-badge-text: {{ $homeDealsBadgeTxt }};
+        --home-deals-title: {{ $homeDealsTitle }};
+        --home-deals-subtitle: {{ $homeDealsSubtitle }};
+        --home-deals-tile-bg: {{ $homeDealsTileBg }};
+        --home-deals-tile-text: {{ $homeDealsTileTxt }};
+        --home-deals-tile-label: {{ $homeDealsTileLbl }};
+
+        --home-pop-card-bg: {{ $homePopCardBg }};
+        --home-pop-card-border: {{ $homePopCardBorder }};
+        --home-pop-title: {{ $homePopTitle }};
+        --home-pop-title-icon: {{ $homePopTitleIco }};
+        --home-pop-btn-text: {{ $homePopBtnTxt }};
+        --home-pop-btn-border: {{ $homePopBtnBorder }};
+        --home-pop-btn-hover-bg: {{ $homePopBtnHovBg }};
+        --home-pop-btn-hover-text: {{ $homePopBtnHovTxt }};
+        --home-pop-pill-bg: {{ $homePopPillBg }};
+        --home-pop-pill-border: {{ $homePopPillBorder }};
+        --home-pop-pill-hover-border: {{ $homePopPillHovBorder }};
+        --home-pop-pill-icon-bg: {{ $homePopPillIconBg }};
+        --home-pop-pill-icon: {{ $homePopPillIcon }};
+        --home-pop-pill-text: {{ $homePopPillTxt }};
+        --home-pop-pill-count: {{ $homePopPillCount }};
+
+        --home-feat-card-bg: {{ $homeFeatCardBg }};
+        --home-feat-card-border: {{ $homeFeatCardBorder }};
+        --home-feat-title: {{ $homeFeatTitle }};
+        --home-feat-title-icon: {{ $homeFeatTitleIco }};
+        --home-feat-subtitle: {{ $homeFeatSubtitle }};
+        --home-feat-filter-act-bg: {{ $homeFeatFilterActBg }};
+        --home-feat-filter-act-text: {{ $homeFeatFilterActTxt }};
+        --home-feat-filter-btn-bg: {{ $homeFeatFilterBtnBg }};
+        --home-feat-filter-btn-text: {{ $homeFeatFilterBtnTxt }};
+        --home-feat-filter-btn-border: {{ $homeFeatFilterBtnBrd }};
+        --home-feat-filter-hover-bg: {{ $homeFeatFilterHovBg }};
+        --home-feat-filter-hover-text: {{ $homeFeatFilterHovTxt }};
+    }
+
     .home-viewport {
-        background-color: #f8fafc;
+        background-color: var(--site-bg-color, #f8fafc);
         position: relative;
         z-index: 1;
     }
 
     .widget-category-menu {
         border-radius: 16px;
-        background: #ffffff;
-        border: 1px solid #edf2f7;
+        background-color: var(--home-cat-bg) !important;
+        border: 1px solid var(--home-cat-border) !important;
         position: relative;
         overflow: visible !important;
+    }
+
+    .widget-category-header {
+        color: var(--home-cat-head-text) !important;
+        border-bottom: 1px solid var(--home-cat-border) !important;
+    }
+    .widget-category-header i {
+        color: var(--home-cat-head-icon) !important;
+    }
+    .widget-category-badge {
+        background-color: var(--home-cat-badge-bg) !important;
+        color: var(--home-cat-badge-text) !important;
     }
 
     .home-cat-list {
@@ -127,7 +265,7 @@
         padding: 9.5px 16px;
         font-size: 13.5px;
         font-weight: 500;
-        color: #334155;
+        color: var(--home-cat-item-text) !important;
         text-decoration: none;
         border-radius: 8px;
         transition: all 0.2s ease;
@@ -135,13 +273,13 @@
 
     .home-cat-link:hover,
     .home-cat-row:hover > .home-cat-link {
-        background-color: #f1f5f9;
-        color: #2563eb !important;
+        background-color: var(--home-cat-item-hover-bg) !important;
+        color: var(--home-cat-item-hover-text) !important;
     }
 
     .home-cat-link.active {
-        background-color: #eff6ff;
-        color: #2563eb !important;
+        background-color: var(--home-cat-item-act-bg) !important;
+        color: var(--home-cat-item-act-text) !important;
         font-weight: 700;
     }
 
@@ -151,8 +289,8 @@
         top: 0;
         left: 100%;
         min-width: 220px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background-color: var(--home-cat-flyout-bg) !important;
+        border: 1px solid var(--home-cat-flyout-border) !important;
         border-radius: 12px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
         padding: 8px 0;
@@ -178,7 +316,7 @@
     .home-sub-link {
         display: block;
         padding: 8px 18px;
-        color: #475569;
+        color: var(--home-cat-flyout-text) !important;
         font-size: 13px;
         font-weight: 500;
         text-decoration: none;
@@ -186,15 +324,15 @@
     }
 
     .home-sub-link:hover {
-        background-color: #f8fafc;
-        color: #2563eb;
+        background-color: var(--home-cat-flyout-hover-bg) !important;
+        color: var(--home-cat-flyout-hover-text) !important;
         padding-left: 22px;
     }
 
     .home-sub-link.active {
-        color: #2563eb;
+        color: var(--home-cat-flyout-hover-text) !important;
         font-weight: 700;
-        background-color: #eff6ff;
+        background-color: var(--home-cat-flyout-hover-bg) !important;
     }
 
     @keyframes homeCatFlyoutAnim {
@@ -202,185 +340,22 @@
         to { opacity: 1; transform: translateX(0); }
     }
 
-    /* ================= DYNAMIC HERO SLIDER STYLES ================= */
-    .hero-slider-wrap {
-        border-radius: 14px;
-        overflow: hidden;
-        position: relative;
-        min-height: 280px;
-        height: 100%;
-        background: #0f172a;
-        z-index: 1;
-        transition: all 0.25s ease-in-out;
-    }
-    @media (min-width: 768px) {
-        .hero-slider-wrap { min-height: 380px; }
-    }
-    .hero-slide-item {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        padding: 24px;
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-    }
-    @media (min-width: 768px) {
-        .hero-slide-item { padding: 40px; }
-    }
-    .hero-slide-item.active {
-        opacity: 1;
-    }
-    .hero-slide-overlay {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 1;
-    }
-    .hero-slide-content {
-        position: relative;
-        z-index: 2;
-        max-width: 480px;
-    }
-
-    /* ================= YOUTUBE / LINKEDIN BANNER STYLE FOR MOBILE ================= */
-    @media (max-width: 767.98px) {
-        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-landscape),
-        .hero-slider-wrap.mobile-is-landscape {
-            aspect-ratio: 21 / 9 !important;
-            min-height: 145px !important;
-            max-height: 175px !important;
-            height: auto !important;
-        }
-
-        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-square),
-        .hero-slider-wrap.mobile-is-square {
-            aspect-ratio: 1 / 1 !important;
-            max-height: 260px !important;
-            min-height: 220px !important;
-            height: auto !important;
-        }
-
-        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-portrait),
-        .hero-slider-wrap.mobile-is-portrait {
-            aspect-ratio: 4 / 5 !important;
-            max-height: 320px !important;
-            height: auto !important;
-        }
-
-        .hero-slide-item.ratio-mobile-landscape {
-            aspect-ratio: 21 / 9 !important;
-            max-height: 175px !important;
-            height: 100% !important;
-            padding: 14px 12px !important;
-        }
-        .hero-slide-item.ratio-mobile-square {
-            aspect-ratio: 1 / 1 !important;
-            max-height: 260px !important;
-            height: 100% !important;
-            padding: 16px 14px !important;
-        }
-        .hero-slide-item.ratio-mobile-portrait {
-            aspect-ratio: 4 / 5 !important;
-            max-height: 320px !important;
-            height: 100% !important;
-            padding: 16px 14px !important;
-        }
-
-        .hero-slide-content {
-            padding: 0 !important;
-            max-width: 100% !important;
-        }
-        .hero-slide-content h2 {
-            font-size: 1.05rem !important;
-            margin-bottom: 4px !important;
-            line-height: 1.25 !important;
-        }
-        .hero-slide-content p {
-            font-size: 11px !important;
-            margin-bottom: 8px !important;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .hero-slide-content .badge {
-            font-size: 9.5px !important;
-            padding: 2px 8px !important;
-            margin-bottom: 4px !important;
-        }
-        .hero-slide-content a.btn {
-            font-size: 11px !important;
-            padding: 4px 12px !important;
-        }
-    }
-
-    .offer-slider-box {
-        border-radius: 14px;
-        overflow: hidden;
-        position: relative;
-        min-height: 280px;
-        height: 100%;
-        background: #ecfdf5;
-        border: 1px solid #d1fae5;
-        z-index: 1;
-    }
-    @media (min-width: 768px) {
-        .offer-slider-box { min-height: 380px; }
-    }
-    .offer-slide-item {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        transition: opacity 0.8s ease-in-out;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    @media (min-width: 768px) {
-        .offer-slide-item { padding: 24px 22px; }
-    }
-    .offer-slide-item.active {
-        opacity: 1;
-    }
-
-    .offer-feature-img-wrap {
-        flex: 1 1 auto;
-        min-height: 130px;
-        max-height: 170px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 8px 0;
-    }
-    .offer-feature-img-wrap img {
-        max-height: 150px;
-        max-width: 90%;
-        object-fit: contain;
-        filter: drop-shadow(0 6px 12px rgba(0,0,0,0.08));
-    }
-
     .deals-panel-card {
         border-radius: 16px;
-        border: 1.5px solid #fee2e2;
-        background: linear-gradient(135deg, #ffffff 0%, #fff7f7 100%);
+        border: 1.5px solid var(--home-deals-card-border) !important;
+        background: var(--home-deals-card-bg) !important;
         box-shadow: 0 4px 20px rgba(239, 68, 68, 0.05);
         position: relative;
         z-index: 1;
     }
     
     .deals-timer-box {
-        border-right: 1px solid #fed7d7;
+        border-right: 1px solid var(--home-deals-card-border) !important;
         min-width: 100%;
         padding: 20px 16px;
         position: relative;
         overflow: hidden;
-        background-color: #0f172a;
+        background-color: var(--home-deals-timer-bg) !important;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -390,43 +365,23 @@
             min-width: 300px;
             max-width: 350px;
             padding: 30px 24px;
-            border-right: 1px solid #fed7d7;
             border-bottom: none;
         }
     }
-    .deals-bg-slide-wrap {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-    .deals-bg-slide-item {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        opacity: 0;
-        transition: opacity 1.2s ease-in-out;
-    }
-    .deals-bg-slide-item.active {
-        opacity: 1;
-    }
-    .deals-bg-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.78) 100%);
-    }
-    .deals-timer-content {
-        position: relative;
-    }
 
+    .deals-badge {
+        background-color: var(--home-deals-badge-bg) !important;
+        color: var(--home-deals-badge-text) !important;
+    }
+    .deals-title-text {
+        color: var(--home-deals-title) !important;
+    }
+    .deals-subtitle-text {
+        color: var(--home-deals-subtitle) !important;
+    }
     .timer-tile {
-        background: #ffffff;
-        color: #0f172a;
+        background-color: var(--home-deals-tile-bg) !important;
+        color: var(--home-deals-tile-text) !important;
         border-radius: 6px;
         padding: 4px 6px;
         font-weight: 800;
@@ -438,52 +393,31 @@
     @media (min-width: 768px) {
         .timer-tile { padding: 6px 8px; font-size: 15px; min-width: 40px; }
     }
-
-    .flash-products-slider-row {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        padding-bottom: 4px;
-    }
-    .flash-products-slider-row::-webkit-scrollbar {
-        display: none;
-    }
-    .flash-product-card-item {
-        flex: 0 0 165px;
-        max-width: 165px;
-        min-width: 165px;
-    }
-    @media (min-width: 768px) {
-        .flash-product-card-item {
-            flex: 0 0 210px;
-            max-width: 210px;
-            min-width: 210px;
-        }
+    .timer-label-text {
+        color: var(--home-deals-tile-label) !important;
     }
 
-    .featured-filter-scroll {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 8px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-        padding-bottom: 4px;
-        max-width: 100%;
+    /* Popular Categories Card & Scroller */
+    .pop-cat-section-card {
+        background-color: var(--home-pop-card-bg) !important;
+        border: 1px solid var(--home-pop-card-border) !important;
     }
-    .featured-filter-scroll::-webkit-scrollbar {
-        display: none;
+    .pop-cat-title {
+        color: var(--home-pop-title) !important;
     }
-    .filter-pill-btn {
-        white-space: nowrap;
-        font-size: 12px;
-        padding: 5px 14px;
-        border-radius: 50px;
-        font-weight: 600;
-        flex-shrink: 0;
+    .pop-cat-title i {
+        color: var(--home-pop-title-icon) !important;
+    }
+    .pop-cat-view-btn {
+        color: var(--home-pop-btn-text) !important;
+        border-color: var(--home-pop-btn-border) !important;
+        background-color: transparent;
+        transition: all 0.2s ease;
+    }
+    .pop-cat-view-btn:hover {
+        background-color: var(--home-pop-btn-hover-bg) !important;
+        color: var(--home-pop-btn-hover-text) !important;
+        border-color: var(--home-pop-btn-hover-bg) !important;
     }
 
     .cat-scroller-container {
@@ -509,8 +443,8 @@
     }
     .cat-pill-card {
         width: 110px;
-        background: #ffffff;
-        border: 1px solid #edf2f7;
+        background-color: var(--home-pop-pill-bg) !important;
+        border: 1px solid var(--home-pop-pill-border) !important;
         border-radius: 14px;
         padding: 12px 8px;
         text-align: center;
@@ -527,15 +461,15 @@
         .cat-pill-card { width: 135px; padding: 14px 10px; border-radius: 16px; }
     }
     .cat-pill-card:hover {
-        border-color: #3b82f6;
+        border-color: var(--home-pop-pill-hover-border) !important;
         transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.12);
     }
     .cat-icon-circle {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: #f1f5f9;
+        background-color: var(--home-pop-pill-icon-bg) !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -545,27 +479,64 @@
     @media (min-width: 768px) {
         .cat-icon-circle { width: 58px; height: 58px; margin-bottom: 10px; }
     }
-    .cat-icon-circle img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .cat-icon-circle i {
+        color: var(--home-pop-pill-icon) !important;
+    }
+    .cat-pill-name {
+        color: var(--home-pop-pill-text) !important;
+    }
+    .cat-pill-count {
+        color: var(--home-pop-pill-count) !important;
     }
 
-    .section-title-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-        border-bottom: 1.5px solid #edf2f7;
-        padding-bottom: 10px;
+    /* Featured Section Styling */
+    .featured-section-card {
+        background-color: var(--home-feat-card-bg) !important;
+        border: 1px solid var(--home-feat-card-border) !important;
     }
-    .section-title-wrap h4 {
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0;
+    .featured-title-text {
+        color: var(--home-feat-title) !important;
+    }
+    .featured-title-text i {
+        color: var(--home-feat-title-icon) !important;
+    }
+    .featured-subtitle-text {
+        color: var(--home-feat-subtitle) !important;
+    }
+
+    .featured-filter-scroll {
         display: flex;
-        align-items: center;
+        flex-wrap: nowrap;
         gap: 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 4px;
+        max-width: 100%;
+    }
+    .featured-filter-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    .filter-pill-btn {
+        white-space: nowrap;
+        font-size: 12px;
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-weight: 600;
+        flex-shrink: 0;
+        background-color: var(--home-feat-filter-btn-bg) !important;
+        color: var(--home-feat-filter-btn-text) !important;
+        border: 1px solid var(--home-feat-filter-btn-border) !important;
+        transition: all 0.2s ease;
+    }
+    .filter-pill-btn:hover {
+        background-color: var(--home-feat-filter-hover-bg) !important;
+        color: var(--home-feat-filter-hover-text) !important;
+    }
+    .filter-pill-btn.active {
+        background-color: var(--home-feat-filter-act-bg) !important;
+        color: var(--home-feat-filter-act-text) !important;
+        border-color: var(--home-feat-filter-act-bg) !important;
     }
 
     /* Dynamic Grid Layout */
@@ -610,25 +581,10 @@
         animation: scShimmerWave 1.4s infinite linear;
         border-radius: 6px;
     }
-    .sc-skel-img {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 10px;
-    }
-    .sc-skel-title {
-        height: 14px;
-        width: 80%;
-    }
-    .sc-skel-price {
-        height: 16px;
-        width: 45%;
-    }
-    .sc-skel-btn {
-        height: 32px;
-        width: 100%;
-        border-radius: 20px;
-        margin-top: 4px;
-    }
+    .sc-skel-img { width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; }
+    .sc-skel-title { height: 14px; width: 80%; }
+    .sc-skel-price { height: 16px; width: 45%; }
+    .sc-skel-btn { height: 32px; width: 100%; border-radius: 20px; margin-top: 4px; }
     @keyframes scShimmerWave {
         0% { background-position: -300px 0; }
         100% { background-position: 300px 0; }
@@ -708,16 +664,16 @@
 
     .featured-pagination-container .page-item.active .page-link,
     .sitcommerce-ajax-section-wrapper .sc-pagination-box .page-item.active .page-link {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
+        background-color: var(--home-feat-filter-act-bg) !important;
+        border-color: var(--home-feat-filter-act-bg) !important;
+        color: var(--home-feat-filter-act-text) !important;
         box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
     }
 
     .featured-pagination-container .page-link:hover,
     .sitcommerce-ajax-section-wrapper .sc-pagination-box .page-link:hover {
-        background-color: #eff6ff;
-        color: #2563eb;
+        background-color: var(--home-feat-filter-hover-bg) !important;
+        color: var(--home-feat-filter-hover-text) !important;
     }
 
     @media (max-width: 767.98px) {
@@ -741,6 +697,131 @@
             justify-content: center !important;
         }
     }
+.cat-pill-card .cat-icon-circle img {
+
+    width:100%;
+    height:100%;
+}
+
+    /* Hero & Offer Slider Essentials */
+    .hero-slider-wrap {
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+        min-height: 280px;
+        height: 100%;
+        background: #0f172a;
+        z-index: 1;
+        transition: all 0.25s ease-in-out;
+    }
+    @media (min-width: 768px) { .hero-slider-wrap { min-height: 380px; } }
+    .hero-slide-item {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        padding: 24px;
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+    @media (min-width: 768px) { .hero-slide-item { padding: 40px; } }
+    .hero-slide-item.active { opacity: 1; }
+    .hero-slide-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .hero-slide-content { position: relative; z-index: 2; max-width: 480px; }
+
+    @media (max-width: 767.98px) {
+        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-landscape),
+        .hero-slider-wrap.mobile-is-landscape {
+            aspect-ratio: 21 / 9 !important;
+            min-height: 145px !important;
+            max-height: 175px !important;
+            height: auto !important;
+        }
+        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-square),
+        .hero-slider-wrap.mobile-is-square {
+            aspect-ratio: 1 / 1 !important;
+            max-height: 260px !important;
+            min-height: 220px !important;
+            height: auto !important;
+        }
+        .hero-slider-wrap:has(.hero-slide-item.active.ratio-mobile-portrait),
+        .hero-slider-wrap.mobile-is-portrait {
+            aspect-ratio: 4 / 5 !important;
+            max-height: 320px !important;
+            height: auto !important;
+        }
+        .hero-slide-item.ratio-mobile-landscape {
+            aspect-ratio: 21 / 9 !important;
+            max-height: 175px !important;
+            height: 100% !important;
+            padding: 14px 12px !important;
+        }
+        .hero-slide-item.ratio-mobile-square {
+            aspect-ratio: 1 / 1 !important;
+            max-height: 260px !important;
+            height: 100% !important;
+            padding: 16px 14px !important;
+        }
+        .hero-slide-item.ratio-mobile-portrait {
+            aspect-ratio: 4 / 5 !important;
+            max-height: 320px !important;
+            height: 100% !important;
+            padding: 16px 14px !important;
+        }
+        .hero-slide-content { padding: 0 !important; max-width: 100% !important; }
+        .hero-slide-content h2 { font-size: 1.05rem !important; margin-bottom: 4px !important; line-height: 1.25 !important; }
+        .hero-slide-content p { font-size: 11px !important; margin-bottom: 8px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .hero-slide-content .badge { font-size: 9.5px !important; padding: 2px 8px !important; margin-bottom: 4px !important; }
+        .hero-slide-content a.btn { font-size: 11px !important; padding: 4px 12px !important; }
+    }
+
+    .offer-slider-box {
+        border-radius: 14px;
+        overflow: hidden;
+        position: relative;
+        min-height: 280px;
+        height: 100%;
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+        z-index: 1;
+    }
+    @media (min-width: 768px) { .offer-slider-box { min-height: 380px; } }
+    .offer-slide-item {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.8s ease-in-out;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    @media (min-width: 768px) { .offer-slide-item { padding: 24px 22px; } }
+    .offer-slide-item.active { opacity: 1; }
+    .offer-feature-img-wrap { flex: 1 1 auto; min-height: 130px; max-height: 170px; width: 100%; display: flex; align-items: center; justify-content: center; margin: 8px 0; }
+    .offer-feature-img-wrap img { max-height: 150px; max-width: 90%; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.08)); }
+
+    .deals-bg-slide-wrap { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+    .deals-bg-slide-item { position: absolute; inset: 0; width: 100%; height: 100%; background-size: cover; background-position: center center; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease-in-out; }
+    .deals-bg-slide-item.active { opacity: 1; }
+    .deals-bg-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.78) 100%); }
+    .deals-timer-content { position: relative; }
+
+    .flash-products-slider-row {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 4px;
+    }
+    .flash-products-slider-row::-webkit-scrollbar { display: none; }
+    .flash-product-card-item { flex: 0 0 165px; max-width: 165px; min-width: 165px; }
+    @media (min-width: 768px) { .flash-product-card-item { flex: 0 0 210px; max-width: 210px; min-width: 210px; } }
 </style>
 
 <div class="home-viewport py-3 py-md-4">
@@ -752,9 +833,9 @@
             @if($showCategoryMenu && ($homeSettings['show_widget'] ?? true))
                 <div class="col-lg-3 col-md-4 d-none d-md-block">
                     <div class="widget-category-menu shadow-sm p-2 h-100">
-                        <div class="px-3 py-2 border-bottom fw-bold text-dark small text-uppercase d-flex justify-content-between align-items-center mb-1">
-                            <span><i class="fas fa-bars me-2 text-primary"></i> CATEGORIES</span>
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 11px;">Explore</span>
+                        <div class="widget-category-header px-3 py-2 fw-bold small text-uppercase d-flex justify-content-between align-items-center mb-1">
+                            <span><i class="fas fa-bars me-2"></i> CATEGORIES</span>
+                            <span class="badge widget-category-badge rounded-pill px-2 py-1" style="font-size: 11px;">Explore</span>
                         </div>
 
                         <ul class="home-cat-list mt-1">
@@ -791,7 +872,7 @@
                             @endforeach
 
                             <li class="home-cat-row mt-1 pt-1 border-top">
-                                <a href="{{ route('shop') }}" class="home-cat-link text-primary fw-bold">
+                                <a href="{{ route('shop') }}" class="home-cat-link fw-bold" style="color: var(--home-cat-item-hover-text) !important;">
                                     <span><i class="fas fa-th-large me-2"></i> All Categories</span>
                                     <i class="fas fa-arrow-right small" style="font-size: 10px;"></i>
                                 </a>
@@ -835,12 +916,10 @@
                                  data-mobile-ratio="{{ $slider->mobile_view_ratio ?? 'landscape' }}"
                                  style="background-image: url('{{ show_image($slider->image) }}');">
                                 
-                                {{-- 1. Dynamic Color Overlay Control --}}
                                 @if($hasOverlay)
                                     <div class="hero-slide-overlay" style="background-color: {{ $overlayColor }}; opacity: {{ $overlayOpacity }};"></div>
                                 @endif
 
-                                {{-- 2. Slide Content On/Off Control --}}
                                 @if($showContent && (!empty($slider->title) || !empty($slider->badge_text) || !empty($slider->subtitle) || !empty($slider->btn_text)))
                                     <div class="hero-slide-content text-white">
                                         @if(!empty($slider->badge_text))
@@ -877,7 +956,7 @@
                                 <span class="badge bg-primary text-white rounded-pill px-3 py-1 mb-2 fw-semibold" style="font-size: 11px;">New Arrivals</span>
                                 <h2 class="fs-4 fs-md-3 fw-bold mb-2">Upgrade Your Lifestyle</h2>
                                 <p class="small text-white-50 mb-3" style="font-size: 12.5px;">Explore verified trending fashion with fast delivery.</p>
-                                <a href="{{ route('shop') }}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow btn-sm">
+                                <a href="{{ route('shop') }}" class="btn btn-primary theme-btn-primary rounded-pill px-4 py-2 fw-bold shadow btn-sm">
                                     Shop Now <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
                             </div>
@@ -935,15 +1014,15 @@
                         <div class="deals-bg-overlay"></div>
 
                         <div class="deals-timer-content text-white">
-                            <span class="badge bg-danger text-white fw-bold rounded-pill px-2.5 py-1 mb-2" style="font-size: 10px; width: fit-content;">Hot Deals</span>
-                            <h4 class="fw-bold text-white mb-1 fs-6 fs-md-5">{{ !empty($flashSaleConfig->title) ? $flashSaleConfig->title : 'Deals & Offers' }}</h4>
-                            <p class="text-white-50 small mb-2" style="font-size: 11.5px;">{{ !empty($flashSaleConfig->subtitle) ? $flashSaleConfig->subtitle : 'Flash discounts expire soon' }}</p>
+                            <span class="badge deals-badge fw-bold rounded-pill px-2.5 py-1 mb-2" style="font-size: 10px; width: fit-content;">Hot Deals</span>
+                            <h4 class="fw-bold deals-title-text mb-1 fs-6 fs-md-5">{{ !empty($flashSaleConfig->title) ? $flashSaleConfig->title : 'Deals & Offers' }}</h4>
+                            <p class="deals-subtitle-text small mb-2" style="font-size: 11.5px;">{{ !empty($flashSaleConfig->subtitle) ? $flashSaleConfig->subtitle : 'Flash discounts expire soon' }}</p>
                             
                             <div class="d-flex gap-2 text-center mb-1">
-                                <div><span class="timer-tile" id="deal-timer-days">00</span><div class="text-white-50 small mt-1" style="font-size: 9.5px;">Days</div></div>
-                                <div><span class="timer-tile" id="deal-timer-hours">00</span><div class="text-white-50 small mt-1" style="font-size: 9.5px;">Hours</div></div>
-                                <div><span class="timer-tile" id="deal-timer-mins">00</span><div class="text-white-50 small mt-1" style="font-size: 9.5px;">Mins</div></div>
-                                <div><span class="timer-tile" id="deal-timer-secs">00</span><div class="text-white-50 small mt-1" style="font-size: 9.5px;">Secs</div></div>
+                                <div><span class="timer-tile" id="deal-timer-days">00</span><div class="timer-label-text small mt-1" style="font-size: 9.5px;">Days</div></div>
+                                <div><span class="timer-tile" id="deal-timer-hours">00</span><div class="timer-label-text small mt-1" style="font-size: 9.5px;">Hours</div></div>
+                                <div><span class="timer-tile" id="deal-timer-mins">00</span><div class="timer-label-text small mt-1" style="font-size: 9.5px;">Mins</div></div>
+                                <div><span class="timer-tile" id="deal-timer-secs">00</span><div class="timer-label-text small mt-1" style="font-size: 9.5px;">Secs</div></div>
                             </div>
                         </div>
                     </div>
@@ -969,12 +1048,12 @@
             @endphp
 
             @if(count($displayCategories) > 0)
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 mb-3 mb-md-4">
+                <div class="card border-0 shadow-sm rounded-4 pop-cat-section-card p-3 p-md-4 mb-3 mb-md-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="fw-bold text-dark mb-0 pop-cat-title fs-6 fs-md-5">
-                            <i class="fas fa-shapes text-primary me-2"></i> Popular Categories
+                        <h5 class="fw-bold mb-0 pop-cat-title fs-6 fs-md-5">
+                            <i class="fas fa-shapes me-2"></i> Popular Categories
                         </h5>
-                        <a href="{{ route('shop') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold pop-cat-view-btn" style="font-size: 11.5px;">
+                        <a href="{{ route('shop') }}" class="btn btn-sm pop-cat-view-btn rounded-pill px-3 fw-semibold" style="font-size: 11.5px;">
                             View All <i class="fas fa-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -984,8 +1063,6 @@
                             @foreach($displayCategories->concat($displayCategories) as $category)
                                 @php
                                     $catUrl = route('category.products', $category->slug ?? $category->id);
-                                    
-                                    // image এবং thumbnail উভয় ফিল্ড থেকেই রেজল্ভ নিশ্চিতকরণ
                                     $rawCatImg = !empty($category->image) ? $category->image : ($category->thumbnail ?? null);
                                     $catImg = !empty($rawCatImg) ? show_image($rawCatImg) : null;
 
@@ -1005,15 +1082,15 @@
                                         @if($catImg)
                                             <img src="{{ $catImg }}" alt="{{ $category->name }}">
                                         @elseif(!empty($category->icon))
-                                            <i class="{{ $category->icon }} text-secondary fs-5"></i>
+                                            <i class="{{ $category->icon }} fs-5"></i>
                                         @else
-                                            <i class="fas {{ $defaultIcon }} text-secondary fs-5"></i>
+                                            <i class="fas {{ $defaultIcon }} fs-5"></i>
                                         @endif
                                     </div>
-                                    <span class="fw-bold text-dark small text-truncate w-100" style="font-size: 11.5px;" title="{{ $category->name }}">
+                                    <span class="fw-bold cat-pill-name small text-truncate w-100" style="font-size: 11.5px;" title="{{ $category->name }}">
                                         {{ $category->name }}
                                     </span>
-                                    <small class="text-muted" style="font-size: 10px;">{{ $category->products_count ?? 0 }} Items</small>
+                                    <small class="cat-pill-count" style="font-size: 10px;">{{ $category->products_count ?? 0 }} Items</small>
                                 </a>
                             @endforeach
                         </div>
@@ -1024,22 +1101,22 @@
 
         <!-- ================= ৪. ফিচার্ড প্রোডাক্টস ================= -->
         @if($homeSettings['show_featured'] ?? true)
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-md-4 mb-3 mb-md-4" id="home-featured-wrapper">
+            <div class="card border-0 shadow-sm rounded-4 featured-section-card p-3 p-md-4 mb-3 mb-md-4" id="home-featured-wrapper">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                     <div>
-                        <h4 class="fw-bold text-dark mb-1 fs-6 fs-md-5">
-                            <i class="fas fa-fire text-danger me-2"></i> Featured Products
+                        <h4 class="fw-bold mb-1 fs-6 fs-md-5 featured-title-text">
+                            <i class="fas fa-fire me-2"></i> Featured Products
                         </h4>
-                        <p class="text-muted small mb-0" style="font-size: 12px;">Handpicked collections updated every week</p>
+                        <p class="featured-subtitle-text small mb-0" style="font-size: 12px;">Handpicked collections updated every week</p>
                     </div>
 
                     <div class="featured-filter-scroll">
-                        <button type="button" class="btn btn-sm btn-primary filter-pill-btn active" onclick="applyAjaxCategoryFilter('all', this)">
+                        <button type="button" class="btn btn-sm filter-pill-btn active" onclick="applyAjaxCategoryFilter('all', this)">
                             All Items
                         </button>
                         @if(isset($categories))
                             @foreach($categories->take(6) as $fCat)
-                                <button type="button" class="btn btn-sm btn-outline-secondary filter-pill-btn" onclick="applyAjaxCategoryFilter('{{ $fCat->id }}', this)">
+                                <button type="button" class="btn btn-sm filter-pill-btn" onclick="applyAjaxCategoryFilter('{{ $fCat->id }}', this)">
                                     {{ $fCat->name }}
                                 </button>
                             @endforeach
@@ -1245,11 +1322,9 @@
 
         if (btnElement) {
             document.querySelectorAll('.filter-pill-btn').forEach(b => {
-                b.classList.remove('btn-primary', 'active');
-                b.classList.add('btn-outline-secondary');
+                b.classList.remove('active');
             });
-            btnElement.classList.remove('btn-outline-secondary');
-            btnElement.classList.add('btn-primary', 'active');
+            btnElement.classList.add('active');
         }
 
         const grid = document.getElementById('featured-products-grid');

@@ -2,6 +2,52 @@
 
 @section('title', 'Email Marketing Dashboard')
 
+@php
+    // Safe dynamic fallbacks for all metrics
+    $dateRange           = $dateRange ?? request('range', '30_days');
+    $eligibleSubscribers = $eligibleSubscribers ?? 0;
+    $totalSubscribers    = $totalSubscribers ?? 0;
+    $newSubscribersRange = $newSubscribersRange ?? 0;
+    $unsubscribedCount   = $unsubscribedCount ?? 0;
+    $bouncedCount        = $bouncedCount ?? 0;
+
+    $openRate  = $openRate ?? 0;
+    $clickRate = $clickRate ?? 0;
+
+    $abandonedCartsCount = $abandonedCartsCount ?? 0;
+    $recoveredCartsCount = $recoveredCartsCount ?? 0;
+    $recoveredRevenue    = $recoveredRevenue ?? 0;
+    $activeAutomations   = $activeAutomations ?? 0;
+
+    $recentCampaigns   = $recentCampaigns ?? collect();
+    $recentSubscribers = $recentSubscribers ?? collect();
+
+    // Safe route fallbacks
+    $dashboardRoute = Route::has('admin.email_marketing.dashboard') 
+        ? route('admin.email_marketing.dashboard') 
+        : url('admin/email-marketing/dashboard');
+
+    $createCampaignRoute = Route::has('admin.email_marketing.campaigns.create') 
+        ? route('admin.email_marketing.campaigns.create') 
+        : url('admin/email-marketing/campaigns/create');
+
+    $subscribersIndexRoute = Route::has('admin.email_marketing.subscribers.index') 
+        ? route('admin.email_marketing.subscribers.index') 
+        : url('admin/email-marketing/subscribers');
+
+    $campaignsIndexRoute = Route::has('admin.email_marketing.campaigns.index') 
+        ? route('admin.email_marketing.campaigns.index') 
+        : url('admin/email-marketing/campaigns');
+
+    $cartWishlistRoute = Route::has('admin.email_marketing.cart_wishlist_marketing') 
+        ? route('admin.email_marketing.cart_wishlist_marketing') 
+        : url('admin/email-marketing/cart-wishlist');
+
+    $automationsIndexRoute = Route::has('admin.email_marketing.automations.index') 
+        ? route('admin.email_marketing.automations.index') 
+        : url('admin/email-marketing/automations');
+@endphp
+
 @section('admin_content')
 <style>
     /* Strict 5px Element Radius Across All Controls */
@@ -29,7 +75,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -137,20 +183,20 @@
         margin-bottom: 0;
     }
     .custom-dashboard-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-dashboard-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -277,7 +323,7 @@
         
         <div class="d-flex align-items-center gap-2 top-action-bar">
             {{-- Date Range Filter Dropdown --}}
-            <form action="{{ route('admin.email_marketing.dashboard') }}" method="GET" class="d-inline-flex m-0">
+            <form action="{{ $dashboardRoute }}" method="GET" class="d-inline-flex m-0">
                 <select name="range" class="form-select shadow-xs font-monospace" onchange="this.form.submit()" style="font-size: 11px;">
                     <option value="today" {{ $dateRange === 'today' ? 'selected' : '' }}>Today</option>
                     <option value="yesterday" {{ $dateRange === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
@@ -288,10 +334,10 @@
                 </select>
             </form>
 
-            <a href="{{ route('admin.email_marketing.campaigns.create') }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold">
+            <a href="{{ $createCampaignRoute }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold">
                 <i class="fas fa-paper-plane me-1"></i> <span>New Campaign</span>
             </a>
-            <a href="{{ route('admin.email_marketing.subscribers.index') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+            <a href="{{ $subscribersIndexRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
                 <i class="fas fa-user-plus me-1"></i> <span>Subscribers</span>
             </a>
         </div>
@@ -532,7 +578,7 @@
                                 </div>
                             </div>
                             <div class="pt-2 border-top mt-2">
-                                <a href="{{ route('admin.email_marketing.cart_wishlist_marketing') }}" class="text-decoration-none small fw-bold text-primary d-inline-flex align-items-center font-monospace" style="font-size: 11px;">
+                                <a href="{{ $cartWishlistRoute }}" class="text-decoration-none small fw-bold text-primary d-inline-flex align-items-center font-monospace" style="font-size: 11px;">
                                     <span>View Cart Recovery Engine</span> <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
                             </div>
@@ -580,7 +626,7 @@
                                 </div>
                             </div>
                             <div class="pt-2 border-top mt-2">
-                                <a href="{{ route('admin.email_marketing.automations.index') }}" class="text-decoration-none small fw-bold text-primary d-inline-flex align-items-center font-monospace" style="font-size: 11px;">
+                                <a href="{{ $automationsIndexRoute }}" class="text-decoration-none small fw-bold text-primary d-inline-flex align-items-center font-monospace" style="font-size: 11px;">
                                     <span>Configure Workflows</span> <i class="fas fa-arrow-right ms-1"></i>
                                 </a>
                             </div>
@@ -603,7 +649,7 @@
                         </h6>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <a href="{{ route('admin.email_marketing.campaigns.index') }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs" style="font-size: 10.5px !important;">
+                        <a href="{{ $campaignsIndexRoute }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs" style="font-size: 10.5px !important;">
                             View All
                         </a>
                         <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseRecentCampaigns" aria-expanded="true" aria-controls="collapseRecentCampaigns" title="Toggle Campaigns">
@@ -637,11 +683,15 @@
                                             'cancelled'         => 'bg-danger-subtle text-danger border border-danger-subtle',
                                             default             => 'bg-light text-dark border',
                                         };
+
+                                        $campaignShowUrl = Route::has('admin.email_marketing.campaigns.show') 
+                                            ? route('admin.email_marketing.campaigns.show', $c->id) 
+                                            : url('admin/email-marketing/campaigns/' . $c->id);
                                     @endphp
                                     <tr>
                                         <td class="ps-3 col-dash-name">
                                             <div class="min-w-0" style="line-height: 1.3;">
-                                                <a href="{{ route('admin.email_marketing.campaigns.show', $c->id) }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $c->name }}">
+                                                <a href="{{ $campaignShowUrl }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $c->name }}">
                                                     {{ $c->name }}
                                                 </a>
                                                 <small class="text-muted d-block text-truncate font-monospace" style="font-size: 10px;" title="{{ $c->subject }}">
@@ -667,7 +717,7 @@
                                             ৳ {{ number_format($c->total_revenue, 2) }}
                                         </td>
                                         <td class="text-end pe-3 col-dash-action">
-                                            <a href="{{ route('admin.email_marketing.campaigns.show', $c->id) }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="View Campaign Analytics">
+                                            <a href="{{ $campaignShowUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="View Campaign Analytics">
                                                 <i class="fas fa-chart-line" style="font-size: 10px;"></i>
                                             </a>
                                         </td>
@@ -695,7 +745,7 @@
                         <i class="fas fa-user-check text-success me-1"></i> Latest Consented Users
                     </h6>
                     <div class="d-flex align-items-center gap-2">
-                        <a href="{{ route('admin.email_marketing.subscribers.index') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs" style="font-size: 10.5px !important;">
+                        <a href="{{ $subscribersIndexRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs" style="font-size: 10.5px !important;">
                             Manage
                         </a>
                         <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseRecentSubscribers" aria-expanded="true" aria-controls="collapseRecentSubscribers" title="Toggle Subscribers">
@@ -715,11 +765,11 @@
                                                 {{ $s->email }}
                                             </strong>
                                             <small class="text-muted font-monospace d-block text-truncate" style="font-size: 10px;">
-                                                Via: {{ ucfirst($s->consent_source) }} &bull; {{ $s->created_at->diffForHumans() }}
+                                                Via: {{ ucfirst($s->consent_source ?? 'web') }} &bull; {{ $s->created_at ? $s->created_at->diffForHumans() : 'Recently' }}
                                             </small>
                                         </div>
-                                        <span class="badge {{ $s->status === 'subscribed' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle' }} font-monospace ms-2 px-2 py-0.5" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            {{ ucfirst($s->status) }}
+                                        <span class="badge {{ ($s->status ?? '') === 'subscribed' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle' }} font-monospace ms-2 px-2 py-0.5" style="border-radius: 5px !important; font-size: 9.5px;">
+                                            {{ ucfirst($s->status ?? 'Active') }}
                                         </span>
                                     </li>
                                 @empty

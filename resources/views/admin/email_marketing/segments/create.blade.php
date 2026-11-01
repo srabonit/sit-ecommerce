@@ -227,7 +227,7 @@
                                     <label class="form-label" for="segment_name">
                                         Segment Name <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" name="name" id="segment_name" class="form-control" placeholder="e.g. Inactive High-Spenders, Fashion Lovers" value="{{ old('name') }}" required>
+                                    <input type="text" name="name" id="segment_name" class="form-control" placeholder="Inactive High-Spenders, Fashion Lovers" value="{{ old('name') }}" required>
                                 </div>
 
                                 <div class="col-12 col-md-4">
@@ -285,7 +285,7 @@
                                 {{-- Condition B: Minimum Orders Placed --}}
                                 <div class="col-12 col-md-6">
                                     <label class="form-label" for="min_orders_input">Minimum Completed Orders</label>
-                                    <input type="number" name="filter_criteria[min_orders]" id="min_orders_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" placeholder="e.g. 2 for repeat buyers" min="0">
+                                    <input type="number" name="filter_criteria[min_orders]" id="min_orders_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" placeholder="2 for repeat buyers" min="0">
                                     <div class="d-flex flex-wrap gap-1 mt-1">
                                         <span class="preset-chip" onclick="setPresetValue('min_orders_input', 1)">1+ Order</span>
                                         <span class="preset-chip" onclick="setPresetValue('min_orders_input', 2)">2+ Repeat</span>
@@ -298,7 +298,7 @@
                                 <div class="col-12 col-md-6 mt-2">
                                     <label class="form-label" for="inactive_days_input">Inactive Days (Win-Back)</label>
                                     <div class="input-group">
-                                        <input type="number" name="filter_criteria[inactive_days]" id="inactive_days_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" placeholder="e.g. 30" min="0">
+                                        <input type="number" name="filter_criteria[inactive_days]" id="inactive_days_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" placeholder="30" min="0">
                                         <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">Days</span>
                                     </div>
                                     <div class="d-flex flex-wrap gap-1 mt-1">
@@ -372,7 +372,7 @@
                         <i class="fas fa-lightbulb text-warning"></i> <span>Audience Targeting Tips</span>
                     </h6>
                     <p class="text-muted small mb-1" style="font-size: 11px; line-height: 1.4;">
-                        &bull; <strong>Dynamic Segments:</strong> Best for automated recurring broadcasts (e.g. daily win-back campaigns).
+                        &bull; <strong>Dynamic Segments:</strong> Best for automated recurring broadcasts (daily win-back campaigns).
                     </p>
                     <p class="text-muted small mb-0" style="font-size: 11px; line-height: 1.4;">
                         &bull; <strong>Snapshots:</strong> Best for one-time seasonal blast lists where the list must remain frozen.

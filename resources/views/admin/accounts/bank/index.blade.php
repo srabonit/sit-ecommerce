@@ -634,7 +634,7 @@
                         <!-- Reference No -->
                         <div class="col-12">
                             <label class="form-label">Reference / Slip #</label>
-                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="e.g. SLIP-10293">
+                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="SLIP-10293">
                         </div>
 
                         <!-- Note -->
@@ -690,7 +690,7 @@
 
                         <div class="col-12 col-md-6">
                             <label class="form-label">Reference / Slip #</label>
-                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="e.g. DEP-9938">
+                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="DEP-9938">
                         </div>
 
                         <div class="col-12">
@@ -726,7 +726,7 @@
                     <div class="row g-2">
                         <div class="col-12 col-md-6">
                             <label class="form-label">Account Name <span class="text-danger">*</span></label>
-                            <input type="text" name="account_name" class="form-control" placeholder="e.g. City Bank Business, Counter Cash #2" required>
+                            <input type="text" name="account_name" class="form-control" placeholder="City Bank Business, Counter Cash #2" required>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -740,17 +740,17 @@
 
                         <div class="col-12 col-md-6">
                             <label class="form-label">Account / Phone Number</label>
-                            <input type="text" name="account_number" class="form-control font-monospace" placeholder="e.g. 150-101-9988">
+                            <input type="text" name="account_number" class="form-control font-monospace" placeholder="150-101-9988">
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label class="form-label">Bank / Service Name</label>
-                            <input type="text" name="bank_name" class="form-control" placeholder="e.g. City Bank, bKash">
+                            <input type="text" name="bank_name" class="form-control" placeholder="City Bank, bKash">
                         </div>
 
                         <div class="col-12 col-md-6">
                             <label class="form-label">Branch / Outlet Name</label>
-                            <input type="text" name="branch_name" class="form-control" placeholder="e.g. Gulshan Branch">
+                            <input type="text" name="branch_name" class="form-control" placeholder="Gulshan Branch">
                         </div>
 
                         <div class="col-12 col-md-6">

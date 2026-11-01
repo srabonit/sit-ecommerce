@@ -4,9 +4,9 @@
 
 @section('admin_content')
 @php
-    $campaigns = $campaigns ?? ($scheduledCampaigns ?? collect());
-    $totalCampaignsCount = method_exists($campaigns, 'total') ? $campaigns->total() : $campaigns->count();
-    $totalRecipientsCount = $campaigns->sum('total_recipients');
+    $campaigns            = $campaigns ?? ($scheduledCampaigns ?? collect());
+    $totalCampaignsCount  = method_exists($campaigns, 'total') ? $campaigns->total() : $campaigns->count();
+    $totalRecipientsCount = (int) $campaigns->sum('total_recipients');
 
     $allCampaignsRoute = Route::has('admin.email_marketing.campaigns.index') 
         ? route('admin.email_marketing.campaigns.index') 
@@ -55,7 +55,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -183,20 +183,20 @@
         margin-bottom: 0;
     }
     .custom-scheduled-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-scheduled-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -355,7 +355,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-scheduled-root">
 
-    {{-- 1. Header & Navigation (Original Clean Light Theme) --}}
+    {{-- 1. Header & Navigation --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 scheduled-header-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -364,11 +364,11 @@
                     <span>Scheduled Campaigns</span>
                 </h5>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" id="scheduled-total-badge" style="font-size: 10px;">
-                    {{ $totalCampaignsCount }} Queued Broadcasts
+                    {{ number_format($totalCampaignsCount) }} Queued Broadcasts
                 </span>
             </div>
             <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
-                Monitor, reschedule, or immediately dispatch time-locked promotional broadcasts.
+                Monitor, reschedule, or immediately dispatch time-locked promotional broadcasts[cite: 14].
             </small>
         </div>
 
@@ -426,9 +426,9 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
-                                    {{ $totalCampaignsCount }}
+                                    {{ number_format($totalCampaignsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Awaiting scheduled trigger</small>
+                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Awaiting scheduled trigger[cite: 14]</small>
                             </div>
                         </div>
                     </div>
@@ -447,7 +447,7 @@
                                     {{ number_format($totalRecipientsCount) }}
                                 </h4>
                                 <small class="text-success d-block text-truncate font-monospace stat-sub-text">
-                                    <i class="fas fa-check-circle me-1"></i>Legally Consented Inboxes
+                                    <i class="fas fa-check-circle me-1"></i>Legally Consented Inboxes[cite: 14]
                                 </small>
                             </div>
                         </div>
@@ -466,7 +466,7 @@
                                 <h4 class="fw-bold my-0 text-warning-emphasis font-monospace stat-val-num" style="font-size: 15px;">
                                     <i class="fas fa-arrows-spin me-1"></i> Active Pipeline
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Evaluates queue every minute</small>
+                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Evaluates queue every minute[cite: 14]</small>
                             </div>
                         </div>
                     </div>
@@ -496,7 +496,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text scheduled-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                                <input type="text" id="scheduledSearchInput" class="form-control border-start-0 ps-0 scheduled-filter-control shadow-none font-monospace" placeholder="e.g. Flash Sale, Welcome Series, VIP..." onkeyup="filterScheduledTable()">
+                                <input type="text" id="scheduledSearchInput" class="form-control border-start-0 ps-0 scheduled-filter-control shadow-none font-monospace" placeholder="Flash Sale, Welcome Series, VIP..." onkeyup="filterScheduledTable()">
                             </div>
                         </div>
 
@@ -532,12 +532,12 @@
                     <i class="fas fa-calendar-day text-primary"></i> <span>Time-Locked Broadcast Queue</span>
                 </h6>
                 <small class="text-muted font-monospace bn-digit" id="showing-entries-text" style="font-size: 10px;">
-                    Showing {{ method_exists($campaigns, 'firstItem') ? ($campaigns->firstItem() ?? 0) : 1 }} to {{ method_exists($campaigns, 'lastItem') ? ($campaigns->lastItem() ?? 0) : $campaigns->count() }} of {{$totalCampaignsCount }} campaigns
+                    Showing {{ method_exists($campaigns, 'firstItem') ? ($campaigns->firstItem() ?? 0) : 1 }} to {{ method_exists($campaigns, 'lastItem') ? ($campaigns->lastItem() ?? 0) : $campaigns->count() }} of {{ number_format($totalCampaignsCount) }} campaigns[cite: 14]
                 </small>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-scheduled-count">
-                    {{ $totalCampaignsCount }} Total
+                    {{ number_format($totalCampaignsCount) }} Total
                 </span>
                 <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseScheduledTable" aria-expanded="true" aria-controls="collapseScheduledTable" title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -578,8 +578,9 @@
                                     ? route('admin.email_marketing.campaigns.dispatch_now', $camp->id) 
                                     : url('admin/email-marketing/campaigns/' . $camp->id . '/dispatch-now');
 
-                                $segmentTitle =$camp->segment ? $camp->segment->name : 'All Subscribers';$isDue = $camp->scheduled_at &&$camp->scheduled_at->isPast();
+                                $segmentTitle  =$camp->segment ? $camp->segment->name : 'All Subscribers';$isDue         = $camp->scheduled_at &&$camp->scheduled_at->isPast();
                                 $readinessSlug =$isDue ? 'due' : 'upcoming';
+                                $scheduleEpoch = $camp->scheduled_at ? $camp->scheduled_at->timestamp : 0;
 
                                 $rowSearchData = strtolower(
                                     ($camp->name ?? '') . ' ' .
@@ -587,56 +588,58 @@
                                     $segmentTitle . ' ' .$readinessSlug
                                 );
                             @endphp
-                            <tr class="scheduled-entry-row align-middle" data-search="{{ $rowSearchData }}" data-readiness="{{ $readinessSlug }}">
+                            <tr class="scheduled-entry-row align-middle" data-search="{{ $rowSearchData }}" data-readiness="{{ $readinessSlug }}" data-epoch="{{ $scheduleEpoch }}">
                                 <td class="ps-3 col-sc-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
-                                    {{ $camp->id }}
+                                    {{ $camp->id }}[cite: 14]
                                 </td>
                                 <td class="col-sc-camp">
                                     <div class="min-w-0" style="line-height: 1.3;">
                                         <a href="{{ $campViewUrl }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $camp->name }}">
-                                            {{ $camp->name }}
+                                            {{ $camp->name }}[cite: 14]
                                         </a>
                                         <small class="text-muted d-block text-truncate font-monospace" style="font-size: 10px;" title="{{ $camp->subject }}">
-                                            <i class="fas fa-envelope me-1 text-secondary"></i> {{ $camp->subject }}
+                                            <i class="fas fa-envelope me-1 text-secondary"></i> {{ $camp->subject }}[cite: 14]
                                         </small>
                                     </div>
                                 </td>
                                 <td class="col-sc-aud">
                                     @if($camp->segment)
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-truncate d-inline-block px-2 py-1" style="max-width: 100%; border-radius: 5px !important; font-size: 9.5px;" title="{{ $camp->segment->name }}">
-                                            <i class="fas fa-filter me-1"></i> {{ $camp->segment->name }}
+                                            <i class="fas fa-filter me-1"></i> {{ $camp->segment->name }}[cite: 14]
                                         </span>
                                     @else
                                         <span class="badge bg-light text-muted border font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            <i class="fas fa-users me-1"></i> All Subscribers
+                                            <i class="fas fa-users me-1"></i> All Subscribers[cite: 14]
                                         </span>
                                     @endif
                                 </td>
                                 <td class="col-sc-time font-monospace bn-digit" style="line-height: 1.3;">
                                     @if($camp->scheduled_at)
-                                        <span class="text-dark d-block" style="font-size: 11px;">{{ $camp->scheduled_at->format('M d, Y') }}</span>
+                                        <span class="text-dark d-block" style="font-size: 11px;">{{ $camp->scheduled_at->format('M d, Y') }}</span>[cite: 14]
                                         <small class="text-muted" style="font-size: 9.5px;">
-                                            <i class="fas fa-clock me-1 text-secondary"></i>{{ $camp->scheduled_at->format('h:i A') }}
+                                            <i class="fas fa-clock me-1 text-secondary"></i>{{ $camp->scheduled_at->format('h:i A') }}[cite: 14]
                                         </small>
                                     @else
-                                        <span class="text-muted font-monospace" style="font-size: 10px;">Unset</span>
+                                        <span class="text-muted font-monospace" style="font-size: 10px;">Unset</span>[cite: 14]
                                     @endif
                                 </td>
                                 <td class="col-sc-due font-monospace">
                                     @if($camp->scheduled_at)
                                         @if($isDue)
-                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                                <i class="fas fa-bolt me-1"></i> Due for dispatch
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace px-2 py-1 countdown-badge" style="border-radius: 5px !important; font-size: 9.5px;">
+                                                <i class="fas fa-bolt me-1"></i> Due for dispatch[cite: 14]
                                             </span>
                                         @else
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                                <i class="fas fa-hourglass-half me-1"></i> In {{ $camp->scheduled_at->diffForHumans(null, true) }}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1 countdown-badge" style="border-radius: 5px !important; font-size: 9.5px;">
+                                                <i class="fas fa-hourglass-half me-1"></i> In {{ $camp->scheduled_at->diffForHumans(null, true) }}[cite: 14]
                                             </span>
                                         @endif
+                                    @else
+                                        <span class="text-muted font-monospace" style="font-size: 10px;">—</span>
                                     @endif
                                 </td>
                                 <td class="text-center col-sc-recip font-monospace bn-digit fw-bold text-dark" style="font-size: 11.5px;">
-                                    {{ number_format($camp->total_recipients) }}
+                                    {{ number_format($camp->total_recipients) }}[cite: 14]
                                 </td>
                                 <td class="text-end pe-3 col-sc-action">
                                     <div class="d-inline-flex align-items-center gap-1">
@@ -660,16 +663,16 @@
                         @empty
                             <tr id="emptyScheduledRow">
                                 <td colspan="7" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-calendar-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                    <span class="fw-semibold text-dark d-block mb-1">No upcoming scheduled campaigns</span>
-                                    <span>When scheduling a broadcast with a future date, it will appear here.</span>
+                                    <i class="fas fa-calendar-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>[cite: 14]
+                                    <span class="fw-semibold text-dark d-block mb-1">No upcoming scheduled campaigns</span>[cite: 14]
+                                    <span>When scheduling a broadcast with a future date, it will appear here.</span>[cite: 14]
                                 </td>
                             </tr>
                         @endforelse
                         <tr id="noMatchScheduledRow" style="display: none;">
                             <td colspan="7" class="text-center py-5 text-muted small">
-                                <i class="fas fa-filter-circle-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                <span class="fw-semibold">No scheduled campaigns matched your search or readiness filter.</span>
+                                <i class="fas fa-filter-circle-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>[cite: 14]
+                                <span class="fw-semibold">No scheduled campaigns matched your search or readiness filter.</span>[cite: 14]
                             </td>
                         </tr>
                     </tbody>
@@ -680,10 +683,10 @@
             @if(method_exists($campaigns, 'hasPages') &&$campaigns->hasPages())
                 <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
                     <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
-                        Showing {{ $campaigns->firstItem() }} to {{ $campaigns->lastItem() }} of {{$campaigns->total() }} campaigns
+                        Showing {{ $campaigns->firstItem() }} to {{ $campaigns->lastItem() }} of {{$campaigns->total() }} campaigns[cite: 14]
                     </small>
                     <div>
-                        {{ $campaigns->links('pagination::bootstrap-5') }}
+                        {{ $campaigns->links('pagination::bootstrap-5') }}[cite: 14]
                     </div>
                 </div>
             @endif
@@ -701,13 +704,15 @@
                 </div>
                 <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Dispatch Immediately?</h6>
                 <p class="text-muted small mb-3" style="font-size: 11px; line-height: 1.45;">
-                    Override time lock and broadcast <strong id="dispatchCampaignName" class="text-dark">this campaign</strong> to all target recipients right now?
+                    Override time lock and broadcast <strong id="dispatchCampaignName" class="text-dark">this campaign</strong> to all target recipients right now?[cite: 14]
                 </p>
-                <form id="instantDispatchForm" method="POST" action="">
+                <form id="instantDispatchForm" method="POST" action="" onsubmit="lockSubmitBtn(this, 'Dispatching...')">
                     @csrf
                     <div class="d-flex justify-content-center gap-2">
                         <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success btn-compact shadow-xs fw-bold text-white">Yes, Send Now</button>
+                        <button type="submit" class="btn btn-success btn-compact shadow-xs fw-bold text-white submit-btn">
+                            <i class="fas fa-paper-plane me-1"></i> Yes, Send Now[cite: 14]
+                        </button>
                     </div>
                 </form>
             </div>
@@ -725,14 +730,16 @@
                 </div>
                 <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Cancel Scheduled Broadcast?</h6>
                 <p class="text-muted small mb-3" style="font-size: 11px; line-height: 1.45;">
-                    Are you sure you want to cancel and remove <strong id="cancelCampaignName" class="text-dark">this campaign</strong> from the queue?
+                    Are you sure you want to cancel and remove <strong id="cancelCampaignName" class="text-dark">this campaign</strong> from the queue?[cite: 14]
                 </p>
-                <form id="cancelScheduleForm" method="POST" action="">
+                <form id="cancelScheduleForm" method="POST" action="" onsubmit="lockSubmitBtn(this, 'Cancelling...')">
                     @csrf
                     @method('DELETE')
                     <div class="d-flex justify-content-center gap-2">
                         <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Keep Scheduled</button>
-                        <button type="submit" class="btn btn-danger btn-compact shadow-xs fw-bold">Yes, Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-compact shadow-xs fw-bold submit-btn">
+                            <i class="fas fa-trash-can me-1"></i> Yes, Cancel[cite: 14]
+                        </button>
                     </div>
                 </form>
             </div>
@@ -756,6 +763,14 @@
         const modalEl = document.getElementById('cancelScheduleModal');
         if (modalEl && window.bootstrap) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    function lockSubmitBtn(form, loadingText) {
+        const btn = form.querySelector('.submit-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> ${loadingText}`;
         }
     }
 
@@ -799,5 +814,24 @@
         if (readinessFilter) readinessFilter.value = 'all';
         filterScheduledTable();
     }
+
+    // Live countdown refresh interval (updates diff every minute without page refresh)
+    setInterval(() => {
+        const now = Math.floor(Date.now() / 1000);
+        document.querySelectorAll('.scheduled-entry-row').forEach(row => {
+            const epoch = parseInt(row.getAttribute('data-epoch') || '0', 10);
+            if (!epoch) return;
+
+            const badge = row.querySelector('.countdown-badge');
+            if (!badge) return;
+
+            const diff = epoch - now;
+            if (diff <= 0) {
+                row.setAttribute('data-readiness', 'due');
+                badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle font-monospace px-2 py-1 countdown-badge';
+                badge.innerHTML = '<i class="fas fa-bolt me-1"></i> Due for dispatch';
+            }
+        });
+    }, 60000);
 </script>
 @endsection

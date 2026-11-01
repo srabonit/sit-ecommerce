@@ -1,6 +1,11 @@
 @php
     $siteSettings = \Illuminate\Support\Facades\DB::table('settings')
-        ->whereIn('key', ['footer_brand_title', 'footer_phone', 'footer_email', 'site_title', 'logo_title', 'company_address', 'contact_address'])
+        ->whereIn('key', [
+            'footer_brand_title', 'footer_phone', 'footer_email', 
+            'site_title', 'logo_title', 'company_address', 'contact_address', 
+            'company_bin', 'bin_number', 'vat_label', 'pos_vat_display_mode', 
+            'enable_pos_vat', 'vat_enabled', 'enable_vat'
+        ])
         ->pluck('value', 'key')
         ->toArray();
 
@@ -12,30 +17,65 @@
     $siteEmail = !empty($siteSettings['footer_email']) ? $siteSettings['footer_email'] : '';
     $branchAddress = !empty($order->branch_address) ? $order->branch_address : ($siteSettings['company_address'] ?? ($siteSettings['contact_address'] ?? ''));
 
-    $subtotalAmt   = (float)($order->subtotal ?? 0);
-    $grandTotalAmt = (float)($order->grand_total ?? 0);
+    // Central & Branch BIN Resolver
+    $companyBin = !empty($companyBin) 
+        ? $companyBin 
+        : (!empty($order->branch_bin) 
+            ? $order->branch_bin 
+            : ($order->bin_number ?? ($siteSettings['company_bin'] ?? ($siteSettings['bin_number'] ?? '001293847-0101'))));
+
+    $vatLabelText = !empty($vatLabel) ? $vatLabel : (!empty($siteSettings['vat_label']) ? $siteSettings['vat_label'] : 'Govt. VAT');
+    $posVatDisplayMode = $siteSettings['pos_vat_display_mode'] ?? 'item_breakdown';
+
+    $subtotalAmt   = (float)($order->subtotal ?? ($order->sub_total ?? 0));
+    $grandTotalAmt = (float)($order->grand_total ?? ($order->total_amount ?? ($order->total ?? 0)));
     $discountAmt   = (float)($order->discount_amount ?? ($order->discount ?? 0));
+    $itemsList     = !empty($items) ? $items : [];
 
-    if (!empty($order->delivery_charge) && (float)$order->delivery_charge > 0) {
-        $deliveryFee = (float)$order->delivery_charge;
-    } elseif (!empty($order->shipping_charge) && (float)$order->shipping_charge > 0) {
+    // ১. Delivery Charge (Strict: Input > 0 thaklei asbe, noyto 0)
+    $deliveryFee = 0.0;
+    if (isset($order->shipping_charge) && is_numeric($order->shipping_charge) && (float)$order->shipping_charge > 0) {
         $deliveryFee = (float)$order->shipping_charge;
-    } elseif (!empty($order->shipping_cost) && (float)$order->shipping_cost > 0) {
+    } elseif (isset($order->delivery_charge) && is_numeric($order->delivery_charge) && (float)$order->delivery_charge > 0) {
+        $deliveryFee = (float)$order->delivery_charge;
+    } elseif (isset($order->shipping_cost) && is_numeric($order->shipping_cost) && (float)$order->shipping_cost > 0) {
         $deliveryFee = (float)$order->shipping_cost;
-    } else {
-        $calcDiff = $grandTotalAmt - ($subtotalAmt - $discountAmt);
-        $deliveryFee = max(0, $calcDiff);
     }
+    $deliveryFee = round($deliveryFee, 2);
 
-    $paidAmt = (float)($order->paid_amount ?? 0);
-    $dueAmt  = (float)($order->due_amount ?? max(0, $grandTotalAmt - $paidAmt));
+    // ২. Strict VAT Resolution (0% ba 0 hole kono bhabei tax asbe na)
+    $taxAmt = 0.0;
+    if (isset($order->tax_amount) && !is_null($order->tax_amount)) {
+        $taxAmt = (float)$order->tax_amount;
+    } elseif (isset($order->product_tax_amount) && !is_null($order->product_tax_amount)) {
+        $taxAmt = (float)$order->product_tax_amount;
+    }
+    $taxAmt = round(max(0.0, $taxAmt), 2);
+
+    $isTaxInclusive = (bool)($order->is_tax_inclusive ?? false);
+
+    // ৩. Total & Paid Amount 100% Sync (Order Paid hole Due kokhono asbe na)
+    $paymentStatus = strtolower($order->payment_status ?? '');
+    if (in_array($paymentStatus, ['paid', 'completed'])) {
+        $paidAmt = $grandTotalAmt;
+        $dueAmt  = 0.0;
+    } else {
+        $paidAmt = (float)($order->paid_amount ?? 0);
+        $dueAmt  = (float)($order->due_amount ?? max(0, $grandTotalAmt - $paidAmt));
+        if ($paidAmt >= $grandTotalAmt) {
+            $paidAmt = $grandTotalAmt;
+            $dueAmt  = 0.0;
+        }
+    }
 
     $customerName    = $order->customer_name ?? ($order->name ?? ($order->shipping_name ?? 'Walk-in Customer'));
     $customerPhone   = $order->customer_phone ?? ($order->phone ?? ($order->shipping_phone ?? ''));
     $customerAddress = $order->customer_address ?? ($order->address ?? ($order->shipping_address ?? ($order->bio ?? '')));
 
     $cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $order->invoice_no ?? ('POS-' . $order->id));
-    $verifyUrl      = route('order.confirmation', $cleanInvoiceNo);
+    $verifyUrl      = \Illuminate\Support\Facades\Route::has('order.confirmation') 
+        ? route('order.confirmation', $cleanInvoiceNo) 
+        : url('/order/confirmation/' . $cleanInvoiceNo);
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -107,6 +147,8 @@
         .text-center { text-align: center; }
         .text-end { text-align: right; }
         .fw-bold { font-weight: bold; }
+        .font-monospace { font-family: monospace, Courier, monospace; }
+        
         .dashed-line {
             border-top: 1px dashed #000;
             margin: 7px 0;
@@ -185,12 +227,20 @@
             <h3 style="margin: 0; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
                 {{ $siteName }}
             </h3>
+
             <div style="font-size: 9.5px; color: #334155; margin-top: 2px;">
-                {{ !empty($order->branch_name) ? $order->branch_name : 'Order Confirmation Slip' }}
+                {{ !empty($order->branch_name) ? $order->branch_name : 'Main Outlet' }}
                 @if(!empty($branchAddress)) | {{ $branchAddress }} @endif
             </div>
+
+            @if(!empty($companyBin))
+                <div style="font-size: 9px; color: #1e293b; margin-top: 1px; font-family: monospace;">
+                    BIN: <strong>{{ $companyBin }}</strong>
+                </div>
+            @endif
+
             @if(!empty($sitePhone) || !empty($siteEmail))
-                <div style="font-size: 9.5px; color: #334155;">
+                <div style="font-size: 9px; color: #334155; margin-top: 1px;">
                     @if(!empty($sitePhone)) Hotline: {{ $sitePhone }} @endif
                     @if(!empty($sitePhone) && !empty($siteEmail)) | @endif
                     @if(!empty($siteEmail)) {{ $siteEmail }} @endif
@@ -203,14 +253,13 @@
         <div style="font-size: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 4px;">
                 <span>Invoice: <strong class="font-monospace">#{{ $cleanInvoiceNo }}</strong></span>
-                <!-- Timezone-Safe Dynamic Date -->
                 <span style="font-size: 9.5px; color: #334155;">{{ function_exists('format_datetime') ? format_datetime($order->created_at, 'd-M-Y h:i A') : date('d-M-Y h:i A', strtotime($order->created_at)) }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-top: 3px;">
                 <span>Customer: <strong>{{ $customerName }}</strong></span>
                 <span>{{ $customerPhone }}</span>
             </div>
-            @if(!empty($customerAddress) && $customerAddress !== 'Digital Delivery')
+            @if(!empty($customerAddress) && $customerAddress !== 'Digital Delivery' && $customerAddress !== 'N/A')
                 <div style="font-size: 9px; color: #475569; margin-top: 2px;">
                     Address: {{ $customerAddress }}
                 </div>
@@ -229,7 +278,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($items as $it)
+                @foreach($itemsList as $it)
                     @php
                         $title = $it->product_title ?? ($it->title ?? ($it->main_title ?? ($it->product_name ?? 'Product')));
                         $sku = $it->pv_sku ?? ($it->sku ?? ($it->product_code ?? ($it->main_sku ?? '')));
@@ -242,6 +291,8 @@
                             $it->size ?? ($it->pv_size ?? null)
                         ]);
                         $varText = !empty($it->variant_title) ? $it->variant_title : (count($varParts) > 0 ? implode(' / ', $varParts) : null);
+                        $lineTaxRate = isset($it->tax_rate) ? (float)$it->tax_rate : 0.0;
+                        $lineTaxAmt  = isset($it->tax_amount) ? (float)$it->tax_amount : 0.0;
                     @endphp
                     <tr>
                         <td style="text-align: left;">
@@ -251,9 +302,16 @@
                                     [{{ $varText }}]
                                 </span>
                             @endif
-                            @if(!empty($sku))
-                                <span style="font-size: 8px; color: #64748b; font-family: monospace;">Code: {{ $sku }}</span>
-                            @endif
+                            <div style="font-size: 8px; color: #64748b; font-family: monospace;">
+                                @if(!empty($sku)) Code: {{ $sku }} @endif
+                                @if($taxAmt > 0 && $posVatDisplayMode === 'item_breakdown')
+                                    @if($lineTaxRate > 0)
+                                        <span style="color: #0f172a; font-weight: bold;">(VAT: {{ number_format($lineTaxRate, ($lineTaxRate == (int)$lineTaxRate ? 0 : 1)) }}%)</span>
+                                    @elseif($lineTaxAmt > 0)
+                                        <span style="color: #0f172a; font-weight: bold;">(VAT: ৳{{ number_format($lineTaxAmt, 2) }})</span>
+                                    @endif
+                                @endif
+                            </div>
                         </td>
                         <td class="text-center">{{ $qty }}</td>
                         <td class="text-end">{{ number_format($unitPrice, 2) }}</td>
@@ -270,26 +328,39 @@
                 <span>Subtotal:</span>
                 <span class="fw-bold">{{ number_format($subtotalAmt, 2) }} ৳</span>
             </div>
-            @if($deliveryFee > 0)
-                <div style="display: flex; justify-content: space-between; padding: 1.5px 0;">
-                    <span>Delivery Charge:</span>
-                    <span>{{ number_format($deliveryFee, 2) }} ৳</span>
-                </div>
-            @endif
+
             @if($discountAmt > 0)
                 <div style="display: flex; justify-content: space-between; padding: 1.5px 0; color: #dc2626;">
                     <span>Discount:</span>
                     <span>-{{ number_format($discountAmt, 2) }} ৳</span>
                 </div>
             @endif
+
+            {{-- ভ্যাট থাকলে এবং হাইড করা না থাকলে তবেই ভ্যাট লাইন আসবে, ০ হলে কখনোই আসবে না --}}
+            @if($taxAmt > 0 && $posVatDisplayMode !== 'hidden')
+                <div style="display: flex; justify-content: space-between; padding: 1.5px 0;">
+                    <span>{{ $vatLabelText }} {{ $isTaxInclusive ? '(Inc.)' : '' }}:</span>
+                    <span class="fw-bold" style="color: #0284c7;">{{ number_format($taxAmt, 2) }} ৳</span>
+                </div>
+            @endif
+
+            {{-- ডেলিভারি চার্জ ইনপুট থাকলে তবেই আসবে --}}
+            @if($deliveryFee > 0)
+                <div style="display: flex; justify-content: space-between; padding: 1.5px 0;">
+                    <span>Delivery Charge:</span>
+                    <span>{{ number_format($deliveryFee, 2) }} ৳</span>
+                </div>
+            @endif
+
             <div class="dashed-line" style="margin: 4px 0;"></div>
+
             <div style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; font-weight: bold;">
                 <span>Total Amount:</span>
                 <span>{{ number_format($grandTotalAmt, 2) }} ৳</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 1.5px 0;">
                 <span>Paid ({{ $order->payment_method ?? 'Cash' }}):</span>
-                <span class="fw-bold">{{ number_format($paidAmt, 2) }} ৳</span>
+                <span class="fw-bold" style="color: #16a34a;">{{ number_format($paidAmt, 2) }} ৳</span>
             </div>
             @if($dueAmt > 0)
                 <div style="display: flex; justify-content: space-between; padding: 1.5px 0; color: #dc2626; font-weight: bold;">
@@ -304,13 +375,13 @@
         <div class="qr-wrapper text-center">
             <div id="pos-thermal-qrcode"></div>
             <span style="font-size: 8.5px; color: #64748b; margin-top: 4px; font-family: monospace;">
-                Scan to Verify Order Slip
+                Scan to Verify Slip
             </span>
         </div>
 
-        <div class="text-center" style="font-size: 9px; color: #64748b; margin-top: 6px; line-height: 1.3;">
-            Thank you for shopping with {{ $siteName }}!<br>
-            Please keep this receipt for future reference.
+        <div class="text-center" style="font-size: 8.5px; color: #64748b; margin-top: 6px; line-height: 1.3;">
+            Thank you for shopping with <strong>{{ $siteName }}</strong>!<br>
+            Please keep receipt for warranty/exchange.
         </div>
 
     </div>

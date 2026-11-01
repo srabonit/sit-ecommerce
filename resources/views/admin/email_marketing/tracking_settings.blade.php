@@ -3,6 +3,15 @@
 @section('title', 'Tracking & Privacy Settings - Email Marketing')
 
 @php
+    $settings = $settings ?? ($trackingSettings ?? []);
+
+    // Safe dynamic values with strict fallbacks
+    $trackOpens     = (bool) (data_get($settings, 'track_opens') ?? true);
+    $trackClicks    = (bool) (data_get($settings, 'track_clicks') ?? true);
+    $logIpAddresses = (bool) (data_get($settings, 'log_ip_addresses') ?? true);
+    $autoSuppress   = (bool) (data_get($settings, 'auto_suppress_on_unsubscribe') ?? true);
+    $footerNotice   = data_get($settings, 'unsubscribe_footer_notice') ?? 'You are receiving this communication because you placed an order or subscribed at {shop_url}. You can unsubscribe at any time.';
+
     $generalSettingsRoute = Route::has('admin.email_marketing.settings') 
         ? route('admin.email_marketing.settings') 
         : url('admin/email-marketing/settings');
@@ -30,7 +39,8 @@
     #email-marketing-tracking-settings-root .endpoint-box,
     #email-marketing-tracking-settings-root .collapse-toggle-btn,
     .tracking-modal-scope .modal-content,
-    .tracking-modal-scope .btn {
+    .tracking-modal-scope .btn,
+    .admin-tracking-toast {
         border-radius: 5px !important;
     }
 
@@ -51,7 +61,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -223,6 +233,21 @@
         outline: none;
     }
 
+    /* Floating Toast Box */
+    .admin-tracking-toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 108000;
+        min-width: 280px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+        animation: slideInRight 0.25s ease;
+    }
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
     /* 100/100 Mobile Responsiveness Tuning (< 768px) */
     @media (max-width: 767.98px) {
         .tracking-header-wrap h5 {
@@ -282,7 +307,7 @@
             <a href="{{ $generalSettingsRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
                 <i class="fas fa-arrow-left me-1"></i> <span>General Settings</span>
             </a>
-            <button type="button" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold" onclick="document.getElementById('trackingSettingsForm').submit()">
+            <button type="button" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold" id="btn-save-tracking-settings" onclick="submitTrackingForm()">
                 <i class="fas fa-save me-1"></i> <span>Save Tracking Parameters</span>
             </button>
         </div>
@@ -434,7 +459,7 @@
                                             </div>
                                         </div>
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
-                                            <input class="form-check-input" type="checkbox" name="track_opens" id="trackOpensInput" checked>
+                                            <input class="form-check-input" type="checkbox" name="track_opens" id="trackOpensInput" value="1" {{ $trackOpens ? 'checked' : '' }}>
                                         </div>
                                     </div>
                                 </div>
@@ -454,7 +479,7 @@
                                             </div>
                                         </div>
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
-                                            <input class="form-check-input" type="checkbox" name="track_clicks" id="trackClicksInput" checked>
+                                            <input class="form-check-input" type="checkbox" name="track_clicks" id="trackClicksInput" value="1" {{ $trackClicks ? 'checked' : '' }}>
                                         </div>
                                     </div>
                                 </div>
@@ -474,7 +499,7 @@
                                             </div>
                                         </div>
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
-                                            <input class="form-check-input" type="checkbox" name="log_ip_addresses" id="logIpInput" checked>
+                                            <input class="form-check-input" type="checkbox" name="log_ip_addresses" id="logIpInput" value="1" {{ $logIpAddresses ? 'checked' : '' }}>
                                         </div>
                                     </div>
                                 </div>
@@ -507,7 +532,7 @@
                                         <span class="tag-chip font-monospace" onclick="insertNoticeTag('{company_name}')" title="Insert Company Name">+{company_name}</span>
                                     </div>
                                 </div>
-                                <textarea name="unsubscribe_footer_notice" id="unsubscribe_footer_notice" rows="3" class="form-control font-monospace" style="font-size: 11.5px; line-height: 1.5;" required>You are receiving this communication because you placed an order or subscribed at {shop_url}. You can unsubscribe at any time.</textarea>
+                                <textarea name="unsubscribe_footer_notice" id="unsubscribe_footer_notice" rows="3" class="form-control font-monospace" style="font-size: 11.5px; line-height: 1.5;" required>{{ $footerNotice }}</textarea>
                                 <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">
                                     Required by CAN-SPAM and international mail laws. Included automatically in the footer of all marketing broadcast templates.
                                 </small>
@@ -527,7 +552,7 @@
                                         </div>
                                     </div>
                                     <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
-                                        <input class="form-check-input" type="checkbox" name="auto_suppress_on_unsubscribe" id="autoSuppressInput" checked>
+                                        <input class="form-check-input" type="checkbox" name="auto_suppress_on_unsubscribe" id="autoSuppressInput" value="1" {{ $autoSuppress ? 'checked' : '' }}>
                                     </div>
                                 </div>
                             </div>
@@ -557,8 +582,8 @@
                                 <div class="text-truncate font-monospace" style="font-size: 10.5px;" id="endpointOpenUrl">
                                     <span class="text-success fw-bold">GET</span> /email/track/open/{token}
                                 </div>
-                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 22px; height: 22px;" onclick="copyEndpointText('/email/track/open/{token}')" title="Copy Route">
-                                    <i class="fas fa-copy" style="font-size: 9px;"></i>
+                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;" onclick="copyEndpointText(this, '/email/track/open/{token}')" title="Copy Route">
+                                    <i class="fas fa-copy" style="font-size: 10px;"></i>
                                 </button>
                             </div>
 
@@ -566,8 +591,8 @@
                                 <div class="text-truncate font-monospace" style="font-size: 10.5px;" id="endpointClickUrl">
                                     <span class="text-primary fw-bold">GET</span> /email/track/click/{token}
                                 </div>
-                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 22px; height: 22px;" onclick="copyEndpointText('/email/track/click/{token}')" title="Copy Route">
-                                    <i class="fas fa-copy" style="font-size: 9px;"></i>
+                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;" onclick="copyEndpointText(this, '/email/track/click/{token}')" title="Copy Route">
+                                    <i class="fas fa-copy" style="font-size: 10px;"></i>
                                 </button>
                             </div>
                         </div>
@@ -603,6 +628,9 @@
     </form>
 </div>
 
+{{-- Floating Toast Notification Holder --}}
+<div id="custom-toast-holder"></div>
+
 <script>
     function insertNoticeTag(tag) {
         const textarea = document.getElementById('unsubscribe_footer_notice');
@@ -616,10 +644,79 @@
         }
     }
 
-    function copyEndpointText(routeText) {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(routeText);
+    function copyEndpointText(btn, routeText) {
+        const icon = btn ? btn.querySelector('i') : null;
+        if (icon) icon.className = 'fas fa-check text-success';
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(routeText).then(() => {
+                showToast('Copied', 'Endpoint copied to clipboard.', 'success');
+            }).catch(() => {
+                fallbackCopy(routeText);
+            });
+        } else {
+            fallbackCopy(routeText);
         }
+
+        setTimeout(() => {
+            if (icon) icon.className = 'fas fa-copy';
+        }, 1500);
+    }
+
+    function fallbackCopy(text) {
+        const temp = document.createElement('input');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+            document.execCommand('copy');
+            showToast('Copied', 'Endpoint copied to clipboard.', 'success');
+        } catch (e) {
+            showToast('Notice', 'Please select and copy manually.', 'info');
+        }
+        document.body.removeChild(temp);
+    }
+
+    function submitTrackingForm() {
+        const btn = document.getElementById('btn-save-tracking-settings');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+        }
+        document.getElementById('trackingSettingsForm').submit();
+    }
+
+    function showToast(title, message, type = 'success') {
+        const holder = document.getElementById('custom-toast-holder');
+        if (!holder) return;
+
+        const toastId = 'toast-' + Date.now();
+        const typeConfigs = {
+            success: { icon: 'fa-check-circle', color: 'bg-success text-white' },
+            danger:  { icon: 'fa-trash-can',    color: 'bg-danger text-white' },
+            warning: { icon: 'fa-triangle-exclamation', color: 'bg-warning text-dark' },
+            info:    { icon: 'fa-circle-info',  color: 'bg-primary text-white' }
+        };
+        const config = typeConfigs[type] || typeConfigs.success;
+
+        const html = `
+            <div id="${toastId}" class="admin-tracking-toast ${config.color} p-3 d-flex align-items-center justify-content-between shadow-lg" style="border-radius: 5px !important;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas ${config.icon} fs-5"></i>
+                    <div>
+                        <strong class="d-block" style="font-size: 13px;">${title}</strong>
+                        <small style="opacity: 0.95; font-size: 11px;">${message}</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} btn-sm ms-2 shadow-none" onclick="document.getElementById('${toastId}')?.remove()"></button>
+            </div>
+        `;
+
+        holder.insertAdjacentHTML('beforeend', html);
+        setTimeout(() => {
+            const el = document.getElementById(toastId);
+            if (el) el.remove();
+        }, 3500);
     }
 </script>
 @endsection

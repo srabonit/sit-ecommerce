@@ -155,7 +155,7 @@
     }
     .cat-media-picker-box {
         background: #f8fafc;
-        border: 1.5px dashed #cbd5e1;
+        border: 1.5.px dashed #cbd5e1;
         border-radius: 6px !important;
         padding: 12px;
         transition: border-color 0.15s ease;
@@ -369,7 +369,7 @@
                     {{ $categories->total() }}
                 </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage parent collections and sub-categories in structured hierarchy.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage parent collections, sub-categories and custom VAT overrides.</small>
         </div>
         <div class="header-add-btn-wrap">
             <button type="button" class="btn btn-warning btn-compact px-3 py-2 fw-bold text-dark shadow-xs" onclick="openAddCategoryModal()">
@@ -417,6 +417,7 @@
                         <th>Category Name</th>
                         <th>Slug</th>
                         <th>Parent Category</th>
+                        <th class="text-center">VAT (Override)</th>
                         <th>Items Count</th>
                         <th class="text-center">Status</th>
                         <th class="text-end pe-3">Action</th>
@@ -492,6 +493,24 @@
                         <label class="form-label">FontAwesome Icon</label>
                         <input type="text" name="icon" id="cat_input_icon" class="form-control font-monospace" placeholder="fas fa-tshirt">
                         <small class="text-muted d-block mt-1" style="font-size: 10.5px;"> fas fa-tshirt, fas fa-female, fas fa-clock</small>
+                    </div>
+
+                    <!-- Category Optional VAT Overrides (Requirements 2 & 3) -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Category VAT Type (Override)</label>
+                        <select name="vat_type" id="cat_input_vat_type" class="form-select">
+                            <option value="percent">Percentage (%)</option>
+                            <option value="flat">Flat Amount (৳)</option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Select calculation unit for this category.</small>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Category VAT Amount (Optional)</label>
+                        <input type="number" step="0.01" min="0" name="vat_amount" id="cat_input_vat_amount" class="form-control font-monospace bn-digit" placeholder="Leave blank for product-level rule">
+                        <small class="text-primary d-block mt-1 fw-semibold" style="font-size: 10.5px;">
+                            <i class="fas fa-info-circle me-1"></i> এখানে ভ্যাট বসালে এর অধীনে থাকা প্রোডাক্টের নিজস্ব ভ্যাট বাতিল হয়ে ক্যাটাগরির হিসাব কার্যকর হবে।
+                        </small>
                     </div>
 
                     <!-- Image / Thumbnail with Global Media Picker -->
@@ -679,6 +698,8 @@
         document.getElementById('cat_edit_type').value = 'parent';
         document.getElementById('cat_input_image_media').value = '';
         document.getElementById('cat_remove_image').value = '0';
+        document.getElementById('cat_input_vat_type').value = 'percent';
+        document.getElementById('cat_input_vat_amount').value = '';
         document.getElementById('catModalLabel').innerHTML = '<i class="fas fa-plus-circle text-primary me-1"></i> Add New Category';
         document.getElementById('cat_image_preview').src = '';
         document.getElementById('cat_image_preview_box').style.display = 'none';
@@ -751,6 +772,8 @@
                     document.getElementById('cat_input_slug').value = d.slug;
                     document.getElementById('cat_input_icon').value = d.icon || '';
                     document.getElementById('cat_input_description').value = d.description || '';
+                    document.getElementById('cat_input_vat_type').value = d.vat_type || 'percent';
+                    document.getElementById('cat_input_vat_amount').value = (d.vat_amount !== null && d.vat_amount !== undefined) ? d.vat_amount : '';
                     document.getElementById('cat_input_is_active').checked = (d.is_active == 1);
                     document.getElementById('cat_input_image_media').value = '';
                     document.getElementById('cat_remove_image').value = '0';

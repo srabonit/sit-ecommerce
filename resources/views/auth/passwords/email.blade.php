@@ -13,7 +13,7 @@
             <div class="col-md-5 col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                     <div class="text-center mb-4">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px;">
+                        <div class="bg-primary theme-btn-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px;">
                             <i class="fas fa-key fs-5"></i>
                         </div>
                         <h4 class="fw-bold text-dark mb-1">Forgot Password</h4>
@@ -36,7 +36,7 @@
                             @enderror
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm">
+                        <button type="submit" class="btn btn-primary theme-btn-primary w-100 py-2 rounded-3 fw-bold shadow-sm">
                             Send Reset Link
                         </button>
                     </form>

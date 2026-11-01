@@ -21,14 +21,19 @@
     @php
         $img = $resolveCatThumb($cat->image ?? null);
         $isChild = ($cat->type === 'child');
+
+        // Category VAT resolution (Percentage vs Flat)
+        $hasVat = isset($cat->vat_amount) && !is_null($cat->vat_amount) && (float)$cat->vat_amount > 0;
+        $vatType = strtolower($cat->vat_type ?? 'percent');
+        $isFlat = in_array($vatType, ['flat', 'fixed']);
     @endphp
     <tr id="cat-row-{{ $cat->type }}-{{ $cat->id }}" class="align-middle {{ $isChild ? 'bg-light bg-opacity-50' : '' }}">
-        <!-- ID -->
+        <!-- 1. ID -->
         <td class="text-center text-nowrap py-2" style="width: 45px;">
             <span class="text-secondary small fw-bold font-monospace bn-digit" style="font-size: 11.5px;">#{{ $cat->id }}</span>
         </td>
 
-        <!-- Thumb / Icon -->
+        <!-- 2. Thumb / Icon -->
         <td class="text-center py-2" style="width: 60px;">
             @if(!empty($cat->image))
                 <img src="{{ $img }}" onerror="this.onerror=null; this.src='https://placehold.co/50x50?text=Icon';" class="border object-fit-cover shadow-xs" style="width: 40px; height: 40px; border-radius: 5px !important;" alt="thumb">
@@ -43,7 +48,7 @@
             @endif
         </td>
 
-        <!-- Category Name & Type Badge -->
+        <!-- 3. Category Name & Type Badge -->
         <td class="py-2" style="min-width: 200px;">
             <div class="d-flex align-items-center">
                 @if($isChild)
@@ -65,12 +70,12 @@
             </div>
         </td>
 
-        <!-- Slug -->
+        <!-- 4. Slug -->
         <td class="font-monospace small text-muted text-nowrap py-2" style="font-size: 11.5px;">
             {{ $cat->slug }}
         </td>
 
-        <!-- Parent Category -->
+        <!-- 5. Parent Category -->
         <td class="text-nowrap py-2">
             @if(!empty($cat->parent_name))
                 <span class="badge bg-info-subtle text-dark border border-info-subtle px-2 py-1 small" style="font-size: 10.5px; border-radius: 5px !important;">
@@ -81,21 +86,42 @@
             @endif
         </td>
 
-        <!-- Items Count -->
+        <!-- 6. VAT (Override) Rate & Type -->
+        <td class="text-center text-nowrap py-2">
+            @if($hasVat)
+                @if($isFlat)
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace bn-digit" style="font-size: 10px; border-radius: 5px !important;" title="Flat Category Override VAT: ৳{{ number_format((float)$cat->vat_amount, 2) }}">
+                        <i class="fas fa-coins me-1"></i>৳{{ number_format((float)$cat->vat_amount, 2) }}
+                    </span>
+                    <small class="text-muted d-block font-monospace" style="font-size: 9px;">Flat (৳)</small>
+                @else
+                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 font-monospace bn-digit" style="font-size: 10px; border-radius: 5px !important;" title="Percentage Category Override VAT: {{ (float)$cat->vat_amount }}%">
+                        <i class="fas fa-percent me-1"></i>{{ (float)$cat->vat_amount }}%
+                    </span>
+                    <small class="text-muted d-block font-monospace" style="font-size: 9px;">Percent (%)</small>
+                @endif
+            @else
+                <span class="badge bg-light text-secondary border px-2 py-1 font-monospace" style="font-size: 9.5px; border-radius: 5px !important;" title="No override set, products will use their own VAT or 0">
+                    Product Rule
+                </span>
+            @endif
+        </td>
+
+        <!-- 7. Items Count -->
         <td class="text-nowrap py-2">
             <span class="badge bg-light text-dark border px-2 py-1 fw-bold small font-monospace bn-digit" style="font-size: 10.5px; border-radius: 5px !important;">
                 {{ $cat->products_count ?? 0 }} items
             </span>
         </td>
 
-        <!-- Status Toggle -->
+        <!-- 8. Status Toggle -->
         <td class="text-center text-nowrap py-2">
             <div class="form-check form-switch d-inline-block m-0">
                 <input class="form-check-input m-0" type="checkbox" role="switch" id="switch-status-{{ $cat->type }}-{{ $cat->id }}" {{ $cat->is_active ? 'checked' : '' }} onchange="toggleCatStatusAjax({{ $cat->id }}, '{{ $cat->type }}', this)" style="cursor: pointer;">
             </div>
         </td>
 
-        <!-- Actions (Strict 5px Radius, 26x26 Square) -->
+        <!-- 9. Actions -->
         <td class="text-end pe-3 text-nowrap py-2">
             <div class="d-inline-flex align-items-center justify-content-end gap-1">
                 <!-- View Live Storefront -->
@@ -117,7 +143,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="8" class="text-center py-5 text-muted small">
+        <td colspan="9" class="text-center py-5 text-muted small">
             <i class="fas fa-folder-open fa-2x mb-2 d-block opacity-25"></i>
             <span class="fw-semibold">No categories found matching criteria.</span>
         </td>

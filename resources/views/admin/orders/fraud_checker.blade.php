@@ -239,7 +239,7 @@
                         <span class="input-group-text bg-light text-muted border-end-0">
                             <i class="fas fa-phone" style="font-size: 11px;"></i>
                         </span>
-                        <input type="text" id="phoneInput" class="form-control font-monospace bn-digit border-start-0" placeholder="e.g. 018XXXXXXXX" value="{{ $searchedPhone ?? '' }}" required autofocus>
+                        <input type="text" id="phoneInput" class="form-control font-monospace bn-digit border-start-0" placeholder="018XXXXXXXX" value="{{ $searchedPhone ?? '' }}" required autofocus>
                         <button type="button" id="analyzeBtn" class="btn ms-2 btn-primary btn-compact px-3 px-md-4 shadow-xs">
                             <span id="btnText"><i class="fas fa-magnifying-glass me-1"></i> Analyze Number</span>
                             <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>

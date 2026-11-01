@@ -1,10 +1,62 @@
 @extends('layouts.app')
 
 @php
-    $globalSettings = DB::table('settings')->pluck('value', 'key');
+    static $shopSettingsCache = null;
+    if ($shopSettingsCache === null) {
+        $shopSettingsCache = \Illuminate\Support\Facades\Cache::remember('global_settings_cache', 86400, function() {
+            return DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $globalSettings = $shopSettingsCache ?? [];
+
     $colMobile = $globalSettings['grid_mobile'] ?? '2';
     $colTab    = $globalSettings['grid_tab'] ?? '2';
-    $colPc     = $globalSettings['grid_pc'] ?? '3';
+    $colPc     = $colPc ?? ($globalSettings['grid_pc'] ?? '3');
+
+    // Shop Dynamic Color Resolvers
+    $shopPageBg         = $globalSettings['color_shop_page_bg'] ?? ($globalSettings['color_site_bg'] ?? '#f8fafc');
+    $shopTopBg          = $globalSettings['color_shop_top_bg'] ?? '#ffffff';
+    $shopTopBorder      = $globalSettings['color_shop_top_border'] ?? '#edf2f7';
+    $shopHeading        = $globalSettings['color_shop_heading'] ?? '#0f172a';
+    $shopShowingText    = $globalSettings['color_shop_showing_text'] ?? '#64748b';
+
+    $shopSortBg         = $globalSettings['color_shop_sort_bg'] ?? '#f8fafc';
+    $shopSortText       = $globalSettings['color_shop_sort_text'] ?? '#334155';
+    $shopSortBorder     = $globalSettings['color_shop_sort_border'] ?? '#cbd5e1';
+    $shopSortFocusBrd   = $globalSettings['color_shop_sort_focus_border'] ?? '#2563eb';
+
+    // Sidebar Category Menu Colors
+    $shopSideBg         = $globalSettings['color_shop_sidebar_bg'] ?? '#ffffff';
+    $shopSideBorder     = $globalSettings['color_shop_sidebar_border'] ?? '#edf2f7';
+    $shopCatHeadText    = $globalSettings['color_shop_cat_head_text'] ?? '#0f172a';
+    $shopCatHeadIcon    = $globalSettings['color_shop_cat_head_icon'] ?? '#2563eb';
+    $shopCatBadgeBg     = $globalSettings['color_shop_cat_badge_bg'] ?? '#eff6ff';
+    $shopCatBadgeText   = $globalSettings['color_shop_cat_badge_text'] ?? '#2563eb';
+
+    $shopCatItemText    = $globalSettings['color_shop_cat_item_text'] ?? '#334155';
+    $shopCatItemHovBg   = $globalSettings['color_shop_cat_item_hover_bg'] ?? '#f1f5f9';
+    $shopCatItemHovText = $globalSettings['color_shop_cat_item_hover_text'] ?? '#2563eb';
+    $shopCatItemActBg   = $globalSettings['color_shop_cat_item_active_bg'] ?? '#eff6ff';
+    $shopCatItemActText = $globalSettings['color_shop_cat_item_active_text'] ?? '#2563eb';
+
+    $shopFlyoutBg       = $globalSettings['color_shop_flyout_bg'] ?? '#ffffff';
+    $shopFlyoutBorder   = $globalSettings['color_shop_flyout_border'] ?? '#e2e8f0';
+    $shopFlyoutText     = $globalSettings['color_shop_flyout_text'] ?? '#475569';
+    $shopFlyoutHovBg    = $globalSettings['color_shop_flyout_hover_bg'] ?? '#f8fafc';
+    $shopFlyoutHovText  = $globalSettings['color_shop_flyout_hover_text'] ?? '#2563eb';
+
+    // Pagination Card & Buttons Colors
+    $shopPagCardBg      = $globalSettings['color_shop_pag_card_bg'] ?? '#ffffff';
+    $shopPagCardBorder  = $globalSettings['color_shop_pag_card_border'] ?? '#edf2f7';
+    $shopPagCountText   = $globalSettings['color_shop_pag_counter_text'] ?? '#64748b';
+
+    $shopPagBtnBg       = $globalSettings['color_shop_pag_btn_bg'] ?? '#ffffff';
+    $shopPagBtnText     = $globalSettings['color_shop_pag_btn_text'] ?? '#334155';
+    $shopPagBtnBorder   = $globalSettings['color_shop_pag_btn_border'] ?? '#e2e8f0';
+    $shopPagBtnHovBg    = $globalSettings['color_shop_pag_btn_hover_bg'] ?? '#eff6ff';
+    $shopPagBtnHovText  = $globalSettings['color_shop_pag_btn_hover_text'] ?? '#2563eb';
+    $shopPagBtnActBg    = $globalSettings['color_shop_pag_btn_active_bg'] ?? '#2563eb';
+    $shopPagBtnActText  = $globalSettings['color_shop_pag_btn_active_text'] ?? '#ffffff';
 
     // ১. মেনু বিল্ডার (site_menus) থেকে mobile_categories লোকেশনের মেনু রিড করা
     $catMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile_categories')->first();
@@ -31,7 +83,7 @@
         }
     }
 
-    // ৩. ব্যাকআপ: যদি মেনু বিল্ডারে কোনো আইটেম সেভ না থাকে তবে ক্যাটাগরি টেবিল থেকে রিড
+    // ৩. ব্যাকআপ: ক্যাটাগরি টেবিল থেকে রিড
     if (empty($categoryMenuTree)) {
         $dbCategories = \App\Models\Category::all();
         $hasParentCol = \Illuminate\Support\Facades\Schema::hasColumn('categories', 'parent_id');
@@ -100,16 +152,76 @@
 
 @section('content')
 <style>
+    :root {
+        --shop-page-bg: {{ $shopPageBg }};
+        --shop-top-bg: {{ $shopTopBg }};
+        --shop-top-border: {{ $shopTopBorder }};
+        --shop-heading: {{ $shopHeading }};
+        --shop-showing-text: {{ $shopShowingText }};
+
+        --shop-sort-bg: {{ $shopSortBg }};
+        --shop-sort-text: {{ $shopSortText }};
+        --shop-sort-border: {{ $shopSortBorder }};
+        --shop-sort-focus-border: {{ $shopSortFocusBrd }};
+
+        --shop-sidebar-bg: {{ $shopSideBg }};
+        --shop-sidebar-border: {{ $shopSideBorder }};
+        --shop-cat-head-text: {{ $shopCatHeadText }};
+        --shop-cat-head-icon: {{ $shopCatHeadIcon }};
+        --shop-cat-badge-bg: {{ $shopCatBadgeBg }};
+        --shop-cat-badge-text: {{ $shopCatBadgeText }};
+
+        --shop-cat-item-text: {{ $shopCatItemText }};
+        --shop-cat-item-hover-bg: {{ $shopCatItemHovBg }};
+        --shop-cat-item-hover-text: {{ $shopCatItemHovText }};
+        --shop-cat-item-active-bg: {{ $shopCatItemActBg }};
+        --shop-cat-item-active-text: {{ $shopCatItemActText }};
+
+        --shop-flyout-bg: {{ $shopFlyoutBg }};
+        --shop-flyout-border: {{ $shopFlyoutBorder }};
+        --shop-flyout-text: {{ $shopFlyoutText }};
+        --shop-flyout-hover-bg: {{ $shopFlyoutHovBg }};
+        --shop-flyout-hover-text: {{ $shopFlyoutHovText }};
+
+        --shop-pag-card-bg: {{ $shopPagCardBg }};
+        --shop-pag-card-border: {{ $shopPagCardBorder }};
+        --shop-pag-counter-text: {{ $shopPagCountText }};
+
+        --shop-pag-btn-bg: {{ $shopPagBtnBg }};
+        --shop-pag-btn-text: {{ $shopPagBtnText }};
+        --shop-pag-btn-border: {{ $shopPagBtnBorder }};
+        --shop-pag-btn-hover-bg: {{ $shopPagBtnHovBg }};
+        --shop-pag-btn-hover-text: {{ $shopPagBtnHovText }};
+        --shop-pag-btn-active-bg: {{ $shopPagBtnActBg }};
+        --shop-pag-btn-active-text: {{ $shopPagBtnActText }};
+    }
+
+    #shop-page-wrapper {
+        background-color: var(--shop-page-bg) !important;
+    }
+
     /* ================= SIDEBAR CATEGORY MENU CONTAINER ================= */
     .shop-sidebar-widget {
-        background: #ffffff;
+        background-color: var(--shop-sidebar-bg) !important;
         border-radius: 16px;
-        border: 1px solid #edf2f7;
+        border: 1px solid var(--shop-sidebar-border) !important;
         box-shadow: 0 4px 15px -2px rgba(0, 0, 0, 0.03);
         position: sticky;
         top: 80px;
         z-index: 100;
         overflow: visible !important;
+    }
+
+    .shop-sidebar-header {
+        color: var(--shop-cat-head-text) !important;
+        border-bottom: 1px solid var(--shop-sidebar-border) !important;
+    }
+    .shop-sidebar-header i {
+        color: var(--shop-cat-head-icon) !important;
+    }
+    .shop-sidebar-badge {
+        background-color: var(--shop-cat-badge-bg) !important;
+        color: var(--shop-cat-badge-text) !important;
     }
 
     .shop-category-list {
@@ -128,7 +240,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 9.5px 16px;
-        color: #334155;
+        color: var(--shop-cat-item-text) !important;
         font-weight: 500;
         font-size: 13.5px;
         text-decoration: none;
@@ -138,25 +250,25 @@
 
     .shop-cat-link:hover,
     .shop-cat-row:hover > .shop-cat-link {
-        background-color: #f1f5f9;
-        color: #2563eb !important;
+        background-color: var(--shop-cat-item-hover-bg) !important;
+        color: var(--shop-cat-item-hover-text) !important;
     }
 
     .shop-cat-link.active {
-        background-color: #eff6ff;
-        color: #2563eb !important;
+        background-color: var(--shop-cat-item-active-bg) !important;
+        color: var(--shop-cat-item-active-text) !important;
         font-weight: 700;
     }
 
-    /* Child Dropdown */
+    /* Child Flyout */
     .shop-cat-flyout-box {
         display: none !important;
         position: absolute;
         top: 0;
         left: 100%;
         min-width: 220px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+        background-color: var(--shop-flyout-bg) !important;
+        border: 1px solid var(--shop-flyout-border) !important;
         border-radius: 12px;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
         padding: 8px 0;
@@ -182,7 +294,7 @@
     .shop-sub-link {
         display: block;
         padding: 8px 18px;
-        color: #475569;
+        color: var(--shop-flyout-text) !important;
         font-size: 13px;
         font-weight: 500;
         text-decoration: none;
@@ -190,15 +302,15 @@
     }
 
     .shop-sub-link:hover {
-        background-color: #f8fafc;
-        color: #2563eb;
+        background-color: var(--shop-flyout-hover-bg) !important;
+        color: var(--shop-flyout-hover-text) !important;
         padding-left: 22px;
     }
 
     .shop-sub-link.active {
-        color: #2563eb;
+        color: var(--shop-flyout-hover-text) !important;
         font-weight: 700;
-        background-color: #eff6ff;
+        background-color: var(--shop-flyout-hover-bg) !important;
     }
 
     @keyframes catFlyoutAnim {
@@ -235,35 +347,41 @@
 
     /* ================= AJAX SORT BAR ================= */
     .shop-top-controls {
-        background: #ffffff;
-        border: 1px solid #edf2f7;
+        background-color: var(--shop-top-bg) !important;
+        border: 1px solid var(--shop-top-border) !important;
         border-radius: 14px;
         padding: 12px 18px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+    .shop-heading-text {
+        color: var(--shop-heading) !important;
+    }
+    .shop-showing-text {
+        color: var(--shop-showing-text) !important;
     }
 
     .shop-sort-select {
         border-radius: 10px;
         font-size: 13px;
         font-weight: 600;
-        color: #334155;
-        border-color: #cbd5e1;
-        background-color: #f8fafc;
+        color: var(--shop-sort-text) !important;
+        border-color: var(--shop-sort-border) !important;
+        background-color: var(--shop-sort-bg) !important;
         padding: 6px 30px 6px 12px;
         cursor: pointer;
         min-width: 180px;
         transition: all 0.2s ease;
     }
     .shop-sort-select:focus {
-        border-color: #2563eb;
+        border-color: var(--shop-sort-focus-border) !important;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         background-color: #ffffff;
     }
 
     /* ================= 100% RESPONSIVE PAGINATION ================= */
     .shop-pagination-card {
-        background: #ffffff;
-        border: 1px solid #edf2f7;
+        background-color: var(--shop-pag-card-bg) !important;
+        border: 1px solid var(--shop-pag-card-border) !important;
         border-radius: 14px;
         padding: 18px 22px;
         margin-top: 40px;
@@ -278,7 +396,7 @@
 
     .pagination-counter-text {
         font-size: 13.5px;
-        color: #64748b;
+        color: var(--shop-pag-counter-text) !important;
         font-weight: 500;
         margin: 0;
         white-space: nowrap;
@@ -327,8 +445,8 @@
 
     .pagination-buttons-wrapper .page-link {
         border-radius: 8px !important;
-        border: 1px solid #e2e8f0;
-        color: #334155;
+        border: 1px solid var(--shop-pag-btn-border) !important;
+        color: var(--shop-pag-btn-text) !important;
         font-weight: 600;
         font-size: 13px;
         padding: 6px 12px;
@@ -339,20 +457,20 @@
         justify-content: center;
         min-width: 36px;
         height: 36px;
-        background: #ffffff;
+        background-color: var(--shop-pag-btn-bg) !important;
     }
 
     .pagination-buttons-wrapper .page-item.active .page-link {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
+        background-color: var(--shop-pag-btn-active-bg) !important;
+        border-color: var(--shop-pag-btn-active-bg) !important;
+        color: var(--shop-pag-btn-active-text) !important;
         box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
     }
 
     .pagination-buttons-wrapper .page-link:hover {
-        background-color: #eff6ff;
-        color: #2563eb;
-        border-color: #93c5fd;
+        background-color: var(--shop-pag-btn-hover-bg) !important;
+        color: var(--shop-pag-btn-hover-text) !important;
+        border-color: var(--shop-pag-btn-hover-text) !important;
     }
 
     /* Mobile Responsive (Always Centered) */
@@ -408,141 +526,143 @@
     }
 </style>
 
-<div id="shop-page-wrapper" class="container py-4 py-md-5">
-    <!-- Breadcrumb -->
-    <nav id="shop-breadcrumb-nav" aria-label="breadcrumb" class="mb-3">
-        <ol id="shop-breadcrumb-list" class="breadcrumb small mb-0">
-            <li id="breadcrumb-home" class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('shop') }}" class="text-decoration-none">Shop</a></li>
-            @if(isset($category))
-                <li id="breadcrumb-current" class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
-            @else
-                <li id="breadcrumb-current" class="breadcrumb-item active" aria-current="page">All Products</li>
-            @endif
-        </ol>
-    </nav>
-
-    <!-- Header Title & AJAX Filter Bar -->
-    <div class="shop-top-controls d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-4">
-        <div>
-            <h4 id="shop-main-heading" class="fw-bold mb-0 fs-5 fs-md-4 text-dark">{{ isset($category) ? $category->name : 'All Products' }}</h4>
-            <span id="shop-showing-text" class="text-muted small">
-                Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} items
-            </span>
-        </div>
-
-        <!-- AJAX Sort/Filter Dropdown Box -->
-        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-sm-auto">
-            <label for="shopSortFilter" class="small fw-bold text-muted text-nowrap mb-0 d-none d-sm-inline">
-                <i class="fas fa-sort-amount-down text-primary me-1"></i> Sort by:
-            </label>
-            <select id="shopSortFilter" class="form-select form-select-sm shop-sort-select flex-grow-1 flex-sm-grow-0" onchange="applyAjaxShopFilter()">
-                <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest Items</option>
-                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
-                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
-                <option value="sale" {{ request('sort') == 'sale' ? 'selected' : '' }}>On Sale Deals</option>
-                <option value="in_stock" {{ request('sort') == 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
-            </select>
-        </div>
-    </div>
-
-    <div id="shop-grid-row" class="row g-4">
-        <!-- Sidebar Column -->
-        <div id="shop-sidebar-column" class="col-lg-3 col-md-4">
-            <div id="shop-categories-card" class="shop-sidebar-widget p-2">
-                <div class="px-3 py-2 border-bottom fw-bold text-dark small text-uppercase d-flex justify-content-between align-items-center mb-1">
-                    <span><i class="fas fa-bars me-2 text-primary"></i> CATEGORIES</span>
-                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1" style="font-size: 11px;">Explore</span>
-                </div>
-
-                <ul id="sidebar-categories-list" class="shop-category-list">
-                    @foreach($categoryMenuTree as $parentItem)
-                        @php
-                            $hasChildren = !empty($parentItem['children']);
-                            $isActive = isCatNodeActive($parentItem);
-                            $parentUrl = shopDynamicUrl($parentItem['url'] ?? '');
-                        @endphp
-                        <li class="shop-cat-row mb-1">
-                            <a href="{{ $parentUrl }}" class="shop-cat-link {{ $isActive ? 'active' : '' }}">
-                                <span class="text-truncate" style="max-width: 170px;">{{ $parentItem['title'] }}</span>
-                                @if($hasChildren)
-                                    <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
-                                @endif
-                            </a>
-
-                            <!-- Child Flyout -->
-                            @if($hasChildren)
-                                <ul class="shop-cat-flyout-box">
-                                    @foreach($parentItem['children'] as $childItem)
-                                        @php
-                                            $childUrl = shopDynamicUrl($childItem['url'] ?? '');
-                                            $isChildActive = (url()->current() === $childUrl);
-                                        @endphp
-                                        <li>
-                                            <a href="{{ $childUrl }}" class="shop-sub-link {{ $isChildActive ? 'active' : '' }}">
-                                                {{ $childItem['title'] }}
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
-                        </li>
-                    @endforeach
-
-                    <li class="shop-cat-row mt-1 pt-1 border-top">
-                        <a href="{{ route('shop') }}" class="shop-cat-link text-primary fw-bold {{ $isAllActive ? 'active' : '' }}">
-                            <span><i class="fas fa-th-large me-2"></i> View All Categories</span>
-                            <i class="fas fa-arrow-right small" style="font-size: 10px;"></i>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Products Grid Area -->
-        <div id="shop-products-column" class="col-lg-9 col-md-8 position-relative">
-            
-            <!-- AJAX Loading Overlay -->
-            <div id="shop-ajax-loading-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center d-none" style="z-index: 20; border-radius: 12px; min-height: 250px;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-
-            <div id="products-render-row" class="dynamic-product-grid" style="--col-mobile: {{ $colMobile }}; --col-tab: {{ $colTab }}; --col-pc: {{ $colPc }};">
-                @forelse($products as $product)
-                    <div id="product-col-{{ $product->id }}" class="product-card-wrap">
-                        <x-product-card 
-                            :product="$product" 
-                            style="classic"
-                            btnStyle="filled"
-                            :showCategory="true"
-                            :showReview="true"
-                        />
-                    </div>
-                @empty
-                    <div id="no-products-alert-box" class="col-12 text-center py-5 bg-white rounded-4 shadow-sm w-100" style="grid-column: 1 / -1;">
-                        <i class="fas fa-box-open text-muted fs-1 mb-3"></i>
-                        <p class="text-muted fs-5">No products found matching your selection.</p>
-                        <a href="{{ route('shop') }}" class="btn btn-primary rounded-pill px-4">Browse All Products</a>
-                    </div>
-                @endforelse
-            </div>
-
-            <!-- Single Clean Line Pagination Block -->
-            <div id="shop-pagination-container">
-                @if($products->hasPages())
-                    <div class="shop-pagination-card">
-                        <p class="pagination-counter-text" id="pagination-bottom-summary">
-                            Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
-                        </p>
-                        <div class="pagination-buttons-wrapper">
-                            {{ $products->onEachSide(1)->links('pagination::bootstrap-5') }}
-                        </div>
-                    </div>
+<div id="shop-page-wrapper" class="py-4 py-md-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav id="shop-breadcrumb-nav" aria-label="breadcrumb" class="mb-3">
+            <ol id="shop-breadcrumb-list" class="breadcrumb small mb-0">
+                <li id="breadcrumb-home" class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('shop') }}" class="text-decoration-none">Shop</a></li>
+                @if(isset($category))
+                    <li id="breadcrumb-current" class="breadcrumb-item active" aria-current="page">{{ $category->name }}</li>
+                @else
+                    <li id="breadcrumb-current" class="breadcrumb-item active" aria-current="page">All Products</li>
                 @endif
+            </ol>
+        </nav>
+
+        <!-- Header Title & AJAX Filter Bar -->
+        <div class="shop-top-controls d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-4">
+            <div>
+                <h4 id="shop-main-heading" class="fw-bold mb-0 fs-5 fs-md-4 shop-heading-text">{{ isset($category) ? $category->name : 'All Products' }}</h4>
+                <span id="shop-showing-text" class="small shop-showing-text">
+                    Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }} items
+                </span>
             </div>
 
+            <!-- AJAX Sort/Filter Dropdown Box -->
+            <div class="d-flex align-items-center gap-2 align-self-stretch align-self-sm-auto">
+                <label for="shopSortFilter" class="small fw-bold text-muted text-nowrap mb-0 d-none d-sm-inline">
+                    <i class="fas fa-sort-amount-down me-1" style="color: var(--shop-sort-focus-border);"></i> Sort by:
+                </label>
+                <select id="shopSortFilter" class="form-select form-select-sm shop-sort-select flex-grow-1 flex-sm-grow-0" onchange="applyAjaxShopFilter()">
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest Items</option>
+                    <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                    <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                    <option value="sale" {{ request('sort') == 'sale' ? 'selected' : '' }}>On Sale Deals</option>
+                    <option value="in_stock" {{ request('sort') == 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="shop-grid-row" class="row g-4">
+            <!-- Sidebar Column -->
+            <div id="shop-sidebar-column" class="col-lg-3 col-md-4">
+                <div id="shop-categories-card" class="shop-sidebar-widget p-2">
+                    <div class="shop-sidebar-header px-3 py-2 fw-bold small text-uppercase d-flex justify-content-between align-items-center mb-1">
+                        <span><i class="fas fa-bars me-2"></i> CATEGORIES</span>
+                        <span class="badge shop-sidebar-badge rounded-pill px-2 py-1" style="font-size: 11px;">Explore</span>
+                    </div>
+
+                    <ul id="sidebar-categories-list" class="shop-category-list">
+                        @foreach($categoryMenuTree as $parentItem)
+                            @php
+                                $hasChildren = !empty($parentItem['children']);
+                                $isActive = isCatNodeActive($parentItem);
+                                $parentUrl = shopDynamicUrl($parentItem['url'] ?? '');
+                            @endphp
+                            <li class="shop-cat-row mb-1">
+                                <a href="{{ $parentUrl }}" class="shop-cat-link {{ $isActive ? 'active' : '' }}">
+                                    <span class="text-truncate" style="max-width: 170px;">{{ $parentItem['title'] }}</span>
+                                    @if($hasChildren)
+                                        <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
+                                    @endif
+                                </a>
+
+                                <!-- Child Flyout -->
+                                @if($hasChildren)
+                                    <ul class="shop-cat-flyout-box">
+                                        @foreach($parentItem['children'] as $childItem)
+                                            @php
+                                                $childUrl = shopDynamicUrl($childItem['url'] ?? '');
+                                                $isChildActive = (url()->current() === $childUrl);
+                                            @endphp
+                                            <li>
+                                                <a href="{{ $childUrl }}" class="shop-sub-link {{ $isChildActive ? 'active' : '' }}">
+                                                    {{ $childItem['title'] }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </li>
+                        @endforeach
+
+                        <li class="shop-cat-row mt-1 pt-1 border-top">
+                            <a href="{{ route('shop') }}" class="shop-cat-link fw-bold {{ $isAllActive ? 'active' : '' }}" style="color: var(--shop-cat-item-hover-text) !important;">
+                                <span><i class="fas fa-th-large me-2"></i> View All Categories</span>
+                                <i class="fas fa-arrow-right small" style="font-size: 10px;"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Products Grid Area -->
+            <div id="shop-products-column" class="col-lg-9 col-md-8 position-relative">
+                
+                <!-- AJAX Loading Overlay -->
+                <div id="shop-ajax-loading-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center d-none" style="z-index: 20; border-radius: 12px; min-height: 250px;">
+                    <div class="spinner-border" role="status" style="color: var(--shop-sort-focus-border);">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <div id="products-render-row" class="dynamic-product-grid" style="--col-mobile: {{ $colMobile }}; --col-tab: {{ $colTab }}; --col-pc: {{ $colPc }};">
+                    @forelse($products as $product)
+                        <div id="product-col-{{ $product->id }}" class="product-card-wrap">
+                            <x-product-card 
+                                :product="$product" 
+                                style="classic"
+                                btnStyle="filled"
+                                :showCategory="true"
+                                :showReview="true"
+                            />
+                        </div>
+                    @empty
+                        <div id="no-products-alert-box" class="col-12 text-center py-5 bg-white rounded-4 shadow-sm w-100" style="grid-column: 1 / -1;">
+                            <i class="fas fa-box-open text-muted fs-1 mb-3"></i>
+                            <p class="text-muted fs-5">No products found matching your selection.</p>
+                            <a href="{{ route('shop') }}" class="btn btn-primary rounded-pill px-4" style="background-color: var(--shop-sort-focus-border); border-color: var(--shop-sort-focus-border);">Browse All Products</a>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Single Clean Line Pagination Block -->
+                <div id="shop-pagination-container">
+                    @if($products->hasPages())
+                        <div class="shop-pagination-card">
+                            <p class="pagination-counter-text" id="pagination-bottom-summary">
+                                Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
+                            </p>
+                            <div class="pagination-buttons-wrapper">
+                                {{ $products->onEachSide(1)->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -573,7 +693,6 @@
         const grid = document.getElementById('products-render-row');
         const cardCount = grid ? (grid.children.length || 9) : 9;
 
-        // Instantly display Shimmer Skeleton Cards without screen blanking
         if (grid) {
             grid.innerHTML = getShopSkeletonHTML(cardCount);
             grid.style.opacity = '1';

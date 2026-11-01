@@ -1,235 +1,409 @@
 @php
-    $globalSettings = DB::table('settings')->pluck('value', 'key');
+$globalSettings = DB::table('settings')->pluck('value', 'key');
 
-    // Logo Resolver
-    $dbLogo = $globalSettings['header_logo'] ?? null;
-    $finalLogo = null;
-    if (!empty($dbLogo)) {
-        if (filter_var($dbLogo, FILTER_VALIDATE_URL)) {
-            $finalLogo = $dbLogo;
+// Logo Resolver
+$dbLogo = $globalSettings['header_logo'] ?? null;
+$finalLogo = null;
+if (!empty($dbLogo)) {
+    if (filter_var($dbLogo, FILTER_VALIDATE_URL)) {
+        $finalLogo = $dbLogo;
+    } else {
+        $cleanLogo = ltrim(str_replace('storage/', '', $dbLogo), '/');
+        if (file_exists(public_path($cleanLogo))) {
+            $finalLogo = asset($cleanLogo);
+        } elseif (file_exists(public_path('uploads/' . $cleanLogo))) {
+            $finalLogo = asset('uploads/' . $cleanLogo);
         } else {
-            $cleanLogo = ltrim(str_replace('storage/', '', $dbLogo), '/');
-            if (file_exists(public_path($cleanLogo))) {
-                $finalLogo = asset($cleanLogo);
-            } elseif (file_exists(public_path('uploads/' . $cleanLogo))) {
-                $finalLogo = asset('uploads/' . $cleanLogo);
-            } else {
-                $finalLogo = asset($cleanLogo);
-            }
+            $finalLogo = asset($cleanLogo);
         }
     }
+}
 
-    $siteTitle   = !empty($globalSettings['site_title']) ? $globalSettings['site_title'] : config('app.name', 'Ecommerce');
-    $displayMode = $globalSettings['header_display_mode'] ?? 'logo_title';
-    $tagline     = $globalSettings['site_tagline'] ?? '';
-    
-    // Logo Dimensions
-    $rawWidth    = $globalSettings['logo_width'] ?? '150';
-    $rawHeight   = $globalSettings['logo_height'] ?? '40';
-    $logoWidth   = preg_replace('/[^0-9]/', '', (string)$rawWidth) ?: '150';
-    $logoHeight  = preg_replace('/[^0-9]/', '', (string)$rawHeight) ?: '40';
+$siteTitle = !empty($globalSettings['site_title']) ? $globalSettings['site_title'] : config('app.name', 'Ecommerce');
+$displayMode = $globalSettings['header_display_mode'] ?? 'logo_title';
+$tagline = $globalSettings['site_tagline'] ?? '';
 
-    // Theme Colors
-    $headerBgColor     = $globalSettings['color_header_bg'] ?? '#ffffff';
-    $headerTextColor   = $globalSettings['color_header_text'] ?? '#334155';
-    $headerSearchBtnBg = $globalSettings['color_header_search_btn_bg'] ?? '#2563eb';
+// Logo Dimensions
+$rawWidth = $globalSettings['logo_width'] ?? '150';
+$rawHeight = $globalSettings['logo_height'] ?? '40';
+$logoWidth = preg_replace('/[^0-9]/', '', (string) $rawWidth) ?: '150';
+$logoHeight = preg_replace('/[^0-9]/', '', (string) $rawHeight) ?: '40';
 
-    $menuFontSize   = $globalSettings['menu_font_size'] ?? '14px';
-    $menuFontWeight = $globalSettings['menu_font_weight'] ?? '600';
-    $menuPadding    = $globalSettings['menu_padding'] ?? '10px 15px';
-    $menuMargin     = $globalSettings['menu_margin'] ?? '0px';
-    $menuColor      = $globalSettings['color_menu_text'] ?? ($globalSettings['menu_color'] ?? '#334155');
-    $menuHoverColor = $globalSettings['color_menu_hover'] ?? ($globalSettings['menu_hover_color'] ?? '#00a8ff'); 
-    $menuHoverBg    = $globalSettings['color_menu_active_bg'] ?? ($globalSettings['menu_hover_bg'] ?? '#e0f2fe');
+// 1. Header Background & Separators
+$hdrBgColor = $globalSettings['color_hdr_bg'] ?? '#ffffff';
+$hdrBorderColor = $globalSettings['color_hdr_border'] ?? '#e2e8f0';
+$hdrSecMenuBg = $globalSettings['color_hdr_sec_menu_bg'] ?? '#ffffff';
+$hdrSecMenuBorder = $globalSettings['color_hdr_sec_menu_border'] ?? '#f1f5f9';
 
-    $isStickyHeader = ($globalSettings['feature_sticky_header'] ?? '1') == '1';
-    $isGlassHeader  = ($globalSettings['feature_glassmorphism_header'] ?? '0') == '1';
-    $enableFloatingCart = ($globalSettings['feature_floating_cart_modal'] ?? '1') == '1';
+// 2. Search Box Elements
+$hdrSearchBorder = $globalSettings['color_hdr_search_border'] ?? '#2563eb';
+$hdrSearchBg = $globalSettings['color_hdr_search_bg'] ?? '#ffffff';
+$hdrSearchInputText = $globalSettings['color_hdr_search_input_text'] ?? '#0f172a';
+$hdrSearchPlaceholder = $globalSettings['color_hdr_search_placeholder'] ?? '#94a3b8';
+$hdrSearchCatBg = $globalSettings['color_hdr_search_cat_bg'] ?? '#f8fafc';
+$hdrSearchCatText = $globalSettings['color_hdr_search_cat_text'] ?? '#475569';
+$hdrSearchBtnBg = $globalSettings['color_hdr_search_btn_bg'] ?? '#2563eb';
+$hdrSearchBtnText = $globalSettings['color_hdr_search_btn_text'] ?? '#ffffff';
+$hdrSearchBtnHoverBg = $globalSettings['color_hdr_search_btn_hover_bg'] ?? '#1d4ed8';
+$hdrSearchBtnHoverText = $globalSettings['color_hdr_search_btn_hover_text'] ?? '#ffffff';
 
-    $showTopbarDesktop = !isset($globalSettings['show_topbar_desktop']) || $globalSettings['show_topbar_desktop'] == '1';
-    $showTopbarMobile  = !isset($globalSettings['show_topbar_mobile']) || $globalSettings['show_topbar_mobile'] == '1';
-    
-    $topbarBg    = $globalSettings['topbar_bg'] ?? '#0066ff';
-    $topbarColor = $globalSettings['topbar_color'] ?? '#ffffff';
-    
-    $sliderDesktop = !isset($globalSettings['topbar_slider_desktop']) || $globalSettings['topbar_slider_desktop'] == '1';
-    $sliderMobile  = !isset($globalSettings['topbar_slider_mobile']) || $globalSettings['topbar_slider_mobile'] == '1';
+// 3. Header Action Icons & Badges
+$hdrIconText = $globalSettings['color_hdr_icon_text'] ?? '#334155';
+$hdrIconHover = $globalSettings['color_hdr_icon_hover'] ?? '#2563eb';
+$hdrIconActive = $globalSettings['color_hdr_icon_active'] ?? '#f59e0b';
+$hdrBadgeBg = $globalSettings['color_hdr_badge_bg'] ?? '#ef4444';
+$hdrBadgeText = $globalSettings['color_hdr_badge_text'] ?? '#ffffff';
 
-    $noticesJson = $globalSettings['topbar_notices_json'] ?? null;
-    $topbarNotices = !empty($noticesJson) ? json_decode($noticesJson, true) : [
-        ['text' => 'Free Shipping on orders over ৳1500', 'icon' => 'fas fa-check-circle'],
-        ['text' => '7-Day Easy Returns & Instant Refund', 'icon' => 'fas fa-undo'],
-        ['text' => '100% Secure Checkout with Leading Gateways', 'icon' => 'fas fa-shield-alt'],
-        ['text' => 'Hotline Support: +880 1774-937404 (10 AM - 10 PM)', 'icon' => 'fas fa-headset']
-    ];
+// 4. Desktop Category Menu Button & Dropdown
+$hdrCatBtnBg = $globalSettings['color_hdr_cat_btn_bg'] ?? '#f8fafc';
+$hdrCatBtnText = $globalSettings['color_hdr_cat_btn_text'] ?? '#0f172a';
+$hdrCatBtnHoverBg = $globalSettings['color_hdr_cat_btn_hover_bg'] ?? '#e2e8f0';
+$hdrCatBtnHoverText = $globalSettings['color_hdr_cat_btn_hover_text'] ?? '#2563eb';
+$hdrCatBtnActiveBg = $globalSettings['color_hdr_cat_btn_active_bg'] ?? '#2563eb';
+$hdrCatBtnActiveText = $globalSettings['color_hdr_cat_btn_active_text'] ?? '#ffffff';
+$hdrCatDropBg = $globalSettings['color_hdr_cat_drop_bg'] ?? '#ffffff';
+$hdrCatDropText = $globalSettings['color_hdr_cat_drop_text'] ?? '#334155';
+$hdrCatDropHoverBg = $globalSettings['color_hdr_cat_drop_hover_bg'] ?? '#f1f5f9';
+$hdrCatDropHoverText = $globalSettings['color_hdr_cat_drop_hover_text'] ?? '#2563eb';
 
-    $topbarLeftHtml = $globalSettings['topbar_left_html'] ?? '';
-    $topbarRightHtml = $globalSettings['topbar_right_html'] ?? '';
+// 5. Desktop Primary Menu Links
+$menuFontSize = $globalSettings['menu_font_size'] ?? '14px';
+$menuFontWeight = $globalSettings['menu_font_weight'] ?? '600';
+$menuPadding = $globalSettings['menu_padding'] ?? '10px 15px';
+$menuMargin = $globalSettings['menu_margin'] ?? '0px';
+$hdrMenuText = $globalSettings['color_hdr_menu_text'] ?? ($globalSettings['menu_color'] ?? '#334155');
+$hdrMenuBg = $globalSettings['color_hdr_menu_bg'] ?? 'transparent';
+$hdrMenuHoverText = $globalSettings['color_hdr_menu_hover_text'] ?? ($globalSettings['menu_hover_color'] ?? '#00a8ff');
+$hdrMenuHoverBg = $globalSettings['color_hdr_menu_hover_bg'] ?? ($globalSettings['menu_hover_bg'] ?? '#e0f2fe');
+$hdrMenuActiveText = $globalSettings['color_hdr_menu_active_text'] ?? '#2563eb';
+$hdrMenuActiveBg = $globalSettings['color_hdr_menu_active_bg'] ?? '#e0f2fe';
+$hdrMenuDropBg = $globalSettings['color_hdr_menu_drop_bg'] ?? '#ffffff';
+$hdrMenuDropText = $globalSettings['color_hdr_menu_drop_text'] ?? '#475569';
+$hdrMenuDropHoverBg = $globalSettings['color_hdr_menu_drop_hover_bg'] ?? '#f8fafc';
+$hdrMenuDropHoverText = $globalSettings['color_hdr_menu_drop_hover_text'] ?? '#2563eb';
 
-    $formatDynamicUrl = function($url) {
-        if (empty($url) || $url === '#') return '#';
-        if (filter_var($url, FILTER_VALIDATE_URL)) {
-            $parsed = parse_url($url);
-            $path = ($parsed['path'] ?? '/') . (!empty($parsed['query']) ? '?' . $parsed['query'] : '');
-            return url($path);
-        }
-        return url($url);
-    };
+// 6. Header Support Contact Info
+$hdrSupportIcon = $globalSettings['color_hdr_support_icon'] ?? '#2563eb';
+$hdrSupportLabel = $globalSettings['color_hdr_support_label'] ?? '#64748b';
+$hdrSupportPhone = $globalSettings['color_hdr_support_phone'] ?? '#0f172a';
+$hdrSupportPhoneHover = $globalSettings['color_hdr_support_phone_hover'] ?? '#2563eb';
 
-    $isMenuItemActive = function($url) use ($formatDynamicUrl) {
-        if (empty($url) || $url === '#') return false;
-        $currentUrl = url()->current();
-        $fullTarget = $formatDynamicUrl($url);
-        if ($currentUrl === $fullTarget) return true;
-        if ($fullTarget === url('/')) return request()->is('/');
-        $parsedTarget = parse_url($fullTarget, PHP_URL_PATH);
-        $trimmedTarget = trim($parsedTarget ?? '', '/');
-        return !empty($trimmedTarget) && request()->is($trimmedTarget, $trimmedTarget . '/*');
-    };
+// 7. Mobile Menu Trigger Button
+$hdrMobToggleBg = $globalSettings['color_hdr_mob_toggle_bg'] ?? '#f8fafc';
+$hdrMobToggleIcon = $globalSettings['color_hdr_mob_toggle_icon'] ?? '#0f172a';
+$hdrMobToggleHoverBg = $globalSettings['color_hdr_mob_toggle_hover_bg'] ?? '#e2e8f0';
+$hdrMobToggleHoverIcon = $globalSettings['color_hdr_mob_toggle_hover_icon'] ?? '#2563eb';
 
-    $isTreeActive = function($item) use ($isMenuItemActive, &$isTreeActive) {
-        if ($isMenuItemActive($item['url'] ?? '')) return true;
-        if (!empty($item['children'])) {
-            foreach ($item['children'] as $child) {
-                if ($isTreeActive($child)) return true;
-            }
-        }
+// 8. Mobile Offcanvas Navigation Drawer
+$hdrMobHeadBg = $globalSettings['color_hdr_mob_head_bg'] ?? '#f8fafc';
+$hdrMobHeadText = $globalSettings['color_hdr_mob_head_text'] ?? '#0f172a';
+$hdrMobHeadIcon = $globalSettings['color_hdr_mob_head_icon'] ?? '#2563eb';
+$hdrMobTabBg = $globalSettings['color_hdr_mob_tab_bg'] ?? '#e2e8f0';
+$hdrMobTabText = $globalSettings['color_hdr_mob_tab_text'] ?? '#64748b';
+$hdrMobTabActiveBg = $globalSettings['color_hdr_mob_tab_active_bg'] ?? '#2563eb';
+$hdrMobTabActiveText = $globalSettings['color_hdr_mob_tab_active_text'] ?? '#ffffff';
+$hdrMobBodyBg = $globalSettings['color_hdr_mob_body_bg'] ?? '#ffffff';
+$hdrMobItemText = $globalSettings['color_hdr_mob_item_text'] ?? '#0f172a';
+$hdrMobItemBorder = $globalSettings['color_hdr_mob_item_border'] ?? '#f1f5f9';
+$hdrMobItemHoverBg = $globalSettings['color_hdr_mob_item_hover_bg'] ?? '#f8fafc';
+$hdrMobItemHoverText = $globalSettings['color_hdr_mob_item_hover_text'] ?? '#2563eb';
+$hdrMobItemActiveBg = $globalSettings['color_hdr_mob_item_active_bg'] ?? '#eff6ff';
+$hdrMobItemActiveText = $globalSettings['color_hdr_mob_item_active_text'] ?? '#2563eb';
+
+$isStickyHeader = ($globalSettings['feature_sticky_header'] ?? '1') == '1';
+$isGlassHeader = ($globalSettings['feature_glassmorphism_header'] ?? '0') == '1';
+$enableFloatingCart = ($globalSettings['feature_floating_cart_modal'] ?? '1') == '1';
+
+$showTopbarDesktop = !isset($globalSettings['show_topbar_desktop']) || $globalSettings['show_topbar_desktop'] == '1';
+$showTopbarMobile = !isset($globalSettings['show_topbar_mobile']) || $globalSettings['show_topbar_mobile'] == '1';
+
+$topbarBg = $globalSettings['topbar_bg'] ?? '#0066ff';
+$topbarColor = $globalSettings['topbar_color'] ?? '#ffffff';
+
+$sliderDesktop = !isset($globalSettings['topbar_slider_desktop']) || $globalSettings['topbar_slider_desktop'] == '1';
+$sliderMobile = !isset($globalSettings['topbar_slider_mobile']) || $globalSettings['topbar_slider_mobile'] == '1';
+
+$noticesJson = $globalSettings['topbar_notices_json'] ?? null;
+$topbarNotices = !empty($noticesJson) ? json_decode($noticesJson, true) : [
+    ['text' => 'Free Shipping on orders over ৳1500', 'icon' => 'fas fa-check-circle'],
+    ['text' => '7-Day Easy Returns & Instant Refund', 'icon' => 'fas fa-undo'],
+    ['text' => '100% Secure Checkout with Leading Gateways', 'icon' => 'fas fa-shield-alt'],
+    ['text' => 'Hotline Support: +880 1774-937404 (10 AM - 10 PM)', 'icon' => 'fas fa-headset']
+];
+
+$topbarLeftHtml = $globalSettings['topbar_left_html'] ?? '';
+$topbarRightHtml = $globalSettings['topbar_right_html'] ?? '';
+
+$formatDynamicUrl = function ($url) {
+    if (empty($url) || $url === '#')
+        return '#';
+    if (filter_var($url, FILTER_VALIDATE_URL)) {
+        $parsed = parse_url($url);
+        $path = ($parsed['path'] ?? '/') . (!empty($parsed['query']) ? '?' . $parsed['query'] : '');
+        return url($path);
+    }
+    return url($url);
+};
+
+$isMenuItemActive = function ($url) use ($formatDynamicUrl) {
+    if (empty($url) || $url === '#')
         return false;
-    };
+    $currentUrl = url()->current();
+    $fullTarget = $formatDynamicUrl($url);
+    if ($currentUrl === $fullTarget)
+        return true;
+    if ($fullTarget === url('/'))
+        return request()->is('/');
+    $parsedTarget = parse_url($fullTarget, PHP_URL_PATH);
+    $trimmedTarget = trim($parsedTarget ?? '', '/');
+    return !empty($trimmedTarget) && request()->is($trimmedTarget, $trimmedTarget . '/*');
+};
 
-    $primaryMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'primary')->first();
-    $rawPrimaryItems = !empty($primaryMenuRow->items) ? json_decode($primaryMenuRow->items, true) : [
-        ['title' => 'Hot Offers', 'url' => route('shop', ['filter' => 'offers']), 'depth' => 0],
-        ['title' => 'Bestsellers', 'url' => route('shop', ['filter' => 'bestsellers']), 'depth' => 0],
-        ['title' => 'Gift Boxes', 'url' => route('shop', ['filter' => 'gifts']), 'depth' => 0],
-        ['title' => 'About Us', 'url' => url('/about-us'), 'depth' => 0],
-        ['title' => 'Contact', 'url' => url('/contact-us'), 'depth' => 0],
-    ];
+$isTreeActive = function ($item) use ($isMenuItemActive, &$isTreeActive) {
+    if ($isMenuItemActive($item['url'] ?? ''))
+        return true;
+    if (!empty($item['children'])) {
+        foreach ($item['children'] as $child) {
+            if ($isTreeActive($child))
+                return true;
+        }
+    }
+    return false;
+};
 
-    $primaryNavItems = [];
-    $lastItems = [];
-    foreach ($rawPrimaryItems as $item) {
-        $item['url'] = $formatDynamicUrl($item['url'] ?? '');
-        $item['children'] = [];
-        $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0);
-        
-        if ($depth === 0) {
-            $primaryNavItems[] = $item;
-            $lastItems[0] = count($primaryNavItems) - 1;
-        } else {
-            $parentDepth = $depth - 1;
-            if (isset($lastItems[$parentDepth])) {
-                if ($depth === 1) {
-                    $primaryNavItems[$lastItems[0]]['children'][] = $item;
-                    $lastItems[1] = count($primaryNavItems[$lastItems[0]]['children']) - 1;
-                } elseif ($depth === 2) {
-                    $pIdx = $lastItems[0];
-                    $cIdx = $lastItems[1];
-                    $primaryNavItems[$pIdx]['children'][$cIdx]['children'][] = $item;
-                    $lastItems[2] = count($primaryNavItems[$pIdx]['children'][$cIdx]['children']) - 1;
-                } else {
-                    $primaryNavItems[] = $item;
-                }
+$primaryMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'primary')->first();
+$rawPrimaryItems = !empty($primaryMenuRow->items) ? json_decode($primaryMenuRow->items, true) : [
+    ['title' => 'Hot Offers', 'url' => route('shop', ['filter' => 'offers']), 'depth' => 0],
+    ['title' => 'Bestsellers', 'url' => route('shop', ['filter' => 'bestsellers']), 'depth' => 0],
+    ['title' => 'Gift Boxes', 'url' => route('shop', ['filter' => 'gifts']), 'depth' => 0],
+    ['title' => 'About Us', 'url' => url('/about-us'), 'depth' => 0],
+    ['title' => 'Contact', 'url' => url('/contact-us'), 'depth' => 0],
+];
+
+$primaryNavItems = [];
+$lastItems = [];
+foreach ($rawPrimaryItems as $item) {
+    $item['url'] = $formatDynamicUrl($item['url'] ?? '');
+    $item['children'] = [];
+    $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0);
+
+    if ($depth === 0) {
+        $primaryNavItems[] = $item;
+        $lastItems[0] = count($primaryNavItems) - 1;
+    } else {
+        $parentDepth = $depth - 1;
+        if (isset($lastItems[$parentDepth])) {
+            if ($depth === 1) {
+                $primaryNavItems[$lastItems[0]]['children'][] = $item;
+                $lastItems[1] = count($primaryNavItems[$lastItems[0]]['children']) - 1;
+            } elseif ($depth === 2) {
+                $primaryNavItems[$lastItems[0]]['children'][$lastItems[1]]['children'][] = $item;
+                $lastItems[2] = count($primaryNavItems[$lastItems[0]]['children'][$lastItems[1]]['children']) - 1;
             } else {
                 $primaryNavItems[] = $item;
             }
+        } else {
+            $primaryNavItems[] = $item;
         }
     }
+}
 
-    $mobileMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile')->first();
-    $rawMobileItems = !empty($mobileMenuRow->items) ? json_decode($mobileMenuRow->items, true) : $rawPrimaryItems;
-    
-    $mobileNavItems = [];
-    $mLastItems = [];
-    foreach ($rawMobileItems as $item) {
+$mobileMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile')->first();
+$rawMobileItems = !empty($mobileMenuRow->items) ? json_decode($mobileMenuRow->items, true) : $rawPrimaryItems;
+
+$mobileNavItems = [];
+$mLastItems = [];
+foreach ($rawMobileItems as $item) {
+    $item['url'] = $formatDynamicUrl($item['url'] ?? '');
+    $item['children'] = [];
+    $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0);
+    if ($depth === 0) {
+        $mobileNavItems[] = $item;
+        $mLastItems[0] = count($mobileNavItems) - 1;
+    } else {
+        if (isset($mLastItems[$depth - 1])) {
+            if ($depth === 1) {
+                $mobileNavItems[$mLastItems[0]]['children'][] = $item;
+                $mLastItems[1] = count($mobileNavItems[$mLastItems[0]]['children']) - 1;
+            } elseif ($depth === 2) {
+                $mobileNavItems[$mLastItems[0]]['children'][$mLastItems[1]]['children'][] = $item;
+            }
+        }
+    }
+}
+
+$catMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile_categories')->first();
+$rawCatItems = !empty($catMenuRow->items) ? json_decode($catMenuRow->items, true) : null;
+
+$drawerCategories = [];
+$cLastItems = [];
+if (!empty($rawCatItems)) {
+    foreach ($rawCatItems as $item) {
         $item['url'] = $formatDynamicUrl($item['url'] ?? '');
         $item['children'] = [];
         $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0);
         if ($depth === 0) {
-            $mobileNavItems[] = $item;
-            $mLastItems[0] = count($mobileNavItems) - 1;
+            $drawerCategories[] = $item;
+            $cLastItems[0] = count($drawerCategories) - 1;
         } else {
-            if (isset($mLastItems[$depth - 1])) {
+            if (isset($cLastItems[$depth - 1])) {
                 if ($depth === 1) {
-                    $mobileNavItems[$mLastItems[0]]['children'][] = $item;
-                    $mLastItems[1] = count($mobileNavItems[$mLastItems[0]]['children']) - 1;
+                    $drawerCategories[$cLastItems[0]]['children'][] = $item;
+                    $cLastItems[1] = count($drawerCategories[$cLastItems[0]]['children']) - 1;
                 } elseif ($depth === 2) {
-                    $mobileNavItems[$mLastItems[0]]['children'][$mLastItems[1]]['children'][] = $item;
+                    $drawerCategories[$cLastItems[0]]['children'][$cLastItems[1]]['children'][] = $item;
                 }
             }
         }
     }
+}
 
-    $catMenuRow = DB::table('site_menus')->whereJsonContains('locations', 'mobile_categories')->first();
-    $rawCatItems = !empty($catMenuRow->items) ? json_decode($catMenuRow->items, true) : null;
-    
-    $drawerCategories = [];
-    $cLastItems = [];
-    if(!empty($rawCatItems)){
-        foreach ($rawCatItems as $item) {
-            $item['url'] = $formatDynamicUrl($item['url'] ?? '');
-            $item['children'] = [];
-            $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0);
-            if ($depth === 0) {
-                $drawerCategories[] = $item;
-                $cLastItems[0] = count($drawerCategories) - 1;
-            } else {
-                if (isset($cLastItems[$depth - 1])) {
-                    if ($depth === 1) {
-                        $drawerCategories[$cLastItems[0]]['children'][] = $item;
-                        $cLastItems[1] = count($drawerCategories[$cLastItems[0]]['children']) - 1;
-                    } elseif ($depth === 2) {
-                        $drawerCategories[$cLastItems[0]]['children'][$cLastItems[1]]['children'][] = $item;
-                    }
-                }
+$cartData = session()->get('cart', []);
+$headerCartCount = array_sum(array_column($cartData, 'quantity'));
+$headerCategories = \App\Models\Category::take(20)->get();
+
+$headerWishlistCount = 0;
+if (auth()->check()) {
+    if (!\Illuminate\Support\Facades\Schema::hasTable('wishlists')) {
+        \Illuminate\Support\Facades\Schema::create('wishlists', function ($table) {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('product_id');
+            $table->timestamps();
+            $table->index(['user_id', 'product_id']);
+        });
+    }
+    $sessWish = session()->pull('wishlist', []);
+    if (!empty($sessWish)) {
+        foreach ($sessWish as $sId) {
+            $currCount = DB::table('wishlists')->where('user_id', auth()->id())->count();
+            if ($currCount < 100) {
+                DB::table('wishlists')->updateOrInsert(
+                    ['user_id' => auth()->id(), 'product_id' => (int) $sId],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
             }
         }
     }
-
-    $cartData = session()->get('cart', []);
-    $headerCartCount = array_sum(array_column($cartData, 'quantity'));
-    $headerCategories = \App\Models\Category::take(20)->get();
-
-    $headerWishlistCount = 0;
-    if (auth()->check()) {
-        if (!\Illuminate\Support\Facades\Schema::hasTable('wishlists')) {
-            \Illuminate\Support\Facades\Schema::create('wishlists', function ($table) {
-                $table->id();
-                $table->unsignedBigInteger('user_id');
-                $table->unsignedBigInteger('product_id');
-                $table->timestamps();
-                $table->index(['user_id', 'product_id']);
-            });
-        }
-        $sessWish = session()->pull('wishlist', []);
-        if (!empty($sessWish)) {
-            foreach ($sessWish as $sId) {
-                $currCount = DB::table('wishlists')->where('user_id', auth()->id())->count();
-                if ($currCount < 100) {
-                    DB::table('wishlists')->updateOrInsert(
-                        ['user_id' => auth()->id(), 'product_id' => (int)$sId],
-                        ['created_at' => now(), 'updated_at' => now()]
-                    );
-                }
-            }
-        }
-        $headerWishlistCount = DB::table('wishlists')->where('user_id', auth()->id())->count();
-    } else {
-        $headerWishlistCount = count(session()->get('wishlist', []));
-    }
-    $hasSavedProducts = $headerWishlistCount > 0;
+    $headerWishlistCount = DB::table('wishlists')->where('user_id', auth()->id())->count();
+} else {
+    $headerWishlistCount = count(session()->get('wishlist', []));
+}
+$hasSavedProducts = $headerWishlistCount > 0;
 @endphp
 
 <style>
     :root {
+        --hdr-bg: {{ $hdrBgColor }};
+        --hdr-border: {{ $hdrBorderColor }};
+        --hdr-sec-menu-bg: {{ $hdrSecMenuBg }};
+        --hdr-sec-menu-border: {{ $hdrSecMenuBorder }};
+
+        --hdr-search-border: {{ $hdrSearchBorder }};
+        --hdr-search-bg: {{ $hdrSearchBg }};
+        --hdr-search-input-text: {{ $hdrSearchInputText }};
+        --hdr-search-placeholder: {{ $hdrSearchPlaceholder }};
+        --hdr-search-cat-bg: {{ $hdrSearchCatBg }};
+        --hdr-search-cat-text: {{ $hdrSearchCatText }};
+        --hdr-search-btn-bg: {{ $hdrSearchBtnBg }};
+        --hdr-search-btn-text: {{ $hdrSearchBtnText }};
+        --hdr-search-btn-hover-bg: {{ $hdrSearchBtnHoverBg }};
+        --hdr-search-btn-hover-text: {{ $hdrSearchBtnHoverText }};
+
+        --hdr-icon-text: {{ $hdrIconText }};
+        --hdr-icon-hover: {{ $hdrIconHover }};
+        --hdr-icon-active: {{ $hdrIconActive }};
+        --hdr-badge-bg: {{ $hdrBadgeBg }};
+        --hdr-badge-text: {{ $hdrBadgeText }};
+
+        --hdr-cat-btn-bg: {{ $hdrCatBtnBg }};
+        --hdr-cat-btn-text: {{ $hdrCatBtnText }};
+        --hdr-cat-btn-hover-bg: {{ $hdrCatBtnHoverBg }};
+        --hdr-cat-btn-hover-text: {{ $hdrCatBtnHoverText }};
+        --hdr-cat-btn-active-bg: {{ $hdrCatBtnActiveBg }};
+        --hdr-cat-btn-active-text: {{ $hdrCatBtnActiveText }};
+        --hdr-cat-drop-bg: {{ $hdrCatDropBg }};
+        --hdr-cat-drop-text: {{ $hdrCatDropText }};
+        --hdr-cat-drop-hover-bg: {{ $hdrCatDropHoverBg }};
+        --hdr-cat-drop-hover-text: {{ $hdrCatDropHoverText }};
+
         --dyn-menu-font-size: {{ $menuFontSize }};
         --dyn-menu-font-weight: {{ $menuFontWeight }};
         --dyn-menu-padding: {{ $menuPadding }};
         --dyn-menu-margin: {{ $menuMargin }};
-        --dyn-menu-color: {{ $menuColor }};
-        --dyn-menu-hover-color: {{ $menuHoverColor }};
-        --dyn-menu-hover-bg: {{ $menuHoverBg }};
+        --hdr-menu-text: {{ $hdrMenuText }};
+        --hdr-menu-bg: {{ $hdrMenuBg }};
+        --hdr-menu-hover-text: {{ $hdrMenuHoverText }};
+        --hdr-menu-hover-bg: {{ $hdrMenuHoverBg }};
+        --hdr-menu-active-text: {{ $hdrMenuActiveText }};
+        --hdr-menu-active-bg: {{ $hdrMenuActiveBg }};
+        --hdr-menu-drop-bg: {{ $hdrMenuDropBg }};
+        --hdr-menu-drop-text: {{ $hdrMenuDropText }};
+        --hdr-menu-drop-hover-bg: {{ $hdrMenuDropHoverBg }};
+        --hdr-menu-drop-hover-text: {{ $hdrMenuDropHoverText }};
+
+        --hdr-support-icon: {{ $hdrSupportIcon }};
+        --hdr-support-label: {{ $hdrSupportLabel }};
+        --hdr-support-phone: {{ $hdrSupportPhone }};
+        --hdr-support-phone-hover: {{ $hdrSupportPhoneHover }};
+
+        --hdr-mob-toggle-bg: {{ $hdrMobToggleBg }};
+        --hdr-mob-toggle-icon: {{ $hdrMobToggleIcon }};
+        --hdr-mob-toggle-hover-bg: {{ $hdrMobToggleHoverBg }};
+        --hdr-mob-toggle-hover-icon: {{ $hdrMobToggleHoverIcon }};
+
+        --hdr-mob-head-bg: {{ $hdrMobHeadBg }};
+        --hdr-mob-head-text: {{ $hdrMobHeadText }};
+        --hdr-mob-head-icon: {{ $hdrMobHeadIcon }};
+        --hdr-mob-tab-bg: {{ $hdrMobTabBg }};
+        --hdr-mob-tab-text: {{ $hdrMobTabText }};
+        --hdr-mob-tab-active-bg: {{ $hdrMobTabActiveBg }};
+        --hdr-mob-tab-active-text: {{ $hdrMobTabActiveText }};
+        --hdr-mob-body-bg: {{ $hdrMobBodyBg }};
+        --hdr-mob-item-text: {{ $hdrMobItemText }};
+        --hdr-mob-item-border: {{ $hdrMobItemBorder }};
+        --hdr-mob-item-hover-bg: {{ $hdrMobItemHoverBg }};
+        --hdr-mob-item-hover-text: {{ $hdrMobItemHoverText }};
+        --hdr-mob-item-active-bg: {{ $hdrMobItemActiveBg }};
+        --hdr-mob-item-active-text: {{ $hdrMobItemActiveText }};
     }
+
+
+    /* header responsive custom css */
+select#mainHeaderSearchCategory {
+    border-radius: 0px !important;
+}
+@media (min-width: 992px) and (max-width: 1140px) {
+.header-action-btn {
+    min-width:35px !important ;
+    font-size:8px !important;}
+}
+
+
+@media (min-width: 992px) and (max-width: 1050px) {
+
+.desktop-nav-menu li, .desktop-nav-menu ul {
+
+    margin-left: -10px !important;
+}
+
+}
+
+@media (max-width: 600px) {
+    a#header-saved-btn {
+    margin-right: -10px !important;}  
+    a.header-action-btn.btn-open-cart-drawer {
+    margin-right: -10px;}
+}
+
+ /* header responsive custom css end! */
+
+    
+    /* 1. Header Structure & Separators */
+.container.py-2\.5.py-md-3 {
+    margin-bottom: 5px !important;
+}
+
 
     .master-site-header {
         @if($isStickyHeader)
@@ -248,13 +422,13 @@
             background-color: rgba(255, 255, 255, 0.88) !important;
             backdrop-filter: blur(16px) saturate(180%) !important;
             -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+            border-bottom: 1px solid var(--hdr-border) !important;
             box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04) !important;
         @else
-            background-color: {{ $headerBgColor }} !important;
-            border-bottom: 1px solid #e2e8f0;
+            background-color: var(--hdr-bg) !important;
+            border-bottom: 1px solid var(--hdr-border) !important;
         @endif
-        color: {{ $headerTextColor }} !important;
+        color: var(--hdr-icon-text) !important;
         transition: background-color 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -264,9 +438,9 @@
             backdrop-filter: blur(12px) !important;
             -webkit-backdrop-filter: blur(12px) !important;
         @else
-            background-color: {{ $headerBgColor }} !important;
+            background-color: var(--hdr-sec-menu-bg) !important;
         @endif
-        border-top: 1px solid #f1f5f9;
+        border-top: 1px solid var(--hdr-sec-menu-border) !important;
     }
 
     @if($isStickyHeader)
@@ -308,12 +482,12 @@
         .topbar-mobile-view { display: block !important; }
     }
 
-    /* Enterprise Search Bar */
+    /* 2. Search Bar Styles */
     .header-search-bar { 
-        border: 2px solid {{ $headerSearchBtnBg }} !important; 
+        border: 2px solid var(--hdr-search-border) !important; 
         border-radius: 10px; 
         overflow: hidden; 
-        background-color: #ffffff;
+        background-color: var(--hdr-search-bg) !important;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
@@ -324,48 +498,49 @@
         border: none; 
         outline: none; 
         box-shadow: none; 
-        background: transparent; 
+        background: transparent !important; 
         font-size: 13.5px;
-        color: #0f172a;
+        color: var(--hdr-search-input-text) !important;
     }
     .header-search-input::placeholder {
-        color: #94a3b8;
+        color: var(--hdr-search-placeholder) !important;
     }
     .header-search-select { 
         border: none; 
-        border-left: 1px solid #e2e8f0; 
-        background-color: #f8fafc; 
+        border-left: 1px solid var(--hdr-search-border) !important; 
+        background-color: var(--hdr-search-cat-bg) !important; 
         max-width: 145px; 
         font-size: 13px; 
         font-weight: 600; 
-        color: #475569; 
+        color: var(--hdr-search-cat-text) !important; 
         cursor: pointer;
     }
     .header-search-btn { 
-        background-color: {{ $headerSearchBtnBg }} !important; 
-        color: #ffffff; 
+        background-color: var(--hdr-search-btn-bg) !important; 
+        color: var(--hdr-search-btn-text) !important; 
         border: none; 
         padding: 0 22px; 
         font-weight: 700; 
         font-size: 13.5px; 
-        transition: filter 0.2s ease; 
+        transition: background-color 0.2s ease, color 0.2s ease; 
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
     }
     .header-search-btn:hover { 
-        filter: brightness(0.92); 
+        background-color: var(--hdr-search-btn-hover-bg) !important; 
+        color: var(--hdr-search-btn-hover-text) !important; 
     }
 
-    /* Touch-Comfort Action Buttons */
+    /* 3. Action Buttons & Badges */
     .header-action-btn { 
         text-decoration: none; 
-        color: {{ $headerTextColor }}; 
+        color: var(--hdr-icon-text) !important; 
         display: flex; 
         flex-direction: column; 
         align-items: center; 
-        justify-content: center;
+        justify-content: center; 
         font-size: 11px; 
         font-weight: 600; 
         transition: color 0.2s ease, transform 0.2s ease; 
@@ -374,19 +549,24 @@
         padding: 4px 6px;
     }
     .header-action-btn:hover { 
-        color: {{ $headerSearchBtnBg }}; 
+        color: var(--hdr-icon-hover) !important; 
         transform: translateY(-1px); 
     }
     .header-action-btn i { 
         font-size: 18px; 
         margin-bottom: 3px; 
     }
+    .header-action-btn.is-active-icon,
+    .header-action-btn.is-active-icon i,
+    .header-action-btn.is-active-icon span {
+        color: var(--hdr-icon-active) !important;
+    }
     .header-badge-count { 
         position: absolute; 
         top: -2px; 
         right: 4px; 
-        background: #ef4444; 
-        color: #ffffff; 
+        background-color: var(--hdr-badge-bg) !important; 
+        color: var(--hdr-badge-text) !important; 
         border-radius: 9999px; 
         padding: 1px 5px; 
         font-size: 9.5px; 
@@ -394,10 +574,179 @@
         line-height: 1.2;
     }
 
+    /* Mobile Protection: Keep header icons intact without text spilling */
+    @media (max-width: 991.98px) {
+        .header-action-btn > span:not(.header-badge-count) {
+            display: none !important;
+        }
+        .header-action-btn {
+            min-width: 36px !important;
+            padding: 4px 4px !important;
+        }
+    }
+
+    /* 4. Desktop Category Button & Dropdown */
+    .secondary-menu-bar .dropdown > button.btn {
+        background-color: var(--hdr-cat-btn-bg) !important;
+        color: var(--hdr-cat-btn-text) !important;
+        transition: all 0.2s ease;
+    }
+    .secondary-menu-bar .dropdown > button.btn:hover {
+        background-color: var(--hdr-cat-btn-hover-bg) !important;
+        color: var(--hdr-cat-btn-hover-text) !important;
+    }
+    .secondary-menu-bar .dropdown > button.btn.is-active-cat,
+    .secondary-menu-bar .dropdown > button.btn.btn-primary {
+        background-color: var(--hdr-cat-btn-active-bg) !important;
+        color: var(--hdr-cat-btn-active-text) !important;
+    }
+    .secondary-menu-bar .dropdown-menu {
+        background-color: var(--hdr-cat-drop-bg) !important;
+        border-color: var(--hdr-border) !important;
+    }
+    .secondary-menu-bar .dropdown-item {
+        color: var(--hdr-cat-drop-text) !important;
+        transition: all 0.15s ease;
+    }
+    .secondary-menu-bar .dropdown-item:hover,
+    .secondary-menu-bar .dropdown-item.active {
+        background-color: var(--hdr-cat-drop-hover-bg) !important;
+        color: var(--hdr-cat-drop-hover-text) !important;
+    }
+
+    /* 5. Desktop Navigation Menu */
+    .desktop-nav-menu { 
+        display: flex; 
+        align-items: center; 
+        gap: 4px; 
+        list-style: none !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+    }
+    .desktop-nav-menu li, .desktop-nav-menu ul { 
+        list-style: none !important; 
+        padding-left: 0 !important; 
+    }
+    .desktop-nav-item { position: relative; }
+    
+    .desktop-nav-link {
+        text-decoration: none; 
+        font-size: var(--dyn-menu-font-size); 
+        font-weight: var(--dyn-menu-font-weight);
+        color: var(--hdr-menu-text) !important; 
+        background-color: var(--hdr-menu-bg) !important; 
+        padding: var(--dyn-menu-padding); 
+        margin: var(--dyn-menu-margin);
+        border-radius: 8px; 
+        transition: all 0.2s ease; 
+        display: flex; 
+        align-items: center; 
+        gap: 6px; 
+        position: relative;
+    }
+    .desktop-nav-link:hover { 
+        color: var(--hdr-menu-hover-text) !important; 
+        background-color: var(--hdr-menu-hover-bg) !important; 
+    }
+    .desktop-nav-link.active {
+        color: var(--hdr-menu-active-text) !important; 
+        background-color: var(--hdr-menu-active-bg) !important; 
+        font-weight: 700 !important;
+    }
+    .desktop-nav-link.active::after {
+        content: ""; 
+        position: absolute; 
+        bottom: 0px; 
+        left: 18%; 
+        right: 18%; 
+        height: 2px;
+        background-color: var(--hdr-menu-active-text) !important; 
+        border-radius: 2px;
+    }
+
+    .desktop-nav-menu .dropdown { 
+        position: relative; 
+        padding-bottom: 12px; 
+        margin-bottom: -12px; 
+    }
+    .desktop-nav-menu .shadow-dropdown {
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        z-index: 10000 !important; 
+        min-width: 240px; 
+        padding: 8px 0 !important;
+        margin: 0 !important; 
+        background-color: var(--hdr-menu-drop-bg) !important; 
+        border: 1px solid var(--hdr-border) !important; 
+        border-radius: 12px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); 
+        animation: fadeInMenu 0.2s ease-in-out; 
+        list-style: none !important;
+    }
+    .desktop-nav-menu .dropdown:hover > .shadow-dropdown { display: block; }
+    
+    .desktop-nav-menu .dropdown-submenu { position: relative; width: 100%; list-style: none !important; }
+    .desktop-nav-menu .dropdown-submenu > .submenu-box {
+        display: none; 
+        position: static; 
+        background: transparent; 
+        border: none; 
+        box-shadow: none;
+        margin: 0 0 0 14px !important; 
+        padding: 0 !important; 
+        width: auto; 
+        border-left: 2px solid var(--hdr-border); 
+        list-style: none !important;
+    }
+    .desktop-nav-menu .dropdown-submenu:hover > .submenu-box { display: block; }
+    
+    .desktop-nav-menu .dropdown-item {
+        font-size: 13.5px; 
+        font-weight: 500; 
+        color: var(--hdr-menu-drop-text) !important; 
+        padding: 8px 18px; 
+        display: flex; 
+        justify-content: space-between;
+        align-items: center; 
+        text-decoration: none; 
+        transition: all 0.15s ease; 
+        width: 100%; 
+        box-sizing: border-box;
+    }
+    .desktop-nav-menu .dropdown-item:hover { 
+        background-color: var(--hdr-menu-drop-hover-bg) !important; 
+        color: var(--hdr-menu-drop-hover-text) !important; 
+        padding-left: 22px; 
+    }
+    .desktop-nav-menu .dropdown-item.active {
+        background-color: var(--hdr-menu-drop-hover-bg) !important; 
+        color: var(--hdr-menu-drop-hover-text) !important; 
+        font-weight: 700 !important;
+        border-left: 3px solid var(--hdr-menu-drop-hover-text);
+    }
+
+    /* 6. Support Header Section */
+    .hdr-support-icon {
+        color: var(--hdr-support-icon) !important;
+    }
+    .hdr-support-label {
+        color: var(--hdr-support-label) !important;
+    }
+    .hdr-support-phone {
+        color: var(--hdr-support-phone) !important;
+        transition: color 0.15s ease;
+    }
+    .hdr-support-phone:hover {
+        color: var(--hdr-support-phone-hover) !important;
+    }
+
+    /* 7. Mobile Menu Trigger Button */
     .mobile-menu-toggle-btn { 
-        border: 1px solid #e2e8f0; 
-        background: #f8fafc; 
-        color: #0f172a; 
+        border: 1px solid var(--hdr-border) !important; 
+        background-color: var(--hdr-mob-toggle-bg) !important; 
+        color: var(--hdr-mob-toggle-icon) !important; 
         width: 40px; 
         height: 40px; 
         border-radius: 10px; 
@@ -409,25 +758,133 @@
         transition: all 0.2s ease; 
     }
     .mobile-menu-toggle-btn:hover { 
-        background: #e2e8f0; 
-        color: {{ $headerSearchBtnBg }}; 
+        background-color: var(--hdr-mob-toggle-hover-bg) !important; 
+        color: var(--hdr-mob-toggle-hover-icon) !important; 
     }
 
+    /* 8. Mobile Offcanvas Navigation Drawer */
+    #mobileMenuOffcanvas {
+        width: 325px !important;
+        max-width: 88vw !important;
+    }
+    #mobileMenuOffcanvas .offcanvas-header {
+        background-color: var(--hdr-mob-head-bg) !important;
+        color: var(--hdr-mob-head-text) !important;
+        border-bottom: 1px solid var(--hdr-mob-item-border) !important;
+    }
+    #mobileMenuOffcanvas .offcanvas-title {
+        color: var(--hdr-mob-head-text) !important;
+    }
+    #mobileMenuOffcanvas .offcanvas-title i {
+        color: var(--hdr-mob-head-icon) !important;
+    }
+    #mobileMenuOffcanvas .offcanvas-body {
+        background-color: var(--hdr-mob-body-bg) !important;
+    }
+
+    /* Tabs Bar in Drawer */
+    .mobile-offcanvas-tabs {
+        background-color: var(--hdr-mob-head-bg) !important;
+        border-bottom: 1px solid var(--hdr-mob-item-border) !important;
+    }
     .mobile-offcanvas-tabs .nav-link { 
         border-radius: 8px; 
         font-weight: 600; 
         font-size: 13px; 
-        color: #64748b; 
+        background-color: var(--hdr-mob-tab-bg) !important;
+        color: var(--hdr-mob-tab-text) !important; 
         padding: 8px 16px; 
         transition: all 0.2s ease;
     }
     .mobile-offcanvas-tabs .nav-link.active { 
-        background-color: #2563eb; 
-        color: #ffffff !important; 
+        background-color: var(--hdr-mob-tab-active-bg) !important; 
+        color: var(--hdr-mob-tab-active-text) !important; 
         box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
 
-    /* Live Search Card */
+    /* Common Text, Separator Borders & HR across all Drawer Items */
+    #mobileMenuOffcanvas .list-group-item,
+    #mobileMenuOffcanvas .list-group-item a,
+    #mobileMenuOffcanvas .mobile-tree-item,
+    #mobileMenuOffcanvas .mob-accordion-btn {
+        color: var(--hdr-mob-item-text) !important;
+    }
+    #mobileMenuOffcanvas .list-group-item {
+        background-color: transparent !important;
+        border-bottom: 1px solid var(--hdr-mob-item-border) !important;
+    }
+    #mobileMenuOffcanvas .border-bottom {
+        border-bottom-color: var(--hdr-mob-item-border) !important;
+    }
+    #mobileMenuOffcanvas .mobile-tree-submenu { 
+        margin-left: 20px; 
+        padding-left: 0; 
+        border-left: 1px solid var(--hdr-mob-item-border) !important; 
+        margin-top: 4px; 
+        margin-bottom: 4px; 
+    }
+
+    /* Single-Line Category Text Fix */
+    #mobileMenuOffcanvas .list-group-item a,
+    #mobileMenuOffcanvas .mobile-tree-item {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        font-size: 13.5px !important;
+    }
+    #mobileMenuOffcanvas .mob-accordion-btn {
+        width: 28px !important;
+        height: 28px !important;
+        flex-shrink: 0 !important;
+        border: none; 
+        background: transparent; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 12px; 
+        transition: all 0.25s ease; 
+        opacity: 0.75; 
+    }
+    #mobileMenuOffcanvas .mob-accordion-btn:hover { opacity: 1; }
+    #mobileMenuOffcanvas .mob-accordion-btn[aria-expanded="true"] { transform: rotate(180deg); opacity: 1; }
+
+    /* Drawer Hover States */
+    #mobileMenuOffcanvas .list-group-item:hover,
+    #mobileMenuOffcanvas .list-group-item a:hover,
+    #mobileMenuOffcanvas .mobile-tree-item:hover {
+        background-color: var(--hdr-mob-item-hover-bg) !important;
+        color: var(--hdr-mob-item-hover-text) !important;
+    }
+    #mobileMenuOffcanvas .list-group-item:hover a,
+    #mobileMenuOffcanvas .list-group-item:hover button {
+        color: var(--hdr-mob-item-hover-text) !important;
+    }
+
+    /* Drawer Active State */
+    #mobileMenuOffcanvas .list-group-item.active-menu-item,
+    #mobileMenuOffcanvas .active-menu-item a,
+    #mobileMenuOffcanvas .mobile-tree-item.active {
+        background-color: var(--hdr-mob-item-active-bg) !important;
+        color: var(--hdr-mob-item-active-text) !important;
+        font-weight: 700 !important;
+        opacity: 1 !important;
+    }
+    #mobileMenuOffcanvas .active-menu-item button {
+        color: var(--hdr-mob-item-active-text) !important;
+    }
+
+    .user-account-dropdown-menu {
+        z-index: 1065 !important;
+        position: absolute !important;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12) !important;
+        border: 1px solid #e2e8f0;
+    }
+
+    @keyframes fadeInMenu { 
+        from { opacity: 0; transform: translateY(6px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
+
     .live-search-container { 
         position: absolute; 
         top: calc(100% + 6px); 
@@ -479,178 +936,6 @@
         color: #0f172a;
     }
 
-    /* Desktop Navigation Menu */
-    .desktop-nav-menu { 
-        display: flex; 
-        align-items: center; 
-        gap: 4px; 
-        list-style: none !important; 
-        margin: 0 !important; 
-        padding: 0 !important; 
-    }
-    .desktop-nav-menu li, .desktop-nav-menu ul { 
-        list-style: none !important; 
-        padding-left: 0 !important; 
-        margin-left: 0 !important; 
-    }
-    .desktop-nav-item { position: relative; }
-    
-    .desktop-nav-link {
-        text-decoration: none; 
-        font-size: var(--dyn-menu-font-size); 
-        font-weight: var(--dyn-menu-font-weight);
-        color: var(--dyn-menu-color); 
-        padding: var(--dyn-menu-padding); 
-        margin: var(--dyn-menu-margin);
-        border-radius: 8px; 
-        transition: all 0.2s ease; 
-        display: flex; 
-        align-items: center; 
-        gap: 6px; 
-        position: relative;
-    }
-    .desktop-nav-link:hover { 
-        color: var(--dyn-menu-hover-color); 
-        background-color: var(--dyn-menu-hover-bg); 
-    }
-
-    .desktop-nav-link.active {
-        color: var(--dyn-menu-hover-color) !important;
-        background-color: var(--dyn-menu-hover-bg) !important;
-        font-weight: 700 !important;
-    }
-    .desktop-nav-link.active::after {
-        content: ""; 
-        position: absolute; 
-        bottom: 0px; 
-        left: 18%; 
-        right: 18%; 
-        height: 2px;
-        background-color: var(--dyn-menu-hover-color); 
-        border-radius: 2px;
-    }
-
-    .desktop-nav-menu .dropdown { 
-        position: relative; 
-        padding-bottom: 12px; 
-        margin-bottom: -12px; 
-    }
-    .desktop-nav-menu .shadow-dropdown {
-        display: none; 
-        position: absolute; 
-        top: 100%; 
-        left: 0; 
-        z-index: 10000 !important; 
-        min-width: 240px; 
-        padding: 8px 0 !important;
-        margin: 0 !important; 
-        background-color: #ffffff; 
-        border: 1px solid #e2e8f0; 
-        border-radius: 12px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08); 
-        animation: fadeInMenu 0.2s ease-in-out; 
-        list-style: none !important;
-    }
-    .desktop-nav-menu .dropdown:hover > .shadow-dropdown { display: block; }
-    
-    .desktop-nav-menu .dropdown-submenu { position: relative; width: 100%; list-style: none !important; }
-    .desktop-nav-menu .dropdown-submenu > .submenu-box {
-        display: none; 
-        position: static; 
-        background: transparent; 
-        border: none; 
-        box-shadow: none;
-        margin: 0 0 0 14px !important; 
-        padding: 0 !important; 
-        width: auto; 
-        border-left: 2px solid #e2e8f0; 
-        list-style: none !important;
-    }
-    .desktop-nav-menu .dropdown-submenu:hover > .submenu-box { display: block; }
-    
-    .desktop-nav-menu .dropdown-item {
-        font-size: 13.5px; 
-        font-weight: 500; 
-        color: #475569; 
-        padding: 8px 18px; 
-        display: flex; 
-        justify-content: space-between;
-        align-items: center; 
-        text-decoration: none; 
-        transition: all 0.15s ease; 
-        width: 100%; 
-        box-sizing: border-box;
-    }
-    .desktop-nav-menu .dropdown-item:hover { 
-        background-color: var(--dyn-menu-hover-bg); 
-        color: var(--dyn-menu-hover-color); 
-        padding-left: 22px; 
-    }
-
-    .desktop-nav-menu .dropdown-item.active {
-        background-color: var(--dyn-menu-hover-bg) !important;
-        color: var(--dyn-menu-hover-color) !important;
-        font-weight: 700 !important;
-        border-left: 3px solid var(--dyn-menu-hover-color);
-    }
-
-    .user-account-dropdown-menu {
-        z-index: 1065 !important;
-        position: absolute !important;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12) !important;
-        border: 1px solid #e2e8f0;
-    }
-
-    @keyframes fadeInMenu { 
-        from { opacity: 0; transform: translateY(6px); } 
-        to { opacity: 1; transform: translateY(0); } 
-    }
-
-    .mob-accordion-btn { 
-        border: none; 
-        background: transparent; 
-        width: 34px; 
-        height: 34px; 
-        border-radius: 6px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        color: currentColor; 
-        font-size: 12px; 
-        transition: all 0.25s ease; 
-        opacity: 0.6; 
-    }
-    .mob-accordion-btn:hover { opacity: 1; }
-    .mob-accordion-btn[aria-expanded="true"] { transform: rotate(180deg); opacity: 1; }
-
-    .mobile-tree-submenu { 
-        margin-left: 20px; 
-        padding-left: 0; 
-        border-left: 1px solid #e2e8f0; 
-        margin-top: 4px; 
-        margin-bottom: 4px; 
-    }
-    .mobile-tree-item { 
-        padding: 8px 14px; 
-        display: flex; 
-        align-items: center; 
-        width: 100%; 
-        position: relative; 
-        text-decoration: none; 
-        color: inherit; 
-        opacity: 0.85; 
-    }
-    .mobile-tree-item:hover { opacity: 1; }
-
-    .mobile-tree-item.active,
-    .list-group-item.active-menu-item {
-        color: #2563eb !important; 
-        font-weight: 700 !important; 
-        background-color: #eff6ff !important; 
-        opacity: 1 !important;
-    }
-
-    /* Bengali Safe Typography Rule */
     .bn-digit, [data-amount] {
         font-weight: 700 !important;
     }
@@ -670,7 +955,7 @@
 
 <header class="master-site-header">
     @if($showTopbarDesktop)
-        <div class="topbar-wrapper topbar-desktop-view">
+        <div class="topbar-wrapper topbar-desktop-view theme-topbar">
             <div class="container-fluid px-3 px-md-4">
                 @if($sliderDesktop && count($topbarNotices) > 0)
                     <div class="topbar-scroller-wrap">
@@ -695,7 +980,7 @@
     @endif
 
     @if($showTopbarMobile)
-        <div class="topbar-wrapper topbar-mobile-view">
+        <div class="topbar-wrapper topbar-mobile-view theme-topbar">
             <div class="container-fluid px-2">
                 @if($sliderMobile && count($topbarNotices) > 0)
                     <div class="topbar-scroller-wrap">
@@ -741,7 +1026,7 @@
             </div>
 
             <div class="col-lg-6 col-12 order-3 order-lg-2 position-relative" style="z-index: 1030;">
-                <form action="{{ route('shop') }}" method="GET" class="header-search-bar d-flex position-relative">
+                <form action="{{ route('shop') }}" method="GET" class="header-search-bar d-flex position-relative theme-header-search-bar">
                     <input type="text" id="mainHeaderSearchInput" name="q" value="{{ request('q') }}" class="form-control header-search-input px-3" placeholder="Find products by name, model or SKU..." autocomplete="off">
                     <select id="mainHeaderSearchCategory" name="category" class="form-select header-search-select d-none d-sm-block">
                         <option value="all">All Categories</option>
@@ -749,7 +1034,7 @@
                             <option value="{{ $cat->slug ?? $cat->id }}" {{ request('category') == ($cat->slug ?? $cat->id) ? 'selected' : '' }}>{{ $cat->name }}</option>
                         @endforeach
                     </select>
-                    <button type="submit" class="header-search-btn"><i class="fas fa-search d-sm-none"></i><span class="d-none d-sm-inline">Search</span></button>
+                    <button type="submit" class="header-search-btn theme-search-btn"><i class="fas fa-search d-sm-none"></i><span class="d-none d-sm-inline">Search</span></button>
                 </form>
                 <div id="liveSearchResultsBox" class="live-search-container d-none"><div id="liveSearchResultsList"></div></div>
             </div>
@@ -758,21 +1043,21 @@
                 <div class="d-flex justify-content-end align-items-center gap-2 gap-sm-3 gap-lg-4">
                     @auth
                         @php
-                            $uHeader = auth()->user();
-                            $isInternalStaff = !empty($uHeader->is_super_admin)
-                                || (method_exists($uHeader, 'isStaffOrAdmin') && $uHeader->isStaffOrAdmin())
-                                || in_array(str_replace(' ', '_', strtolower(trim((string)$uHeader->role))), ['admin', 'super_admin', 'branch_manager', 'staff'])
-                                || in_array(str_replace(' ', '_', strtolower(trim((string)($uHeader->user_type ?? '')))), ['admin', 'staff']);
+    $uHeader = auth()->user();
+    $isInternalStaff = !empty($uHeader->is_super_admin)
+        || (method_exists($uHeader, 'isStaffOrAdmin') && $uHeader->isStaffOrAdmin())
+        || in_array(str_replace(' ', '_', strtolower(trim((string) $uHeader->role))), ['admin', 'super_admin', 'branch_manager', 'staff'])
+        || in_array(str_replace(' ', '_', strtolower(trim((string) ($uHeader->user_type ?? '')))), ['admin', 'staff']);
                         @endphp
                         <a href="{{ $isInternalStaff ? route('admin.order.online') : route('user.orders') }}" class="header-action-btn d-none d-md-flex"><i class="fas fa-receipt"></i><span>Orders</span></a>
                     @else
                         <a href="{{ route('checkout') }}" class="header-action-btn d-none d-md-flex"><i class="fas fa-receipt"></i><span>Orders</span></a>
                     @endauth
 
-                    <a href="{{ auth()->check() ? route('user.wishlist') : (Route::has('login') ? route('login') : '#') }}" class="header-action-btn position-relative" id="header-saved-btn">
-                        <i id="header-saved-icon" class="{{ $hasSavedProducts ? 'fas fa-heart text-warning' : 'far fa-heart' }}" style="{{ $hasSavedProducts ? 'color: #f59e0b !important;' : '' }}"></i>
+                    <a href="{{ auth()->check() ? route('user.wishlist') : (Route::has('login') ? route('login') : '#') }}" class="header-action-btn position-relative {{ $hasSavedProducts ? 'is-active-icon' : '' }}" id="header-saved-btn">
+                        <i id="header-saved-icon" class="{{ $hasSavedProducts ? 'fas fa-heart text-warning' : 'far fa-heart' }}"></i>
                         <span id="wishlist-counter-badge" class="header-badge-count wishlist-badge-count bn-digit {{ $hasSavedProducts ? '' : 'd-none' }}">{{ $headerWishlistCount }}</span>
-                        <span id="header-saved-text" style="{{ $hasSavedProducts ? 'color: #f59e0b; font-weight: bold;' : '' }}">Saved</span>
+                        <span id="header-saved-text">Saved</span>
                     </a>
 
                     <a href="{{ route('cart.index') }}" class="header-action-btn {{ $enableFloatingCart ? 'btn-open-cart-drawer' : '' }}">
@@ -783,11 +1068,11 @@
 
                     @auth
                         @php
-                            $uDropdown = auth()->user();
-                            $hasAdminAccess = !empty($uDropdown->is_super_admin)
-                                || (method_exists($uDropdown, 'isStaffOrAdmin') && $uDropdown->isStaffOrAdmin())
-                                || in_array(str_replace(' ', '_', strtolower(trim((string)$uDropdown->role))), ['admin', 'super_admin', 'branch_manager', 'staff', 'manager', 'cashier'])
-                                || in_array(str_replace(' ', '_', strtolower(trim((string)($uDropdown->user_type ?? '')))), ['admin', 'staff']);
+    $uDropdown = auth()->user();
+    $hasAdminAccess = !empty($uDropdown->is_super_admin)
+        || (method_exists($uDropdown, 'isStaffOrAdmin') && $uDropdown->isStaffOrAdmin())
+        || in_array(str_replace(' ', '_', strtolower(trim((string) $uDropdown->role))), ['admin', 'super_admin', 'branch_manager', 'staff', 'manager', 'cashier'])
+        || in_array(str_replace(' ', '_', strtolower(trim((string) ($uDropdown->user_type ?? '')))), ['admin', 'staff']);
                         @endphp
                         <div class="dropdown position-relative" style="z-index: 1060;">
                             <a href="#" class="header-action-btn dropdown-toggle text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user-circle {{ $hasAdminAccess ? 'text-danger' : 'text-primary' }}"></i><span>{{ Str::limit($uDropdown->name, 7) }}</span></a>
@@ -839,14 +1124,14 @@
                     $isAnyCategoryActive = request()->is('category*') || request()->has('category'); 
                 @endphp
                 <div class="dropdown">
-                    <button class="btn btn-sm {{ $isAnyCategoryActive ? 'btn-primary text-white' : 'btn-light text-dark' }} border-0 fw-bold dropdown-toggle d-flex align-items-center gap-2 py-1.5 px-3 rounded-2 shadow-sm" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-bars {{ $isAnyCategoryActive ? 'text-white' : 'text-primary' }}"></i> All Categories
+                    <button class="btn btn-sm {{ $isAnyCategoryActive ? 'btn-primary text-white is-active-cat' : 'btn-light text-dark' }} border-0 fw-bold dropdown-toggle d-flex align-items-center gap-2 py-1.5 px-3 rounded-2 shadow-sm" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-bars"></i> All Categories
                     </button>
                     <ul class="dropdown-menu shadow-sm border rounded-3 mt-1 py-2" style="border-color: #e2e8f0;">
                         @foreach($headerCategories as $cat)
                             @php
-                                $catUrl = route('category.products', $cat->slug ?? $cat->id);
-                                $isCatActive = $isMenuItemActive($catUrl) || request('category') == ($cat->slug ?? $cat->id);
+    $catUrl = route('category.products', $cat->slug ?? $cat->id);
+    $isCatActive = $isMenuItemActive($catUrl) || request('category') == ($cat->slug ?? $cat->id);
                             @endphp
                             <li>
                                 <a class="dropdown-item small py-2 {{ $isCatActive ? 'active' : '' }}" href="{{ $catUrl }}">
@@ -860,7 +1145,7 @@
                 <ul class="desktop-nav-menu">
                     @foreach($primaryNavItems as $menu)
                         @php
-                            $parentActive = $isTreeActive($menu);
+    $parentActive = $isTreeActive($menu);
                         @endphp
                         @if(empty($menu['children']))
                             <li class="desktop-nav-item">
@@ -876,7 +1161,7 @@
                                 <ul class="shadow-dropdown">
                                     @foreach($menu['children'] as $child)
                                         @php
-                                            $childActive = $isTreeActive($child);
+            $childActive = $isTreeActive($child);
                                         @endphp
                                         @if(empty($child['children']))
                                             <li>
@@ -892,7 +1177,7 @@
                                                 <ul class="submenu-box">
                                                     @foreach($child['children'] as $grandChild)
                                                         @php
-                                                            $grandActive = $isMenuItemActive($grandChild['url']);
+                    $grandActive = $isMenuItemActive($grandChild['url']);
                                                         @endphp
                                                         <li>
                                                             <a class="dropdown-item py-1.5 {{ $grandActive ? 'active' : '' }}" style="font-size:12.5px;" href="{{ $grandChild['url'] }}">
@@ -911,7 +1196,7 @@
                 </ul>
 
                 <div class="small fw-semibold text-muted d-flex align-items-center">
-                    <i class="fas fa-headset text-primary me-1.5"></i> Support: <a href="tel:01774937404" class="text-dark text-decoration-none fw-bold ms-1 bn-digit">+880 1774-937404</a>
+                    <i class="fas fa-headset hdr-support-icon me-2"></i> <span class="hdr-support-label">Support:</span> <a href="tel:01774937404" class="hdr-support-phone text-dark text-decoration-none fw-bold ms-1 bn-digit">+880 1774-937404</a>
                 </div>
 
             </div>
@@ -922,16 +1207,16 @@
 <div class="header-spacer"></div>
 
 <!-- Mobile Navigation Drawer -->
-<div class="offcanvas offcanvas-start border-0 shadow-lg" tabindex="-1" id="mobileMenuOffcanvas" aria-labelledby="mobileMenuOffcanvasLabel" style="width: 310px;">
-    <div class="offcanvas-header border-bottom bg-light py-3">
-        <h6 class="offcanvas-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="mobileMenuOffcanvasLabel">
-            <i class="fas fa-compass text-primary"></i> Main Menu
+<div class="offcanvas offcanvas-start border-0 shadow-lg" tabindex="-1" id="mobileMenuOffcanvas" aria-labelledby="mobileMenuOffcanvasLabel">
+    <div class="offcanvas-header border-bottom py-3">
+        <h6 class="offcanvas-title fw-bold mb-0 d-flex align-items-center gap-2" id="mobileMenuOffcanvasLabel">
+            <i class="fas fa-compass"></i> Main Menu
         </h6>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
 
     <div class="offcanvas-body p-0">
-        <ul class="nav nav-pills nav-fill mobile-offcanvas-tabs p-2 bg-light border-bottom gap-2" role="tablist">
+        <ul class="nav nav-pills nav-fill mobile-offcanvas-tabs p-2 border-bottom gap-2" role="tablist">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-menu-categories" type="button"><i class="fas fa-th-large me-1"></i> Categories</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-menu-pages" type="button"><i class="fas fa-link me-1"></i> Pages</button></li>
         </ul>
@@ -942,34 +1227,34 @@
                     @if(!empty($drawerCategories))
                         @foreach($drawerCategories as $cIdx => $dCat)
                             @php
-                                $dCatActive = $isTreeActive($dCat);
+        $dCatActive = $isTreeActive($dCat);
                             @endphp
                             @if(empty($dCat['children']))
-                                <a href="{{ $dCat['url'] }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold text-dark border-bottom {{ $dCatActive ? 'active-menu-item' : '' }}">{{ $dCat['title'] }}</a>
+                                <a href="{{ $dCat['url'] }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold border-bottom {{ $dCatActive ? 'active-menu-item' : '' }}">{{ $dCat['title'] }}</a>
                             @else
                                 <div class="list-group-item list-group-item-action p-0 border-bottom border-0">
                                     <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom {{ $dCatActive ? 'active-menu-item' : '' }}">
-                                        <a href="{{ $dCat['url'] }}" class="text-decoration-none fw-semibold text-dark py-1 flex-grow-1 {{ $dCatActive ? 'text-primary' : '' }}">{{ $dCat['title'] }}</a>
+                                        <a href="{{ $dCat['url'] }}" class="text-decoration-none fw-semibold py-1 flex-grow-1" style="color: inherit;">{{ $dCat['title'] }}</a>
                                         <button class="mob-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobCat-{{ $cIdx }}"><i class="fas fa-chevron-down"></i></button>
                                     </div>
                                     <div class="collapse {{ $dCatActive ? 'show' : '' }}" id="mobCat-{{ $cIdx }}">
                                         <div class="mobile-tree-submenu">
                                             @foreach($dCat['children'] as $scIdx => $subCat)
                                                 @php
-                                                    $subCatActive = $isTreeActive($subCat);
+                $subCatActive = $isTreeActive($subCat);
                                                 @endphp
                                                 @if(empty($subCat['children']))
                                                     <a href="{{ $subCat['url'] }}" class="mobile-tree-item fw-medium {{ $subCatActive ? 'active' : '' }}">{{ $subCat['title'] }}</a>
                                                 @else
                                                     <div class="d-flex justify-content-between align-items-center pe-2">
                                                         <a href="{{ $subCat['url'] }}" class="mobile-tree-item fw-medium py-2 flex-grow-1 {{ $subCatActive ? 'active' : '' }}">{{ $subCat['title'] }}</a>
-                                                        <button class="mob-accordion-btn" style="width: 24px; height: 24px;" type="button" data-bs-toggle="collapse" data-bs-target="#mobSubCat-{{ $cIdx }}-{{ $scIdx }}"><i class="fas fa-chevron-down" style="font-size: 10px;"></i></button>
+                                                        <button class="mob-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobSubCat-{{ $cIdx }}-{{ $scIdx }}"><i class="fas fa-chevron-down" style="font-size: 10px;"></i></button>
                                                     </div>
                                                     <div class="collapse {{ $subCatActive ? 'show' : '' }}" id="mobSubCat-{{ $cIdx }}-{{ $scIdx }}">
                                                         <div class="mobile-tree-submenu">
                                                             @foreach($subCat['children'] as $gCat)
                                                                 @php
-                                                                    $gCatActive = $isMenuItemActive($gCat['url']);
+                        $gCatActive = $isMenuItemActive($gCat['url']);
                                                                 @endphp
                                                                 <a href="{{ $gCat['url'] }}" class="mobile-tree-item small {{ $gCatActive ? 'active' : '' }}">{{ $gCat['title'] }}</a>
                                                             @endforeach
@@ -985,16 +1270,16 @@
                     @else
                         @foreach($headerCategories as $cat)
                             @php
-                                $cUrl = route('category.products', $cat->slug ?? $cat->id);
-                                $isThisCatActive = $isMenuItemActive($cUrl) || request('category') == ($cat->slug ?? $cat->id);
+        $cUrl = route('category.products', $cat->slug ?? $cat->id);
+        $isThisCatActive = $isMenuItemActive($cUrl) || request('category') == ($cat->slug ?? $cat->id);
                             @endphp
-                            <a href="{{ $cUrl }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-3 small fw-semibold text-dark {{ $isThisCatActive ? 'active-menu-item' : '' }}">
+                            <a href="{{ $cUrl }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 px-3 small fw-semibold {{ $isThisCatActive ? 'active-menu-item' : '' }}">
                                 <span>{{ $cat->name }}</span>
                                 <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
                             </a>
                         @endforeach
                     @endif
-                    <a href="{{ route('shop') }}" class="list-group-item list-group-item-action text-primary text-center fw-bold py-3 px-3 border-bottom"><i class="fas fa-eye me-2"></i> View All Categories</a>
+                    <a href="{{ route('shop') }}" class="list-group-item list-group-item-action text-center fw-bold py-3 px-3 border-bottom"><i class="fas fa-eye me-2"></i> View All Categories</a>
                 </div>
             </div>
 
@@ -1002,34 +1287,34 @@
                 <div class="list-group list-group-flush">
                     @foreach($mobileNavItems as $mIdx => $mNav)
                         @php
-                            $mNavActive = $isTreeActive($mNav);
+    $mNavActive = $isTreeActive($mNav);
                         @endphp
                         @if(empty($mNav['children']))
-                            <a href="{{ $mNav['url'] }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold text-dark border-bottom {{ $mNavActive ? 'active-menu-item' : '' }}">{{ $mNav['title'] }}</a>
+                            <a href="{{ $mNav['url'] }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold border-bottom {{ $mNavActive ? 'active-menu-item' : '' }}">{{ $mNav['title'] }}</a>
                         @else
                             <div class="list-group-item list-group-item-action p-0 border-bottom border-0">
                                 <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom {{ $mNavActive ? 'active-menu-item' : '' }}">
-                                    <a href="{{ $mNav['url'] }}" class="text-decoration-none fw-semibold text-dark py-1 flex-grow-1 {{ $mNavActive ? 'text-primary' : '' }}">{{ $mNav['title'] }}</a>
+                                    <a href="{{ $mNav['url'] }}" class="text-decoration-none fw-semibold py-1 flex-grow-1" style="color: inherit;">{{ $mNav['title'] }}</a>
                                     <button class="mob-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobNav-{{ $mIdx }}"><i class="fas fa-chevron-down"></i></button>
                                 </div>
                                 <div class="collapse {{ $mNavActive ? 'show' : '' }}" id="mobNav-{{ $mIdx }}">
                                     <div class="mobile-tree-submenu">
                                         @foreach($mNav['children'] as $smIdx => $sNav)
                                             @php
-                                                $sNavActive = $isTreeActive($sNav);
+            $sNavActive = $isTreeActive($sNav);
                                             @endphp
                                             @if(empty($sNav['children']))
                                                 <a href="{{ $sNav['url'] }}" class="mobile-tree-item fw-medium {{ $sNavActive ? 'active' : '' }}">{{ $sNav['title'] }}</a>
                                             @else
                                                 <div class="d-flex justify-content-between align-items-center pe-2">
                                                     <a href="{{ $sNav['url'] }}" class="mobile-tree-item fw-medium py-2 flex-grow-1 {{ $sNavActive ? 'active' : '' }}">{{ $sNav['title'] }}</a>
-                                                    <button class="mob-accordion-btn" style="width: 24px; height: 24px;" type="button" data-bs-toggle="collapse" data-bs-target="#mobSubNav-{{ $mIdx }}-{{ $smIdx }}"><i class="fas fa-chevron-down" style="font-size: 10px;"></i></button>
+                                                    <button class="mob-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobSubNav-{{ $mIdx }}-{{ $smIdx }}"><i class="fas fa-chevron-down" style="font-size: 10px;"></i></button>
                                                 </div>
                                                 <div class="collapse {{ $sNavActive ? 'show' : '' }}" id="mobSubNav-{{ $mIdx }}-{{ $smIdx }}">
                                                     <div class="mobile-tree-submenu">
                                                         @foreach($sNav['children'] as $gNav)
                                                             @php
-                                                                $gNavActive = $isMenuItemActive($gNav['url']);
+                    $gNavActive = $isMenuItemActive($gNav['url']);
                                                             @endphp
                                                             <a href="{{ $gNav['url'] }}" class="mobile-tree-item small {{ $gNavActive ? 'active' : '' }}">{{ $gNav['title'] }}</a>
                                                         @endforeach
@@ -1044,15 +1329,15 @@
                     @endforeach
                     @auth
                         @php
-                            $uMob = auth()->user();
-                            $isMobStaff = !empty($uMob->is_super_admin)
-                                || (method_exists($uMob, 'isStaffOrAdmin') && $uMob->isStaffOrAdmin())
-                                || in_array(str_replace(' ', '_', strtolower(trim((string)$uMob->role))), ['admin', 'super_admin', 'branch_manager', 'staff']);
+    $uMob = auth()->user();
+    $isMobStaff = !empty($uMob->is_super_admin)
+        || (method_exists($uMob, 'isStaffOrAdmin') && $uMob->isStaffOrAdmin())
+        || in_array(str_replace(' ', '_', strtolower(trim((string) $uMob->role))), ['admin', 'super_admin', 'branch_manager', 'staff']);
                         @endphp
                         @if($isMobStaff)
                             <a href="{{ route('admin.dashboard') }}" class="list-group-item list-group-item-action py-3 px-3 fw-bold text-danger border-bottom"><i class="fas fa-shield-alt me-2"></i> Admin Panel</a>
                         @endif
-                        <a href="{{ route('user.orders') }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold text-primary border-bottom"><i class="fas fa-box-open me-2"></i> Track My Orders</a>
+                        <a href="{{ route('user.orders') }}" class="list-group-item list-group-item-action py-3 px-3 fw-semibold border-bottom"><i class="fas fa-box-open me-2"></i> Track My Orders</a>
                     @endauth
                 </div>
             </div>
@@ -1153,7 +1438,7 @@
 
                 var badge = document.getElementById('wishlist-counter-badge');
                 var savedIcon = document.getElementById('header-saved-icon');
-                var savedText = document.getElementById('header-saved-text');
+                var savedBtn = document.getElementById('header-saved-btn');
 
                 if (badge) {
                     badge.innerText = count;
@@ -1169,20 +1454,10 @@
                 if (savedIcon) {
                     if (count > 0) {
                         savedIcon.className = 'fas fa-heart text-warning';
-                        savedIcon.style.color = '#f59e0b !important';
+                        if (savedBtn) savedBtn.classList.add('is-active-icon');
                     } else {
                         savedIcon.className = 'far fa-heart';
-                        savedIcon.style.color = '';
-                    }
-                }
-
-                if (savedText) {
-                    if (count > 0) {
-                        savedText.style.color = '#f59e0b';
-                        savedText.style.fontWeight = 'bold';
-                    } else {
-                        savedText.style.color = '';
-                        savedText.style.fontWeight = '';
+                        if (savedBtn) savedBtn.classList.remove('is-active-icon');
                     }
                 }
 
@@ -1243,7 +1518,7 @@
                                             <div>
                                                 <div class="fw-semibold text-truncate small" style="max-width: 240px;">${p.title}</div>
                                                 <div class="d-flex align-items-center gap-2 mt-0.5">
-                                                    <span class="fw-bold text-primary small bn-digit">৳${p.price}</span>
+                                                    <span class="fw-bold small bn-digit" style="color: var(--hdr-search-border) !important;">৳${p.price}</span>
                                                     ${p.sku ? `<span class="badge bg-light text-muted border px-1.5 py-0.5" style="font-size: 10px;">SKU: ${p.sku}</span>` : ''}
                                                 </div>
                                             </div>
@@ -1254,7 +1529,7 @@
                                                 <span id="search-qty-${p.id}" class="small fw-bold px-1.5 bn-digit">1</span>
                                                 <button type="button" class="search-qty-btn" onclick="changeSearchQty(${p.id}, 1)">+</button>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-primary rounded-2 px-2.5 py-1 small" onclick="addSearchItemToCart(${p.id})"><i class="fas fa-cart-plus"></i></button>
+                                            <button type="button" class="btn btn-sm rounded-2 px-2.5 py-1 small header-search-btn" onclick="addSearchItemToCart(${p.id})"><i class="fas fa-cart-plus"></i></button>
                                         </div>
                                     </div>
                                 `).join('');

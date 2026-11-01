@@ -3,6 +3,15 @@
 @section('title', 'Email Marketing Settings')
 
 @php
+    $settings = $settings ?? ($generalSettings ?? []);
+
+    // Dynamic fallbacks with DB/Config alignment
+    $fromNameDefault  = data_get($settings, 'default_sender_name') ?? config('mail.from.name', 'SHOP NOW BD');
+    $fromEmailDefault = data_get($settings, 'default_sender_email') ?? config('mail.from.address', 'newsletter@shopnowbd.online');
+    $replyToDefault   = data_get($settings, 'reply_to_email') ?? '';
+    $batchSizeDefault = (int) (data_get($settings, 'default_batch_size') ?? 50);
+    $cartThresholdDef = (int) (data_get($settings, 'cart_abandon_threshold_minutes') ?? 60);
+
     $trackingSettingsRoute = Route::has('admin.email_marketing.tracking_settings') 
         ? route('admin.email_marketing.tracking_settings') 
         : url('admin/email-marketing/tracking-settings');
@@ -18,9 +27,6 @@
     $suppressionRoute = Route::has('admin.email_marketing.suppression') 
         ? route('admin.email_marketing.suppression') 
         : url('admin/email-marketing/suppression');
-
-    $fromNameDefault  = config('mail.from.name', 'SHOP NOW BD');
-    $fromEmailDefault = config('mail.from.address', 'newsletter@shopnowbd.online');
 @endphp
 
 @section('admin_content')
@@ -60,7 +66,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -251,7 +257,7 @@
             <a href="{{ $trackingSettingsRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
                 <i class="fas fa-chart-pie me-1"></i> <span>Tracking Settings</span>
             </a>
-            <button type="button" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold" onclick="document.getElementById('generalSettingsForm').submit()">
+            <button type="button" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold" id="btn-save-general-settings" onclick="submitSettingsForm()">
                 <i class="fas fa-save me-1"></i> <span>Save Configuration</span>
             </button>
         </div>
@@ -321,7 +327,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num">
-                                    50 <span style="font-size: 11px;" class="fw-normal text-muted">per cycle</span>
+                                    {{ $batchSizeDefault }} <span style="font-size: 11px;" class="fw-normal text-muted">per cycle</span>
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Background worker chunk</small>
                             </div>
@@ -339,7 +345,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num">
-                                    60 <span style="font-size: 11px;" class="fw-normal text-muted">Minutes</span>
+                                    {{ $cartThresholdDef }} <span style="font-size: 11px;" class="fw-normal text-muted">Minutes</span>
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Abandonment threshold</small>
                             </div>
@@ -394,7 +400,7 @@
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text settings-addon-text"><i class="fas fa-user-tag text-muted" style="font-size: 11px;"></i></span>
-                                        <input type="text" name="default_sender_name" id="default_sender_name" class="form-control" value="{{ $fromNameDefault }}" placeholder="e.g. SHOP NOW BD" required>
+                                        <input type="text" name="default_sender_name" id="default_sender_name" class="form-control" value="{{ $fromNameDefault }}" placeholder="SHOP NOW BD" required>
                                     </div>
                                     <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">The friendly display name customers see in their email inbox.</small>
                                 </div>
@@ -416,9 +422,9 @@
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text settings-addon-text"><i class="fas fa-reply text-muted" style="font-size: 11px;"></i></span>
-                                        <input type="email" name="reply_to_email" id="reply_to_email" class="form-control font-monospace" placeholder="support@shopnowbd.online">
+                                        <input type="email" name="reply_to_email" id="reply_to_email" class="form-control font-monospace" value="{{ $replyToDefault }}" placeholder="support@shopnowbd.online">
                                     </div>
-                                    <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">Where customer direct email replies will be routed (e.g. helpdesk or support inbox).</small>
+                                    <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">Where customer direct email replies will be routed (helpdesk or support inbox).</small>
                                 </div>
                             </div>
                         </div>
@@ -444,7 +450,7 @@
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text settings-addon-text"><i class="fas fa-boxes-stacked text-muted" style="font-size: 11px;"></i></span>
-                                        <input type="number" name="default_batch_size" id="default_batch_size" class="form-control font-monospace bn-digit" value="50" min="10" max="500">
+                                        <input type="number" name="default_batch_size" id="default_batch_size" class="form-control font-monospace bn-digit" value="{{ $batchSizeDefault }}" min="10" max="500">
                                     </div>
                                     <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">Number of emails dispatched per background queue cycle (Recommended: 50 - 100).</small>
                                 </div>
@@ -454,7 +460,7 @@
                                         Abandoned Cart Inactivity Threshold
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" name="cart_abandon_threshold_minutes" id="cart_abandon_threshold_minutes" class="form-control font-monospace bn-digit" value="60" min="15">
+                                        <input type="number" name="cart_abandon_threshold_minutes" id="cart_abandon_threshold_minutes" class="form-control font-monospace bn-digit" value="{{ $cartThresholdDef }}" min="15">
                                         <span class="input-group-text settings-addon-text font-monospace" style="font-size: 11px;">Minutes</span>
                                     </div>
                                     <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">Time elapsed without checkout activity before marking a cart session as abandoned.</small>
@@ -509,4 +515,15 @@
         </div>
     </form>
 </div>
+
+<script>
+    function submitSettingsForm() {
+        const btn = document.getElementById('btn-save-general-settings');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+        }
+        document.getElementById('generalSettingsForm').submit();
+    }
+</script>
 @endsection

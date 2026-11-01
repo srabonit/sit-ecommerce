@@ -2,7 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Web Controllers
+/*
+|--------------------------------------------------------------------------
+| Web Controllers Imports
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\CartController;
@@ -15,11 +19,19 @@ use App\Http\Middleware\FormSubmissionRateLimit;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureBranchAccess;
 
-// Auth Controllers
+/*
+|--------------------------------------------------------------------------
+| Auth Controllers Imports
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 
-// Admin Controllers
+/*
+|--------------------------------------------------------------------------
+| Admin Controllers Imports
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
@@ -40,6 +52,8 @@ use App\Http\Controllers\Admin\SiteContentController;
 use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\Admin\PaymentTransactionController;
 use App\Http\Controllers\Admin\ThemeSettingController;
+use App\Http\Controllers\Admin\ThemeExtendedColorController;
+use App\Http\Controllers\Admin\DynamicDisplayController;
 use App\Http\Controllers\Admin\ShippingController as AdminShippingController;
 use App\Http\Controllers\Admin\FormController;
 use App\Http\Controllers\Admin\FormFieldController;
@@ -54,19 +68,70 @@ use App\Http\Controllers\Admin\InvestmentController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AccountLedgerController;
 use App\Http\Controllers\Admin\EmailMarketingController;
+use App\Http\Controllers\Admin\AdminProductReviewController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
 
-// Frontend Controllers
+/*
+|--------------------------------------------------------------------------
+| Enterprise Tax & VAT Controllers Imports
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\Tax\TaxDashboardController;
+use App\Http\Controllers\Admin\Tax\TaxClassController;
+use App\Http\Controllers\Admin\Tax\TaxRuleController;
+use App\Http\Controllers\Admin\Tax\TaxPaymentController;
+use App\Http\Controllers\Admin\Tax\TaxDocumentController;
+use App\Http\Controllers\Admin\Tax\TaxReportController;
+use App\Http\Controllers\Admin\Tax\TaxPeriodController;
+use App\Http\Controllers\Admin\Tax\TaxSettingController;
+
+/*
+|--------------------------------------------------------------------------
+| Advanced Security & Threat Prevention Controllers Imports
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\Security\SecurityDashboardController;
+use App\Http\Controllers\Admin\Security\SecurityIpManagementController;
+use App\Http\Controllers\Admin\Security\SecuritySuspiciousOrderController;
+use App\Http\Controllers\Admin\Security\SecurityUrlMonitoringController;
+use App\Http\Controllers\Admin\Security\SecurityBlockingManagementController;
+use App\Http\Controllers\Admin\Security\SecurityRulesAndSettingsController;
+use App\Http\Controllers\Admin\Security\SecurityLogsAndAlertsController;
+
+/*
+|--------------------------------------------------------------------------
+| SMS Marketing & Gateway Management Controllers Imports
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\SmsSettingController;
+use App\Http\Controllers\Admin\SmsTemplateController;
+use App\Http\Controllers\Admin\SmsCampaignController;
+use App\Http\Controllers\Admin\SmsLogController;
+use App\Http\Controllers\Admin\SmsBlacklistController;
+
+/*
+|--------------------------------------------------------------------------
+| Frontend Controllers Imports
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\PageController;
 use App\Http\Controllers\Frontend\ProductReviewController;
 
-// Public Store & Operations
+/*
+|==========================================================================
+| SECTION 1: PUBLIC STORE & OPERATIONS
+|==========================================================================
+*/
 Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/shop', [ProductController::class, 'index'])->name('shop');
     Route::get('/category/{slug}', [HomeController::class, 'categoryProducts'])->name('category.products');
     Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.details');
     Route::get('/ajax/quick-view/{id}', [ProductController::class, 'quickViewModal'])->name('product.quickview');
+
+    // Live Product Reviews AJAX Fetch for PDP Tabs
+    Route::get('/ajax/product/{id}/reviews', [ProductReviewController::class, 'getReviewsAjax'])->name('product.reviews.ajax');
 
     // Secure Digital Product Download Route
     Route::get('/digital-download/{token}', [DigitalProductController::class, 'downloadFile'])->name('digital.download');
@@ -86,6 +151,12 @@ Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::post('/cart/abandoned/sync', [\App\Http\Controllers\Web\AbandonedCartController::class, 'sync'])->name('cart.abandoned.sync');
 
+    // Cart Coupon & Voucher Operations
+    Route::post('/cart/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
+    Route::post('/cart/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
+    Route::post('/cart/voucher/apply', [CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
+    Route::post('/cart/voucher/remove', [CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
+
     // Wishlist
     Route::post('/wishlist/toggle/{id}', [UserDashboardController::class, 'toggleWishlist'])->name('wishlist.toggle');
     Route::get('/wishlist/count', [UserDashboardController::class, 'getWishlistCount'])->name('wishlist.count');
@@ -96,6 +167,12 @@ Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::post('/checkout/delivery-charge', [CheckoutController::class, 'getDeliveryCharge'])->name('checkout.deliveryCharge');
     Route::post('/checkout/process', [CheckoutController::class, 'processOrder'])->name('checkout.process');
     Route::get('/order/confirmation/{invoiceNo}', [CheckoutController::class, 'confirmation'])->name('order.confirmation');
+
+    // Checkout Coupon & Voucher Operations
+    Route::post('/checkout/coupon/apply', [CheckoutController::class, 'applyCoupon'])->name('checkout.coupon.apply');
+    Route::post('/checkout/coupon/remove', [CheckoutController::class, 'removeCoupon'])->name('checkout.coupon.remove');
+    Route::post('/checkout/voucher/apply', [CheckoutController::class, 'applyVoucher'])->name('checkout.voucher.apply');
+    Route::post('/checkout/voucher/remove', [CheckoutController::class, 'removeVoucher'])->name('checkout.voucher.remove');
 
     // Live APIs
     Route::get('/api/filter-products', [HomeController::class, 'filterProducts'])->name('home.filterProducts');
@@ -120,13 +197,16 @@ Route::middleware(['throttle:custom-rate-limit'])->group(function () {
         Route::post('/addresses/update', [UserDashboardController::class, 'updateAddress'])->name('addresses.update');
         Route::get('/wishlist', [UserDashboardController::class, 'wishlist'])->name('wishlist');
         Route::get('/coupons', [UserDashboardController::class, 'coupons'])->name('coupons');
+        Route::post('/vouchers/claim', [UserDashboardController::class, 'claimVoucher'])->name('vouchers.claim');
         Route::get('/support', [UserDashboardController::class, 'support'])->name('support');
         Route::post('/support/submit', [UserDashboardController::class, 'submitSupportTicket'])->name('support.submit');
 
-        // Product Reviews
+        // Customer Product Reviews Actions
         Route::post('/product/{id}/review', [ProductReviewController::class, 'store'])->name('product.review.store');
         Route::put('/product/review/{id}', [ProductReviewController::class, 'update'])->name('product.review.update');
         Route::delete('/product/review/{id}', [ProductReviewController::class, 'destroy'])->name('product.review.destroy');
+        Route::post('/product/review/{id}/helpful', [ProductReviewController::class, 'toggleHelpful'])->name('product.review.helpful');
+        Route::post('/product/review/{id}/report', [ProductReviewController::class, 'reportReview'])->name('product.review.report');
     });
 
     Route::get('/track-order', [UserDashboardController::class, 'trackOrder'])->name('guest.track.order');
@@ -141,12 +221,21 @@ Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::get('/cart/recover/{token}', [EmailMarketingController::class, 'recoverCart'])->name('cart.recover');
 });
 
-// Public Dynamic Form Submission
+/*
+|==========================================================================
+| SECTION 2: DYNAMIC FORM SUBMISSIONS
+|==========================================================================
+*/
+Route::get('/forms/{slug}', [FormSubmissionController::class, 'show'])->name('forms.show');
 Route::post('/forms/{form}/submit', [FormSubmissionController::class, 'submit'])
     ->name('forms.submit')
     ->middleware(['throttle:10,1', FormSubmissionRateLimit::class]);
 
-// Payment Gateways
+/*
+|==========================================================================
+| SECTION 3: PAYMENT GATEWAYS & CALLBACKS
+|==========================================================================
+*/
 Route::prefix('payment')->name('payment.')->group(function () {
     Route::prefix('sslcommerz')->name('sslcommerz.')->group(function () {
         Route::get('/pay/{invoiceNo}', [PaymentGatewayController::class, 'sslcommerzPay'])->name('pay');
@@ -197,7 +286,11 @@ Route::prefix('payment')->name('payment.')->group(function () {
     });
 });
 
-// Authentication Routes
+/*
+|==========================================================================
+| SECTION 4: AUTHENTICATION (CUSTOMER & ADMIN)
+|==========================================================================
+*/
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-limiter');
@@ -211,22 +304,33 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Admin Auth
+// Admin Dedicated Authentication
 Route::prefix('dashboard/auth')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'showLogin'])->name('login');
     Route::post('/', [AdminDashboardController::class, 'login'])->name('login.submit')->middleware('throttle:auth-limiter');
     Route::post('/logout', [AdminDashboardController::class, 'logout'])->name('logout');
 });
 
-// Public Automated Courier Webhook Route
+/*
+|==========================================================================
+| SECTION 5: AUTOMATED COURIER WEBHOOK
+|==========================================================================
+*/
 Route::post('/webhook/courier/{provider}', [AdminCourierSettingController::class, 'handleWebhook'])->name('courier.webhook');
 
-// Admin Panel Routes (Protected by Auth, Admin Gate, and Granular CheckPermission)
+/*
+|==========================================================================
+| SECTION 6: ADMIN PANEL CORE & MODULES
+|==========================================================================
+*/
 Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->name('admin.')->group(function () {
+
+    /* --- 6.1 Admin Dashboard & Global Search --- */
+    Route::get('/', fn() => redirect()->route('admin.dashboard'));
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/search-ajax', [AdminDashboardController::class, 'ajaxGlobalSearch'])->name('search.ajax');
 
-    // Central Global Media Library Routes (Site Media + User Uploads Control)
+    /* --- 6.2 Central Global Media Library --- */
     Route::prefix('media')->name('media.')->group(function () {
         Route::get('/', [AdminMediaController::class, 'index'])->name('index');
         Route::post('/upload', [AdminMediaController::class, 'upload'])->name('upload');
@@ -238,7 +342,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/bulk-delete', [AdminMediaController::class, 'bulkDestroy'])->name('bulk.destroy');
     });
 
-    // Branch Management Hubs
+    /* --- 6.3 Branch Management Hubs --- */
     Route::prefix('branch')->name('branch.')->group(function () {
         Route::get('/all', [BranchController::class, 'index'])->name('index');
         Route::get('/create', [BranchController::class, 'create'])->name('create');
@@ -257,13 +361,13 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/search-products-ajax', [BranchController::class, 'searchProductsAjax'])->name('search.products');
     });
 
-    // Contact
+    /* --- 6.4 Contacts (Customer & Supplier) --- */
     Route::prefix('contact')->name('contact.')->group(function () {
         Route::get('/customer', fn() => view('admin.modules.placeholder', ['title' => 'Customer List']))->name('customer');
         Route::get('/supplier', fn() => view('admin.modules.placeholder', ['title' => 'Supplier List']))->name('supplier');
     });
 
-    // Product Management
+    /* --- 6.5 Product Management & Product Reviews --- */
     Route::prefix('product')->name('product.')->group(function () {
         Route::post('/category/quick-store-ajax', [AdminCategoryController::class, 'quickStoreAjax'])->name('category.quick_store');
         Route::get('/category', [AdminCategoryController::class, 'index'])->name('category');
@@ -299,11 +403,35 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::delete('/delete/{id}', [AdminProductController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-action', [AdminProductController::class, 'bulkAction'])->name('bulk.action');
         Route::post('/toggle-featured/{id}', [AdminProductController::class, 'toggleFeatured'])->name('toggle.featured');
+
+        // Product Reviews Dashboard & Management
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [AdminProductReviewController::class, 'index'])->name('index');
+            Route::get('/dashboard', [AdminProductReviewController::class, 'dashboard'])->name('dashboard');
+            Route::get('/show/{id}', [AdminProductReviewController::class, 'show'])->name('show');
+            Route::post('/status/{id}', [AdminProductReviewController::class, 'updateStatus'])->name('status');
+            Route::post('/toggle-visibility/{id}', [AdminProductReviewController::class, 'toggleVisibility'])->name('toggle_visibility');
+            Route::match(['delete', 'post'], '/destroy/{id}', [AdminProductReviewController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-action', [AdminProductReviewController::class, 'bulkAction'])->name('bulk_action');
+            Route::post('/reply/{id}', [AdminProductReviewController::class, 'reply'])->name('reply');
+            Route::match(['delete', 'post'], '/reply/delete/{id}', [AdminProductReviewController::class, 'deleteReply'])->name('reply.delete');
+            Route::post('/toggle-pin/{id}', [AdminProductReviewController::class, 'togglePin'])->name('toggle_pin');
+            Route::post('/pin-order', [AdminProductReviewController::class, 'updatePinOrder'])->name('pin_order');
+            Route::get('/product/{productId}', [AdminProductReviewController::class, 'productReviews'])->name('product');
+            Route::post('/product/{productId}/settings', [AdminProductReviewController::class, 'saveProductSettings'])->name('product.settings');
+            Route::get('/customer/{userId}', [AdminProductReviewController::class, 'customerReviews'])->name('customer');
+            Route::get('/auto-rules', [AdminProductReviewController::class, 'autoRulesIndex'])->name('auto_rules');
+            Route::post('/auto-rules/store', [AdminProductReviewController::class, 'storeAutoRule'])->name('auto_rules.store');
+            Route::post('/auto-rules/toggle/{id}', [AdminProductReviewController::class, 'toggleAutoRule'])->name('auto_rules.toggle');
+            Route::match(['delete', 'post'], '/auto-rules/delete/{id}', [AdminProductReviewController::class, 'deleteAutoRule'])->name('auto_rules.delete');
+            Route::get('/settings', [AdminProductReviewController::class, 'settingsIndex'])->name('settings');
+            Route::post('/settings/update', [AdminProductReviewController::class, 'updateSettings'])->name('settings.update');
+        });
     });
 
-    // =========================================================================
-    // COMPREHENSIVE INVENTORY MANAGEMENT SYSTEM ROUTES
-    // =========================================================================
+    Route::get('/reviews', [AdminProductReviewController::class, 'index'])->name('review.index');
+
+    /* --- 6.6 Inventory Management System --- */
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/dashboard', [InventoryController::class, 'dashboard'])->name('dashboard');
         Route::get('/stock-in', [InventoryController::class, 'stockIn'])->name('stock_in');
@@ -315,12 +443,9 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/product/{id}/details', [InventoryController::class, 'productStockDetails'])->name('product.details');
         Route::get('/reports', [InventoryController::class, 'reports'])->name('reports');
         Route::post('/adjust', [InventoryController::class, 'adjustStock'])->name('adjust');
-
-        // AJAX Product & Variant Search for Stock In / Out Forms
         Route::get('/search-products-ajax', [InventoryController::class, 'ajaxSearchProducts'])->name('search.products.ajax');
     });
 
-    // Adjustment Modal-e variant load korar AJAX API
     Route::get('/api/products/{id}/variants', function ($id) {
         if (!\Illuminate\Support\Facades\Schema::hasTable('product_variants')) {
             return response()->json([]);
@@ -332,21 +457,20 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         return response()->json($variants);
     })->name('products.variants.ajax');
 
-    // Support Requests & Reviews
+    /* --- 6.7 Support Requests --- */
     Route::prefix('support-requests')->name('support.')->group(function () {
         Route::get('/', [AdminSupportController::class, 'index'])->name('index');
         Route::get('/view/{id}', [AdminSupportController::class, 'show'])->name('show');
         Route::post('/reply/{id}', [AdminSupportController::class, 'replyTicket'])->name('reply');
     });
-    Route::get('/reviews', fn() => view('admin.modules.placeholder', ['title' => 'Customer Reviews']))->name('review.index');
 
-    // Purchase
+    /* --- 6.8 Purchase Management --- */
     Route::prefix('purchase')->name('purchase.')->group(function () {
         Route::get('/all', fn() => redirect()->route('admin.inventory.stock_in'))->name('index');
         Route::get('/add', fn() => redirect()->route('admin.inventory.stock_in'))->name('create');
     });
 
-    // POS Terminal Module
+    /* --- 6.9 POS Terminal Module --- */
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::get('/', [PosController::class, 'index'])->name('index');
         Route::get('/terminal/{branch_id}', [PosController::class, 'terminal'])
@@ -361,7 +485,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/print-a5-memo/{id}', [PosController::class, 'printA5Memo'])->name('print.a5');
     });
 
-    // Advanced Courier Management Module
+    /* --- 6.10 Advanced Courier Management --- */
     Route::prefix('courier-management')->name('courier.')->group(function () {
         Route::get('/dashboard', [CourierManagementController::class, 'dashboard'])->name('dashboard');
         Route::get('/orders', [CourierManagementController::class, 'index'])->name('index');
@@ -378,7 +502,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/bulk-action', [CourierManagementController::class, 'bulkAction'])->name('bulk.action');
     });
 
-    // Shipping Management
+    /* --- 6.11 Shipping Management --- */
     Route::prefix('shipping-management')->name('shipping.')->group(function () {
         Route::get('/zones', [AdminShippingController::class, 'zonesIndex'])->name('index');
         Route::get('/zones/create', [AdminShippingController::class, 'zoneCreate'])->name('zone.create');
@@ -402,7 +526,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::delete('/local-pickup/location/delete/{id}', [AdminShippingController::class, 'pickupLocationDestroy'])->name('pickup.location.destroy');
     });
 
-    // Orders Management
+    /* --- 6.12 Orders Management & Fraud Checker --- */
     Route::prefix('orders')->name('order.')->group(function () {
         Route::get('/', fn() => redirect()->route('admin.order.online'));
         Route::get('/online', [AdminOrderController::class, 'index'])->name('online');
@@ -422,6 +546,9 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/exchange', [AdminOrderController::class, 'exchangeOrders'])->name('exchange');
         Route::match(['get', 'post'], '/fraud-checker', [AdminOrderController::class, 'fraudChecker'])->name('fraud');
 
+        // Dedicated Manual SMS Trigger Route
+        Route::post('/send-manual-sms/{id}', [AdminOrderController::class, 'sendManualSms'])->name('send_manual_sms');
+
         Route::get('/create-manual', [AdminOrderController::class, 'createManual'])->name('create_manual');
         Route::post('/store-manual', [AdminOrderController::class, 'storeManual'])->name('store_manual');
         Route::get('/search-products-ajax', [AdminOrderController::class, 'searchProductsAjax'])->name('search_products');
@@ -429,9 +556,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/process-return-exchange/{id}', [AdminOrderController::class, 'processReturnExchange'])->name('process_return_exchange');
     });
 
-    // =========================================================================
-    // ADVANCED PAYMENT TRANSACTION MANAGEMENT & VERIFICATION SYSTEM
-    // =========================================================================
+    /* --- 6.13 Payment Transactions Management --- */
     Route::prefix('transactions')->name('transactions.')->group(function () {
         Route::get('/dashboard', [PaymentTransactionController::class, 'dashboard'])->name('dashboard');
         Route::get('/checkout-requests', [PaymentTransactionController::class, 'checkoutRequests'])->name('checkout');
@@ -452,25 +577,206 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::match(['delete', 'post'], '/destroy/{id}', [PaymentTransactionController::class, 'destroy'])->name('destroy');
     });
 
-    // Promo & Campaigns
-    Route::prefix('promo')->name('promo.')->group(function () {
-        Route::get('/flash-sale', fn() => view('admin.modules.placeholder', ['title' => 'Flash Sale']))->name('flashsale');
-        Route::get('/coupons', fn() => view('admin.modules.placeholder', ['title' => 'Coupons']))->name('coupon');
+    /* --- 6.14 Enterprise Tax & VAT System --- */
+    Route::prefix('tax')->name('tax.')->group(function () {
+        Route::get('/dashboard', [TaxDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/chart-ajax', [TaxDashboardController::class, 'chartDataAjax'])->name('dashboard.chart_ajax');
+
+        Route::prefix('classes')->name('classes.')->group(function () {
+            Route::get('/', [TaxClassController::class, 'index'])->name('index');
+            Route::post('/store', [TaxClassController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [TaxClassController::class, 'edit'])->name('edit');
+            Route::match(['put', 'post'], '/update/{id}', [TaxClassController::class, 'update'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{id}', [TaxClassController::class, 'destroy'])->name('destroy');
+            Route::post('/toggle-status/{id}', [TaxClassController::class, 'toggleStatus'])->name('toggle_status');
+        });
+
+        Route::prefix('rules')->name('rules.')->group(function () {
+            Route::get('/', [TaxRuleController::class, 'index'])->name('index');
+            Route::get('/create', [TaxRuleController::class, 'create'])->name('create');
+            Route::post('/store', [TaxRuleController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [TaxRuleController::class, 'edit'])->name('edit');
+            Route::match(['put', 'post'], '/update/{id}', [TaxRuleController::class, 'update'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{id}', [TaxRuleController::class, 'destroy'])->name('destroy');
+            Route::post('/toggle-status/{id}', [TaxRuleController::class, 'toggleStatus'])->name('toggle_status');
+            Route::get('/search-entities-ajax', [TaxRuleController::class, 'searchEntitiesAjax'])->name('search_entities');
+        });
+
+        Route::get('/product-tax', fn() => redirect()->route('admin.tax.rules.index', ['type' => 'product']))->name('product_tax');
+        Route::get('/category-tax', fn() => redirect()->route('admin.tax.rules.index', ['type' => 'category']))->name('category_tax');
+        Route::get('/shipping-tax', fn() => redirect()->route('admin.tax.rules.index', ['type' => 'shipping_zone']))->name('shipping_tax');
+        Route::get('/branch-tax', fn() => redirect()->route('admin.tax.rules.index', ['type' => 'branch']))->name('branch_tax');
+        Route::get('/service-tax', fn() => redirect()->route('admin.tax.rules.index', ['type' => 'service_fee']))->name('service_tax');
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [TaxPaymentController::class, 'index'])->name('index');
+            Route::post('/store', [TaxPaymentController::class, 'store'])->name('store');
+            Route::get('/show/{id}', [TaxPaymentController::class, 'show'])->name('show');
+            Route::match(['put', 'post'], '/update/{id}', [TaxPaymentController::class, 'update'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{id}', [TaxPaymentController::class, 'destroy'])->name('destroy');
+            Route::get('/download/{id}', [TaxPaymentController::class, 'downloadChallan'])->name('download');
+        });
+
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [TaxDocumentController::class, 'index'])->name('index');
+            Route::post('/store', [TaxDocumentController::class, 'store'])->name('store');
+            Route::get('/show/{id}', [TaxDocumentController::class, 'show'])->name('show');
+            Route::match(['put', 'post'], '/update/{id}', [TaxDocumentController::class, 'update'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{id}', [TaxDocumentController::class, 'destroy'])->name('destroy');
+            Route::get('/download/{id}', [TaxDocumentController::class, 'download'])->name('download');
+        });
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [TaxReportController::class, 'index'])->name('index');
+            Route::get('/export-csv', [TaxReportController::class, 'exportCsv'])->name('export');
+            Route::get('/print', [TaxReportController::class, 'printReport'])->name('print');
+        });
+
+        Route::prefix('periods')->name('periods.')->group(function () {
+            Route::get('/', [TaxPeriodController::class, 'index'])->name('index');
+            Route::post('/close', [TaxPeriodController::class, 'close'])->name('close');
+            Route::get('/{id}', [TaxPeriodController::class, 'show'])->name('show');
+            Route::post('/unlock/{id}', [TaxPeriodController::class, 'unlock'])->name('unlock');
+        });
+
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [TaxSettingController::class, 'index'])->name('index');
+            Route::post('/update', [TaxSettingController::class, 'update'])->name('update');
+        });
+
+        Route::get('/collection', fn() => redirect()->route('admin.tax.reports.index', ['report_type' => 'collection_history']))->name('collection');
+        Route::get('/history', fn() => redirect()->route('admin.tax.reports.index', ['report_type' => 'all_transactions']))->name('history');
+        Route::get('/adjustments', fn() => redirect()->route('admin.tax.reports.index', ['report_type' => 'adjustment_history']))->name('adjustments');
+        
+        // Dedicated Tax Audit Log Route
+        Route::get('/audit-logs', [TaxReportController::class, 'auditLogs'])->name('audit_logs');
     });
 
-    // Accounts & General Cash Flow Ledger
+    /*
+    |--------------------------------------------------------------------------
+    | 6.15 ADVANCED SECURITY, IP DETECTION, FIREWALL & TRACKER SYSTEM
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('security')->name('security.')->group(function () {
+
+        // [SEC-1] Security Dashboard & Live Analytics
+        Route::get('/dashboard', [SecurityDashboardController::class, 'index'])->name('dashboard');
+
+        // [SEC-2] All IP Addresses, Telemetry Directory & Inspector
+        Route::prefix('ips')->name('ips.')->group(function () {
+            Route::get('/', [SecurityIpManagementController::class, 'index'])->name('index');
+            Route::get('/export-csv', [SecurityIpManagementController::class, 'export'])->name('export');
+            Route::get('/show/{ip}', [SecurityIpManagementController::class, 'show'])->name('show');
+            Route::post('/block', [SecurityIpManagementController::class, 'block'])->name('block');
+            Route::post('/unblock', [SecurityIpManagementController::class, 'unblock'])->name('unblock');
+        });
+
+        // [SEC-3] Suspicious Orders & Multiple Order Detection
+        Route::prefix('orders')->name('orders.')->group(function () {
+            Route::get('/', [SecuritySuspiciousOrderController::class, 'index'])->name('index');
+            Route::get('/clusters', [SecuritySuspiciousOrderController::class, 'clusters'])->name('clusters');
+            Route::get('/show/{id}', [SecuritySuspiciousOrderController::class, 'show'])->name('show');
+            Route::post('/status/{id}', [SecuritySuspiciousOrderController::class, 'updateStatus'])->name('update_status');
+            Route::post('/quick-block', [SecuritySuspiciousOrderController::class, 'quickBlockAction'])->name('quick_block');
+        });
+
+        // [SEC-4] URL Attack Monitoring & Scanner Protection
+        Route::prefix('urls')->name('urls.')->group(function () {
+            Route::get('/', [SecurityUrlMonitoringController::class, 'index'])->name('index');
+            Route::get('/show/{id}', [SecurityUrlMonitoringController::class, 'show'])->name('show');
+            Route::get('/export-csv', [SecurityUrlMonitoringController::class, 'export'])->name('export');
+            Route::post('/block-all/{id}', [SecurityUrlMonitoringController::class, 'blockAllAttackingIps'])->name('block_all');
+            Route::delete('/reset/{id}', [SecurityUrlMonitoringController::class, 'resetMetrics'])->name('reset');
+        });
+
+        // [SEC-5] Blocking Controls (Single IP, CIDR Network, User Lockout)
+        Route::prefix('blocking')->name('blocking.')->group(function () {
+            // Single Blocked IPs
+            Route::get('/ips', [SecurityBlockingManagementController::class, 'blockedIps'])->name('ips');
+            Route::post('/ips/store', [SecurityBlockingManagementController::class, 'storeBlockedIp'])->name('ips.store');
+            Route::post('/ips/unblock/{id}', [SecurityBlockingManagementController::class, 'unblockIp'])->name('ips.unblock');
+            Route::post('/ips/update/{id}', [SecurityBlockingManagementController::class, 'updateBlockedIp'])->name('ips.update');
+
+            // Blocked CIDR Networks
+            Route::get('/networks', [SecurityBlockingManagementController::class, 'blockedNetworks'])->name('networks');
+            Route::post('/networks/store', [SecurityBlockingManagementController::class, 'storeBlockedNetwork'])->name('networks.store');
+            Route::post('/networks/unblock/{id}', [SecurityBlockingManagementController::class, 'unblockNetwork'])->name('networks.unblock');
+
+            // Customer User Restrictions
+            Route::get('/users', [SecurityBlockingManagementController::class, 'userRestrictions'])->name('users');
+            Route::post('/users/store', [SecurityBlockingManagementController::class, 'storeUserRestriction'])->name('users.store');
+            Route::post('/users/lift/{id}', [SecurityBlockingManagementController::class, 'liftUserRestriction'])->name('users.lift');
+
+            // Emergency Recovery Flush
+            Route::post('/emergency-flush', [SecurityBlockingManagementController::class, 'emergencyFlush'])->name('emergency_flush');
+        });
+
+        // [SEC-6] Security Rules, Firewall Thresholds & Allowlist Settings
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [SecurityRulesAndSettingsController::class, 'index'])->name('index');
+            Route::post('/update', [SecurityRulesAndSettingsController::class, 'updateSettings'])->name('update');
+            Route::post('/allowlist/store', [SecurityRulesAndSettingsController::class, 'storeAllowlist'])->name('allowlist.store');
+            Route::post('/allowlist/toggle/{id}', [SecurityRulesAndSettingsController::class, 'toggleAllowlist'])->name('allowlist.toggle');
+            Route::match(['delete', 'post'], '/allowlist/{id}', [SecurityRulesAndSettingsController::class, 'destroyAllowlist'])->name('allowlist.destroy');
+        });
+
+        // [SEC-7] Activity Logs & Security Alerts Center
+        Route::prefix('logs')->name('logs.')->group(function () {
+            Route::get('/', [SecurityLogsAndAlertsController::class, 'logs'])->name('index');
+            Route::get('/export-csv', [SecurityLogsAndAlertsController::class, 'exportLogs'])->name('export');
+            Route::get('/show/{id}', [SecurityLogsAndAlertsController::class, 'showLog'])->name('show');
+            Route::post('/cleanup', [SecurityLogsAndAlertsController::class, 'cleanupLogs'])->name('cleanup');
+        });
+
+        Route::prefix('alerts')->name('alerts.')->group(function () {
+            Route::get('/', [SecurityLogsAndAlertsController::class, 'alerts'])->name('index');
+            Route::post('/mark-read/{id}', [SecurityLogsAndAlertsController::class, 'markAlertAsRead'])->name('mark_read');
+            Route::post('/mark-all-read', [SecurityLogsAndAlertsController::class, 'markAllAlertsAsRead'])->name('mark_all_read');
+            Route::delete('/destroy/{id}', [SecurityLogsAndAlertsController::class, 'destroyAlert'])->name('destroy');
+        });
+    });
+
+    /* --- 6.16 Promotions, Coupons & Vouchers --- */
+    Route::prefix('promo')->name('promo.')->group(function () {
+        Route::get('/flash-sale', fn() => view('admin.modules.placeholder', ['title' => 'Flash Sale']))->name('flashsale');
+
+        Route::prefix('coupons')->name('coupons.')->group(function () {
+            Route::get('/', [AdminCouponController::class, 'index'])->name('index');
+            Route::get('/create', [AdminCouponController::class, 'createCoupon'])->name('create');
+            Route::post('/store', [AdminCouponController::class, 'storeCoupon'])->name('store');
+            Route::get('/edit/{id}', [AdminCouponController::class, 'editCoupon'])->name('edit');
+            Route::post('/update/{id}', [AdminCouponController::class, 'updateCoupon'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{id}', [AdminCouponController::class, 'destroyCoupon'])->name('destroy');
+            Route::post('/toggle-status/{id}', [AdminCouponController::class, 'toggleCouponStatus'])->name('toggle_status');
+
+            Route::get('/search-products-ajax', [AdminCouponController::class, 'searchProductsAjax'])->name('search_products_ajax');
+            Route::get('/search-categories-ajax', [AdminCouponController::class, 'searchCategoriesAjax'])->name('search_categories_ajax');
+            Route::match(['get', 'post'], '/redemptions/{id}/toggle-status', [AdminCouponController::class, 'toggleRedemptionStatus'])->name('redemptions.toggle_status');
+
+            Route::prefix('vouchers')->name('vouchers.')->group(function () {
+                Route::get('/create', [AdminCouponController::class, 'createVoucher'])->name('create');
+                Route::post('/store', [AdminCouponController::class, 'storeVoucher'])->name('store');
+                Route::get('/edit/{id}', [AdminCouponController::class, 'editVoucher'])->name('edit');
+                Route::post('/update/{id}', [AdminCouponController::class, 'updateVoucher'])->name('update');
+                Route::match(['delete', 'post'], '/delete/{id}', [AdminCouponController::class, 'destroyVoucher'])->name('destroy');
+                Route::post('/toggle-status/{id}', [AdminCouponController::class, 'toggleVoucherStatus'])->name('toggle_status');
+            });
+        });
+
+        Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupon');
+    });
+
+    /* --- 6.17 Accounts, Expenses, Banking & Assets Ledger --- */
     Route::prefix('accounts')->name('accounts.')->group(function () {
         Route::get('/payment-method', [PaymentSettingController::class, 'index'])->name('methods');
         Route::get('/transactions', [PaymentTransactionController::class, 'index'])->name('transactions');
 
-        // Unified General Account Ledger
         Route::prefix('ledger')->name('ledger.')->group(function () {
             Route::get('/', [AccountLedgerController::class, 'index'])->name('index');
             Route::get('/export-csv', [AccountLedgerController::class, 'exportCsv'])->name('export');
         });
         Route::get('/ledger', [AccountLedgerController::class, 'index'])->name('ledger');
 
-        // Operational Expenses Engine (Explicit Fixed Named Routes)
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
         Route::post('/expenses/store', [ExpenseController::class, 'store'])->name('expenses.store');
         Route::match(['delete', 'post'], '/expenses/delete/{id}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
@@ -478,7 +784,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/expenses/export-csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export');
         Route::get('/expenses-manage', [ExpenseController::class, 'index'])->name('expenses');
 
-        // Bank Accounts & Liquid Cash Engine (Step 10)
         Route::prefix('bank-balance')->name('bank.')->group(function () {
             Route::get('/', [BankAccountController::class, 'index'])->name('index');
             Route::post('/account/store', [BankAccountController::class, 'storeAccount'])->name('account.store');
@@ -489,7 +794,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         });
         Route::get('/bank-balance', [BankAccountController::class, 'index'])->name('bank');
 
-        // Business Inflow / Other Income Engine (Step 11)
         Route::prefix('income')->name('income.')->group(function () {
             Route::get('/', [IncomeController::class, 'index'])->name('index');
             Route::post('/store', [IncomeController::class, 'store'])->name('store');
@@ -499,7 +803,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         });
         Route::get('/income', [IncomeController::class, 'index'])->name('income');
 
-        // Capital & Owner Investment Engine (Step 12)
         Route::prefix('investment')->name('investment.')->group(function () {
             Route::get('/', [InvestmentController::class, 'index'])->name('index');
             Route::post('/store', [InvestmentController::class, 'store'])->name('store');
@@ -508,7 +811,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         });
         Route::get('/investment', [InvestmentController::class, 'index'])->name('investment');
 
-        // Fixed Assets Management Engine (Step 13)
         Route::prefix('assets')->name('assets.')->group(function () {
             Route::get('/', [AssetController::class, 'index'])->name('index');
             Route::post('/store', [AssetController::class, 'store'])->name('store');
@@ -518,7 +820,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/assets', [AssetController::class, 'index'])->name('assets');
     });
 
-    // Reports & Financial Analytics (P&L, COGS, Balance Sheet, Cash Flow)
+    /* --- 6.18 Financial Reports & Balance Sheets --- */
     Route::prefix('report')->name('report.')->group(function () {
         Route::get('/stock', fn() => redirect()->route('admin.inventory.balance'))->name('stock');
         Route::get('/sales', fn() => redirect()->route('admin.inventory.reports'))->name('sales');
@@ -527,23 +829,17 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/cogs-analysis', [FinancialReportController::class, 'cogsAnalysis'])->name('cogs');
         Route::get('/export-pnl', [FinancialReportController::class, 'exportPnl'])->name('export_pnl');
 
-        // Comprehensive Balance Sheet
         Route::get('/balance-sheet', [FinancialReportController::class, 'balanceSheet'])->name('balance_sheet');
         Route::get('/export-balance-sheet', [FinancialReportController::class, 'exportBalanceSheet'])->name('export_balance_sheet');
 
-        // Comprehensive Statement of Cash Flows
         Route::get('/cash-flow', [FinancialReportController::class, 'cashFlow'])->name('cash_flow');
         Route::get('/export-cash-flow', [FinancialReportController::class, 'exportCashFlow'])->name('export_cash_flow');
     });
 
-    // =========================================================================
-    // ADVANCED EMAIL MARKETING SYSTEM ROUTES
-    // =========================================================================
+    /* --- 6.19 Advanced Email Marketing System --- */
     Route::prefix('email-marketing')->name('email_marketing.')->group(function () {
-        // 1. Dashboard
         Route::get('/dashboard', [EmailMarketingController::class, 'dashboard'])->name('dashboard');
 
-        // 2. All Subscribers & Instant Bulk Email Dispatch
         Route::prefix('subscribers')->name('subscribers.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'subscribersIndex'])->name('index');
             Route::post('/store', [EmailMarketingController::class, 'subscriberStore'])->name('store');
@@ -555,7 +851,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/bulk-send-instant', [EmailMarketingController::class, 'bulkSendEmailInstant'])->name('bulk_send_instant');
         });
 
-        // 3. Audience Segments (Full Live AJAX, Recalculate, Bulk & Export Routes)
         Route::prefix('segments')->name('segments.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'segmentsIndex'])->name('index');
             Route::get('/create', [EmailMarketingController::class, 'segmentCreate'])->name('create');
@@ -570,10 +865,8 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/bulk-recalculate', [EmailMarketingController::class, 'segmentBulkRecalculate'])->name('bulk_recalculate');
             Route::get('/export-csv', [EmailMarketingController::class, 'segmentsExport'])->name('export');
         });
-        // Aliases for Segments
         Route::get('/segments', [EmailMarketingController::class, 'segmentsIndex'])->name('segments');
 
-        // 4. Campaigns
         Route::prefix('campaigns')->name('campaigns.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'campaignsIndex'])->name('index');
             Route::get('/create', [EmailMarketingController::class, 'campaignCreate'])->name('create');
@@ -590,7 +883,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::get('/recipients/{id}', [EmailMarketingController::class, 'campaignRecipients'])->name('recipients');
         });
 
-        // 5. Email Template Builder
         Route::prefix('templates')->name('templates.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'templatesIndex'])->name('index');
             Route::get('/create', [EmailMarketingController::class, 'templateCreate'])->name('create');
@@ -602,7 +894,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/duplicate/{id}', [EmailMarketingController::class, 'templateDuplicate'])->name('duplicate');
         });
 
-        // 6. Automation & Workflows
         Route::prefix('automations')->name('automations.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'automationsIndex'])->name('index');
             Route::get('/create', [EmailMarketingController::class, 'automationCreate'])->name('create');
@@ -614,12 +905,10 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::get('/logs', [EmailMarketingController::class, 'automationLogs'])->name('logs');
         });
 
-        // 7. Product-Based Marketing & Targeted Audience
         Route::get('/product-marketing', [EmailMarketingController::class, 'productMarketing'])->name('product_marketing');
         Route::match(['get', 'post'], '/campaigns/create-product-targeted', [EmailMarketingController::class, 'createProductCampaign'])->name('campaigns.create_product_targeted');
         Route::match(['get', 'post'], '/product-marketing/create-campaign', [EmailMarketingController::class, 'createProductCampaign'])->name('product_marketing.create_campaign');
 
-        // 8. Cart & Wishlist Marketing (Bulletproof Route Names & Aliases)
         Route::prefix('cart-wishlist')->name('cart_wishlist.')->group(function () {
             Route::get('/', [EmailMarketingController::class, 'cartWishlistMarketing'])->name('index');
             Route::post('/send-recovery/{id}', [EmailMarketingController::class, 'sendCartRecoveryDirect'])->name('send_recovery');
@@ -629,40 +918,28 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/delete/{id}', [EmailMarketingController::class, 'cartWishlistDestroy']);
             Route::get('/export-csv', [EmailMarketingController::class, 'cartWishlistExport'])->name('export');
         });
-        // Explicit Direct Aliases (Prevents RouteNotFoundException for any legacy calls)
         Route::get('/cart-wishlist', [EmailMarketingController::class, 'cartWishlistMarketing'])->name('cart_wishlist_marketing');
         Route::get('/cart-wishlist-all', [EmailMarketingController::class, 'cartWishlistMarketing'])->name('cart_wishlist');
         Route::post('/cart-wishlist/send-recovery/{id}', [EmailMarketingController::class, 'sendCartRecoveryDirect'])->name('cart_wishlist_marketing.send_direct');
         Route::post('/cart-wishlist/send-recovery-alt/{id}', [EmailMarketingController::class, 'sendCartRecoveryDirect']);
 
-        // 9. Customer Groups
         Route::get('/customer-groups', [EmailMarketingController::class, 'customerGroups'])->name('customer_groups');
-
-        // 10. Scheduled Emails
         Route::get('/scheduled', [EmailMarketingController::class, 'scheduledCampaigns'])->name('scheduled');
-
-        // 11. Email Queue & Delivery Logs
         Route::get('/queue-logs', [EmailMarketingController::class, 'queueLogs'])->name('queue_logs');
-
-        // 12. Email Analytics & Reports
         Route::get('/analytics', [EmailMarketingController::class, 'analytics'])->name('analytics');
         Route::get('/analytics/export', [EmailMarketingController::class, 'analyticsExport'])->name('analytics.export');
 
-        // 13. A/B Testing
         Route::get('/ab-testing', [EmailMarketingController::class, 'abTestingIndex'])->name('ab_testing');
         Route::post('/ab-testing/store', [EmailMarketingController::class, 'abTestingStore'])->name('ab_testing.store');
 
-        // 14. Coupons & Promotions
         Route::get('/coupons', [EmailMarketingController::class, 'couponsIndex'])->name('coupons');
         Route::post('/coupons/campaign', [EmailMarketingController::class, 'createCouponCampaign'])->name('coupons.campaign');
         Route::post('/coupons/create-campaign', [EmailMarketingController::class, 'createCouponCampaign'])->name('coupons.create_campaign');
 
-        // 15. Suppression & Unsubscribe List
         Route::get('/suppression', [EmailMarketingController::class, 'suppressionIndex'])->name('suppression');
         Route::post('/suppression/store', [EmailMarketingController::class, 'suppressionStore'])->name('suppression.store');
         Route::delete('/suppression/delete/{id}', [EmailMarketingController::class, 'suppressionDestroy'])->name('suppression.destroy');
 
-        // 16. SMTP & Email Provider Settings
         Route::get('/providers', [EmailMarketingController::class, 'providersIndex'])->name('providers');
         Route::post('/providers/store', [EmailMarketingController::class, 'providerStore'])->name('providers.store');
         Route::match(['put', 'post'], '/providers/update/{id}', [EmailMarketingController::class, 'providerUpdate'])->name('providers.update');
@@ -673,29 +950,82 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/providers/test-connection', [EmailMarketingController::class, 'providerTestConnection'])->name('providers.test_connection');
         Route::post('/providers/test', [EmailMarketingController::class, 'providerTestConnection'])->name('providers.test');
 
-        // 17. Tracking & Consent Settings
         Route::get('/tracking-settings', [EmailMarketingController::class, 'trackingSettings'])->name('tracking_settings');
         Route::post('/tracking-settings/update', [EmailMarketingController::class, 'updateTrackingSettings'])->name('tracking_settings.update');
 
-        // 18. General Marketing Settings
         Route::get('/settings', [EmailMarketingController::class, 'settingsIndex'])->name('settings');
         Route::post('/settings/update', [EmailMarketingController::class, 'updateSettings'])->name('settings.update');
     });
 
-    // Ecommerce Settings
+    /*
+    |--------------------------------------------------------------------------
+    | 6.20 SMS GATEWAY, MARKETING & NOTIFICATION MANAGEMENT SYSTEM (NEW)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('sms')->name('sms.')->group(function () {
+
+        // 1. Settings & Provider Configuration
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [SmsSettingController::class, 'index'])->name('index');
+            Route::post('/update', [SmsSettingController::class, 'update'])->name('update');
+            Route::post('/provider', [SmsSettingController::class, 'updateProvider'])->name('provider.update');
+            Route::post('/test-sms', [SmsSettingController::class, 'testSms'])->name('test');
+            Route::post('/sync-balance', [SmsSettingController::class, 'syncBalance'])->name('sync_balance');
+        });
+
+        // 2. Dynamic Templates Management
+        Route::prefix('templates')->name('templates.')->group(function () {
+            Route::get('/', [SmsTemplateController::class, 'index'])->name('index');
+            Route::get('/create', [SmsTemplateController::class, 'create'])->name('create');
+            Route::post('/store', [SmsTemplateController::class, 'store'])->name('store');
+            Route::get('/edit/{template}', [SmsTemplateController::class, 'edit'])->name('edit');
+            Route::match(['put', 'post'], '/update/{template}', [SmsTemplateController::class, 'update'])->name('update');
+            Route::match(['delete', 'post'], '/delete/{template}', [SmsTemplateController::class, 'destroy'])->name('destroy');
+            Route::post('/toggle-status/{template}', [SmsTemplateController::class, 'toggleStatus'])->name('toggle_status');
+            Route::post('/preview-metrics', [SmsTemplateController::class, 'previewMetrics'])->name('preview_metrics');
+        });
+
+        // 3. Bulk SMS Marketing Campaigns & Audience Targeting
+        Route::prefix('campaigns')->name('campaigns.')->group(function () {
+            Route::get('/', [SmsCampaignController::class, 'index'])->name('index');
+            Route::get('/create', [SmsCampaignController::class, 'create'])->name('create');
+            Route::post('/store', [SmsCampaignController::class, 'store'])->name('store');
+            Route::get('/show/{campaign}', [SmsCampaignController::class, 'show'])->name('show');
+            Route::post('/cancel/{campaign}', [SmsCampaignController::class, 'cancel'])->name('cancel');
+            Route::post('/retry-failed/{campaign}', [SmsCampaignController::class, 'retryFailed'])->name('retry_failed');
+        });
+
+        // 4. SMS Delivery Logs, Audit Trail & CSV Export
+        Route::prefix('logs')->name('logs.')->group(function () {
+            Route::get('/', [SmsLogController::class, 'index'])->name('index');
+            Route::get('/show/{log}', [SmsLogController::class, 'show'])->name('show');
+            Route::post('/check-status/{log}', [SmsLogController::class, 'checkStatus'])->name('check_status');
+            Route::post('/resend/{log}', [SmsLogController::class, 'resend'])->name('resend');
+            Route::get('/export-csv', [SmsLogController::class, 'exportCsv'])->name('export');
+        });
+
+        // 5. Multi-Level SMS Blacklist Management (Phone, IP, Keyword)
+        Route::prefix('blacklist')->name('blacklist.')->group(function () {
+            Route::get('/', [SmsBlacklistController::class, 'index'])->name('index');
+            Route::post('/store', [SmsBlacklistController::class, 'store'])->name('store');
+            Route::match(['delete', 'post'], '/delete/{blacklist}', [SmsBlacklistController::class, 'destroy'])->name('destroy');
+            Route::post('/toggle-status/{blacklist}', [SmsBlacklistController::class, 'toggleStatus'])->name('toggle_status');
+        });
+    });
+
+    /* --- 6.21 Ecommerce & Banner Settings --- */
     Route::prefix('ecommerce-setting')->name('ecommerce.setting.')->group(function () {
         Route::get('/shipping-configuration', fn() => view('admin.modules.placeholder', ['title' => 'Shipping Configuration']))->name('shipping');
         Route::get('/company-information', fn() => view('admin.modules.placeholder', ['title' => 'Company Information']))->name('company');
     });
 
-    // Banner Settings
     Route::prefix('banner-setting')->name('banner.setting.')->group(function () {
         Route::get('/main-banner', fn() => view('admin.modules.placeholder', ['title' => 'Main Banner']))->name('main');
         Route::get('/campaign-banner', fn() => view('admin.modules.placeholder', ['title' => 'Campaign Banner']))->name('campaign');
         Route::get('/shop-banner', fn() => view('admin.modules.placeholder', ['title' => 'Shop Banner']))->name('shop');
     });
 
-    // Frontend Settings
+    /* --- 6.22 Frontend & Site Settings --- */
     Route::prefix('frontend-setting')->name('frontend.setting.')->group(function () {
         Route::get('/logo', fn() => view('admin.modules.placeholder', ['title' => 'Logo Settings']))->name('logo');
         Route::get('/favicon', fn() => view('admin.modules.placeholder', ['title' => 'Favicon Settings']))->name('favicon');
@@ -708,7 +1038,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/blogs', fn() => view('admin.modules.placeholder', ['title' => 'Blogs']))->name('blogs');
     });
 
-    // Theme Settings
+    /* --- 6.23 Dynamic Theme Settings & Display Engine --- */
     Route::prefix('theme-setting')->name('theme.setting.')->group(function () {
         Route::get('/slider', [ThemeSettingController::class, 'sliderIndex'])->name('slider');
         Route::post('/slider/store', [ThemeSettingController::class, 'sliderStore'])->name('slider.store');
@@ -730,6 +1060,8 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
 
         Route::get('/colors', [ThemeSettingController::class, 'themeColorsIndex'])->name('colors');
         Route::post('/colors/update', [ThemeSettingController::class, 'themeColorsUpdate'])->name('colors.update');
+        Route::get('/extended-colors', [ThemeExtendedColorController::class, 'index'])->name('extended_colors');
+        Route::post('/extended-colors/update', [ThemeExtendedColorController::class, 'update'])->name('extended_colors.update');
 
         Route::get('/footer', [ThemeSettingController::class, 'footerBuilderIndex'])->name('footer');
         Route::post('/footer/update', [ThemeSettingController::class, 'footerBuilderUpdate'])->name('footer.update');
@@ -747,9 +1079,28 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
 
         Route::get('/featured-products', [ThemeSettingController::class, 'featuredProductsIndex'])->name('featured_products');
         Route::post('/featured-products/update', [ThemeSettingController::class, 'featuredProductsUpdate'])->name('featured_products.update');
+
+        // Centralized Dynamic Display Engine
+        Route::prefix('display')->name('display.')->group(function () {
+            Route::get('/', [DynamicDisplayController::class, 'index'])->name('index');
+            
+            Route::get('/popups/create', [DynamicDisplayController::class, 'popupCreate'])->name('popup.create');
+            Route::post('/popups/store', [DynamicDisplayController::class, 'popupStore'])->name('popup.store');
+            Route::get('/popups/{id}/edit', [DynamicDisplayController::class, 'popupEdit'])->name('popup.edit');
+            Route::post('/popups/{id}/update', [DynamicDisplayController::class, 'popupUpdate'])->name('popup.update');
+            Route::post('/popups/{id}/toggle', [DynamicDisplayController::class, 'popupToggle'])->name('popup.toggle');
+            Route::delete('/popups/{id}', [DynamicDisplayController::class, 'popupDestroy'])->name('popup.destroy');
+
+            Route::post('/widgets/store', [DynamicDisplayController::class, 'widgetStore'])->name('widget.store');
+            Route::post('/widgets/{id}/update', [DynamicDisplayController::class, 'widgetUpdate'])->name('widget.update');
+            Route::post('/widgets/{id}/toggle', [DynamicDisplayController::class, 'widgetToggle'])->name('widget.toggle');
+            Route::delete('/widgets/{id}', [DynamicDisplayController::class, 'widgetDestroy'])->name('widget.destroy');
+
+            Route::post('/sticky-bar-rule', [DynamicDisplayController::class, 'updateStickyBarRule'])->name('sticky_bar_rule.update');
+        });
     });
 
-    // Payment Settings
+    /* --- 6.24 Admin Payment Gateway Settings --- */
     Route::prefix('payment-settings')->name('payment.')->group(function () {
         Route::get('/gateways', [PaymentSettingController::class, 'index'])->name('setting.gateways');
         Route::post('/manual/store', [PaymentSettingController::class, 'storeManual'])->name('store_manual');
@@ -762,7 +1113,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/manual-history', [PaymentTransactionController::class, 'checkoutRequests'])->name('setting.history');
     });
 
-    // Roles & Staff Users (RBAC) - with bulkAction
+    /* --- 6.25 Roles & Staff Users (RBAC) --- */
     Route::prefix('user-roles')->name('roles.')->group(function () {
         Route::get('/roles', [RolePermissionController::class, 'index'])->name('index');
         Route::get('/roles/create', [RolePermissionController::class, 'create'])->name('create');
@@ -790,7 +1141,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/trash/force-delete/{id}', [StaffUserController::class, 'forceDelete'])->name('trash.force_delete');
     });
 
-    // Live Audit Trail & Activity Logs
+    /* --- 6.26 Activity Logs & User Sessions --- */
     Route::prefix('activity-logs')->name('activity.')->group(function () {
         Route::get('/', [ActivityLogController::class, 'index'])->name('logs');
         Route::get('/show/{id}', [ActivityLogController::class, 'show'])->name('show');
@@ -798,21 +1149,20 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::match(['delete', 'post'], '/destroy/{id}', [ActivityLogController::class, 'destroy'])->name('destroy');
     });
 
-    // Live User Session Monitoring
     Route::prefix('user-sessions')->name('sessions.')->group(function () {
         Route::get('/', [SessionMonitorController::class, 'index'])->name('index');
         Route::post('/revoke/{id}', [SessionMonitorController::class, 'revoke'])->name('revoke');
         Route::post('/revoke-all/{userId}', [SessionMonitorController::class, 'revokeAll'])->name('revoke_all');
     });
 
-    // Admin & Staff Account Profile System
+    /* --- 6.27 Admin & Staff Profile --- */
     Route::prefix('my-profile')->name('profile.')->group(function () {
         Route::get('/', [AdminProfileController::class, 'index'])->name('index');
         Route::post('/update', [AdminProfileController::class, 'updateProfile'])->name('update');
         Route::post('/change-password', [AdminProfileController::class, 'updatePassword'])->name('password');
     });
 
-    // Form Builder
+    /* --- 6.28 Form Builder & Admin Submissions --- */
     Route::prefix('forms')->name('forms.')->group(function () {
         Route::get('/', [FormController::class, 'index'])->name('index');
         Route::get('/create', [FormController::class, 'create'])->name('create');
@@ -824,64 +1174,69 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::put('/{form}/fields/{field}', [FormFieldController::class, 'update'])->name('fields.update');
         Route::delete('/{form}/fields/{field}', [FormFieldController::class, 'destroy'])->name('fields.destroy');
         Route::delete('/{form}', [FormController::class, 'destroy'])->name('destroy');
+        Route::post('/{form}/fields/{field}/clone', [FormFieldController::class, 'clone'])->name('fields.clone');
+
+        Route::get('/submissions', [FormController::class, 'submissions'])->name('submissions.index');
+        Route::post('/submissions/bulk-reply', [FormController::class, 'bulkReplySubmissions'])->name('submissions.bulk_reply');
+        Route::post('/submissions/bulk-status', [FormController::class, 'bulkSubmissionStatus'])->name('submissions.bulk_status');
+        Route::match(['delete', 'post'], '/submissions/bulk-delete', [FormController::class, 'bulkSubmissionDestroy'])->name('submissions.bulk_destroy');
+        Route::get('/submissions/{id}', [FormController::class, 'showSubmission'])->name('submissions.show');
+        Route::post('/submissions/{id}/reply', [FormController::class, 'replySubmission'])->name('submissions.reply');
+        Route::post('/submissions/{id}/block-ip', [FormController::class, 'blockIp'])->name('submissions.block_ip');
+        Route::post('/submissions/{id}/status', [FormController::class, 'updateSubmissionStatus'])->name('submissions.status');
+        Route::match(['delete', 'post'], '/submissions/{id}', [FormController::class, 'destroySubmission'])->name('submissions.destroy');
     });
 
-    // Content Management (Pages, Blogs, Menus, Widgets, Media)
+    /* --- 6.29 Content Management (CMS) --- */
     Route::prefix('content')->name('content.')->group(function () {
-        // Pages
         Route::get('/pages', [SiteContentController::class, 'pagesIndex'])->name('pages.index');
         Route::get('/pages/create', [SiteContentController::class, 'pagesCreate'])->name('pages.create');
         Route::post('/pages', [SiteContentController::class, 'pagesStore'])->name('pages.store');
-        Route::get('/pages/{id}/edit', [SiteContentController::class, 'pagesEdit'])->name('pages.edit');
+        Route::get('/pages/{id}/edit', [SiteContentController::class, 'pagesEdit'])->name('edit');
         Route::match(['put', 'post'], '/pages/{id}', [SiteContentController::class, 'pagesUpdate'])->name('pages.update');
         Route::delete('/pages/{id}', [SiteContentController::class, 'pagesDestroy'])->name('pages.destroy');
 
-        // Blogs
         Route::get('/blogs', [SiteContentController::class, 'blogsIndex'])->name('blogs.index');
         Route::get('/blogs/create', [SiteContentController::class, 'blogsCreate'])->name('blogs.create');
         Route::post('/blogs', [SiteContentController::class, 'blogsStore'])->name('blogs.store');
-        Route::get('/blogs/{id}/edit', [SiteContentController::class, 'blogsEdit'])->name('blogs.edit');
+        Route::get('/blogs/{id}/edit', [SiteContentController::class, 'blogsEdit'])->name('edit');
         Route::match(['put', 'post'], '/blogs/{id}', [SiteContentController::class, 'blogsUpdate'])->name('blogs.update');
         Route::delete('/blogs/{id}', [SiteContentController::class, 'blogsDestroy'])->name('blogs.destroy');
         Route::post('/blogs/{id}/toggle-comments', [SiteContentController::class, 'blogsToggleComments'])->name('blogs.toggleComments');
         
-        // Blog Comments Moderation
         Route::get('/blogs/comments', [SiteContentController::class, 'blogCommentsIndex'])->name('blogs.comments');
         Route::post('/blogs/comment/{id}/status', [SiteContentController::class, 'blogCommentStatus'])->name('blogs.comment.status');
         Route::delete('/blogs/comment/{id}', [SiteContentController::class, 'blogCommentDestroy'])->name('blogs.comment.destroy');
         Route::post('/blogs/comment/{id}/reply', [SiteContentController::class, 'blogCommentReply'])->name('blogs.comment.reply');
         Route::post('/blogs/comments/toggle-auto-approve', [SiteContentController::class, 'blogToggleAutoApprove'])->name('blogs.comments.toggleAutoApprove');
 
-        // Menus
         Route::get('/menus', [SiteContentController::class, 'menusIndex'])->name('menus.index');
         Route::get('/menus/create', [SiteContentController::class, 'menusCreate'])->name('menus.create');
         Route::post('/menus/save', [SiteContentController::class, 'menusSave'])->name('menus.save');
         Route::delete('/menus/{id}', [SiteContentController::class, 'menusDelete'])->name('menus.delete');
 
-        // Widgets
         Route::get('/widgets', [SiteContentController::class, 'widgetsIndex'])->name('widgets.index');
         Route::post('/widgets', [SiteContentController::class, 'widgetsStore'])->name('widgets.store');
         Route::post('/widgets/{id}/update', [SiteContentController::class, 'widgetsUpdate'])->name('widgets.update');
         Route::delete('/widgets/{id}', [SiteContentController::class, 'widgetsDestroy'])->name('widgets.destroy');
         Route::post('/widgets/{id}/toggle', [SiteContentController::class, 'widgetsToggle'])->name('widgets.toggle');
 
-        // Media Library
         Route::get('/media', [AdminMediaController::class, 'index'])->name('media.index');
         Route::post('/media/upload', [AdminMediaController::class, 'upload'])->name('media.upload');
         Route::post('/media/{id}/update', [AdminMediaController::class, 'updateMeta'])->name('update');
         Route::delete('/media/{id}', [AdminMediaController::class, 'destroy'])->name('destroy');
     });
 
-    // General & System Settings
+    /* --- 6.30 General Settings --- */
     Route::prefix('settings')->name('setting.')->group(function () {
         Route::get('/general', [SettingController::class, 'general'])->name('general');
         Route::post('/general/update', [SettingController::class, 'updateGeneral'])->name('general.update');
     });
 
-    // System Settings (Courier, Balance, Track, Webhook & Fraud Check)
+    /* --- 6.31 System Settings (Courier, Balance, Webhooks & Fraud Check) --- */
     Route::prefix('system-settings')->name('system.setting.')->group(function () {
         Route::get('/smtp', fn() => view('admin.modules.placeholder', ['title' => 'SMTP Configuration']))->name('smtp');
-        Route::get('/sms', fn() => view('admin.modules.placeholder', ['title' => 'SMS Configuration']))->name('sms');
+        Route::get('/sms', fn() => redirect()->route('admin.sms.settings.index'))->name('sms');
         Route::get('/courier', [AdminCourierSettingController::class, 'index'])->name('courier');
         Route::post('/courier/{id}', [AdminCourierSettingController::class, 'update'])->name('courier.update');
         Route::post('/courier/balance/{id}', [AdminCourierSettingController::class, 'checkBalance'])->name('courier.balance');
@@ -896,7 +1251,11 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
 
 Route::get('/test-500', fn() => abort(500));
 
-// Universal Symlink Fallback
+/*
+|==========================================================================
+| SECTION 7: UNIVERSAL SYMLINK & MEDIA SERVE FALLBACK
+|==========================================================================
+*/
 $serveMediaFallback = function (string $relativePath) {
     $clean = ltrim(str_replace(['..', "\0", '\\'], ['', '', '/'], $relativePath), '/');
     $clean = preg_replace('#^(public_html/|public/|storage/storage/|uploads/uploads/)#i', '', $clean);
@@ -954,7 +1313,11 @@ Route::get('/products/{path}', fn($path) => $serveMediaFallback('products/' . $p
 Route::get('/sliders/{filename}', fn($filename) => $serveMediaFallback('sliders/' . $filename))->where('filename', '.*');
 Route::get('/theme/offers/{filename}', fn($filename) => $serveMediaFallback('theme/offers/' . $filename))->where('filename', '.*');
 
-// Public Dynamic Catch-All Route
+/*
+|==========================================================================
+| SECTION 8: PUBLIC DYNAMIC CATCH-ALL ROUTE
+|==========================================================================
+*/
 Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::get('/{slug}', [PageController::class, 'show'])
         ->name('pages.show')

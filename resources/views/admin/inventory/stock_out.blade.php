@@ -375,7 +375,7 @@
                                 Quantity to Deduct <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <input type="number" name="quantity" id="form_quantity" class="form-control font-monospace bn-digit fw-bold text-danger shadow-none" min="1" placeholder="e.g. 5" required oninput="recalculateOutPreview()">
+                                <input type="number" name="quantity" id="form_quantity" class="form-control font-monospace bn-digit fw-bold text-danger shadow-none" min="1" placeholder="5" required oninput="recalculateOutPreview()">
                                 <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">Units</span>
                             </div>
                             <small class="text-danger d-none mt-1 fw-semibold" id="errOverStock" style="font-size: 11px;">
@@ -448,7 +448,7 @@
                         <label class="form-label" for="form_notes">
                             Explanation / Disposal Notes <span class="text-danger">*</span>
                         </label>
-                        <textarea name="notes" id="form_notes" class="form-control shadow-none" rows="2" style="font-size: 11px;" placeholder="e.g. 2 bottles broken during warehouse transport, disposed of by supervisor..." required></textarea>
+                        <textarea name="notes" id="form_notes" class="form-control shadow-none" rows="2" style="font-size: 11px;" placeholder="2 bottles broken during warehouse transport, disposed of by supervisor..." required></textarea>
                     </div>
 
                     <!-- Submit Button -->

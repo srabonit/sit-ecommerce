@@ -1,20 +1,15 @@
 @php
-    // ১. রিয়েল-টাইম সেটিং চেক
-    $stockOutSetting = DB::table('settings')->where('key', 'card_show_stockout_btn')->value('value');
-    $showStockOutSetting = ($stockOutSetting === '1' || $stockOutSetting == 1);
+    // ১. স্ট্যাটিক ক্যাশিং (লুপে বারবার ডাটাবেজ কোয়েরি বন্ধ রাখার জন্য)
+    static $cardSettingsCache = null;
+    if ($cardSettingsCache === null) {
+        $cardSettingsCache = \Illuminate\Support\Facades\Cache::remember('product_card_settings_cache', 86400, function() {
+            return DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $dbSettings = $cardSettingsCache ?? [];
 
-    $dbSettings = DB::table('settings')->whereIn('key', [
-        'card_show_price_decimal',
-        'card_show_review',
-        'card_show_wishlist',
-        'card_show_sale_badge',
-        'card_sale_badge_text',
-        'card_enable_quick_view',
-        'card_hover_style',
-        'feature_buy_now_btn',
-        'feature_floating_cart_modal',
-        'feature_quick_view'
-    ])->pluck('value', 'key')->toArray();
+    $stockOutSetting     = $dbSettings['card_show_stockout_btn'] ?? '1';
+    $showStockOutSetting = ($stockOutSetting === '1' || $stockOutSetting == 1);
 
     $showPriceDecimal   = ($dbSettings['card_show_price_decimal'] ?? '1') == '1';
     $showReviews        = ($dbSettings['card_show_review'] ?? '1') == '1';
@@ -25,6 +20,77 @@
     $cardHoverStyle     = $dbSettings['card_hover_style'] ?? 'zoom';
     $showBuyNowBtn      = ($dbSettings['feature_buy_now_btn'] ?? '1') == '1';
     $enableFloatingCart = ($dbSettings['feature_floating_cart_modal'] ?? '1') == '1';
+
+    // কার্ড কালার ও ইন্টারেক্টিভ ভেরিয়েবল রিজলভার
+    $cpcCardBg           = $dbSettings['color_cpc_card_bg'] ?? '#ffffff';
+    $cpcCardBorder       = $dbSettings['color_cpc_card_border'] ?? '#edf2f7';
+    $cpcCardBorderHover  = $dbSettings['color_cpc_card_border_hover'] ?? '#cbd5e1';
+    $cpcCardShadowHover  = $dbSettings['color_cpc_card_shadow_hover'] ?? 'rgba(0,0,0,0.06)';
+    $cpcImgWrapBg        = $dbSettings['color_cpc_img_wrap_bg'] ?? '#f8fafc';
+    $cpcBodyBg           = $dbSettings['color_cpc_body_bg'] ?? 'transparent';
+
+    $cpcTitle            = $dbSettings['color_cpc_title'] ?? '#1e293b';
+    $cpcTitleHover       = $dbSettings['color_cpc_title_hover'] ?? '#2563eb';
+    $cpcCategory         = $dbSettings['color_cpc_category'] ?? '#64748b';
+    $cpcCategoryHover    = $dbSettings['color_cpc_category_hover'] ?? '#2563eb';
+    $cpcPrice            = $dbSettings['color_cpc_price'] ?? '#0f172a';
+    $cpcOldPrice         = $dbSettings['color_cpc_old_price'] ?? '#94a3b8';
+
+    $cpcRatingStar       = $dbSettings['color_cpc_rating_star'] ?? '#f59e0b';
+    $cpcRatingText       = $dbSettings['color_cpc_rating_text'] ?? '#64748b';
+
+    $cpcSaleBadgeBg      = $dbSettings['color_cpc_sale_badge_bg'] ?? '#ef4444';
+    $cpcSaleBadgeText    = $dbSettings['color_cpc_sale_badge_text'] ?? '#ffffff';
+    $cpcSaleBadgeBorder  = $dbSettings['color_cpc_sale_badge_border'] ?? 'transparent';
+
+    $cpcWishlistBg          = $dbSettings['color_cpc_wishlist_bg'] ?? '#f1592a';
+    $cpcWishlistIcon        = $dbSettings['color_cpc_wishlist_icon'] ?? '#ffffff';
+    $cpcWishlistBorder      = $dbSettings['color_cpc_wishlist_border'] ?? 'rgba(255, 255, 255, 0.4)';
+    $cpcWishlistHoverBg     = $dbSettings['color_cpc_wishlist_hover_bg'] ?? '#1f2033';
+    $cpcWishlistHoverIcon   = $dbSettings['color_cpc_wishlist_hover_icon'] ?? '#ffffff';
+    $cpcWishlistHoverBorder = $dbSettings['color_cpc_wishlist_hover_border'] ?? 'transparent';
+    $cpcWishlistActiveBg    = $dbSettings['color_cpc_wishlist_active_bg'] ?? '#dc2626';
+    $cpcWishlistActiveIcon  = $dbSettings['color_cpc_wishlist_active_icon'] ?? '#ffffff';
+    $cpcWishlistActiveBorder= $dbSettings['color_cpc_wishlist_active_border'] ?? 'transparent';
+
+    $cpcQvBg            = $dbSettings['color_cpc_qv_bg'] ?? '#ef4444';
+    $cpcQvIcon          = $dbSettings['color_cpc_qv_icon'] ?? '#ffffff';
+    $cpcQvBorder        = $dbSettings['color_cpc_qv_border'] ?? 'rgba(255, 255, 255, 0.4)';
+    $cpcQvHoverBg       = $dbSettings['color_cpc_qv_hover_bg'] ?? '#1f2033';
+    $cpcQvHoverIcon     = $dbSettings['color_cpc_qv_hover_icon'] ?? '#ffffff';
+    $cpcQvHoverBorder   = $dbSettings['color_cpc_qv_hover_border'] ?? 'transparent';
+
+    $cpcCartBg          = $dbSettings['color_cpc_cart_bg'] ?? '#2563eb';
+    $cpcCartText        = $dbSettings['color_cpc_cart_text'] ?? '#ffffff';
+    $cpcCartBorder      = $dbSettings['color_cpc_cart_border'] ?? '#2563eb';
+    $cpcCartIcon        = $dbSettings['color_cpc_cart_icon'] ?? '#ffffff';
+    $cpcCartHoverBg     = $dbSettings['color_cpc_cart_hover_bg'] ?? '#1d4ed8';
+    $cpcCartHoverText   = $dbSettings['color_cpc_cart_hover_text'] ?? '#ffffff';
+    $cpcCartHoverBorder = $dbSettings['color_cpc_cart_hover_border'] ?? '#1d4ed8';
+    $cpcCartHoverIcon   = $dbSettings['color_cpc_cart_hover_icon'] ?? '#ffffff';
+
+    $cpcOrderBg          = $dbSettings['color_cpc_order_bg'] ?? '#0f172a';
+    $cpcOrderText        = $dbSettings['color_cpc_order_text'] ?? '#ffffff';
+    $cpcOrderBorder      = $dbSettings['color_cpc_order_border'] ?? '#0f172a';
+    $cpcOrderIcon        = $dbSettings['color_cpc_order_icon'] ?? '#f59e0b';
+    $cpcOrderHoverBg     = $dbSettings['color_cpc_order_hover_bg'] ?? '#1e293b';
+    $cpcOrderHoverText   = $dbSettings['color_cpc_order_hover_text'] ?? '#ffffff';
+    $cpcOrderHoverBorder = $dbSettings['color_cpc_order_hover_border'] ?? '#1e293b';
+    $cpcOrderHoverIcon   = $dbSettings['color_cpc_order_hover_icon'] ?? '#f59e0b';
+
+    $cpcOptBg          = $dbSettings['color_cpc_opt_bg'] ?? '#0f172a';
+    $cpcOptText        = $dbSettings['color_cpc_opt_text'] ?? '#ffffff';
+    $cpcOptBorder      = $dbSettings['color_cpc_opt_border'] ?? '#0f172a';
+    $cpcOptIcon        = $dbSettings['color_cpc_opt_icon'] ?? '#ffffff';
+    $cpcOptHoverBg     = $dbSettings['color_cpc_opt_hover_bg'] ?? '#1e293b';
+    $cpcOptHoverText   = $dbSettings['color_cpc_opt_hover_text'] ?? '#ffffff';
+    $cpcOptHoverBorder = $dbSettings['color_cpc_opt_hover_border'] ?? '#1e293b';
+    $cpcOptHoverIcon   = $dbSettings['color_cpc_opt_hover_icon'] ?? '#ffffff';
+
+    $cpcStockoutBg     = $dbSettings['color_cpc_stockout_bg'] ?? '#fee2e2';
+    $cpcStockoutText   = $dbSettings['color_cpc_stockout_text'] ?? '#dc2626';
+    $cpcStockoutBorder = $dbSettings['color_cpc_stockout_border'] ?? '#fca5a5';
+    $cpcStockoutIcon   = $dbSettings['color_cpc_stockout_icon'] ?? '#dc2626';
 
     $finalPrice   = (float) ($product->sale_price ?? $product->price ?? $product->regular_price ?? 0);
     $regularPrice = (float) ($product->regular_price ?? 0);
@@ -56,7 +122,7 @@
                    (!empty($product->variants) && $product->variants->count() > 0) ||
                    (DB::table('product_variants')->where('product_id', $product->id)->exists());
 
-    // Universal Safe Dynamic Image Resolver (Connected to ImagePathService)
+    // Universal Safe Dynamic Image Resolver
     $resolveCardImg = function($path, $fallback = null) {
         if (empty($path)) {
             return $fallback;
@@ -133,12 +199,85 @@
     }
 @endphp
 
+@once
 <style>
+    :root {
+        --cpc-card-bg: {{ $cpcCardBg }};
+        --cpc-card-border: {{ $cpcCardBorder }};
+        --cpc-card-border-hover: {{ $cpcCardBorderHover }};
+        --cpc-card-shadow-hover: {{ $cpcCardShadowHover }};
+        --cpc-img-wrap-bg: {{ $cpcImgWrapBg }};
+        --cpc-body-bg: {{ $cpcBodyBg }};
+
+        --cpc-title: {{ $cpcTitle }};
+        --cpc-title-hover: {{ $cpcTitleHover }};
+        --cpc-category: {{ $cpcCategory }};
+        --cpc-category-hover: {{ $cpcCategoryHover }};
+        --cpc-price: {{ $cpcPrice }};
+        --cpc-old-price: {{ $cpcOldPrice }};
+
+        --cpc-rating-star: {{ $cpcRatingStar }};
+        --cpc-rating-text: {{ $cpcRatingText }};
+
+        --cpc-sale-badge-bg: {{ $cpcSaleBadgeBg }};
+        --cpc-sale-badge-text: {{ $cpcSaleBadgeText }};
+        --cpc-sale-badge-border: {{ $cpcSaleBadgeBorder }};
+
+        --cpc-wishlist-bg: {{ $cpcWishlistBg }};
+        --cpc-wishlist-icon: {{ $cpcWishlistIcon }};
+        --cpc-wishlist-border: {{ $cpcWishlistBorder }};
+        --cpc-wishlist-hover-bg: {{ $cpcWishlistHoverBg }};
+        --cpc-wishlist-hover-icon: {{ $cpcWishlistHoverIcon }};
+        --cpc-wishlist-hover-border: {{ $cpcWishlistHoverBorder }};
+        --cpc-wishlist-active-bg: {{ $cpcWishlistActiveBg }};
+        --cpc-wishlist-active-icon: {{ $cpcWishlistActiveIcon }};
+        --cpc-wishlist-active-border: {{ $cpcWishlistActiveBorder }};
+
+        --cpc-qv-bg: {{ $cpcQvBg }};
+        --cpc-qv-icon: {{ $cpcQvIcon }};
+        --cpc-qv-border: {{ $cpcQvBorder }};
+        --cpc-qv-hover-bg: {{ $cpcQvHoverBg }};
+        --cpc-qv-hover-icon: {{ $cpcQvHoverIcon }};
+        --cpc-qv-hover-border: {{ $cpcQvHoverBorder }};
+
+        --cpc-cart-bg: {{ $cpcCartBg }};
+        --cpc-cart-text: {{ $cpcCartText }};
+        --cpc-cart-border: {{ $cpcCartBorder }};
+        --cpc-cart-icon: {{ $cpcCartIcon }};
+        --cpc-cart-hover-bg: {{ $cpcCartHoverBg }};
+        --cpc-cart-hover-text: {{ $cpcCartHoverText }};
+        --cpc-cart-hover-border: {{ $cpcCartHoverBorder }};
+        --cpc-cart-hover-icon: {{ $cpcCartHoverIcon }};
+
+        --cpc-order-bg: {{ $cpcOrderBg }};
+        --cpc-order-text: {{ $cpcOrderText }};
+        --cpc-order-border: {{ $cpcOrderBorder }};
+        --cpc-order-icon: {{ $cpcOrderIcon }};
+        --cpc-order-hover-bg: {{ $cpcOrderHoverBg }};
+        --cpc-order-hover-text: {{ $cpcOrderHoverText }};
+        --cpc-order-hover-border: {{ $cpcOrderHoverBorder }};
+        --cpc-order-hover-icon: {{ $cpcOrderHoverIcon }};
+
+        --cpc-opt-bg: {{ $cpcOptBg }};
+        --cpc-opt-text: {{ $cpcOptText }};
+        --cpc-opt-border: {{ $cpcOptBorder }};
+        --cpc-opt-icon: {{ $cpcOptIcon }};
+        --cpc-opt-hover-bg: {{ $cpcOptHoverBg }};
+        --cpc-opt-hover-text: {{ $cpcOptHoverText }};
+        --cpc-opt-hover-border: {{ $cpcOptHoverBorder }};
+        --cpc-opt-hover-icon: {{ $cpcOptHoverIcon }};
+
+        --cpc-stockout-bg: {{ $cpcStockoutBg }};
+        --cpc-stockout-text: {{ $cpcStockoutText }};
+        --cpc-stockout-border: {{ $cpcStockoutBorder }};
+        --cpc-stockout-icon: {{ $cpcStockoutIcon }};
+    }
+
     .custom-product-card {
-        background: var(--card-bg-color, #ffffff);
-        border: 1px solid #edf2f7;
+        background-color: var(--cpc-card-bg) !important;
+        border: 1px solid var(--cpc-card-border) !important;
         border-radius: 12px;
-        transition: all 0.2s ease;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -146,14 +285,15 @@
         overflow: hidden;
     }
     .custom-product-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        border-color: var(--cpc-card-border-hover) !important;
+        box-shadow: 0 8px 20px var(--cpc-card-shadow-hover) !important;
+        transform: translateY(-2px);
     }
     .cpc-img-wrap {
         position: relative;
         width: 100%;
         aspect-ratio: 1/1;
-        background: #f8fafc;
+        background-color: var(--cpc-img-wrap-bg) !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -218,47 +358,57 @@
         position: absolute;
         top: 10px;
         left: 10px;
-        background: #ef4444;
-        color: #ffffff;
+        background-color: var(--cpc-sale-badge-bg) !important;
+        color: var(--cpc-sale-badge-text) !important;
+        border: 1px solid var(--cpc-sale-badge-border) !important;
         font-size: 9.5px;
         font-weight: 700;
-        padding: 2px 6px;
+        padding: 2px 7px;
         border-radius: 50px;
         z-index: 2;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
 
     .cpc-wishlist-btn {
         position: absolute;
         top: 6px;
         right: 6px;
-        background: #f1592a !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        background-color: var(--cpc-wishlist-bg) !important;
+        border: 1px solid var(--cpc-wishlist-border) !important;
         width: 28px;
         height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #ffffff !important;
+        color: var(--cpc-wishlist-icon) !important;
         font-size: 11px;
         cursor: pointer;
         z-index: 10;
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s ease;
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease, border-color 0.2s ease;
         margin-right: 5px !important;
         margin-top: 5px !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
+    .cpc-wishlist-btn i {
+        color: var(--cpc-wishlist-icon) !important;
+        transition: color 0.2s ease;
+    }
     .cpc-wishlist-btn:hover {
-        background: #1f2033 !important;
-        color: #ffffff !important;
-        transform: scale(1.1);
+        background-color: var(--cpc-wishlist-hover-bg) !important;
+        border-color: var(--cpc-wishlist-hover-border) !important;
+        transform: scale(1.12);
+    }
+    .cpc-wishlist-btn:hover i {
+        color: var(--cpc-wishlist-hover-icon) !important;
     }
     .cpc-wishlist-btn.is-active {
-        background: #dc2626 !important;
-        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+        background-color: var(--cpc-wishlist-active-bg) !important;
+        border-color: var(--cpc-wishlist-active-border) !important;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
     }
     .cpc-wishlist-btn.is-active i {
-        color: #ffffff !important;
+        color: var(--cpc-wishlist-active-icon) !important;
         font-weight: 900 !important;
     }
 
@@ -266,30 +416,38 @@
         position: absolute;
         top: {{ $showWishlist ? '38px' : '6px' }};
         right: 6px;
-        background: #ef4444 ;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        background-color: var(--cpc-qv-bg) !important;
+        border: 1px solid var(--cpc-qv-border) !important;
         width: 28px;
         height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #ffffff !important;
+        color: var(--cpc-qv-icon) !important;
         font-size: 12px;
         cursor: pointer;
         z-index: 10;
-        transition: 0.2s;
+        transition: transform 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         margin-top: 5px !important;
         margin-right: 5px !important;
     }
+    .cpc-quickview-btn i {
+        color: var(--cpc-qv-icon) !important;
+        transition: color 0.2s ease;
+    }
     .cpc-quickview-btn:hover {
-        background: #1f2033 !important;
-        color: #ffffff !important;
-        transform: scale(1.1);
+        background-color: var(--cpc-qv-hover-bg) !important;
+        border-color: var(--cpc-qv-hover-border) !important;
+        transform: scale(1.12);
+    }
+    .cpc-quickview-btn:hover i {
+        color: var(--cpc-qv-hover-icon) !important;
     }
 
     .cpc-body {
+        background-color: var(--cpc-body-bg) !important;
         padding: 8px 8px 10px 8px;
         display: flex;
         flex-direction: column;
@@ -298,18 +456,27 @@
     .cpc-title {
         font-size: 12.5px;
         font-weight: 600;
-        color: var(--product-title-color, #1e293b);
+        color: var(--cpc-title) !important;
         margin-bottom: 2px;
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        transition: color 0.2s ease;
+    }
+    .cpc-title:hover {
+        color: var(--cpc-title-hover) !important;
     }
     .cpc-category {
         font-size: 10.5px;
-        color: #64748b;
+        color: var(--cpc-category) !important;
         margin-bottom: 3px;
         display: block;
+        transition: color 0.2s ease;
+        text-decoration: none;
+    }
+    .cpc-category:hover {
+        color: var(--cpc-category-hover) !important;
     }
     .cpc-price-box {
         display: flex;
@@ -320,20 +487,26 @@
     .cpc-current-price {
         font-size: 13.5px;
         font-weight: 800;
-        color: var(--product-price-color, #0f172a);
+        color: var(--cpc-price) !important;
     }
     .cpc-old-price {
         font-size: 10.5px;
-        color: #94a3b8;
+        color: var(--cpc-old-price) !important;
         text-decoration: line-through;
     }
     .cpc-rating {
         font-size: 9.5px;
-        color: #f59e0b;
+        color: var(--cpc-rating-star) !important;
         margin-bottom: 6px;
         display: flex;
         align-items: center;
         gap: 1px;
+    }
+    .cpc-rating i {
+        color: var(--cpc-rating-star) !important;
+    }
+    .cpc-rating-count {
+        color: var(--cpc-rating-text) !important;
     }
 
     .cpc-btn-group {
@@ -342,10 +515,12 @@
         gap: 4px;
         margin-top: auto;
     }
+    
+    /* Cart Button */
     .cpc-btn-cart {
-        background-color: var(--card-btn-cart-bg, #2563eb);
-        color: var(--card-btn-cart-text, #ffffff);
-        border: none;
+        background-color: var(--cpc-cart-bg) !important;
+        color: var(--cpc-cart-text) !important;
+        border: 1px solid var(--cpc-cart-border) !important;
         font-size: 11px;
         font-weight: 700;
         padding: 6px 4px;
@@ -355,34 +530,90 @@
         justify-content: center;
         gap: 4px;
         cursor: pointer;
-        transition: 0.2s;
+        transition: all 0.2s ease;
         text-decoration: none;
         width: 100%;
     }
-    .cpc-btn-cart:hover { filter: brightness(0.9); color: #ffffff; }
-    .cpc-btn-order {
-        background-color: var(--card-btn-order-bg, #0f172a);
-        color: var(--card-btn-order-text, #ffffff);
-        border: none;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 6px 4px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        cursor: pointer;
-        transition: 0.2s;
-        text-decoration: none;
-        width: 100%;
+    .cpc-btn-cart i {
+        color: var(--cpc-cart-icon) !important;
+        transition: color 0.2s ease;
     }
-    .cpc-btn-order:hover { filter: brightness(1.2); color: #ffffff; }
+    .cpc-btn-cart:hover {
+        background-color: var(--cpc-cart-hover-bg) !important;
+        color: var(--cpc-cart-hover-text) !important;
+        border-color: var(--cpc-cart-hover-border) !important;
+    }
+    .cpc-btn-cart:hover i {
+        color: var(--cpc-cart-hover-icon) !important;
+    }
 
+    /* Order / Buy Now Button */
+    .cpc-btn-order {
+        background-color: var(--cpc-order-bg) !important;
+        color: var(--cpc-order-text) !important;
+        border: 1px solid var(--cpc-order-border) !important;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 6px 4px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        width: 100%;
+    }
+    .cpc-btn-order i {
+        color: var(--cpc-order-icon) !important;
+        transition: color 0.2s ease;
+    }
+    .cpc-btn-order:hover {
+        background-color: var(--cpc-order-hover-bg) !important;
+        color: var(--cpc-order-hover-text) !important;
+        border-color: var(--cpc-order-hover-border) !important;
+    }
+    .cpc-btn-order:hover i {
+        color: var(--cpc-order-hover-icon) !important;
+    }
+
+    /* Select Option Button */
+    .cpc-btn-opt {
+        background-color: var(--cpc-opt-bg) !important;
+        color: var(--cpc-opt-text) !important;
+        border: 1px solid var(--cpc-opt-border) !important;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 6px 4px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        width: 100%;
+    }
+    .cpc-btn-opt i {
+        color: var(--cpc-opt-icon) !important;
+        transition: color 0.2s ease;
+    }
+    .cpc-btn-opt:hover {
+        background-color: var(--cpc-opt-hover-bg) !important;
+        color: var(--cpc-opt-hover-text) !important;
+        border-color: var(--cpc-opt-hover-border) !important;
+    }
+    .cpc-btn-opt:hover i {
+        color: var(--cpc-opt-hover-icon) !important;
+    }
+
+    /* Stock Out Button */
     .cpc-btn-stockout {
-        background-color: #fee2e2 !important;
-        color: #dc2626 !important;
-        border: none !important;
+        background-color: var(--cpc-stockout-bg) !important;
+        color: var(--cpc-stockout-text) !important;
+        border: 1px solid var(--cpc-stockout-border) !important;
         font-size: 11px !important;
         font-weight: 800 !important;
         padding: 7px 4px !important;
@@ -394,23 +625,27 @@
         cursor: not-allowed !important;
         width: 100% !important;
         letter-spacing: 0.5px;
-        box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+        box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
+    }
+    .cpc-btn-stockout i {
+        color: var(--cpc-stockout-icon) !important;
     }
 
     @media (max-width: 575.98px) {
         .cpc-body { padding: 6px 5px 8px 5px; }
         .cpc-title { font-size: 11.5px; }
         .cpc-current-price { font-size: 12.5px; }
-        .cpc-btn-cart, .cpc-btn-order, .cpc-btn-stockout {
+        .cpc-btn-cart, .cpc-btn-order, .cpc-btn-opt, .cpc-btn-stockout {
             font-size: 10px !important;
             padding: 5px 2px !important;
             border-radius: 5px !important;
         }
-        .cpc-btn-cart i, .cpc-btn-order i, .cpc-btn-stockout i { font-size: 9px !important; }
+        .cpc-btn-cart i, .cpc-btn-order i, .cpc-btn-opt i, .cpc-btn-stockout i { font-size: 9px !important; }
     }
 </style>
+@endonce
 
-<div class="custom-product-card shadow-xs" data-has-secondary="{{ $hasSecondary ? 'true' : 'false' }}" data-hover-style="{{ $cardHoverStyle }}">
+<div class="custom-product-card theme-product-card shadow-xs" data-has-secondary="{{ $hasSecondary ? 'true' : 'false' }}" data-hover-style="{{ $cardHoverStyle }}">
     <div class="cpc-img-wrap">
         @if($showSaleBadge && $hasDiscount)
             <span class="cpc-badge-sale">{{ $saleBadgeText }}</span>
@@ -420,7 +655,7 @@
             <button type="button" 
                     class="cpc-wishlist-btn btn-wishlist-toggle {{ $isWishlisted ? 'is-active' : '' }}" 
                     data-id="{{ $product->id }}" 
-                    title="{{ $isWishlisted ? 'Add / remove to Wish' : 'Add / remove to Wish' }}">
+                    title="{{ $isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
                 <i class="{{ $isWishlisted ? 'fas fa-heart' : 'far fa-heart' }}"></i>
             </button>
         @endif
@@ -441,18 +676,18 @@
 
     <div class="cpc-body">
         <a href="{{ route('product.details', $product->slug ?? $product->id) }}" class="text-decoration-none">
-            <h6 class="cpc-title" title="{{ $product->title ?? $product->name }}">
+            <h6 class="cpc-title theme-product-title" title="{{ $product->title ?? $product->name }}">
                 {{ $product->title ?? $product->name }}
             </h6>
         </a>
         <span class="cpc-category text-truncate">{{ $product->category->name ?? 'Collection' }}</span>
 
         <div class="cpc-price-box">
-            <span class="cpc-current-price">
+            <span class="cpc-current-price theme-product-price bn-digit">
                 ৳{{ $showPriceDecimal ? number_format($finalPrice, 2) : number_format($finalPrice, 0) }}
             </span>
             @if($hasDiscount)
-                <span class="cpc-old-price">
+                <span class="cpc-old-price bn-digit">
                     ৳{{ $showPriceDecimal ? number_format($regularPrice, 2) : number_format($regularPrice, 0) }}
                 </span>
             @endif
@@ -465,7 +700,7 @@
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
                 <i class="fas fa-star"></i>
-                <span class="text-muted ms-1" style="font-size: 8.5px;">(0)</span>
+                <span class="cpc-rating-count ms-1" style="font-size: 8.5px;">(0)</span>
             </div>
         @endif
 
@@ -475,21 +710,21 @@
                     <i class="fas fa-times-circle"></i> <span>STOCK OUT</span>
                 </button>
             @elseif($hasVariants)
-                <a href="{{ route('product.details', $product->slug ?? $product->id) }}" class="cpc-btn-cart text-center py-2 text-decoration-none" style="background-color: #0f172a; color: #fff;">
-                    <i class="fas fa-sliders-h me-1"></i> SELECT OPTIONS
+                <a href="{{ route('product.details', $product->slug ?? $product->id) }}" class="cpc-btn-opt text-center py-2 text-decoration-none">
+                    <i class="fas fa-sliders-h me-1"></i> <span>SELECT OPTIONS</span>
                 </a>
             @else
                 <form action="{{ route('cart.add', $product->id) }}" method="POST" class="d-flex flex-column gap-1 product-cart-form" onsubmit="handleProductCardSubmit(event, this, {{ $product->id }})">
                     @csrf
                     <input type="hidden" name="quantity" value="1">
                     
-                    <button type="submit" name="action" value="add_to_cart" class="cpc-btn-cart">
+                    <button type="submit" name="action" value="add_to_cart" class="cpc-btn-cart theme-btn-cart">
                         <i class="fas fa-shopping-bag"></i> <span>ADD TO CART</span>
                     </button>
 
                     @if($showBuyNowBtn)
-                        <button type="submit" name="action" value="order_now" class="cpc-btn-order">
-                            <i class="fas fa-bolt text-warning"></i> <span>ORDER NOW</span>
+                        <button type="submit" name="action" value="order_now" class="cpc-btn-order theme-btn-order">
+                            <i class="fas fa-bolt"></i> <span>ORDER NOW</span>
                         </button>
                     @endif
                 </form>

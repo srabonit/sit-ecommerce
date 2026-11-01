@@ -1,6 +1,6 @@
 @php
     $siteSettings = \Illuminate\Support\Facades\DB::table('settings')
-        ->whereIn('key', ['footer_brand_title', 'footer_phone', 'footer_email', 'header_logo', 'footer_logo', 'site_icon', 'favicon'])
+        ->whereIn('key', ['footer_brand_title', 'footer_phone', 'footer_email', 'header_logo', 'footer_logo', 'site_icon', 'favicon', 'company_bin', 'bin_number', 'company_address', 'site_address', 'vat_label'])
         ->pluck('value', 'key')
         ->toArray();
 
@@ -8,18 +8,30 @@
         ? $siteSettings['footer_brand_title'] 
         : config('app.name', 'SHOP NOW BD ONLINE');
 
-    $sitePhone =$siteSettings['footer_phone'] ?? '';
-    $siteEmail =$siteSettings['footer_email'] ?? '';
+    $sitePhone = $siteSettings['footer_phone'] ?? '';
+    $siteEmail = $siteSettings['footer_email'] ?? '';
+    $siteAddress = $siteSettings['company_address'] ?? ($siteSettings['site_address'] ?? 'Dhaka, Bangladesh');
+    $vatLabelText = !empty($siteSettings['vat_label']) ? $siteSettings['vat_label'] : 'Govt. VAT / Tax';
+
+    // Central & Branch BIN Resolver for Mushak 6.3 Compliance
+    $companyBin = $siteSettings['company_bin'] ?? ($siteSettings['bin_number'] ?? '001293847-0101');
+    if (!empty($order->branch_id) && \Illuminate\Support\Facades\Schema::hasTable('branches')) {
+        $branchBin = \Illuminate\Support\Facades\DB::table('branches')->where('id', $order->branch_id)->value('bin_number');
+        if (!empty($branchBin)) {
+            $companyBin = $branchBin;
+        }
+    }
 
     $siteLogo = null;
     $rawLogo = $siteSettings['header_logo'] ?? ($siteSettings['footer_logo'] ?? null);
     if (!empty($rawLogo)) {
         if (class_exists(\App\Services\ImagePathService::class)) {
-            $resolved = \App\Services\ImagePathService::resolveUrl($rawLogo, '');$siteLogo = !empty($resolved) ?$resolved : null;
+            $resolved = \App\Services\ImagePathService::resolveUrl($rawLogo, '');
+            $siteLogo = !empty($resolved) ? $resolved : null;
         } elseif (function_exists('show_image')) {
             $siteLogo = show_image($rawLogo, '');
         } elseif (filter_var($rawLogo, FILTER_VALIDATE_URL)) {
-            $siteLogo =$rawLogo;
+            $siteLogo = $rawLogo;
         } else {
             $siteLogo = asset(ltrim($rawLogo, '/'));
         }
@@ -29,46 +41,74 @@
     $finalFavicon = null;
     if (!empty($dbSiteIcon)) {
         if (filter_var($dbSiteIcon, FILTER_VALIDATE_URL)) {
-            $finalFavicon =$dbSiteIcon;
+            $finalFavicon = $dbSiteIcon;
         } else {
-            $cleanIcon = ltrim(str_replace(['storage/', 'public/'], '',$dbSiteIcon), '/');
+            $cleanIcon = ltrim(str_replace(['storage/', 'public/'], '', $dbSiteIcon), '/');
             if (file_exists(public_path($cleanIcon))) {
                 $finalFavicon = asset($cleanIcon);
             } elseif (file_exists(public_path('uploads/' . $cleanIcon))) {
-                $finalFavicon = asset('uploads/' .$cleanIcon);
+                $finalFavicon = asset('uploads/' . $cleanIcon);
             } else {
                 $finalFavicon = asset($cleanIcon);
             }
         }
     }
-    if (empty($finalFavicon) && file_exists(public_path('favicon.ico'))) {$finalFavicon = asset('favicon.ico');
+    if (empty($finalFavicon) && file_exists(public_path('favicon.ico'))) {
+        $finalFavicon = asset('favicon.ico');
     }
 
     $subtotalAmt   = (float)($order->subtotal ?? 0);
     $grandTotalAmt = (float)($order->grand_total ?? 0);
     $discountAmt   = (float)($order->discount_amount ?? ($order->discount ?? 0));
 
-    if (isset($order->delivery_charge) && is_numeric($order->delivery_charge)) {
-        $deliveryFee = (float)$order->delivery_charge;
-    } elseif (isset($order->shipping_charge) && is_numeric($order->shipping_charge)) {
+    // ১. Delivery Charge (Strict: Input thaklei asbe, noyto 0)
+    $deliveryFee = 0.0;
+    if (isset($order->shipping_charge) && is_numeric($order->shipping_charge) && (float)$order->shipping_charge > 0) {
         $deliveryFee = (float)$order->shipping_charge;
+    } elseif (isset($order->delivery_charge) && is_numeric($order->delivery_charge) && (float)$order->delivery_charge > 0) {
+        $deliveryFee = (float)$order->delivery_charge;
+    } elseif (isset($order->shipping_cost) && is_numeric($order->shipping_cost) && (float)$order->shipping_cost > 0) {
+        $deliveryFee = (float)$order->shipping_cost;
+    }
+    $deliveryFee = round($deliveryFee, 2);
+
+    // ২. Strict VAT Resolution (0% ba 0 hole kono fake VAT asbe na)
+    $taxAmt = 0.0;
+    if (isset($order->tax_amount) && !is_null($order->tax_amount)) {
+        $taxAmt = (float)$order->tax_amount;
+    } elseif (isset($order->product_tax_amount) && !is_null($order->product_tax_amount)) {
+        $taxAmt = (float)$order->product_tax_amount;
+    }
+    $taxAmt = round(max(0.0, $taxAmt), 2);
+
+    $taxableBaseAmt = (float)($order->taxable_base_amount ?? max(0, $subtotalAmt - $discountAmt));
+    $isTaxInclusive = (bool)($order->is_tax_inclusive ?? false);
+
+    // ৩. Total & Paid Amount 100% Sync (Order Paid hole Due kokhono asbe na)
+    $paymentStatus = strtolower($order->payment_status ?? '');
+    if (in_array($paymentStatus, ['paid', 'completed'])) {
+        $paidAmt = $grandTotalAmt;
+        $dueAmt  = 0.0;
     } else {
-        $calcDiff =$grandTotalAmt - ($subtotalAmt -$discountAmt);
-        $deliveryFee = max(0,$calcDiff);
+        $paidAmt = (float)($order->paid_amount ?? 0);
+        $dueAmt  = (float)($order->due_amount ?? max(0, $grandTotalAmt - $paidAmt));
+        if ($paidAmt >= $grandTotalAmt) {
+            $paidAmt = $grandTotalAmt;
+            $dueAmt  = 0.0;
+        }
     }
 
-    $paidAmt = (float)($order->paid_amount ?? (($order->payment_status ?? '') === 'paid' ? $grandTotalAmt : 0));
-    $dueAmt  = (float)($order->due_amount ?? max(0, $grandTotalAmt -$paidAmt));
-
-    $rawInv =$order->invoice_no ?? ('INV-' . $order->id);$cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $rawInv);$trackingCode = $order->courier_tracking_id ?? ($order->parcel_id ?? null);
-    $orderNote =$order->admin_note ?? ($order->order_note ?? ($order->notes ?? 'Thank you for shopping with us. Please check your package in front of the delivery person.'));
+    $rawInv = $order->invoice_no ?? ('INV-' . $order->id);
+    $cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $rawInv);
+    $trackingCode = $order->courier_tracking_id ?? ($order->parcel_id ?? null);
+    $orderNote = $order->admin_note ?? ($order->order_note ?? ($order->notes ?? 'Thank you for shopping with us. Please check your package in front of the delivery person.'));
 @endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $cleanInvoiceNo }} - Invoice Memo</title>
+    <title>{{ $cleanInvoiceNo }} - Tax Invoice Memo</title>
     
     @if(!empty($finalFavicon))
         <link rel="icon" type="image/x-icon" href="{{ $finalFavicon }}">
@@ -246,6 +286,19 @@
             color: #000;
         }
 
+        .mushak-compliance-tag {
+            font-size: 8.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #000;
+            border: 1px solid #000;
+            padding: 1px 4px;
+            display: inline-block;
+            margin-top: 2px;
+            background: #f1f5f9;
+        }
+
         .barcode-container {
             text-align: right;
             display: flex;
@@ -329,7 +382,7 @@
         }
 
         .meta-box {
-            width: 50%;
+            width: 48%;
             font-size: 9px;
             border: 1px solid #000;
             padding: 5px 6px;
@@ -338,7 +391,7 @@
         }
 
         .totals-table {
-            width: 48%;
+            width: 50%;
             border-collapse: collapse;
             font-size: 9.5px;
         }
@@ -437,7 +490,7 @@
         <div class="memo-scale-wrapper" id="memoScaleWrapper">
             <div class="invoice-wrapper" id="printable-invoice-content">
                 <div>
-                    <!-- Top Header Row -->
+                    <!-- Top Header Row (Mushak 6.3 & BIN Header) -->
                     <div class="top-row">
                         <div>
                             @if(!empty($siteLogo))
@@ -447,13 +500,20 @@
                                 <img src="" alt="{{ $siteName }}" class="brand-logo-img" id="invoiceBrandLogo" style="display: none;">
                                 <h1 class="brand-title" id="alt-site-title">{{ $siteName }}</h1>
                             @endif
-                            <p style="margin: 0; font-size: 9px; font-weight: bold; text-transform: uppercase;">Delivery &amp; Packing Slip Invoice</p>
-                            <!-- Timezone-Safe Dynamic Date -->
-                            <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #333;">Date: <strong>{{ function_exists('format_datetime') ? format_datetime($order->created_at, 'd M, Y h:i A') : date('d M, Y h:i A', strtotime($order->created_at)) }}</strong></p>
+                            
+                            <div class="mushak-compliance-tag">
+                                Mushak 6.3 / Tax Invoice
+                            </div>
+
+                            <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #111;">
+                                BIN: <strong class="font-monospace">{{ $companyBin }}</strong>
+                            </p>
+                            <p style="margin: 1px 0 0 0; font-size: 8px; color: #444;">Date: <strong>{{ function_exists('format_datetime') ? format_datetime($order->created_at, 'd M, Y h:i A') : date('d M, Y h:i A', strtotime($order->created_at)) }}</strong></p>
                         </div>
 
                         <div class="barcode-container">
                             <svg id="barcode"></svg>
+                            <span style="font-size: 8px; color: #666; margin-top: 2px;">NBR GO-05/VAT/2026</span>
                         </div>
                     </div>
 
@@ -479,7 +539,7 @@
                             <div>Invoice No: <strong>#{{ $order->invoice_no ?? $order->id }}</strong></div>
                             <div>Order Status: <strong>{{ strtoupper(str_replace('_', ' ', $order->order_status ?? 'PENDING')) }}</strong></div>
                             <div>Payment Method: <strong>{{ strtoupper($order->payment_method ?? 'CASH ON DELIVERY') }}</strong></div>
-                            <div>Payment Status: <strong>{{ strtoupper($order->payment_status ?? 'UNPAID') }}</strong></div>
+                            <div>Payment Status: <strong style="color: {{ in_array(strtolower($order->payment_status ?? ''), ['paid', 'completed']) ? '#16a34a' : '#ea580c' }};">{{ strtoupper($order->payment_status ?? 'UNPAID') }}</strong></div>
                             @if(!empty($order->transaction_id))
                                 <div>Trx ID: <strong>{{ $order->transaction_id }}</strong></div>
                             @endif
@@ -493,39 +553,45 @@
                     <table class="items-table">
                         <thead>
                             <tr>
-                                <th style="width: 20px;" class="text-center">#</th>
+                                <th style="width: 18px;" class="text-center">#</th>
                                 <th>Item Description / Specification</th>
-                                <th style="width: 55px;" class="text-center">Rate</th>
-                                <th style="width: 30px;" class="text-center">Qty</th>
-                                <th style="width: 60px;" class="text-end">Total</th>
+                                <th style="width: 50px;" class="text-center">Rate</th>
+                                <th style="width: 28px;" class="text-center">Qty</th>
+                                <th style="width: 38px;" class="text-center">VAT</th>
+                                <th style="width: 55px;" class="text-end">Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($orderItems as $idx =>$item)
+                            @forelse($orderItems as $idx => $item)
                                 @php
                                     $unitPrice = (float)($item->price ?? ($item->unit_price ?? ($item->rate ?? 0)));
                                     $qty = (int)($item->quantity ?? ($item->qty ?? 1));
                                     $lineTotal = (float)($item->total ?? ($item->total_price ?? ($unitPrice * $qty)));
 
-                                    $pTitle =$item->product_title ?? ($item->product_name ?? ($item->title ?? null));
+                                    $pTitle = $item->product_title ?? ($item->product_name ?? ($item->title ?? null));
                                     if (empty($pTitle) && !empty($item->product_id)) {
-                                        $pTitle = \Illuminate\Support\Facades\DB::table('products')->where('id',$item->product_id)->value('title');
+                                        $pTitle = \Illuminate\Support\Facades\DB::table('products')->where('id', $item->product_id)->value('title');
                                     }
-                                    $pTitle =$pTitle ?: ('Product #' . ($item->product_id ?? ($idx + 1)));
+                                    $pTitle = $pTitle ?: ('Product #' . ($item->product_id ?? ($idx + 1)));
 
                                     $vColor = $item->color ?? ($item->pv_color ?? null);
                                     $vSize  = $item->size ?? ($item->pv_size ?? null);
-                                    $vTitle =$item->variant_title ?? null;
-                                    $vSku   =$item->sku ?? ($item->pv_code ?? ($item->pv_sku ?? null));
+                                    $vTitle = $item->variant_title ?? null;
+                                    $vSku   = $item->sku ?? ($item->pv_code ?? ($item->pv_sku ?? null));
 
                                     if (!empty($item->variant_id) && (empty($vColor) && empty($vSize))) {
-                                        $vRec = \Illuminate\Support\Facades\DB::table('product_variants')->where('id',$item->variant_id)->first();
-                                        if ($vRec) {$vColor = $vRec->color ?? $vColor;
+                                        $vRec = \Illuminate\Support\Facades\DB::table('product_variants')->where('id', $item->variant_id)->first();
+                                        if ($vRec) {
+                                            $vColor = $vRec->color ?? $vColor;
                                             $vSize  = $vRec->size ?? $vSize;
-                                            $vSku   =$vRec->product_code ?? ($vRec->sku ?? $vSku);
-                                            $parts  = array_filter([$vColor, $vSize]);$vTitle = count($parts) > 0 ? implode(' / ', $parts) : ($vRec->name ?? $vTitle);
+                                            $vSku   = $vRec->product_code ?? ($vRec->sku ?? $vSku);
+                                            $parts  = array_filter([$vColor, $vSize]);
+                                            $vTitle = count($parts) > 0 ? implode(' / ', $parts) : ($vRec->name ?? $vTitle);
                                         }
                                     }
+
+                                    $itemTaxRate = isset($item->tax_rate) ? (float)$item->tax_rate : 0.0;
+                                    $itemTaxAmt  = isset($item->tax_amount) ? (float)$item->tax_amount : 0.0;
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $idx + 1 }}</td>
@@ -533,7 +599,7 @@
                                         <strong>{{ $pTitle }}</strong>
                                         @if(!empty($vColor) || !empty($vSize) || !empty($vTitle))
                                             <span style="font-size: 8px; display: block; color: #333;">
-                                                Variant: {{ trim(($vColor ? 'Color: ' . $vColor : '') . ($vColor && $vSize ? ' \vert{} ' : '') . ($vSize ? 'Size: ' . $vSize : '')) ?:$vTitle }}
+                                                Variant: {{ trim(($vColor ? 'Color: ' . $vColor : '') . ($vColor && $vSize ? ' | ' : '') . ($vSize ? 'Size: ' . $vSize : '')) ?: $vTitle }}
                                             </span>
                                         @endif
                                         @if(!empty($vSku))
@@ -542,51 +608,78 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-center">৳{{ number_format($unitPrice, 2) }}</td>
-                                    <td class="text-center">{{ $qty }}</td>
-                                    <td class="text-end">৳{{ number_format($lineTotal, 2) }}</td>
+                                    <td class="text-center font-monospace">৳{{ number_format($unitPrice, 2) }}</td>
+                                    <td class="text-center font-monospace">{{ $qty }}</td>
+                                    <td class="text-center font-monospace" style="font-size: 8.5px;">
+                                        @if($taxAmt > 0)
+                                            @if($itemTaxRate > 0)
+                                                {{ number_format($itemTaxRate, ($itemTaxRate == (int)$itemTaxRate ? 0 : 1)) }}%
+                                            @elseif($itemTaxAmt > 0)
+                                                ৳{{ number_format($itemTaxAmt, 2) }}
+                                            @else
+                                                0%
+                                            @endif
+                                        @else
+                                            0%
+                                        @endif
+                                    </td>
+                                    <td class="text-end font-monospace">৳{{ number_format($lineTotal, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-2">No item records found.</td>
+                                    <td colspan="6" class="text-center py-2">No item records found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
 
-                    <!-- Totals & Notes Section -->
+                    <!-- Totals & Notes Section (With Clean NBR VAT Accounting) -->
                     <div class="totals-area">
                         <div class="meta-box safe-text-break">
                             <strong>Order Instructions / Notes:</strong><br>
                             <span>{{ $orderNote }}</span>
+                            @if($taxAmt > 0)
+                                <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #aaa; font-size: 8px; color: #555;">
+                                    <strong>Tax Assessment:</strong> {{ $isTaxInclusive ? 'Inclusive (Included in Price)' : 'Exclusive (Standard)' }}<br>
+                                    <strong>Taxable Sales Base:</strong> ৳{{ number_format($taxableBaseAmt, 2) }}
+                                </div>
+                            @endif
                         </div>
 
-                        <table class="totals-table">
+                        <table class="totals-table font-monospace">
                             <tr>
                                 <td>Subtotal:</td>
                                 <td class="text-end">৳{{ number_format($subtotalAmt, 2) }}</td>
                             </tr>
+                            @if(!empty($discountAmt) && $discountAmt > 0)
+                            <tr>
+                                <td>Discount:</td>
+                                <td class="text-end text-success">-৳{{ number_format($discountAmt, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($taxAmt > 0)
+                            <tr>
+                                <td>{{ $vatLabelText }} {{ $isTaxInclusive ? '(Inc.)' : '' }}:</td>
+                                <td class="text-end fw-bold" style="color: #0284c7;">৳{{ number_format($taxAmt, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($deliveryFee > 0)
                             <tr>
                                 <td>Delivery Fee:</td>
                                 <td class="text-end">৳{{ number_format($deliveryFee, 2) }}</td>
-                            </tr>
-                            @if(!empty($discountAmt) &&$discountAmt > 0)
-                            <tr>
-                                <td>Discount:</td>
-                                <td class="text-end">-৳{{ number_format($discountAmt, 2) }}</td>
                             </tr>
                             @endif
                             <tr style="font-weight: bold; background: #eee;">
                                 <td>Grand Total:</td>
                                 <td class="text-end">৳{{ number_format($grandTotalAmt, 2) }}</td>
                             </tr>
-                            @if($paidAmt > 0)
                             <tr>
                                 <td>Paid Amount:</td>
-                                <td class="text-end">৳{{ number_format($paidAmt, 2) }}</td>
+                                <td class="text-end fw-bold" style="color: #16a34a;">৳{{ number_format($paidAmt, 2) }}</td>
                             </tr>
-                            <tr style="font-weight: bold;">
-                                <td>Collectible Due:</td>
+                            @if($dueAmt > 0)
+                            <tr style="font-weight: bold; color: #dc2626;">
+                                <td>Due Amount:</td>
                                 <td class="text-end">৳{{ number_format($dueAmt, 2) }}</td>
                             </tr>
                             @endif
@@ -602,20 +695,11 @@
                     </div>
 
                     <div class="footer-terms">
-                        For support or queries:
-                        @if(!empty($sitePhone))
-                            contact <strong>{{ $sitePhone }}</strong>
-                        @endif
-                        @if(!empty($sitePhone) && !empty($siteEmail))
-                            &bull;
-                        @endif
-                        @if(!empty($siteEmail))
-                            Email: <strong>{{ $siteEmail }}</strong>
-                        @endif
-                        @if(empty($sitePhone) && empty($siteEmail))
-                            contact our support team
-                        @endif
-                        &bull; This is Computer Generated Invoice
+                        For support: 
+                        @if(!empty($sitePhone)) <strong>{{ $sitePhone }}</strong> @endif
+                        @if(!empty($siteEmail)) &bull; <strong>{{ $siteEmail }}</strong> @endif
+                        &bull; BIN: <strong>{{ $companyBin }}</strong>
+                        &bull; Computer Generated Tax Invoice (Mushak 6.3)
                     </div>
                 </div>
             </div>

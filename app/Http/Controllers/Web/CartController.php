@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\ShippingZone;
 use App\Services\ImagePathService;
+use App\Services\DiscountEngineService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -41,32 +43,52 @@ class CartController extends Controller
     {
         $cart = Session::get('cart', []);
 
+        $total = 0;
+        $itemsCount = 0;
+        foreach ($cart as $item) {
+            $total += (float)$item['price'] * (int)$item['quantity'];
+            $itemsCount += (int)$item['quantity'];
+        }
+
+        $appliedCoupon = Session::get('applied_coupon');
+        $appliedVoucher = Session::get('applied_voucher');
+
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $total,
+            $cart,
+            $couponCode,
+            $voucherCode,
+            Auth::id(),
+            0.0
+        );
+
+        $freeShippingMin = $this->getDynamicFreeShippingMin($total);
+        $remainingForFree = max(0, $freeShippingMin - $total);
+        $isFreeShipping = ($freeShippingMin === 0.00 || $total >= $freeShippingMin || ($calc['adjusted_delivery_charge'] === 0.0 && ($calc['coupon_discount'] > 0 || $calc['voucher_discount'] > 0)));
+
         if ($request->ajax() || $request->wantsJson()) {
-            $total = 0;
-            $itemsCount = 0;
-            foreach ($cart as $item) {
-                $total += (float)$item['price'] * (int)$item['quantity'];
-                $itemsCount += (int)$item['quantity'];
-            }
-
-            $freeShippingMin = $this->getDynamicFreeShippingMin($total);
-            $remainingForFree = max(0, $freeShippingMin - $total);
-            $isFreeShipping = ($freeShippingMin === 0.00 || $total >= $freeShippingMin);
-
             return response()->json([
                 'status'              => 'success',
                 'cart'                => $cart,
                 'cart_count'          => $itemsCount,
                 'subtotal'            => number_format($total, 2, '.', ''),
-                'grand_total'         => number_format($total, 2, '.', ''),
+                'coupon_discount'     => number_format($calc['coupon_discount'], 2, '.', ''),
+                'voucher_discount'    => number_format($calc['voucher_discount'], 2, '.', ''),
+                'total_discount'      => number_format($calc['total_discount'], 2, '.', ''),
+                'grand_total'         => number_format($calc['final_payable'], 2, '.', ''),
                 'free_shipping_min'   => number_format($freeShippingMin, 2, '.', ''),
                 'remaining_free_ship' => number_format($remainingForFree, 2, '.', ''),
                 'is_free_shipping'    => $isFreeShipping,
+                'coupon_code'         => $calc['coupon_code'],
+                'voucher_code'        => $calc['voucher_code'],
                 'html'                => view('frontend.partials.cart_drawer_items', compact('cart', 'total'))->render()
             ]);
         }
 
-        return view('frontend.cart', compact('cart'));
+        return view('frontend.cart', compact('cart', 'calc'));
     }
 
     public function add(Request $request, $id)
@@ -206,6 +228,20 @@ class CartController extends Controller
 
         $itemTotal = isset($cart[$cartKey]) ? ((float)$cart[$cartKey]['price'] * (int)$cart[$cartKey]['quantity']) : 0;
 
+        $appliedCoupon = Session::get('applied_coupon');
+        $appliedVoucher = Session::get('applied_voucher');
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $totalAmount,
+            $cart,
+            $couponCode,
+            $voucherCode,
+            Auth::id(),
+            0.0
+        );
+
         $freeShippingMin = $this->getDynamicFreeShippingMin($totalAmount);
         $remainingForFree = max(0, $freeShippingMin - $totalAmount);
         $isFreeShipping = ($freeShippingMin === 0.00 || $totalAmount >= $freeShippingMin);
@@ -216,7 +252,10 @@ class CartController extends Controller
             'item_total'          => number_format($itemTotal, 2, '.', ''),
             'subtotal'            => number_format($totalAmount, 2, '.', ''),
             'cart_subtotal'       => number_format($totalAmount, 2, '.', ''),
-            'grand_total'         => number_format($totalAmount, 2, '.', ''),
+            'coupon_discount'     => number_format($calc['coupon_discount'], 2, '.', ''),
+            'voucher_discount'    => number_format($calc['voucher_discount'], 2, '.', ''),
+            'total_discount'      => number_format($calc['total_discount'], 2, '.', ''),
+            'grand_total'         => number_format($calc['final_payable'], 2, '.', ''),
             'free_shipping_min'   => number_format($freeShippingMin, 2, '.', ''),
             'remaining_free_ship' => number_format($remainingForFree, 2, '.', ''),
             'is_free_shipping'    => $isFreeShipping,
@@ -233,6 +272,8 @@ class CartController extends Controller
 
         if ($cartKey === 'all_clear') {
             Session::forget('cart');
+            Session::forget('applied_coupon');
+            Session::forget('applied_voucher');
             $removed = true;
             $cart = [];
         } elseif (isset($cart[$cartKey])) {
@@ -248,6 +289,20 @@ class CartController extends Controller
             $totalAmount += (float) $item['price'] * (int) $item['quantity'];
         }
 
+        $appliedCoupon = Session::get('applied_coupon');
+        $appliedVoucher = Session::get('applied_voucher');
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $totalAmount,
+            $cart,
+            $couponCode,
+            $voucherCode,
+            Auth::id(),
+            0.0
+        );
+
         $freeShippingMin = $this->getDynamicFreeShippingMin($totalAmount);
         $remainingForFree = max(0, $freeShippingMin - $totalAmount);
         $isFreeShipping = ($freeShippingMin === 0.00 || $totalAmount >= $freeShippingMin);
@@ -258,7 +313,10 @@ class CartController extends Controller
                 'cart_count'          => $totalItems,
                 'subtotal'            => number_format($totalAmount, 2, '.', ''),
                 'cart_subtotal'       => number_format($totalAmount, 2, '.', ''),
-                'grand_total'         => number_format($totalAmount, 2, '.', ''),
+                'coupon_discount'     => number_format($calc['coupon_discount'], 2, '.', ''),
+                'voucher_discount'    => number_format($calc['voucher_discount'], 2, '.', ''),
+                'total_discount'      => number_format($calc['total_discount'], 2, '.', ''),
+                'grand_total'         => number_format($calc['final_payable'], 2, '.', ''),
                 'free_shipping_min'   => number_format($freeShippingMin, 2, '.', ''),
                 'remaining_free_ship' => number_format($remainingForFree, 2, '.', ''),
                 'is_free_shipping'    => $isFreeShipping,
@@ -273,6 +331,9 @@ class CartController extends Controller
     public function clear()
     {
         Session::forget('cart');
+        Session::forget('applied_coupon');
+        Session::forget('applied_voucher');
+
         return response()->json([
             'status'              => 'success',
             'cart_count'          => 0,
@@ -285,6 +346,281 @@ class CartController extends Controller
             'is_empty'            => true,
             'html'                => view('frontend.partials.cart_drawer_items', ['cart' => [], 'total' => 0])->render()
         ]);
+    }
+
+    /**
+     * Apply Coupon to Cart (With Target User Check & Product/Category Match)
+     */
+    public function applyCoupon(Request $request)
+    {
+        $code = trim((string)($request->input('coupon_code') ?? $request->input('code', '')));
+        if (empty($code)) {
+            $msg = 'Please enter a coupon code.';
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            $msg = 'Your cart is empty.';
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        // Target Customer Group (All vs Registered vs Guest) Check
+        if (Schema::hasTable('coupons')) {
+            $couponRecord = DB::table('coupons')->where('code', $code)->first();
+            if ($couponRecord && isset($couponRecord->target_user_type)) {
+                $target = $couponRecord->target_user_type;
+                if ($target === 'registered_only' && !Auth::check()) {
+                    $msg = 'এই কুপনটি শুধুমাত্র রেজিস্টার্ড ও লগইন করা গ্রাহকদের জন্য প্রযোজ্য। অনুগ্রহ করে প্রথমে লগইন করুন।';
+                    return $request->ajax() || $request->wantsJson()
+                        ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                        : back()->with('error', $msg);
+                } elseif ($target === 'guest_only' && Auth::check()) {
+                    $msg = 'এই কুপনটি শুধুমাত্র গেস্ট গ্রাহকদের জন্য প্রযোজ্য।';
+                    return $request->ajax() || $request->wantsJson()
+                        ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                        : back()->with('error', $msg);
+                }
+            }
+        }
+
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += (float)$item['price'] * (int)$item['quantity'];
+        }
+
+        $result = DiscountEngineService::validateAndCalculateCoupon($code, $subtotal, $cart, Auth::id(), 0.0);
+
+        if (!$result['valid']) {
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $result['message']], 422)
+                : back()->with('error', $result['message']);
+        }
+
+        Session::put('applied_coupon', [
+            'code'          => $result['code'],
+            'discount'      => $result['discount'],
+            'discount_type' => $result['discount_type'],
+        ]);
+
+        $appliedVoucher = Session::get('applied_voucher');
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $subtotal,
+            $cart,
+            $result['code'],
+            $voucherCode,
+            Auth::id(),
+            0.0
+        );
+
+        $msg = $result['message'] ?? 'Coupon applied successfully!';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status'           => 'success',
+                'message'          => $msg,
+                'coupon_code'      => $result['code'],
+                'coupon_discount'  => number_format($calc['coupon_discount'], 2, '.', ''),
+                'voucher_discount' => number_format($calc['voucher_discount'], 2, '.', ''),
+                'total_discount'   => number_format($calc['total_discount'], 2, '.', ''),
+                'subtotal'         => number_format($calc['subtotal'], 2, '.', ''),
+                'grand_total'      => number_format($calc['final_payable'], 2, '.', ''),
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Remove Applied Coupon from Cart
+     */
+    public function removeCoupon(Request $request)
+    {
+        Session::forget('applied_coupon');
+
+        $cart = Session::get('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += (float)$item['price'] * (int)$item['quantity'];
+        }
+
+        $appliedVoucher = Session::get('applied_voucher');
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $subtotal,
+            $cart,
+            null,
+            $voucherCode,
+            Auth::id(),
+            0.0
+        );
+
+        $msg = 'Coupon removed from cart.';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status'           => 'success',
+                'message'          => $msg,
+                'coupon_discount'  => '0.00',
+                'voucher_discount' => number_format($calc['voucher_discount'], 2, '.', ''),
+                'total_discount'   => number_format($calc['total_discount'], 2, '.', ''),
+                'subtotal'         => number_format($calc['subtotal'], 2, '.', ''),
+                'grand_total'      => number_format($calc['final_payable'], 2, '.', ''),
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Apply Voucher to Cart (With Target User Check)
+     */
+    public function applyVoucher(Request $request)
+    {
+        $code = trim((string)($request->input('voucher_code') ?? $request->input('code', '')));
+        if (empty($code)) {
+            $msg = 'Please enter or select a voucher code.';
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            $msg = 'Your cart is empty.';
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                : back()->with('error', $msg);
+        }
+
+        // Voucher Target Check
+        if (Schema::hasTable('vouchers')) {
+            $vRecord = DB::table('vouchers')
+                ->where('code_prefix', $code)
+                ->orWhere('title', $code)
+                ->first();
+
+            if (!$vRecord && Schema::hasTable('customer_vouchers')) {
+                $cv = DB::table('customer_vouchers')->where('voucher_code', $code)->first();
+                if ($cv) {
+                    $vRecord = DB::table('vouchers')->where('id', $cv->voucher_id)->first();
+                }
+            }
+
+            if ($vRecord && isset($vRecord->target_user_type)) {
+                if ($vRecord->target_user_type === 'registered_only' && !Auth::check()) {
+                    $msg = 'এই ভাউচারটি শুধুমাত্র রেজিস্টার্ড গ্রাহকদের ওয়ালেটের জন্য প্রযোজ্য। অনুগ্রহ করে লগইন করুন।';
+                    return $request->ajax() || $request->wantsJson()
+                        ? response()->json(['status' => 'error', 'message' => $msg], 401)
+                        : back()->with('error', $msg);
+                } elseif ($vRecord->target_user_type === 'guest_only' && Auth::check()) {
+                    $msg = 'এই ভাউচারটি শুধুমাত্র গেস্ট গ্রাহকদের জন্য প্রযোজ্য।';
+                    return $request->ajax() || $request->wantsJson()
+                        ? response()->json(['status' => 'error', 'message' => $msg], 422)
+                        : back()->with('error', $msg);
+                }
+            }
+        }
+
+        if (!Auth::check() && (!isset($vRecord) || ($vRecord->target_user_type ?? 'registered_only') === 'registered_only')) {
+            $msg = 'Please log in to use your personal vouchers.';
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $msg], 401)
+                : back()->with('error', $msg);
+        }
+
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += (float)$item['price'] * (int)$item['quantity'];
+        }
+
+        $result = DiscountEngineService::validateAndCalculateVoucher($code, $subtotal, $cart, Auth::id(), 0.0);
+
+        if (!$result['valid']) {
+            return $request->ajax() || $request->wantsJson()
+                ? response()->json(['status' => 'error', 'message' => $result['message']], 422)
+                : back()->with('error', $result['message']);
+        }
+
+        Session::put('applied_voucher', [
+            'code'         => $result['voucher_code'],
+            'discount'     => $result['discount'],
+            'voucher_type' => $result['voucher_type'],
+        ]);
+
+        $appliedCoupon = Session::get('applied_coupon');
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $subtotal,
+            $cart,
+            $couponCode,
+            $result['voucher_code'],
+            Auth::id(),
+            0.0
+        );
+
+        $msg = $result['message'] ?? 'Voucher applied successfully!';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status'           => 'success',
+                'message'          => $msg,
+                'voucher_code'     => $result['voucher_code'],
+                'coupon_discount'  => number_format($calc['coupon_discount'], 2, '.', ''),
+                'voucher_discount' => number_format($calc['voucher_discount'], 2, '.', ''),
+                'total_discount'   => number_format($calc['total_discount'], 2, '.', ''),
+                'subtotal'         => number_format($calc['subtotal'], 2, '.', ''),
+                'grand_total'      => number_format($calc['final_payable'], 2, '.', ''),
+            ]);
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Remove Applied Voucher from Cart
+     */
+    public function removeVoucher(Request $request)
+    {
+        Session::forget('applied_voucher');
+
+        $cart = Session::get('cart', []);
+        $subtotal = 0;
+        foreach ($cart as $item) {
+            $subtotal += (float)$item['price'] * (int)$item['quantity'];
+        }
+
+        $appliedCoupon = Session::get('applied_coupon');
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $subtotal,
+            $cart,
+            $couponCode,
+            null,
+            Auth::id(),
+            0.0
+        );
+
+        $msg = 'Voucher removed from cart.';
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'status'           => 'success',
+                'message'          => $msg,
+                'voucher_discount' => '0.00',
+                'coupon_discount'  => number_format($calc['coupon_discount'], 2, '.', ''),
+                'total_discount'   => number_format($calc['total_discount'], 2, '.', ''),
+                'subtotal'         => number_format($calc['subtotal'], 2, '.', ''),
+                'grand_total'      => number_format($calc['final_payable'], 2, '.', ''),
+            ]);
+        }
+
+        return back()->with('success', $msg);
     }
 
     public function checkout()
@@ -317,7 +653,22 @@ class CartController extends Controller
         }
 
         $deliveryCharge = ($request->delivery_zone === 'inside') ? 70 : 130;
-        $grandTotal = $subtotal + $deliveryCharge;
+
+        $appliedCoupon = Session::get('applied_coupon');
+        $appliedVoucher = Session::get('applied_voucher');
+        $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+        $voucherCode = is_array($appliedVoucher) ? ($appliedVoucher['code'] ?? ($appliedVoucher['voucher_code'] ?? null)) : $appliedVoucher;
+
+        $calc = DiscountEngineService::calculateCartDiscounts(
+            $subtotal,
+            $cart,
+            $couponCode,
+            $voucherCode,
+            Auth::id(),
+            $deliveryCharge
+        );
+
+        $grandTotal = $calc['final_payable'];
 
         $orderInfo = [
             'order_id'        => 'ORD-' . strtoupper(uniqid()),
@@ -329,14 +680,16 @@ class CartController extends Controller
             ],
             'items'           => $cart,
             'subtotal'        => $subtotal,
-            'delivery_charge' => $deliveryCharge,
+            'coupon_discount' => $calc['coupon_discount'],
+            'voucher_discount'=> $calc['voucher_discount'],
+            'delivery_charge' => $calc['adjusted_delivery_charge'],
             'grand_total'     => $grandTotal,
             'payment_method'  => $request->payment_method,
         ];
 
         if (Schema::hasTable('orders')) {
             try {
-                $orderId = DB::table('orders')->insertGetId([
+                $orderData = [
                     'invoice_no'        => 'INV-' . date('Ymd') . '-' . strtoupper(Str::random(5)),
                     'customer_name'     => $request->name,
                     'customer_phone'    => $request->phone,
@@ -346,7 +699,7 @@ class CartController extends Controller
                     'shipping_address'  => $request->address,
                     'district'          => $request->delivery_zone === 'inside' ? 'Dhaka' : 'Outside Dhaka',
                     'subtotal'          => $subtotal,
-                    'shipping_charge'   => $deliveryCharge,
+                    'shipping_charge'   => $calc['adjusted_delivery_charge'],
                     'grand_total'       => $grandTotal,
                     'payment_method'    => $request->payment_method,
                     'payment_status'    => 'unpaid',
@@ -354,7 +707,22 @@ class CartController extends Controller
                     'notes'             => "Customer: {$request->name}, Phone: {$request->phone}, Address: {$request->address}",
                     'created_at'        => now(),
                     'updated_at'        => now(),
-                ]);
+                ];
+
+                if (Schema::hasColumn('orders', 'coupon_discount')) {
+                    $orderData['coupon_discount'] = $calc['coupon_discount'];
+                }
+                if (Schema::hasColumn('orders', 'coupon_code')) {
+                    $orderData['coupon_code'] = $calc['coupon_code'];
+                }
+                if (Schema::hasColumn('orders', 'voucher_code')) {
+                    $orderData['voucher_code'] = $calc['voucher_code'];
+                }
+                if (Schema::hasColumn('orders', 'voucher_discount')) {
+                    $orderData['voucher_discount'] = $calc['voucher_discount'];
+                }
+
+                $orderId = DB::table('orders')->insertGetId($orderData);
 
                 if (Schema::hasTable('order_items')) {
                     foreach ($cart as $cItem) {
@@ -400,12 +768,26 @@ class CartController extends Controller
                         DB::table('order_items')->insert($itemRow);
                     }
                 }
+
+                // রিডেম্পশন অডিট ট্রেল সংরক্ষণ ও ভাউচার স্ট্যাটাস আপডেট
+                DiscountEngineService::recordOrderDiscountRedemptions(
+                    $orderId,
+                    $calc['coupon_code'],
+                    $calc['voucher_code'],
+                    Auth::id(),
+                    $subtotal,
+                    $grandTotal,
+                    $deliveryCharge,
+                    $cart
+                );
             } catch (\Exception $e) {
                 // error ignored
             }
         }
 
         session()->forget('cart');
+        session()->forget('applied_coupon');
+        session()->forget('applied_voucher');
         session()->put('last_order', $orderInfo);
 
         return redirect()->route('order.success');

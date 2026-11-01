@@ -2,9 +2,66 @@
 
 @section('title', 'Popular Categories Slider - ' . config('app.name'))
 
+@php
+    // Safe dynamic route resolver for category directory (Prevents RouteNotFoundException)
+    $categoryIndexRoute = '#';
+    if (\Illuminate\Support\Facades\Route::has('admin.categories.index')) {
+        $categoryIndexRoute = route('admin.categories.index');
+    } elseif (\Illuminate\Support\Facades\Route::has('admin.category.index')) {
+        $categoryIndexRoute = route('admin.category.index');
+    } elseif (\Illuminate\Support\Facades\Route::has('admin.category')) {
+        $categoryIndexRoute = route('admin.category');
+    } elseif (\Illuminate\Support\Facades\Route::has('categories.index')) {
+        $categoryIndexRoute = route('categories.index');
+    } else {
+        $categoryIndexRoute = url('admin/category');
+    }
+
+    $selectedCount = count($selectedCategoryIds ?? []);
+    $totalCats = count($allCategories ?? []);
+@endphp
+
 @section('admin_content')
+<!-- Font Awesome 6.5.1 CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Google Fonts: Plus Jakarta Sans & Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* Professional Enterprise Typography */
+    #popCategoriesRoot,
+    .popcat-modal-scope {
+        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        letter-spacing: -0.01em;
+        color: #1e293b;
+    }
+
+    /* FontAwesome Protection */
+    #popCategoriesRoot i,
+    #popCategoriesRoot .fa,
+    #popCategoriesRoot .fas,
+    #popCategoriesRoot .far,
+    #popCategoriesRoot .fab,
+    #popCategoriesRoot .fa-solid,
+    #popCategoriesRoot .fa-regular,
+    .popcat-modal-scope i,
+    .popcat-modal-scope .fa-solid {
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+        font-style: normal;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: normal !important;
+        display: inline-block;
+    }
+    #popCategoriesRoot .far,
+    .popcat-modal-scope .far {
+        font-weight: 400 !important;
+    }
+
+    /* Strict 5px Element Radius Across Controls */
     #popCategoriesRoot .btn,
     #popCategoriesRoot .btn-sm,
     #popCategoriesRoot button,
@@ -17,23 +74,22 @@
     #popCategoriesRoot .cat-multi-select-box,
     #popCategoriesRoot .cat-chip,
     #popCategoriesRoot .cat-check-item,
-    #popCategoriesRoot .collapse-toggle-btn,
-    .popcat-modal-scope .modal-content,
-    .popcat-modal-scope .btn,
-    .popcat-modal-scope .badge {
+    #popCategoriesRoot .collapse-toggle-btn {
         border-radius: 5px !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
+    /* Clean Tabular Numbers */
     .bn-digit,
-    .font-monospace {
+    .font-tabular {
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
         font-weight: 700 !important;
+        font-variant-numeric: tabular-nums;
     }
 
-    /* Compact Sleek Button Styling */
+    /* Sleek Compact Buttons */
     .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 14px !important;
+        font-size: 11px !important;
+        padding: 6px 14px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
         display: inline-flex;
@@ -43,13 +99,35 @@
         transition: all 0.15s ease;
     }
 
-    /* Enterprise Surface Header Card */
+    .btn-primary {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-outline-secondary {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    .btn-outline-secondary:hover {
+        background-color: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+
+    /* Clean White Theme Header Card */
     .header-banner-card {
-        background: #0f172a;
-        color: #ffffff;
+        background: #ffffff;
+        color: #0f172a;
         padding: 14px 18px;
-        border: 1px solid #1e293b;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         margin-bottom: 14px;
     }
 
@@ -60,16 +138,17 @@
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         margin-bottom: 14px;
         overflow: hidden;
+        border-radius: 6px !important;
     }
     .panel-section-header {
-        padding: 11px 16px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+        padding: 12px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
     }
     .section-title-text {
         font-size: 12.5px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0f172a;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -79,13 +158,14 @@
     .status-kpi-pill {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 10px 14px;
+        padding: 12px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
         height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        border-radius: 6px !important;
     }
 
     /* Collapsible Trigger Buttons & Rotating Chevron */
@@ -100,6 +180,7 @@
         border: 1px solid #cbd5e1;
         color: #475569;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
     .collapse-toggle-btn:hover {
         background-color: #2563eb;
@@ -123,21 +204,26 @@
         display: block;
     }
 
-    /* Enhanced Category Selection Box */
+    /* Category Multi-Select Box */
     .cat-multi-select-box {
         border: 1px solid #cbd5e1;
         background: #ffffff;
         overflow: hidden;
+        border-radius: 6px !important;
     }
     .cat-select-search {
         border: none;
         border-bottom: 1px solid #e2e8f0;
         border-radius: 0 !important;
-        padding: 8px 12px;
+        padding: 9px 12px;
         font-size: 12px;
         outline: none;
         box-shadow: none !important;
         background: #ffffff;
+        color: #0f172a;
+    }
+    .cat-select-search:focus {
+        background: #f8fafc;
     }
     .cat-checklist-container {
         max-height: 240px;
@@ -146,8 +232,9 @@
     }
     .cat-checklist-container::-webkit-scrollbar { width: 4px; }
     .cat-checklist-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
     .cat-check-item {
-        padding: 6px 10px;
+        padding: 8px 10px;
         transition: background-color 0.12s ease;
         cursor: pointer;
         display: flex;
@@ -155,32 +242,35 @@
         justify-content: space-between;
         margin-bottom: 2px;
         border: 1px solid transparent;
+        border-radius: 4px !important;
     }
     .cat-check-item:hover {
         background-color: #f1f5f9;
         border-color: #e2e8f0;
     }
+    
     .selected-chips-box {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        padding: 6px 10px;
+        padding: 8px 10px;
         background: #f8fafc;
         border-bottom: 1px solid #e2e8f0;
-        min-height: 38px;
-        max-height: 90px;
+        min-height: 42px;
+        max-height: 95px;
         overflow-y: auto;
     }
     .cat-chip {
         background: #2563eb;
         color: #ffffff;
         padding: 3px 8px;
-        font-size: 10.5px;
+        font-size: 11px;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 5px;
         max-width: 100%;
+        border-radius: 4px !important;
     }
     .cat-chip .chip-remove {
         cursor: pointer;
@@ -198,11 +288,55 @@
         height: 18px;
         cursor: pointer;
         border-color: #cbd5e1;
+        border-radius: 20px !important;
         transition: background-color 0.15s ease, border-color 0.15s ease;
     }
     .form-switch .form-check-input:checked {
         background-color: #2563eb;
         border-color: #2563eb;
+    }
+
+    /* Minimal Modal System (Screenshot Reference) */
+    .minimal-modal-card {
+        background: #ffffff !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(15, 23, 42, 0.04) !important;
+        padding: 24px 26px !important;
+        text-align: left !important;
+    }
+    .minimal-modal-title {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-bottom: 6px !important;
+        letter-spacing: -0.02em !important;
+    }
+    .minimal-modal-subtext {
+        font-size: 13px !important;
+        color: #64748b !important;
+        margin-bottom: 20px !important;
+        line-height: 1.45 !important;
+    }
+    .btn-minimal-action {
+        background-color: #2563eb !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 7px 22px !important;
+        border-radius: 7px !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .btn-minimal-action:hover {
+        background-color: #1d4ed8 !important;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.38) !important;
+        color: #ffffff !important;
     }
 
     /* Mobile Responsive (< 768px) */
@@ -226,6 +360,9 @@
         .panel-section-header {
             padding: 10px 12px;
         }
+        .minimal-modal-card {
+            padding: 20px 20px !important;
+        }
     }
 </style>
 
@@ -235,25 +372,25 @@
     <div class="header-banner-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 9px;">
-                    <i class="fas fa-shield-heart me-1"></i> STOREFRONT SLIDER
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9.5px; font-weight: 700;">
+                    <i class="fas fa-shield-heart me-1"></i> Storefront Slider
                 </span>
-                <span class="badge {{ $sectionStatus ? 'bg-success' : 'bg-secondary' }} font-monospace text-uppercase" style="font-size: 9px;">
+                <span class="badge {{ $sectionStatus ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} text-uppercase" style="font-size: 9.5px; font-weight: 700;">
                     {{ $sectionStatus ? 'Slider Live' : 'Slider Hidden' }}
                 </span>
             </div>
-            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 17px;">
+            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-dark" style="font-size: 18px;">
                 <i class="fas fa-shield-heart text-primary"></i>
                 <span>Popular Categories Slider Settings</span>
             </h5>
-            <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
                 Control homepage circular category slider visibility, custom items allocation and product link routing.
             </small>
         </div>
 
         <div class="top-action-btns d-flex gap-2">
-            <a href="{{ route('admin.category.index') }}" class="btn btn-outline-secondary btn-compact text-white border-white-50 shadow-xs">
-                <i class="fas fa-list me-1"></i>
+            <a href="{{ $categoryIndexRoute }}" class="btn btn-outline-secondary btn-compact shadow-xs bg-white text-dark fw-semibold">
+                <i class="fas fa-list me-1 text-primary"></i>
                 <span>Categories List</span>
             </a>
             <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" onclick="document.getElementById('popularCategoriesForm').submit()">
@@ -264,17 +401,12 @@
     </div>
 
     <!-- 2. Status Summary KPI Row (Symmetric 3-Column Grid) -->
-    @php
-        $selectedCount = count($selectedCategoryIds ?? []);
-        $totalCats = count($allCategories);
-    @endphp
-
     <div class="row g-2 mb-3">
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Slider Visibility</small>
-                    <strong class="text-dark d-block" style="font-size: 13px;">{{ $sectionStatus ? 'Enabled (Active)' : 'Disabled (Hidden)' }}</strong>
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Slider Visibility</small>
+                    <strong class="text-dark d-block" style="font-size: 13.5px;">{{ $sectionStatus ? 'Enabled (Active)' : 'Disabled (Hidden)' }}</strong>
                 </div>
                 <div class="text-{{ $sectionStatus ? 'success' : 'secondary' }} fs-5">
                     <i class="fas fa-toggle-{{ $sectionStatus ? 'on' : 'off' }}"></i>
@@ -285,9 +417,9 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Selected Showcase</small>
-                    <strong class="text-primary d-block font-monospace bn-digit" style="font-size: 13px;">
-                        {{ $selectedCount > 0 ?$selectedCount . ' Categories' : 'All Categories (Auto)' }}
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Selected Showcase</small>
+                    <strong class="text-primary d-block bn-digit font-tabular" style="font-size: 13.5px;">
+                        {{ $selectedCount > 0 ? $selectedCount . ' Categories' : 'All Categories (Auto)' }}
                     </strong>
                 </div>
                 <div class="text-primary fs-5">
@@ -299,8 +431,8 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Total Catalog Categories</small>
-                    <strong class="text-dark d-block font-monospace bn-digit" style="font-size: 13px;">{{ $totalCats }} Available</strong>
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Total Catalog Categories</small>
+                    <strong class="text-dark d-block bn-digit font-tabular" style="font-size: 13.5px;">{{ $totalCats }} Available</strong>
                 </div>
                 <div class="text-warning fs-5">
                     <i class="fas fa-layer-group"></i>
@@ -330,7 +462,7 @@
                     <span>Section Visibility &amp; Display Rules</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 8.5px;">SLIDER ON/OFF</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Slider Mode</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseVisibilityRules" aria-expanded="true" aria-controls="collapseVisibilityRules" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -339,12 +471,12 @@
 
             <div class="collapse show" id="collapseVisibilityRules">
                 <div class="p-3 bg-light bg-opacity-25">
-                    <div class="p-3 bg-white border d-flex align-items-center justify-content-between" style="border-radius: 5px;">
+                    <div class="p-3 bg-white border d-flex align-items-center justify-content-between" style="border-radius: 6px;">
                         <div class="pe-2">
-                            <label class="form-check-label d-block fw-bold text-dark" for="popCatSecSwitch" style="font-size: 12px; cursor: pointer;">
+                            <label class="form-check-label d-block text-dark fw-bold" for="popCatSecSwitch" style="font-size: 12.5px; cursor: pointer;">
                                 Homepage Popular Categories Slider
                             </label>
-                            <small class="text-muted d-block" style="font-size: 11px; line-height: 1.35;">
+                            <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.35;">
                                 Enable or disable circular icon category showcase carousel on storefront homepage.
                             </small>
                         </div>
@@ -364,7 +496,7 @@
                     <span>Category Selection &amp; Showcase Allocations</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace text-uppercase" style="font-size: 8.5px;">CUSTOM ITEMS</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Custom Items</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseCategorySelection" aria-expanded="true" aria-controls="collapseCategorySelection" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -375,12 +507,12 @@
                 <div class="p-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="form-label mb-0">Select Featured Categories</label>
-                        <small class="text-muted font-monospace" style="font-size: 10.5px;">
+                        <small class="text-muted" style="font-size: 11px;">
                             Leave blank to show all active categories automatically.
                         </small>
                     </div>
 
-                    <div class="cat-multi-select-box shadow-xs" style="border-radius: 5px;">
+                    <div class="cat-multi-select-box shadow-xs">
                         <!-- Selected Category Chips Wrapper -->
                         <div class="selected-chips-box" id="selectedCatChipsWrapper">
                             <span class="text-muted small my-auto placeholder-text" style="font-size: 11px;">No categories selected yet.</span>
@@ -391,16 +523,16 @@
 
                         <!-- Checklist Container with Counter Badges -->
                         <div class="cat-checklist-container" id="catChecklist">
-                            @foreach($allCategories as$cat)
+                            @foreach($allCategories as $cat)
                                 @php
-                                    $isChecked = in_array($cat->id,$selectedCategoryIds ?? []);
+                                    $isChecked = in_array($cat->id, $selectedCategoryIds ?? []);
                                 @endphp
                                 <label class="cat-check-item" data-title="{{ strtolower($cat->name) }}">
                                     <div class="d-flex align-items-center gap-2 min-w-0">
                                         <input class="form-check-input mt-0 cat-checkbox flex-shrink-0" type="checkbox" name="category_ids[]" value="{{ $cat->id }}" data-name="{{ $cat->name }}" {{ $isChecked ? 'checked' : '' }}>
-                                        <span class="small fw-medium text-dark text-truncate" style="font-size: 11.5px;">{{ $cat->name }}</span>
+                                        <span class="small fw-semibold text-dark text-truncate" style="font-size: 12px;">{{ $cat->name }}</span>
                                     </div>
-                                    <span class="badge bg-light text-secondary border small font-monospace bn-digit flex-shrink-0 ms-2" style="font-size: 9.5px;">
+                                    <span class="badge bg-light text-secondary border small bn-digit font-tabular flex-shrink-0 ms-2" style="font-size: 9.5px;">
                                         {{ $cat->products_count ?? 0 }} Items
                                     </span>
                                 </label>
@@ -413,24 +545,21 @@
 
         <!-- Submit Button Bar -->
         <div class="d-flex justify-content-end pt-2 pb-3">
-            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 35px; font-size: 12px;">
+            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 36px; font-size: 12px;">
                 <i class="fas fa-check-circle me-1"></i> Save Changes
             </button>
         </div>
     </form>
 </div>
 
-<!-- Modal: Custom Enterprise Notice Modal -->
+<!-- Modal: Minimal Notice Modal (Exact Match with Reference Screenshot) -->
 <div class="modal fade popcat-modal-scope" id="popCatNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 108500;">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3">
-            <div class="modal-body p-1">
-                <div class="mb-2" id="popCatNoticeIconWrap">
-                    <i class="fas fa-circle-check text-success fa-2x"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1" id="popCatNoticeTitle" style="font-size: 14px;">Notification</h6>
-                <p class="text-muted small mb-3" id="popCatNoticeMessage" style="font-size: 12px; line-height: 1.45;"></p>
-                <button type="button" class="btn btn-primary btn-compact px-4" data-bs-dismiss="modal">Acknowledge</button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+        <div class="modal-content minimal-modal-card">
+            <h6 class="minimal-modal-title" id="popCatNoticeTitle">Notification</h6>
+            <p class="minimal-modal-subtext" id="popCatNoticeMessage" style="margin-bottom: 16px !important;"></p>
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn-minimal-action" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
@@ -438,25 +567,12 @@
 
 <script>
 // Universal Notice Modal
-function showPopCatModalNotice(message, title = 'Notice', type = 'info') {
+function showPopCatModalNotice(message, title = 'Notification') {
     const titleEl = document.getElementById('popCatNoticeTitle');
     const msgEl   = document.getElementById('popCatNoticeMessage');
-    const iconEl  = document.getElementById('popCatNoticeIconWrap');
 
     if (titleEl) titleEl.innerText = title;
     if (msgEl) msgEl.innerText = message;
-
-    if (iconEl) {
-        if (type === 'danger' || type === 'error') {
-            iconEl.innerHTML = '<i class="fas fa-circle-xmark text-danger fa-2x"></i>';
-        } else if (type === 'success') {
-            iconEl.innerHTML = '<i class="fas fa-circle-check text-success fa-2x"></i>';
-        } else if (type === 'warning') {
-            iconEl.innerHTML = '<i class="fas fa-triangle-exclamation text-warning fa-2x"></i>';
-        } else {
-            iconEl.innerHTML = '<i class="fas fa-circle-info text-primary fa-2x"></i>';
-        }
-    }
 
     const modalEl = document.getElementById('popCatNoticeModal');
     if (modalEl && window.bootstrap) {
@@ -466,7 +582,7 @@ function showPopCatModalNotice(message, title = 'Notice', type = 'info') {
 
 document.addEventListener('DOMContentLoaded', function () {
     @if(session('success'))
-        showPopCatModalNotice('{{ session('success') }}', 'Success', 'success');
+        showPopCatModalNotice('{{ session('success') }}', 'Success');
     @endif
 
     // Real-time Category Search

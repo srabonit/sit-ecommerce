@@ -3,10 +3,34 @@
 @section('title', 'Audience Segments - Email Marketing')
 
 @php
-    $totalSegmentsCount    = $stats['total'] ?? $segments->total();
-    $dynamicCount          = $stats['dynamic'] ?? $segments->where('type', 'dynamic')->count();
-    $snapshotCount         = $stats['snapshot'] ?? $segments->where('type', 'snapshot')->count();
+    $segments = $segments ?? collect();
+    $totalSegmentsCount = $stats['total'] ?? (method_exists($segments, 'total') ? $segments->total() : $segments->count());
+
+    $dynamicCount  = $stats['dynamic'] ?? $segments->where('type', 'dynamic')->count();
+    $snapshotCount = $stats['snapshot'] ?? $segments->where('type', 'snapshot')->count();
     $totalMatchingAudience = $stats['total_reach'] ?? $segments->sum(fn($s) => (int)($s->matching_subscribers_count ?? 0));
+
+    // Safe route fallbacks to prevent RouteNotFoundException
+    $indexUrl = Route::has('admin.email_marketing.segments.index') 
+        ? route('admin.email_marketing.segments.index') 
+        : url('admin/email-marketing/segments');
+
+    $createUrl = Route::has('admin.email_marketing.segments.create') 
+        ? route('admin.email_marketing.segments.create') 
+        : url('admin/email-marketing/segments/create');
+
+    $exportCsvUrl = Route::has('admin.email_marketing.segments.export_csv') 
+        ? route('admin.email_marketing.segments.export_csv') 
+        : url('admin/email-marketing/segments/export-csv');
+
+    $subscribersUrl = Route::has('admin.email_marketing.subscribers.index') 
+        ? route('admin.email_marketing.subscribers.index') 
+        : url('admin/email-marketing/subscribers');
+
+    $recalculateBaseUrl = url('admin/email-marketing/segments/recalculate');
+    $bulkRecalculateUrl = url('admin/email-marketing/segments/bulk-recalculate');
+    $deleteBaseUrl       = url('admin/email-marketing/segments/delete');
+    $bulkDeleteUrl       = url('admin/email-marketing/segments/bulk-delete');
 @endphp
 
 @section('admin_content')
@@ -49,7 +73,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -178,20 +202,20 @@
         margin-bottom: 0;
     }
     .custom-segments-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-segments-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -361,7 +385,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-segments-root">
 
-    {{-- 1. Header & Actions (Original Clean Light Theme) --}}
+    {{-- 1. Header & Actions Toolbar --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 segments-header-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -370,7 +394,7 @@
                     <span>Audience Segments</span>
                 </h5>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" id="segments-total-badge" style="font-size: 10px;">
-                    {{ $totalSegmentsCount }} Segments
+                    {{ number_format($totalSegmentsCount) }} Segments
                 </span>
             </div>
             <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
@@ -382,10 +406,10 @@
             <button type="button" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-semibold" onclick="exportSegmentsCsv()" title="Export filtered segments to CSV">
                 <i class="fas fa-file-csv me-1 text-success"></i> <span>Export CSV</span>
             </button>
-            <a href="{{ url('admin/email-marketing/subscribers') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+            <a href="{{ $subscribersUrl }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
                 <i class="fas fa-users me-1"></i> <span>All Subscribers</span>
             </a>
-            <a href="{{ url('admin/email-marketing/segments/create') }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold btn-create-main">
+            <a href="{{ $createUrl }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold btn-create-main">
                 <i class="fas fa-plus-circle me-1"></i> <span>Create Segment</span>
             </a>
         </div>
@@ -435,7 +459,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="stat-total-segments">
-                                    {{ $totalSegmentsCount }}
+                                    {{ number_format($totalSegmentsCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Configured audience groups</small>
                             </div>
@@ -453,7 +477,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-dynamic-rules">
-                                    {{ $dynamicCount }}
+                                    {{ number_format($dynamicCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Auto-evaluating live criteria</small>
                             </div>
@@ -471,7 +495,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num" id="stat-static-snapshots">
-                                    {{ $snapshotCount }}
+                                    {{ number_format($snapshotCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Fixed audience records</small>
                             </div>
@@ -501,7 +525,7 @@
     </div>
 
     {{-- 4. Advanced Multi-Dimensional Filter Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3" style="border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-filter text-primary me-1"></i> Multi-Dimensional Filter &amp; Search Toolbar
@@ -665,7 +689,7 @@
             </span>
         </div>
         <div class="text-muted font-monospace bn-digit small" style="font-size: 11px;">
-            <span id="showing-entries-text">Showing {{ $segments->firstItem() ?? 0 }} to {{ $segments->lastItem() ?? 0 }} of {{$segments->total() }} segments</span>
+            <span id="showing-entries-text">Showing {{ method_exists($segments, 'firstItem') ? ($segments->firstItem() ?? 0) : 1 }} to {{ method_exists($segments, 'lastItem') ? ($segments->lastItem() ?? 0) : $segments->count() }} of {{ number_format($totalSegmentsCount) }} segments</span>
         </div>
     </div>
 
@@ -695,9 +719,9 @@
     </div>
 
     {{-- 7. Responsive Pagination Footer --}}
-    <div class="d-flex justify-content-center justify-content-md-end mb-4" id="segments-pagination-footer" style="{{ $segments->hasPages() ? '' : 'display: none;' }}">
+    <div class="d-flex justify-content-center justify-content-md-end mb-4" id="segments-pagination-footer" style="{{ method_exists($segments, 'hasPages') &&$segments->hasPages() ? '' : 'display: none;' }}">
         <div id="segments-pagination-links">
-            @if($segments->hasPages())
+            @if(method_exists($segments, 'hasPages') &&$segments->hasPages())
                 {{ $segments->links('pagination::bootstrap-5') }}
             @endif
         </div>
@@ -734,6 +758,14 @@
     let searchTimeout = null;
     let pendingConfirmCallback = null;
 
+    const indexUrl           = "{{ $indexUrl }}";
+    const exportCsvUrl       = "{{ $exportCsvUrl }}";
+    const recalculateBaseUrl = "{{ $recalculateBaseUrl }}";
+    const bulkRecalculateUrl = "{{ $bulkRecalculateUrl }}";
+    const deleteBaseUrl       = "{{ $deleteBaseUrl }}";
+    const bulkDeleteUrl       = "{{ $bulkDeleteUrl }}";
+    const csrfToken          = "{{ csrf_token() }}";
+
     // 1. Live Reload-Free Fetch
     function fetchFilteredSegments(page = 1) {
         const form = document.getElementById('segment-filter-form');
@@ -744,7 +776,7 @@
         const tbody = document.getElementById('segments-table-tbody');
         if (tbody) tbody.style.opacity = '0.35';
 
-        fetch("{{ url('admin/email-marketing/segments') }}?" + params.toString(), {
+        fetch(indexUrl + '?' + params.toString(), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
@@ -915,7 +947,7 @@
         const form = document.getElementById('segment-filter-form');
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        const url = "{{ url('admin/email-marketing/segments/export-csv') }}?" + params.toString();
+        const url = exportCsvUrl + '?' + params.toString();
         window.open(url, '_blank');
     }
 
@@ -924,10 +956,10 @@
         const icon = document.getElementById(`recalc-icon-${id}`);
         if (icon) icon.classList.add('fa-spin');
 
-        fetch(`{{ url('admin/email-marketing/segments/recalculate') }}/${id}`, {
+        fetch(`${recalculateBaseUrl}/${id}`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
@@ -958,11 +990,11 @@
             return;
         }
 
-        fetch("{{ url('admin/email-marketing/segments/bulk-recalculate') }}", {
+        fetch(bulkRecalculateUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ segment_ids: selected })
@@ -989,26 +1021,31 @@
         if (msgEl) msgEl.innerHTML = `Are you sure you want to delete <strong>${name}</strong>? Existing campaigns linked to it will not be harmed.`;
 
         pendingConfirmCallback = function() {
-            fetch(`{{ url('admin/email-marketing/segments/delete') }}/${id}`, {
+            fetch(`${deleteBaseUrl}/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(res => res.json())
             .then(data => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 showToast('Deleted', data.message, 'danger');
                 fetchFilteredSegments(1);
             })
             .catch(() => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 fetchFilteredSegments(1);
             });
         };
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('customConfirmModal')).show();
+        const modalEl = document.getElementById('customConfirmModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     // 10. Bulk Segment Deletion
@@ -1025,28 +1062,33 @@
         if (msgEl) msgEl.innerHTML = `Are you sure you want to delete <strong>${selected.length}</strong> selected segment(s)?`;
 
         pendingConfirmCallback = function() {
-            fetch("{{ url('admin/email-marketing/segments/bulk-delete') }}", {
+            fetch(bulkDeleteUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({ segment_ids: selected })
             })
             .then(res => res.json())
             .then(data => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 showToast('Deleted', data.message, 'danger');
                 fetchFilteredSegments(1);
             })
             .catch(() => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 fetchFilteredSegments(1);
             });
         };
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('customConfirmModal')).show();
+        const modalEl = document.getElementById('customConfirmModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     document.getElementById('btn-confirm-action-execute')?.addEventListener('click', function() {

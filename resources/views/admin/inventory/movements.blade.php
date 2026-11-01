@@ -790,7 +790,7 @@
                             <label class="form-label" for="adj_new_stock">
                                 New Total Stock Count <span class="text-danger">*</span>
                             </label>
-                            <input type="number" name="new_stock" id="adj_new_stock" class="form-control bn-digit font-monospace shadow-none" min="0" placeholder="e.g. 50" required>
+                            <input type="number" name="new_stock" id="adj_new_stock" class="form-control bn-digit font-monospace shadow-none" min="0" placeholder="50" required>
                         </div>
                     </div>
 
@@ -798,7 +798,7 @@
                         <label class="form-label" for="adj_purchase_cost">
                             Unit Purchase Cost (৳) <span class="text-muted fw-normal font-monospace">(Optional)</span>
                         </label>
-                        <input type="number" step="0.01" name="purchase_cost" id="adj_purchase_cost" class="form-control bn-digit font-monospace shadow-none" placeholder="e.g. 350.00">
+                        <input type="number" step="0.01" name="purchase_cost" id="adj_purchase_cost" class="form-control bn-digit font-monospace shadow-none" placeholder="350.00">
                     </div>
 
                     <!-- Modern Global Media Chooser Component for Stock Adjustment Proof -->

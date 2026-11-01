@@ -1,0 +1,13 @@
+1 - auto email corn job command eta calate hobe must..
+* * * * * cd /home/username/public_html && php artisan schedule:run >> /dev/null 2>&1
+
+2 - db:seed for marketing form.
+database\seeders\MarketingFormsSeeder.php
+
+3 - db:seed for initial admin username
+database\seeders\AdminUserSeeder.php
+
+
+php artisan security:maintenance
+
+php artisan schedule:list

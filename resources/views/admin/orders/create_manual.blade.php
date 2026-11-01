@@ -431,7 +431,7 @@
                     <div id="advancePaymentDetailsGroup" class="mb-2 d-none">
                         <div class="mb-2">
                             <label class="form-label">Transaction Reference ID</label>
-                            <input type="text" name="transaction_id" class="form-control form-control-sm font-monospace bn-digit" placeholder="Trx ID (e.g. 9J2834KA)">
+                            <input type="text" name="transaction_id" class="form-control form-control-sm font-monospace bn-digit" placeholder="Trx ID (9J2834KA)">
                         </div>
                         <div class="mb-2">
                             <label class="form-label">Sender Phone Number</label>

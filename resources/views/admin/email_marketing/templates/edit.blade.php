@@ -277,7 +277,7 @@
 
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="template_subject">Default Subject Line (Optional)</label>
-                            <input type="text" name="subject" id="template_subject" class="form-control" value="{{ old('subject', $template->subject) }}" placeholder="e.g. Exclusive Weekend Deal Inside...">
+                            <input type="text" name="subject" id="template_subject" class="form-control" value="{{ old('subject', $template->subject) }}" placeholder="Exclusive Weekend Deal Inside...">
                         </div>
                     </div>
                 </div>

@@ -30,6 +30,36 @@
 
     $uncheckedTxnCount    = (int) ($txnAlerts['total_unchecked_count'] ?? 0);
     $pendingCheckoutCount = (int) ($txnAlerts['pending_checkout_count'] ?? 0);
+
+    // লাইভ পেন্ডিং রিভিউ কাউন্টার (Pending Reviews Badge)
+    $pendingReviewCount = \Illuminate\Support\Facades\Schema::hasTable('product_reviews')
+        ? (int) \Illuminate\Support\Facades\DB::table('product_reviews')->where('status', 'pending')->count()
+        : 0;
+
+    // লাইভ অ্যাক্টিভ কুপন কাউন্টার (Active Coupons Badge)
+    $activeCouponCount = \Illuminate\Support\Facades\Schema::hasTable('coupons')
+        ? (int) \Illuminate\Support\Facades\DB::table('coupons')->where('is_active', 1)->count()
+        : 0;
+
+    // লাইভ সিকিউরিটি অ্যালার্ট ও সাসপিশাস অর্ডার কাউন্টার (Security Badges)
+    $securityAlertCount = \Illuminate\Support\Facades\Schema::hasTable('security_alerts')
+        ? (int) \Illuminate\Support\Facades\DB::table('security_alerts')->where('is_read', 0)->count()
+        : 0;
+
+    $suspiciousOrderBadgeCount = (\Illuminate\Support\Facades\Schema::hasTable('orders') && \Illuminate\Support\Facades\Schema::hasColumn('orders', 'is_suspicious'))
+        ? (int) \Illuminate\Support\Facades\DB::table('orders')->where('is_suspicious', 1)->where('security_review_status', 'under_review')->count()
+        : 0;
+
+    // Safe Fail-Safe URLs for Coupons & Vouchers
+    $couponIndexUrl = Route::has('admin.promo.coupons.index') ? route('admin.promo.coupons.index') : url('/admin/promo/coupons');
+    $couponCreateUrl = Route::has('admin.promo.coupons.create') ? route('admin.promo.coupons.create') : url('/admin/promo/coupons/create');
+    $voucherIndexUrl = Route::has('admin.promo.coupons.index') ? route('admin.promo.coupons.index', ['tab' => 'vouchers']) : url('/admin/promo/coupons?tab=vouchers');
+    $voucherCreateUrl = Route::has('admin.promo.coupons.vouchers.create') ? route('admin.promo.coupons.vouchers.create') : url('/admin/promo/coupons/vouchers/create');
+    $redemptionLogsUrl = Route::has('admin.promo.coupons.index') ? route('admin.promo.coupons.index', ['tab' => 'redemptions']) : url('/admin/promo/coupons?tab=redemptions');
+
+    // Safe Fail-Safe URLs for VAT & Tax Module
+    $taxPeriodsUrl = Route::has('admin.tax.periods.index') ? route('admin.tax.periods.index') : url('/admin/tax/periods');
+    $taxSettingsUrl = Route::has('admin.tax.settings.index') ? route('admin.tax.settings.index') : url('/admin/tax/settings');
 @endphp
 
 <style>
@@ -558,12 +588,102 @@
             </ul>
         </div>
 
-        <!-- Product Accordion -->
-        @if(!$u || $u->hasAnyAccess(['admin.product.index', 'admin.product.create', 'admin.product.category', 'admin.product.brand', 'admin.product.barcode']))
-            @php $isProductActive = request()->routeIs('admin.product.*'); @endphp
-            <a class="nav-head-link {{ $isProductActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseProduct" role="button" aria-expanded="{{ $isProductActive ? 'true' : 'false' }}" id="nav-btn-product">
-                <span><i class="fas fa-box-open me-2"></i> Product</span>
+        <!-- ENTERPRISE TAX & VAT ACCORDION -->
+        @if(!$u || $u->hasAnyAccess(['admin.tax.dashboard', 'admin.tax.classes.index', 'admin.tax.rules.index', 'admin.tax.periods.index', 'admin.tax.settings.index', 'admin.tax.payments.index', 'admin.tax.documents.index', 'admin.tax.reports.index']) || ($u->role ?? '') === 'superAdmin')
+            @php 
+                $isTaxActive = request()->routeIs('admin.tax.*'); 
+            @endphp
+            <a class="nav-head-link {{ $isTaxActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseTax" role="button" aria-expanded="{{ $isTaxActive ? 'true' : 'false' }}" id="nav-btn-tax">
+                <span><i class="fas fa-file-invoice-dollar me-2"></i> Tax &amp; VAT</span>
                 <i class="fas fa-chevron-down"></i>
+            </a>
+            <div class="collapse {{ $isTaxActive ? 'show' : '' }}" id="collapseTax">
+                <ul class="nav-sub-list" id="sublist-tax">
+                    <li>
+                        <a href="{{ route('admin.tax.dashboard') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.dashboard') ? 'active' : '' }}"
+                            id="link-tax-dashboard">
+                            <i class="fas fa-chart-pie me-2" style="font-size: 10px;"></i> Tax Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.classes.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.classes.*') ? 'active' : '' }}"
+                            id="link-tax-classes">
+                            <i class="fas fa-shapes me-2" style="font-size: 10px;"></i> Tax Classes
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.rules.index') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.tax.rules.*') && !request()->filled('type')) ? 'active' : '' }}"
+                            id="link-tax-rules">
+                            <i class="fas fa-scale-balanced me-2" style="font-size: 10px;"></i> Tax Rules
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.payments.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.payments.*') ? 'active' : '' }}"
+                            id="link-tax-payments">
+                            <i class="fas fa-receipt me-2" style="font-size: 10px;"></i> Tax Payments (Challan)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $taxPeriodsUrl }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.periods.*') ? 'active' : '' }}"
+                            id="link-tax-periods">
+                            <i class="fas fa-calendar-check me-2" style="font-size: 10px;"></i> Monthly Periods &amp; Closing
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.reports.index') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.tax.reports.*') && !request()->filled('report_type')) ? 'active' : '' }}"
+                            id="link-tax-reports">
+                            <i class="fas fa-chart-line me-2" style="font-size: 10px;"></i> Tax Reports
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.documents.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.documents.*') ? 'active' : '' }}"
+                            id="link-tax-documents">
+                            <i class="fas fa-file-shield me-2" style="font-size: 10px;"></i> Tax Documents (BIN)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.adjustments') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.tax.reports.*') && request('report_type') === 'adjustment_history') ? 'active' : '' }}"
+                            id="link-tax-adjustments">
+                            <i class="fas fa-sliders me-2" style="font-size: 10px;"></i> Tax Adjustments
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.tax.audit_logs') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.activity.logs*') && request('module') === 'tax') ? 'active' : '' }}"
+                            id="link-tax-audit-logs">
+                            <i class="fas fa-clipboard-check me-2" style="font-size: 10px;"></i> Tax Audit Logs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $taxSettingsUrl }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.tax.settings.*') ? 'active' : '' }}"
+                            id="link-tax-settings">
+                            <i class="fas fa-gear me-2" style="font-size: 10px;"></i> VAT &amp; Tax Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
+        <!-- Product Accordion -->
+        @if(!$u || $u->hasAnyAccess(['admin.product.index', 'admin.product.create', 'admin.product.category', 'admin.product.brand', 'admin.product.barcode', 'admin.product.reviews.index', 'admin.review.index']))
+            @php 
+                $isProductActive = request()->routeIs('admin.product.*') || request()->routeIs('admin.review.*'); 
+            @endphp
+            <a class="nav-head-link {{ $isProductActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseProduct" role="button" aria-expanded="{{ $isProductActive ? 'true' : 'false' }}" id="nav-btn-product">
+                <span class="text-nowrap"><i class="fas fa-box-open me-2"></i> Product</span>
+                <span class="d-flex align-items-center gap-1">
+                    <span class="badge bg-danger rounded-pill {{ $pendingReviewCount > 0 ? '' : 'd-none' }}" id="sidebar-prod-pending-badge" style="font-size: 9.5px; padding: 2px 6px;">{{ $pendingReviewCount }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </span>
             </a>
             <div class="collapse {{ $isProductActive ? 'show' : '' }}" id="collapseProduct">
                 <ul class="nav-sub-list" id="sublist-product">
@@ -579,6 +699,67 @@
                     <li><a href="{{ route('admin.product.barcode') }}"
                             class="nav-sub-link {{ request()->routeIs('admin.product.barcode*') ? 'active' : '' }}"
                             id="link-prod-barcode"><i class="fas fa-barcode me-2" style="font-size: 10px;"></i> Barcode Print</a></li>
+                    <li>
+                        <a href="{{ route('admin.product.reviews.index') }}"
+                            class="nav-sub-link d-flex justify-content-between align-items-center {{ (request()->routeIs('admin.product.reviews.*') || request()->routeIs('admin.review.*')) ? 'active' : '' }}"
+                            id="link-prod-reviews">
+                            <span><i class="fas fa-star-half-stroke me-2" style="font-size: 10px;"></i> Product Reviews</span>
+                            <span class="badge bg-danger rounded-pill {{ $pendingReviewCount > 0 ? '' : 'd-none' }}" id="sidebar-sub-pending-reviews-badge" style="font-size: 9.5px;">{{ $pendingReviewCount }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
+        <!-- PROMO: COUPONS & VOUCHERS ACCORDION -->
+        @if(!$u || $u->hasAnyAccess(['admin.promo.coupons.index', 'admin.promo.coupons.create', 'admin.promo.coupons.vouchers.create', 'admin.promo.coupon']))
+            @php 
+                $isPromoActive = request()->routeIs('admin.promo.coupons.*') || request()->routeIs('admin.promo.coupon*') || request()->is('admin/promo/coupons*'); 
+            @endphp
+            <a class="nav-head-link {{ $isPromoActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseCoupons" role="button" aria-expanded="{{ $isPromoActive ? 'true' : 'false' }}" id="nav-btn-coupons">
+                <span class="text-nowrap"><i class="fas fa-ticket-alt me-2"></i> Coupons &amp; Vouchers</span>
+                <span class="d-flex align-items-center gap-1">
+                    <span class="badge bg-success rounded-pill {{ $activeCouponCount > 0 ? '' : 'd-none' }}" id="sidebar-active-coupon-badge" style="font-size: 9.5px; padding: 2px 6px;">{{ $activeCouponCount }}</span>
+                    <i class="fas fa-chevron-down"></i>
+                </span>
+            </a>
+            <div class="collapse {{ $isPromoActive ? 'show' : '' }}" id="collapseCoupons">
+                <ul class="nav-sub-list" id="sublist-coupons">
+                    <li>
+                        <a href="{{ $couponIndexUrl }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.promo.coupons.index') && request('tab', 'coupons') === 'coupons') ? 'active' : '' }}"
+                            id="link-coupon-all">
+                            <i class="fas fa-tags me-2" style="font-size: 10px;"></i> All Coupons
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $couponCreateUrl }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.promo.coupons.create') ? 'active' : '' }}"
+                            id="link-coupon-create">
+                            <i class="fas fa-plus-circle me-2" style="font-size: 10px;"></i> Add Coupon
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $voucherIndexUrl }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.promo.coupons.index') && request('tab') === 'vouchers') ? 'active' : '' }}"
+                            id="link-voucher-campaigns">
+                            <i class="fas fa-gift me-2" style="font-size: 10px;"></i> Voucher Campaigns
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $voucherCreateUrl }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.promo.coupons.vouchers.create') ? 'active' : '' }}"
+                            id="link-voucher-create">
+                            <i class="fas fa-circle-plus me-2" style="font-size: 10px;"></i> New Voucher
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ $redemptionLogsUrl }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.promo.coupons.index') && request('tab') === 'redemptions') ? 'active' : '' }}"
+                            id="link-coupon-redemptions">
+                            <i class="fas fa-history me-2" style="font-size: 10px;"></i> Redemption Logs
+                        </a>
+                    </li>
                 </ul>
             </div>
         @endif
@@ -620,7 +801,7 @@
             </div>
         @endif
 
-        <!-- Reports & Financial Analytics (P&L, Balance Sheet, Cash Flow & COGS) Accordion -->
+        <!-- Reports & Financial Analytics Accordion -->
         @if(!$u || $u->hasAnyAccess(['admin.report.profit_loss', 'admin.report.balance_sheet', 'admin.report.cash_flow', 'admin.report.cogs', 'admin.report.sales', 'admin.report.stock', 'admin.report.purchase']))
             @php $isReportActive = request()->routeIs('admin.report.*'); @endphp
             <a class="nav-head-link {{ $isReportActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseReports" role="button" aria-expanded="{{ $isReportActive ? 'true' : 'false' }}" id="nav-btn-reports">
@@ -671,9 +852,7 @@
             </div>
         @endif
 
-        <!-- ========================================================================= -->
-        <!-- ADVANCED EMAIL MARKETING MODULE (ACCORDION & ALL SUBMENUS)                 -->
-        <!-- ========================================================================= -->
+        <!-- ADVANCED EMAIL MARKETING MODULE -->
         @if(!$u || $u->role === 'superAdmin' || $u->hasAnyAccess(['admin.email_marketing.dashboard', 'admin.email_marketing.subscribers', 'admin.email_marketing.segments', 'admin.email_marketing.campaigns', 'admin.email_marketing.templates', 'admin.email_marketing.automations', 'admin.email_marketing.settings', 'admin.email_marketing.analytics']))
             @php 
                 $isEmailMarketingActive = request()->routeIs('admin.email_marketing.*') || request()->is('admin/email-marketing*'); 
@@ -684,147 +863,164 @@
             </a>
             <div class="collapse {{ $isEmailMarketingActive ? 'show' : '' }}" id="collapseEmailMarketing">
                 <ul class="nav-sub-list" id="sublist-email-marketing">
-                    {{-- 1. Dashboard --}}
                     <li>
                         @php $emDashUrl = Route::has('admin.email_marketing.dashboard') ? route('admin.email_marketing.dashboard') : url('/admin/email-marketing/dashboard'); @endphp
                         <a href="{{ $emDashUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.dashboard*') || request()->is('admin/email-marketing/dashboard*')) ? 'active' : '' }}" id="link-em-dashboard">
                             <i class="fas fa-chart-pie me-2" style="font-size: 10px;"></i> Dashboard
                         </a>
                     </li>
-
-                    {{-- 2. All Subscribers --}}
                     <li>
                         @php $emSubUrl = Route::has('admin.email_marketing.subscribers.index') ? route('admin.email_marketing.subscribers.index') : url('/admin/email-marketing/subscribers'); @endphp
                         <a href="{{ $emSubUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.subscribers*') || request()->is('admin/email-marketing/subscribers*')) ? 'active' : '' }}" id="link-em-subscribers">
                             <i class="fas fa-users me-2" style="font-size: 10px;"></i> All Subscribers
                         </a>
                     </li>
-
-                    {{-- 3. Audience Segments --}}
                     <li>
                         @php $emSegUrl = Route::has('admin.email_marketing.segments.index') ? route('admin.email_marketing.segments.index') : url('/admin/email-marketing/segments'); @endphp
                         <a href="{{ $emSegUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.segments*') || request()->is('admin/email-marketing/segments*')) ? 'active' : '' }}" id="link-em-segments">
                             <i class="fas fa-filter-circle-dollar me-2" style="font-size: 10px;"></i> Audience Segments
                         </a>
                     </li>
-
-                    {{-- 4. Campaigns --}}
                     <li>
                         @php $emCampUrl = Route::has('admin.email_marketing.campaigns.index') ? route('admin.email_marketing.campaigns.index') : url('/admin/email-marketing/campaigns'); @endphp
                         <a href="{{ $emCampUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.campaigns*') || request()->is('admin/email-marketing/campaigns*')) ? 'active' : '' }}" id="link-em-campaigns">
                             <i class="fas fa-paper-plane me-2" style="font-size: 10px;"></i> Campaigns
                         </a>
                     </li>
-
-                    {{-- 5. Email Template Builder --}}
                     <li>
                         @php $emTplUrl = Route::has('admin.email_marketing.templates.index') ? route('admin.email_marketing.templates.index') : url('/admin/email-marketing/templates'); @endphp
                         <a href="{{ $emTplUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.templates*') || request()->is('admin/email-marketing/templates*')) ? 'active' : '' }}" id="link-em-templates">
                             <i class="fas fa-paintbrush me-2" style="font-size: 10px;"></i> Email Template Builder
                         </a>
                     </li>
-
-                    {{-- 6. Automation & Workflows --}}
                     <li>
                         @php $emAutoUrl = Route::has('admin.email_marketing.automations.index') ? route('admin.email_marketing.automations.index') : url('/admin/email-marketing/automations'); @endphp
                         <a href="{{ $emAutoUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.automations*') || request()->is('admin/email-marketing/automations*')) ? 'active' : '' }}" id="link-em-automations">
                             <i class="fas fa-diagram-project me-2" style="font-size: 10px;"></i> Automation &amp; Workflows
                         </a>
                     </li>
-
-                    {{-- 7. Product-Based Marketing --}}
                     <li>
                         @php $emProdUrl = Route::has('admin.email_marketing.product_marketing') ? route('admin.email_marketing.product_marketing') : url('/admin/email-marketing/product-marketing'); @endphp
                         <a href="{{ $emProdUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.product_marketing*') || request()->is('admin/email-marketing/product-marketing*')) ? 'active' : '' }}" id="link-em-prod-marketing">
                             <i class="fas fa-box-open me-2" style="font-size: 10px;"></i> Product-Based Marketing
                         </a>
                     </li>
-
-                    {{-- 8. Cart & Wishlist Marketing --}}
                     <li>
                         @php $emCartUrl = Route::has('admin.email_marketing.cart_wishlist_marketing') ? route('admin.email_marketing.cart_wishlist_marketing') : url('/admin/email-marketing/cart-wishlist'); @endphp
                         <a href="{{ $emCartUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.cart_wishlist*') || request()->is('admin/email-marketing/cart-wishlist*')) ? 'active' : '' }}" id="link-em-cart-wishlist">
                             <i class="fas fa-cart-arrow-down me-2" style="font-size: 10px;"></i> Cart &amp; Wishlist Marketing
                         </a>
                     </li>
-
-                    {{-- 9. Customer Groups --}}
                     <li>
                         @php $emGrpUrl = Route::has('admin.email_marketing.customer_groups') ? route('admin.email_marketing.customer_groups') : url('/admin/email-marketing/customer-groups'); @endphp
                         <a href="{{ $emGrpUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.customer_groups*') || request()->is('admin/email-marketing/customer-groups*')) ? 'active' : '' }}" id="link-em-customer-groups">
                             <i class="fas fa-people-group me-2" style="font-size: 10px;"></i> Customer Groups
                         </a>
                     </li>
-
-                    {{-- 10. Scheduled Emails --}}
                     <li>
                         @php $emSchedUrl = Route::has('admin.email_marketing.scheduled') ? route('admin.email_marketing.scheduled') : url('/admin/email-marketing/scheduled'); @endphp
                         <a href="{{ $emSchedUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.scheduled*') || request()->is('admin/email-marketing/scheduled*')) ? 'active' : '' }}" id="link-em-scheduled">
                             <i class="fas fa-clock me-2" style="font-size: 10px;"></i> Scheduled Emails
                         </a>
                     </li>
-
-                    {{-- 11. Email Queue & Delivery Logs --}}
                     <li>
                         @php $emQueueUrl = Route::has('admin.email_marketing.queue_logs') ? route('admin.email_marketing.queue_logs') : url('/admin/email-marketing/queue-logs'); @endphp
                         <a href="{{ $emQueueUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.queue_logs*') || request()->is('admin/email-marketing/queue-logs*')) ? 'active' : '' }}" id="link-em-queue-logs">
                             <i class="fas fa-list-check me-2" style="font-size: 10px;"></i> Email Queue &amp; Logs
                         </a>
                     </li>
-
-                    {{-- 12. Email Analytics & Reports --}}
                     <li>
                         @php $emAnalyticsUrl = Route::has('admin.email_marketing.analytics') ? route('admin.email_marketing.analytics') : url('/admin/email-marketing/analytics'); @endphp
                         <a href="{{ $emAnalyticsUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.analytics*') || request()->is('admin/email-marketing/analytics*')) ? 'active' : '' }}" id="link-em-analytics">
                             <i class="fas fa-chart-line me-2" style="font-size: 10px;"></i> Analytics &amp; Reports
                         </a>
                     </li>
-
-                    {{-- 13. A/B Testing --}}
                     <li>
                         @php $emAbUrl = Route::has('admin.email_marketing.ab_testing') ? route('admin.email_marketing.ab_testing') : url('/admin/email-marketing/ab-testing'); @endphp
                         <a href="{{ $emAbUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.ab_testing*') || request()->is('admin/email-marketing/ab-testing*')) ? 'active' : '' }}" id="link-em-ab-testing">
                             <i class="fas fa-flask-vial me-2" style="font-size: 10px;"></i> A/B Testing
                         </a>
                     </li>
-
-                    {{-- 14. Coupons & Promotions --}}
                     <li>
                         @php $emCpnUrl = Route::has('admin.email_marketing.coupons') ? route('admin.email_marketing.coupons') : url('/admin/email-marketing/coupons'); @endphp
                         <a href="{{ $emCpnUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.coupons*') || request()->is('admin/email-marketing/coupons*')) ? 'active' : '' }}" id="link-em-coupons">
                             <i class="fas fa-ticket me-2" style="font-size: 10px;"></i> Coupons &amp; Promotions
                         </a>
                     </li>
-
-                    {{-- 15. Suppression & Unsubscribe List --}}
                     <li>
                         @php $emSuppUrl = Route::has('admin.email_marketing.suppression') ? route('admin.email_marketing.suppression') : url('/admin/email-marketing/suppression'); @endphp
                         <a href="{{ $emSuppUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.suppression*') || request()->is('admin/email-marketing/suppression*')) ? 'active' : '' }}" id="link-em-suppression">
                             <i class="fas fa-ban me-2" style="font-size: 10px;"></i> Suppression List
                         </a>
                     </li>
-
-                    {{-- 16. SMTP & Email Provider Settings --}}
                     <li>
                         @php $emProvUrl = Route::has('admin.email_marketing.providers') ? route('admin.email_marketing.providers') : url('/admin/email-marketing/providers'); @endphp
                         <a href="{{ $emProvUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.providers*') || request()->is('admin/email-marketing/providers*')) ? 'active' : '' }}" id="link-em-providers">
                             <i class="fas fa-server me-2" style="font-size: 10px;"></i> SMTP &amp; Providers
                         </a>
                     </li>
-
-                    {{-- 17. Tracking & Consent Settings --}}
                     <li>
                         @php $emTrkUrl = Route::has('admin.email_marketing.tracking_settings') ? route('admin.email_marketing.tracking_settings') : url('/admin/email-marketing/tracking-settings'); @endphp
                         <a href="{{ $emTrkUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.tracking_settings*') || request()->is('admin/email-marketing/tracking-settings*')) ? 'active' : '' }}" id="link-em-tracking-settings">
                             <i class="fas fa-shield-halved me-2" style="font-size: 10px;"></i> Tracking &amp; Consent
                         </a>
                     </li>
-
-                    {{-- 18. General Settings --}}
                     <li>
                         @php $emSetUrl = Route::has('admin.email_marketing.settings') ? route('admin.email_marketing.settings') : url('/admin/email-marketing/settings'); @endphp
                         <a href="{{ $emSetUrl }}" class="nav-sub-link {{ (request()->routeIs('admin.email_marketing.settings*') || request()->is('admin/email-marketing/settings*')) ? 'active' : '' }}" id="link-em-settings">
                             <i class="fas fa-sliders me-2" style="font-size: 10px;"></i> Marketing Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
+        <!-- ========================================================================= -->
+        <!-- SMS GATEWAY, MARKETING & NOTIFICATION MANAGEMENT (NEW ACCORDION)         -->
+        <!-- ========================================================================= -->
+        @if(!$u || ($u->role ?? '') === 'superAdmin' || ($u->role ?? '') === 'admin' || $u->hasAnyAccess(['admin.sms.settings.index', 'admin.sms.templates.index', 'admin.sms.campaigns.index', 'admin.sms.logs.index', 'admin.sms.blacklist.index']))
+            @php 
+                $isSmsActive = request()->routeIs('admin.sms.*') || request()->is('admin/sms*'); 
+            @endphp
+            <a class="nav-head-link {{ $isSmsActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseSmsMarketing" role="button" aria-expanded="{{ $isSmsActive ? 'true' : 'false' }}" id="nav-btn-sms-marketing">
+                <span><i class="fas fa-comment-sms me-2"></i> SMS Marketing</span>
+                <i class="fas fa-chevron-down"></i>
+            </a>
+            <div class="collapse {{ $isSmsActive ? 'show' : '' }}" id="collapseSmsMarketing">
+                <ul class="nav-sub-list" id="sublist-sms-marketing">
+                    <li>
+                        <a href="{{ route('admin.sms.settings.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.sms.settings.*') ? 'active' : '' }}"
+                            id="link-sms-settings">
+                            <i class="fas fa-sliders me-2" style="font-size: 10px;"></i> Settings &amp; Gateway
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.sms.campaigns.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.sms.campaigns.*') ? 'active' : '' }}"
+                            id="link-sms-campaigns">
+                            <i class="fas fa-bullhorn me-2" style="font-size: 10px;"></i> SMS Campaigns
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.sms.templates.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.sms.templates.*') ? 'active' : '' }}"
+                            id="link-sms-templates">
+                            <i class="fas fa-file-lines me-2" style="font-size: 10px;"></i> Message Templates
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.sms.logs.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.sms.logs.*') ? 'active' : '' }}"
+                            id="link-sms-logs">
+                            <i class="fas fa-receipt me-2" style="font-size: 10px;"></i> Delivery Logs &amp; DLR
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.sms.blacklist.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.sms.blacklist.*') ? 'active' : '' }}"
+                            id="link-sms-blacklist">
+                            <i class="fas fa-shield-halved me-2" style="font-size: 10px;"></i> SMS Blacklist
                         </a>
                     </li>
                 </ul>
@@ -872,6 +1068,151 @@
             </div>
         @endif
 
+        <!-- IP & NETWORK SECURITY ACCORDION -->
+        @if(!$u || ($u->role ?? '') === 'superAdmin' || ($u->role ?? '') === 'admin' || $u->hasAnyAccess(['admin.security.dashboard', 'admin.security.ips.index', 'admin.security.orders.index', 'admin.security.blocking.ips', 'admin.security.settings.index']))
+            @php 
+                $isSecurityActive = request()->routeIs('admin.security.*') || request()->is('admin/security*'); 
+            @endphp
+            <a class="nav-head-link {{ $isSecurityActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseSecurity" role="button" aria-expanded="{{ $isSecurityActive ? 'true' : 'false' }}" id="nav-btn-security">
+                <span class="text-nowrap"><i class="fas fa-shield-halved me-2"></i> IP &amp; Network Security</span>
+                <span class="d-flex align-items-center gap-1">
+                    @if($securityAlertCount > 0)
+                        <span class="badge bg-danger rounded-pill" id="sidebar-sec-alert-badge" style="font-size: 9.5px; padding: 2px 6px;" title="Unread Security Alerts">{{ $securityAlertCount }}</span>
+                    @elseif($suspiciousOrderBadgeCount > 0)
+                        <span class="badge bg-warning text-dark rounded-pill" style="font-size: 9.5px; padding: 2px 6px;" title="Suspicious Orders">{{ $suspiciousOrderBadgeCount }}</span>
+                    @endif
+                    <i class="fas fa-chevron-down"></i>
+                </span>
+            </a>
+            <div class="collapse {{ $isSecurityActive ? 'show' : '' }}" id="collapseSecurity">
+                <ul class="nav-sub-list" id="sublist-security">
+                    <li>
+                        <a href="{{ route('admin.security.dashboard') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.security.dashboard') ? 'active' : '' }}"
+                            id="link-sec-dashboard">
+                            <i class="fas fa-chart-line me-2" style="font-size: 10px;"></i> Security Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.ips.index') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.ips.index') && !request()->filled('risk_level') && !request()->filled('view')) ? 'active' : '' }}"
+                            id="link-sec-all-ips">
+                            <i class="fas fa-network-wired me-2" style="font-size: 10px;"></i> All IP Addresses
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.logs.index') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.logs.index') && !request()->filled('activity_type') && !request()->filled('security_status')) ? 'active' : '' }}"
+                            id="link-sec-activity-history">
+                            <i class="fas fa-timeline me-2" style="font-size: 10px;"></i> IP Activity History
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.blocking.ips') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.security.blocking.ips') ? 'active' : '' }}"
+                            id="link-sec-blocked-ips">
+                            <i class="fas fa-ban me-2" style="font-size: 10px;"></i> Blocked IPs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.blocking.networks') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.security.blocking.networks') ? 'active' : '' }}"
+                            id="link-sec-network-monitoring">
+                            <i class="fas fa-diagram-project me-2" style="font-size: 10px;"></i> Network Monitoring
+                        </a>
+                    </li>
+                     <li>
+                        <a href="{{ route('admin.security.blocking.users') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.security.blocking.users') ? 'active' : '' }}"
+                            id="link-sec-user-blocking">
+                            <i class="fas fa-user-xmark me-2" style="font-size: 10px;"></i> User Blocking
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="{{ route('admin.security.logs.index', ['activity_type' => 'user']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.logs.index') && request('activity_type') === 'user') ? 'active' : '' }}"
+                            id="link-sec-user-activity">
+                            <i class="fas fa-user-clock me-2" style="font-size: 10px;"></i> User Activity
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.ips.index', ['risk_level' => 'high']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.ips.index') && request('risk_level') === 'high') ? 'active' : '' }}"
+                            id="link-sec-suspicious-ips">
+                            <i class="fas fa-triangle-exclamation me-2" style="font-size: 10px;"></i> Suspicious IPs
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.logs.index', ['security_status' => 'flagged']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.logs.index') && request('security_status') === 'flagged') ? 'active' : '' }}"
+                            id="link-sec-spam-detection">
+                            <i class="fas fa-shield-virus me-2" style="font-size: 10px;"></i> Spam Detection
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.orders.clusters') }}"
+                            class="nav-sub-link d-flex justify-content-between align-items-center {{ request()->routeIs('admin.security.orders.clusters') ? 'active' : '' }}"
+                            id="link-sec-multi-order">
+                            <span><i class="fas fa-cart-shopping me-2" style="font-size: 10px;"></i> Multiple Order Detection</span>
+                            @if($suspiciousOrderBadgeCount > 0)
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 9px;">{{ $suspiciousOrderBadgeCount }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.logs.index', ['activity_type' => 'form_submit']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.logs.index') && request('activity_type') === 'form_submit') ? 'active' : '' }}"
+                            id="link-sec-multi-form">
+                            <i class="fas fa-file-lines me-2" style="font-size: 10px;"></i> Multiple Form Submission
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.logs.index', ['activity_type' => 'login_failed']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.logs.index') && request('activity_type') === 'login_failed') ? 'active' : '' }}"
+                            id="link-sec-login-attack">
+                            <i class="fas fa-user-lock me-2" style="font-size: 10px;"></i> Login Attack Monitoring
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.urls.index') }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.security.urls.*') ? 'active' : '' }}"
+                            id="link-sec-url-attack">
+                            <i class="fas fa-link-slash me-2" style="font-size: 10px;"></i> URL Attack Monitoring
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.settings.index', ['tab' => 'ratelimit']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.settings.*') && request('tab') === 'ratelimit') ? 'active' : '' }}"
+                            id="link-sec-rate-limit">
+                            <i class="fas fa-gauge-high me-2" style="font-size: 10px;"></i> Rate Limit Settings
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.settings.index', ['tab' => 'rules']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.settings.*') && request('tab') === 'rules') ? 'active' : '' }}"
+                            id="link-sec-rules">
+                            <i class="fas fa-scale-balanced me-2" style="font-size: 10px;"></i> Security Rules
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.settings.index', ['tab' => 'notifications']) }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.settings.*') && request('tab') === 'notifications') ? 'active' : '' }}"
+                            id="link-sec-email-notifications">
+                            <i class="fas fa-bell me-2" style="font-size: 10px;"></i> Email Notifications
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.security.settings.index') }}"
+                            class="nav-sub-link {{ (request()->routeIs('admin.security.settings.*') && !request()->filled('tab')) ? 'active' : '' }}"
+                            id="link-sec-settings">
+                            <i class="fas fa-sliders me-2" style="font-size: 10px;"></i> Security Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        @endif
+
         <!-- Branch Accordion -->
         @if(!$u || $u->hasAnyAccess(['admin.branch.index', 'admin.branch.assign.history', 'admin.branch.new.assign', 'admin.branch.products', 'admin.branch.orders']))
             @php $isBranchActive = request()->routeIs('admin.branch.*'); @endphp
@@ -900,11 +1241,12 @@
             </div>
         @endif
 
-        <!-- Site Content Accordion (With Global Media Chooser Highlight) -->
-        @if(!$u || $u->hasAnyAccess(['admin.content.pages.index', 'admin.content.blogs.index', 'admin.content.blogs.comments', 'admin.content.menus.index', 'admin.content.widgets.index', 'admin.content.media.index', 'admin.media.index']))
+        <!-- Site Content Accordion -->
+        @if(!$u || $u->hasAnyAccess(['admin.content.pages.index', 'admin.content.blogs.index', 'admin.content.blogs.comments', 'admin.content.menus.index', 'admin.content.widgets.index', 'admin.content.media.index', 'admin.media.index', 'admin.theme.setting.display.index']))
             @php 
                 $isMediaActive = request()->routeIs('admin.content.media.*') || request()->routeIs('admin.media.*');
-                $isContentActive = request()->routeIs('admin.content.*') || $isMediaActive; 
+                $isDisplayActive = request()->routeIs('admin.theme.setting.display.*') || request()->routeIs('admin.theme.display.*') || request()->is('admin/theme-setting/display*');
+                $isContentActive = request()->routeIs('admin.content.*') || $isMediaActive || $isDisplayActive; 
             @endphp
             <a class="nav-head-link {{ $isContentActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseSiteContent" role="button" aria-expanded="{{ $isContentActive ? 'true' : 'false' }}"
                 id="nav-btn-site-content">
@@ -929,8 +1271,21 @@
                     <li><a href="{{ route('admin.content.widgets.index') }}"
                             class="nav-sub-link {{ request()->routeIs('admin.content.widgets.*') ? 'active' : '' }}"
                             id="link-cnt-widgets"><i class="fas fa-puzzle-piece me-2" style="font-size: 10px;"></i> Widgets</a></li>
+
+                    <li>
+                        @php
+                            $dynamicDisplayUrl = Route::has('admin.theme.setting.display.index')
+                                ? route('admin.theme.setting.display.index')
+                                : (Route::has('admin.theme.display.index') ? route('admin.theme.display.index') : url('/admin/theme-setting/display'));
+                        @endphp
+                        <a href="{{ $dynamicDisplayUrl }}"
+                            class="nav-sub-link {{ $isDisplayActive ? 'active' : '' }}"
+                            id="link-cnt-display-widgets"
+                            title="Dynamic Display Widgets & Popups">
+                            <i class="fas fa-wand-magic-sparkles me-2" style="font-size: 10px;"></i> Dynamic Display Widgets
+                        </a>
+                    </li>
                     
-                    {{-- Global Media Chooser Primary Route Link --}}
                     <li>
                         <a href="{{ route('admin.content.media.index') }}"
                             class="nav-sub-link d-flex justify-content-between align-items-center media-chooser-menu-item mb-1 {{ $isMediaActive ? 'active' : '' }}"
@@ -1020,7 +1375,7 @@
         @endif
 
         <!-- Form Builder -->
-        @if(!$u || $u->hasAnyAccess(['admin.forms.index', 'admin.forms.create']))
+        @if(!$u || $u->hasAnyAccess(['admin.forms.index', 'admin.forms.create', 'admin.forms.submissions']))
             @php $isFormActive = request()->routeIs('admin.forms.*'); @endphp
             <a class="nav-head-link {{ $isFormActive ? 'active' : '' }}" data-bs-toggle="collapse" href="#collapseFormBuilder" role="button" aria-expanded="{{ $isFormActive ? 'true' : 'false' }}"
                 id="nav-btn-form-builder">
@@ -1035,6 +1390,18 @@
                     <li><a href="{{ route('admin.forms.create') }}"
                             class="nav-sub-link {{ request()->routeIs('admin.forms.create') ? 'active' : '' }}"
                             id="link-form-create"><i class="fas fa-plus-circle me-2" style="font-size: 10px;"></i> Create New Form</a></li>
+                    <li>
+                        @php
+                            $submissionsUrl = Route::has('admin.forms.submissions.index') 
+                                ? route('admin.forms.submissions.index') 
+                                : (Route::has('admin.forms.submissions') ? route('admin.forms.submissions') : url('/admin/forms/submissions'));
+                        @endphp
+                        <a href="{{ $submissionsUrl }}"
+                            class="nav-sub-link {{ request()->routeIs('admin.forms.submissions*') ? 'active' : '' }}"
+                            id="link-form-submissions">
+                            <i class="fas fa-address-book me-2" style="font-size: 10px;"></i> Submissions &amp; Leads
+                        </a>
+                    </li>
                 </ul>
             </div>
         @endif

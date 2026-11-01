@@ -610,7 +610,7 @@
                     <div class="row g-2">
                         <div class="col-12 col-md-7">
                             <label class="form-label" for="add_provider_name">Provider Nickname <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="add_provider_name" class="form-control" placeholder="e.g. Brevo SMTP / Amazon SES" required>
+                            <input type="text" name="name" id="add_provider_name" class="form-control" placeholder="Brevo SMTP / Amazon SES" required>
                         </div>
                         <div class="col-12 col-md-5">
                             <label class="form-label" for="add_driver_type">Driver Type <span class="text-danger">*</span></label>

@@ -1,0 +1,8 @@
+.alert-dismissible .btn-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    padding: -1.75rem 1rem;
+    padding: 12px !important;
+}

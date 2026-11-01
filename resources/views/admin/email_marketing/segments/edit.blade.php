@@ -296,7 +296,7 @@
                                 {{-- Condition B: Minimum Orders Placed --}}
                                 <div class="col-12 col-md-6">
                                     <label class="form-label" for="min_orders_input">Minimum Completed Orders</label>
-                                    <input type="number" name="filter_criteria[min_orders]" id="min_orders_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" value="{{ old('filter_criteria.min_orders', $criteria['min_orders'] ?? '') }}" placeholder="e.g. 2 for repeat buyers" min="0">
+                                    <input type="number" name="filter_criteria[min_orders]" id="min_orders_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" value="{{ old('filter_criteria.min_orders', $criteria['min_orders'] ?? '') }}" placeholder="2 for repeat buyers" min="0">
                                     <div class="d-flex flex-wrap gap-1 mt-1">
                                         <span class="preset-chip" onclick="setPresetValue('min_orders_input', 1)">1+ Order</span>
                                         <span class="preset-chip" onclick="setPresetValue('min_orders_input', 2)">2+ Repeat</span>
@@ -309,7 +309,7 @@
                                 <div class="col-12 col-md-6 mt-2">
                                     <label class="form-label" for="inactive_days_input">Inactive Days (Win-Back)</label>
                                     <div class="input-group">
-                                        <input type="number" name="filter_criteria[inactive_days]" id="inactive_days_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" value="{{ old('filter_criteria.inactive_days', $criteria['inactive_days'] ?? '') }}" placeholder="e.g. 30" min="0">
+                                        <input type="number" name="filter_criteria[inactive_days]" id="inactive_days_input" class="form-control filter-trigger font-monospace bn-digit shadow-none" value="{{ old('filter_criteria.inactive_days', $criteria['inactive_days'] ?? '') }}" placeholder="30" min="0">
                                         <span class="input-group-text bg-light text-muted font-monospace" style="font-size: 11px;">Days</span>
                                     </div>
                                     <div class="d-flex flex-wrap gap-1 mt-1">

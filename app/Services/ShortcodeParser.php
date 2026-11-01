@@ -46,6 +46,8 @@ class ShortcodeParser
         |
         | [form id="1"]
         | [form slug="contact-us"]
+        | [form name="Newsletter"]
+        | [form type="coupon"]
         |
         */
 
@@ -87,6 +89,46 @@ class ShortcodeParser
                         }
                     ])
                     ->where('slug', $attrs['slug'])
+                    ->where('is_active', true)
+                    ->first();
+                }
+
+                /*
+                 * Find by name
+                 */
+                elseif (!empty($attrs['name'])) {
+
+                    $form = Form::with([
+                        'fields' => function ($query) {
+                            $query->where('is_active', true)
+                                ->orderBy('sort_order', 'asc')
+                                ->orderBy('id', 'asc');
+                        }
+                    ])
+                    ->where(function ($q) use ($attrs) {
+                        $q->where('slug', $attrs['name'])
+                          ->orWhere('name', $attrs['name']);
+                    })
+                    ->where('is_active', true)
+                    ->first();
+                }
+
+                /*
+                 * Find by type
+                 */
+                elseif (!empty($attrs['type'])) {
+
+                    $form = Form::with([
+                        'fields' => function ($query) {
+                            $query->where('is_active', true)
+                                ->orderBy('sort_order', 'asc')
+                                ->orderBy('id', 'asc');
+                        }
+                    ])
+                    ->where(function ($q) use ($attrs) {
+                        $q->where('slug', 'LIKE', '%' . $attrs['type'] . '%')
+                          ->orWhere('name', 'LIKE', '%' . $attrs['type'] . '%');
+                    })
                     ->where('is_active', true)
                     ->first();
                 }

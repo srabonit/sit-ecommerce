@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\DiscountEngineService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -530,9 +532,127 @@ class UserDashboardController extends Controller
         return response()->json(['count' => $count]);
     }
 
+    /**
+     * Display customer coupons and voucher wallet with real-time target user filter.
+     */
     public function coupons()
     {
-        return view('frontend.user.coupons');
+        $userId = auth()->id();
+        $now = Carbon::now();
+
+        // ১. কাস্টমারের নিজস্ব ক্লেইম করা ভাউচার
+        $myVouchers = collect();
+        if ($userId && Schema::hasTable('customer_vouchers') && Schema::hasTable('vouchers')) {
+            $myVouchers = DB::table('customer_vouchers')
+                ->join('vouchers', 'customer_vouchers.voucher_id', '=', 'vouchers.id')
+                ->where('customer_vouchers.user_id', $userId)
+                ->select(
+                    'customer_vouchers.*',
+                    'vouchers.title as voucher_title',
+                    'vouchers.voucher_type',
+                    'vouchers.discount_amount as voucher_discount',
+                    'vouchers.max_discount',
+                    'vouchers.min_spend',
+                    'vouchers.banner_image'
+                )
+                ->latest('customer_vouchers.id')
+                ->get();
+        }
+
+        // ২. ক্লেইম করার জন্য উন্মুক্ত লাইভ ভাউচার ক্যাম্পেইন (Excluding guest_only vouchers for logged-in user)
+        $claimableVouchers = collect();
+        if (Schema::hasTable('vouchers')) {
+            $claimedVoucherIds = ($userId && Schema::hasTable('customer_vouchers'))
+                ? DB::table('customer_vouchers')->where('user_id', $userId)->pluck('voucher_id')->toArray()
+                : [];
+
+            $vQuery = DB::table('vouchers')
+                ->where('is_active', 1)
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('claim_start')->orWhere('claim_start', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('claim_end')->orWhere('claim_end', '>=', $now);
+                });
+
+            // Target user type filter: Logged-in user will see 'all' or 'registered_only' (not 'guest_only')
+            if (Schema::hasColumn('vouchers', 'target_user_type')) {
+                $vQuery->where(function ($q) {
+                    $q->whereNull('target_user_type')
+                      ->orWhereIn('target_user_type', ['all', 'registered_only']);
+                });
+            }
+
+            $claimableVouchers = $vQuery->get()->map(function ($v) use ($claimedVoucherIds) {
+                $v->already_claimed = in_array($v->id, $claimedVoucherIds);
+                $v->is_stock_out = (!is_null($v->total_vouchers_count) && $v->claimed_count >= $v->total_vouchers_count);
+                return $v;
+            });
+        }
+
+        // ৩. সক্রিয় পাবলিক কুপন কোড (Excluding guest_only coupons for logged-in user)
+        $publicCoupons = collect();
+        if (Schema::hasTable('coupons')) {
+            $cQuery = DB::table('coupons')
+                ->where('is_active', 1)
+                ->where('is_public', 1)
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('expire_date')->orWhere('expire_date', '>=', $now);
+                });
+
+            if (Schema::hasColumn('coupons', 'target_user_type')) {
+                $cQuery->where(function ($q) {
+                    $q->whereNull('target_user_type')
+                      ->orWhereIn('target_user_type', ['all', 'registered_only']);
+                });
+            }
+
+            $publicCoupons = $cQuery->get();
+        }
+
+        return view('frontend.user.coupons', compact('myVouchers', 'claimableVouchers', 'publicCoupons'));
+    }
+
+    /**
+     * Handle 1-Click Voucher Claim from Customer Dashboard (AJAX).
+     */
+    public function claimVoucher(Request $request)
+    {
+        $request->validate([
+            'voucher_id' => 'required|integer',
+        ]);
+
+        $userId = auth()->id();
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login to claim this voucher.',
+            ], 401);
+        }
+
+        // Target User Group Safety Check for Voucher Claiming
+        if (Schema::hasTable('vouchers') && Schema::hasColumn('vouchers', 'target_user_type')) {
+            $vRecord = DB::table('vouchers')->where('id', (int)$request->voucher_id)->first();
+            if ($vRecord && ($vRecord->target_user_type ?? '') === 'guest_only') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This voucher campaign is only available for guest customers.',
+                ], 422);
+            }
+        }
+
+        if (class_exists(DiscountEngineService::class)) {
+            $result = DiscountEngineService::claimVoucher((int)$request->voucher_id, $userId);
+            return response()->json($result);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Discount service engine is currently unavailable.',
+        ], 500);
     }
 
     public function support()

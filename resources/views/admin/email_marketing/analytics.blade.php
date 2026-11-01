@@ -3,10 +3,21 @@
 @section('title', 'Email Analytics & Events - Email Marketing')
 
 @php
-    $totalEventsCount =$events->total();
-    $openEventsCount  =$events->where('event_type', 'open')->count();
-    $clickEventsCount =$events->where('event_type', 'click')->count();
-    $unsubEventsCount =$events->where('event_type', 'unsubscribe')->count();
+    $events = $events ?? collect();
+    $totalEventsCount = method_exists($events, 'total') ? $events->total() : $events->count();
+
+    // Model fallback check to prevent fatal errors if database state varies
+    $hasTrackingModel = class_exists('\App\Models\EmailTrackingEvent');
+    $openEventsCount  = $hasTrackingModel ? \App\Models\EmailTrackingEvent::where('event_type', 'open')->count() : $events->where('event_type', 'open')->count();
+    $clickEventsCount = $hasTrackingModel ? \App\Models\EmailTrackingEvent::where('event_type', 'click')->count() : $events->where('event_type', 'click')->count();$unsubEventsCount = $hasTrackingModel ? \App\Models\EmailTrackingEvent::where('event_type', 'unsubscribe')->count() : $events->where('event_type', 'unsubscribe')->count();
+
+    $exportUrl = Route::has('admin.email_marketing.analytics.export') 
+        ? route('admin.email_marketing.analytics.export') 
+        : url('admin/email-marketing/analytics/export');
+
+    $dashboardUrl = Route::has('admin.email_marketing.dashboard') 
+        ? route('admin.email_marketing.dashboard') 
+        : url('admin/email-marketing/dashboard');
 @endphp
 
 @section('admin_content')
@@ -34,7 +45,8 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
-    #email-marketing-analytics-root .input-group > .form-control {
+    #email-marketing-analytics-root .input-group > .form-control,
+    #email-marketing-analytics-root .input-group > .form-select {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
@@ -47,7 +59,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -56,6 +68,30 @@
         justify-content: center;
         white-space: nowrap;
         transition: all 0.15s ease;
+    }
+
+    .analytics-filter-control {
+        font-size: 12px !important;
+        height: 32px !important;
+        padding: 4px 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .analytics-filter-control:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+        outline: none;
+    }
+
+    .analytics-addon-text {
+        height: 32px !important;
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #64748b !important;
+        font-size: 11px !important;
     }
 
     /* Collapsible Trigger Buttons & Rotating Chevron */
@@ -152,20 +188,20 @@
         margin-bottom: 0;
     }
     .custom-analytics-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-analytics-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -188,13 +224,13 @@
         }
 
         /* 7 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-an-id     { width: 4% !important; }
-        .col-an-user   { width: 22% !important; }
-        .col-an-type   { width: 12% !important; }
+        .col-an-id     { width: 5% !important; }
+        .col-an-user   { width: 23% !important; }
+        .col-an-type   { width: 11% !important; }
         .col-an-source { width: 22% !important; }
         .col-an-url    { width: 16% !important; }
         .col-an-ip     { width: 10% !important; }
-        .col-an-date   { width: 14% !important; }
+        .col-an-date   { width: 13% !important; }
     }
 
     /* Form Controls */
@@ -204,23 +240,6 @@
         color: #334155;
         margin-bottom: 4px;
         display: block;
-    }
-    #email-marketing-analytics-root .form-control,
-    #email-marketing-analytics-root .form-select {
-        min-height: 32px;
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #email-marketing-analytics-root .form-control:focus,
-    #email-marketing-analytics-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
     }
 
     /* Bulletproof Responsive Pagination */
@@ -243,9 +262,7 @@
     }
     .card-footer nav p,
     .card-footer nav .small.text-muted,
-    .card-footer nav div:has(> p),
-    .card-footer nav > div.d-none > div:first-child,
-    .card-footer nav .d-none.flex-sm-fill > div:first-child {
+    .card-footer nav div:has(> p) {
         display: none !important;
     }
     .card-footer .pagination {
@@ -299,10 +316,6 @@
         border-color: #e2e8f0 !important;
         cursor: not-allowed !important;
     }
-    .card-footer nav svg {
-        width: 10px !important;
-        height: 10px !important;
-    }
 
     /* 100/100 Mobile Responsiveness Tuning (< 768px) */
     @media (max-width: 767.98px) {
@@ -348,6 +361,9 @@
             min-width: 820px !important;
             table-layout: auto !important;
         }
+        #email-marketing-analytics-root .card {
+            margin-bottom: 12px !important;
+        }
     }
 </style>
 
@@ -356,21 +372,26 @@
     {{-- 1. Header & Navigation (Original Clean Light Theme) --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 analytics-header-wrap">
         <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-chart-line text-primary"></i>
-                <span>Email Analytics &amp; Tracking Events</span>
-            </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Audit log of opens, clicks, pixel pings, and delivery telemetry[cite: 22].
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
+                    <i class="fas fa-chart-line text-primary"></i>
+                    <span>Email Analytics &amp; Tracking Events</span>
+                </h5>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" id="analytics-total-badge" style="font-size: 10px;">
+                    {{ number_format($totalEventsCount) }} Events
+                </span>
+            </div>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
+                Audit log of opens, clicks, pixel pings, and delivery telemetry.
             </small>
         </div>
 
-        <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ route('admin.email_marketing.analytics.export') }}" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-semibold">
-                <i class="fas fa-file-csv me-1 text-success"></i> <span>Export Event Logs</span>[cite: 22]
+        <div class="d-flex flex-wrap align-items-center gap-2 top-action-btns">
+            <a href="{{ $exportUrl }}" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-semibold" title="Export events to CSV">
+                <i class="fas fa-file-csv me-1 text-success"></i> <span>Export Event Logs</span>
             </a>
-            <a href="{{ route('admin.email_marketing.dashboard') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
-                <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>[cite: 22]
+            <a href="{{ $dashboardUrl }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+                <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>
             </a>
         </div>
     </div>
@@ -401,7 +422,7 @@
                                 <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
                                     {{ number_format($totalEventsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Total tracking pings[cite: 22]</small>
+                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Total tracking pings</small>
                             </div>
                         </div>
                     </div>
@@ -455,7 +476,7 @@
                                 <h4 class="fw-bold my-0 text-danger bn-digit font-monospace stat-val-num">
                                     {{ number_format($unsubEventsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Unsubscribe clicks[cite: 22]</small>
+                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Unsubscribe clicks</small>
                             </div>
                         </div>
                     </div>
@@ -465,7 +486,7 @@
     </div>
 
     {{-- 3. Live Search & Event Type Filter Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-filter text-primary me-1"></i> Filter Events by Email, Source &amp; Event Type
@@ -476,35 +497,37 @@
         </div>
         <div class="collapse show" id="collapseAnalyticsFilter">
             <div class="p-3">
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-5">
-                        <label class="form-label" for="analyticsSearchInput">
-                            <i class="fas fa-search me-1 text-primary"></i> Search Email, Source, or IP Address
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="analyticsSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="e.g. user@example.com, 192.168.1.1, Campaign..." onkeyup="filterAnalyticsTable()">
+                <form id="analyticsFilterForm" onsubmit="return false;">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-md-5">
+                            <label class="form-label" for="analyticsSearchInput">
+                                <i class="fas fa-search me-1 text-primary"></i> Search Email, Source, or IP Address
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text analytics-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
+                                <input type="text" id="analyticsSearchInput" class="form-control border-start-0 ps-0 analytics-filter-control shadow-none font-monospace" placeholder="user@example.com, 192.168.1.1, Campaign..." onkeyup="filterAnalyticsTable()">
+                            </div>
+                        </div>
+
+                        <div class="col-6 col-md-4">
+                            <label class="form-label" for="analyticsTypeFilter">
+                                <i class="fas fa-tag me-1 text-success"></i> Telemetry Event Type
+                            </label>
+                            <select id="analyticsTypeFilter" class="form-select analytics-filter-control shadow-none font-monospace" onchange="filterAnalyticsTable()">
+                                <option value="all" selected>-- All Event Types --</option>
+                                <option value="open">Open (Pixel Ping)</option>
+                                <option value="click">Click (Link Tracking)</option>
+                                <option value="unsubscribe">Unsubscribe Request</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetAnalyticsFilters()">
+                                <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
+                            </button>
                         </div>
                     </div>
-
-                    <div class="col-6 col-md-4">
-                        <label class="form-label" for="analyticsTypeFilter">
-                            <i class="fas fa-tag me-1 text-success"></i> Telemetry Event Type
-                        </label>
-                        <select id="analyticsTypeFilter" class="form-select shadow-none font-monospace" onchange="filterAnalyticsTable()">
-                            <option value="all" selected>All Event Types</option>
-                            <option value="open">Open (Pixel Ping)</option>
-                            <option value="click">Click (Link Tracking)</option>
-                            <option value="unsubscribe">Unsubscribe Request</option>
-                        </select>
-                    </div>
-
-                    <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetAnalyticsFilters()">
-                            <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
-                        </button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -514,15 +537,15 @@
         <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
             <div>
                 <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
-                    <i class="fas fa-list-check text-primary"></i> <span>Recent Engagement &amp; Telemetry Logs</span>[cite: 22]
+                    <i class="fas fa-list-check text-primary"></i> <span>Recent Engagement &amp; Telemetry Logs</span>
                 </h6>
-                <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">
-                    Showing {{ $events->firstItem() ?? 0 }} to {{ $events->lastItem() ?? 0 }} of {{$events->total() }} events[cite: 22]
+                <small class="text-muted font-monospace bn-digit" id="showing-entries-text" style="font-size: 10px;">
+                    Showing {{ method_exists($events, 'firstItem') ? ($events->firstItem() ?? 0) : 1 }} to {{ method_exists($events, 'lastItem') ? ($events->lastItem() ?? 0) : $events->count() }} of {{$totalEventsCount }} events
                 </small>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-events-count">
-                    {{ $events->total() }} Logged[cite: 22]
+                    {{ $totalEventsCount }} Logged
                 </span>
                 <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseAnalyticsTable" aria-expanded="true" aria-controls="collapseAnalyticsTable" title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -531,17 +554,17 @@
         </div>
 
         <div class="collapse show" id="collapseAnalyticsTable">
-            <div class="table-responsive pc-fit-container">
+            <div class="table-responsive pc-fit-container" style="min-height: 250px;">
                 <table class="table align-middle mb-0 custom-analytics-table" id="analytics-table">
                     <thead>
                         <tr>
-                            <th class="ps-3 col-an-id text-center">#ID</th>[cite: 22]
-                            <th class="col-an-user">Recipient Email</th>[cite: 22]
-                            <th class="col-an-type">Event Type</th>[cite: 22]
-                            <th class="col-an-source">Broadcast / Journey Source</th>[cite: 22]
-                            <th class="col-an-url">Target URL / Data</th>[cite: 22]
-                            <th class="col-an-ip">IP Address</th>[cite: 22]
-                            <th class="pe-3 col-an-date">Timestamp</th>[cite: 22]
+                            <th class="ps-3 col-an-id text-center">#ID</th>
+                            <th class="col-an-user">Recipient Email</th>
+                            <th class="col-an-type">Event Type</th>
+                            <th class="col-an-source">Broadcast / Journey Source</th>
+                            <th class="col-an-url">Target URL / Data</th>
+                            <th class="col-an-ip">IP Address</th>
+                            <th class="pe-3 col-an-date">Timestamp</th>
                         </tr>
                     </thead>
                     <tbody id="analytics-tbody">
@@ -563,49 +586,51 @@
                                     ($event->target_url ?? '') . ' ' .
                                     ($event->ip_address ?? '')
                                 );
+
+                                $campViewUrl = $event->campaign ? url('admin/email-marketing/campaigns/view/' . $event->campaign->id) : '#';
                             @endphp
-                            <tr class="event-entry-row" data-search="{{ $rowSearchData }}" data-type="{{ strtolower($event->event_type ?? '') }}">
+                            <tr class="event-entry-row align-middle" data-search="{{ $rowSearchData }}" data-type="{{ strtolower($event->event_type ?? '') }}">
                                 <td class="ps-3 col-an-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
-                                    {{ $event->id }}[cite: 22]
+                                    {{ $event->id }}
                                 </td>
                                 <td class="col-an-user">
                                     <div class="min-w-0" style="line-height: 1.3;">
                                         <strong class="text-dark d-block text-truncate" style="font-size: 12px;" title="{{ $event->email }}">
-                                            {{ $event->email }}[cite: 22]
+                                            {{ $event->email }}
                                         </strong>
                                         <small class="text-muted font-monospace d-block text-truncate" style="font-size: 10px;">
-                                            Audit ID: #{{ $event->id }}[cite: 22]
+                                            Audit ID: #{{ $event->id }}
                                         </small>
                                     </div>
                                 </td>
                                 <td class="col-an-type">
                                     <span class="badge {{ $badgeClass }} font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
                                         @if(strtolower($event->event_type ?? '') === 'open')
-                                            <i class="fas fa-envelope-open me-1"></i>[cite: 22]
+                                            <i class="fas fa-envelope-open me-1"></i>
                                         @elseif(strtolower($event->event_type ?? '') === 'click')
-                                            <i class="fas fa-mouse-pointer me-1"></i>[cite: 22]
+                                            <i class="fas fa-mouse-pointer me-1"></i>
                                         @elseif(strtolower($event->event_type ?? '') === 'unsubscribe')
-                                            <i class="fas fa-user-xmark me-1"></i>[cite: 22]
+                                            <i class="fas fa-user-xmark me-1"></i>
                                         @else
                                             <i class="fas fa-bolt me-1"></i>
                                         @endif
-                                        {{ strtoupper($event->event_type) }}[cite: 22]
+                                        {{ strtoupper($event->event_type) }}
                                     </span>
                                 </td>
                                 <td class="col-an-source">
                                     <div class="min-w-0" style="line-height: 1.3;">
                                         @if($event->campaign)
-                                            <a href="{{ route('admin.email_marketing.campaigns.show', $event->campaign->id) }}" class="text-decoration-none fw-bold text-primary d-block text-truncate" style="font-size: 12px;" title="{{ $event->campaign->name }}">
-                                                <i class="fas fa-paper-plane me-1"></i> {{ $event->campaign->name }}[cite: 22]
+                                            <a href="{{ $campViewUrl }}" class="text-decoration-none fw-bold text-primary d-block text-truncate" style="font-size: 12px;" title="{{ $event->campaign->name }}">
+                                                <i class="fas fa-paper-plane me-1"></i> {{ $event->campaign->name }}
                                             </a>
                                             <small class="text-muted font-monospace d-block text-truncate" style="font-size: 10px;">Broadcast Campaign</small>
                                         @elseif($event->automation)
                                             <span class="text-dark fw-semibold d-block text-truncate" style="font-size: 12px;" title="{{ $event->automation->name }}">
-                                                <i class="fas fa-diagram-project text-secondary me-1"></i> {{ $event->automation->name }}[cite: 22]
+                                                <i class="fas fa-diagram-project text-secondary me-1"></i> {{ $event->automation->name }}
                                             </span>
                                             <small class="text-muted font-monospace d-block text-truncate" style="font-size: 10px;">Drip Workflow</small>
                                         @else
-                                            <span class="text-muted font-monospace small" style="font-size: 11px;">Direct / System</span>[cite: 22]
+                                            <span class="text-muted font-monospace small" style="font-size: 11px;">Direct / System</span>
                                         @endif
                                     </div>
                                 </td>
@@ -613,39 +638,45 @@
                                     @if($event->target_url)
                                         <button type="button" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center gap-1 text-truncate" style="max-width: 100%; font-size: 10.5px; border-radius: 5px !important;" onclick="showUrlDetailModal('{{ addslashes($event->email) }}', '{{ strtoupper($event->event_type) }}', '{{ addslashes($event->target_url) }}', '{{$event->ip_address ?? 'N/A' }}')" title="Click to view full destination URL">
                                             <i class="fas fa-link flex-shrink-0" style="font-size: 9.5px;"></i>
-                                            <span class="text-truncate font-monospace">{{ $event->target_url }}</span>[cite: 22]
+                                            <span class="text-truncate font-monospace">{{ $event->target_url }}</span>
                                         </button>
                                     @else
-                                        <span class="text-muted font-monospace" style="font-size: 11px;">—</span>[cite: 22]
+                                        <span class="text-muted font-monospace" style="font-size: 11px;">—</span>
                                     @endif
                                 </td>
                                 <td class="col-an-ip">
                                     <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 10px;">
-                                        {{ $event->ip_address ?? '—' }}[cite: 22]
+                                        {{ $event->ip_address ?? '—' }}
                                     </span>
                                 </td>
                                 <td class="pe-3 col-an-date font-monospace bn-digit" style="line-height: 1.3;">
-                                    <span class="text-dark d-block" style="font-size: 11px;">{{ $event->created_at->format('M d, Y') }}</span>[cite: 22]
-                                    <small class="text-muted" style="font-size: 9.5px;">{{ $event->created_at->format('h:i:s A') }}</small>[cite: 22]
+                                    <span class="text-dark d-block" style="font-size: 11px;">{{ $event->created_at->format('M d, Y') }}</span>
+                                    <small class="text-muted" style="font-size: 9.5px;">{{ $event->created_at->format('h:i:s A') }}</small>
                                 </td>
                             </tr>
                         @empty
                             <tr id="emptyEventsRow">
                                 <td colspan="7" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-inbox fa-2x mb-2 d-block text-secondary opacity-25"></i>[cite: 22]
-                                    <span class="fw-semibold">No tracking events recorded yet. Open and click events will appear here in real-time.</span>[cite: 22]
+                                    <i class="fas fa-inbox fa-2x mb-2 d-block text-secondary opacity-25"></i>
+                                    <span class="fw-semibold">No tracking events recorded yet. Open and click events will appear here in real-time.</span>
                                 </td>
                             </tr>
                         @endforelse
+                        <tr id="noMatchEventsRow" style="display: none;">
+                            <td colspan="7" class="text-center py-5 text-muted small">
+                                <i class="fas fa-filter-circle-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>
+                                <span class="fw-semibold">No tracking events matched your search or event type filter.</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
             {{-- Bulletproof Responsive Pagination Footer --}}
-            @if($events->hasPages())
+            @if(method_exists($events, 'hasPages') &&$events->hasPages())
                 <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
                     <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
-                        Showing {{ $events->firstItem() }} to {{ $events->lastItem() }} of {{$events->total() }} events[cite: 22]
+                        Showing {{ $events->firstItem() }} to {{ $events->lastItem() }} of {{$events->total() }} events
                     </small>
                     <div>
                         {{ $events->links('pagination::bootstrap-5') }}
@@ -656,7 +687,7 @@
     </div>
 </div>
 
-<!-- Modal: URL & Telemetry Lightbox Modal (Zero Cut-off on Mobile) -->
+{{-- Modal: URL & Telemetry Lightbox Modal --}}
 <div class="modal fade analytics-modal-scope" id="telemetryDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content border-0 shadow-lg p-3">
@@ -732,6 +763,11 @@
         const countBadge = document.getElementById('visible-events-count');
         if (countBadge) {
             countBadge.innerText = `${visibleCount} Showing`;
+        }
+
+        const noMatchRow = document.getElementById('noMatchEventsRow');
+        if (noMatchRow) {
+            noMatchRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
         }
     }
 

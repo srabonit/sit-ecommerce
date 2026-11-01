@@ -3,10 +3,21 @@
 @section('title', 'Campaigns - Email Marketing')
 
 @php
-    $totalCampaignsCount = $campaigns->total();
-    $activeCount         = \App\Models\EmailCampaign::whereIn('status', ['sending', 'queued', 'scheduled'])->count();
-    $completedCount      = \App\Models\EmailCampaign::where('status', 'completed')->count();
-    $totalRevenueSum     = (float) \App\Models\EmailCampaign::sum('total_revenue');
+    $campaigns = $campaigns ?? collect();
+    $totalCampaignsCount = method_exists($campaigns, 'total') ? $campaigns->total() : $campaigns->count();
+
+    $hasCampaignModel = class_exists('\App\Models\EmailCampaign');
+    $activeCount      = $hasCampaignModel ? \App\Models\EmailCampaign::whereIn('status', ['sending', 'queued', 'scheduled'])->count() : $campaigns->whereIn('status', ['sending', 'queued', 'scheduled'])->count();
+    $completedCount   = $hasCampaignModel ? \App\Models\EmailCampaign::where('status', 'completed')->count() : $campaigns->where('status', 'completed')->count();
+    $totalRevenueSum  = $hasCampaignModel ? (float) \App\Models\EmailCampaign::sum('total_revenue') : (float) $campaigns->sum('total_revenue');
+
+    $dashboardRoute = Route::has('admin.email_marketing.dashboard') 
+        ? route('admin.email_marketing.dashboard') 
+        : url('admin/email-marketing/dashboard');
+
+    $createCampaignRoute = Route::has('admin.email_marketing.campaigns.create') 
+        ? route('admin.email_marketing.campaigns.create') 
+        : url('admin/email-marketing/campaigns/create');
 @endphp
 
 @section('admin_content')
@@ -363,7 +374,7 @@
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-campaigns-root">
 
-    {{-- 1. Header & Actions (Original Clean Light Theme) --}}
+    {{-- 1. Header & Actions --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 campaign-header-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -372,7 +383,7 @@
                     <span>Marketing Campaigns</span>
                 </h5>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" id="campaigns-total-badge" style="font-size: 10px;">
-                    {{ $totalCampaignsCount }} Campaigns
+                    {{ number_format($totalCampaignsCount) }} Campaigns
                 </span>
             </div>
             <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
@@ -381,10 +392,10 @@
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2 top-action-btns">
-            <a href="{{ url('admin/email-marketing/dashboard') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+            <a href="{{ $dashboardRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
                 <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>
             </a>
-            <a href="{{ url('admin/email-marketing/campaigns/create') }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold btn-create-main">
+            <a href="{{ $createCampaignRoute }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold btn-create-main">
                 <i class="fas fa-plus-circle me-1"></i> <span>Create Campaign</span>
             </a>
         </div>
@@ -434,7 +445,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="stat-total-campaigns">
-                                    {{ $totalCampaignsCount }}
+                                    {{ number_format($totalCampaignsCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Configured broadcasts</small>
                             </div>
@@ -452,7 +463,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num" id="stat-active-engine">
-                                    {{ $activeCount }}
+                                    {{ number_format($activeCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Sending or scheduled</small>
                             </div>
@@ -470,7 +481,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-completed-campaigns">
-                                    {{ $completedCount }}
+                                    {{ number_format($completedCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Successfully dispatched</small>
                             </div>
@@ -500,7 +511,7 @@
     </div>
 
     {{-- 4. Status Filter & Live Search Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3" style="border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-filter text-primary me-1"></i> Multi-Dimensional Filter &amp; Search Toolbar
@@ -520,7 +531,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text campaign-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                                <input type="text" name="search" id="campaignSearchInput" class="form-control border-start-0 ps-0 campaign-filter-control shadow-none font-monospace" placeholder="e.g. Black Friday, Welcome Offer, VIP Special...">
+                                <input type="text" name="search" id="campaignSearchInput" class="form-control border-start-0 ps-0 campaign-filter-control shadow-none font-monospace" placeholder="Black Friday, Welcome Offer, VIP Special...">
                             </div>
                         </div>
 
@@ -561,12 +572,12 @@
                     <i class="fas fa-envelopes-bulk text-primary"></i> <span>Broadcast Campaigns &amp; Delivery Matrix</span>
                 </h6>
                 <small class="text-muted font-monospace bn-digit" id="showing-entries-text" style="font-size: 10px;">
-                    Showing {{ $campaigns->firstItem() ?? 0 }} to {{ $campaigns->lastItem() ?? 0 }} of {{ $campaigns->total() }} campaigns
+                    Showing {{ $campaigns->firstItem() ?? 0 }} to {{ $campaigns->lastItem() ?? 0 }} of {{ number_format($campaigns->total()) }} campaigns
                 </small>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-campaign-count">
-                    {{ $campaigns->total() }} Total
+                    {{ number_format($campaigns->total()) }} Total
                 </span>
                 <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCampaignsTable" aria-expanded="true" aria-controls="collapseCampaignsTable" title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -613,6 +624,34 @@
                                 if ($camp->status === 'completed') {
                                     $progress = 100.0;
                                 }
+
+                                $showCampaignUrl = Route::has('admin.email_marketing.campaigns.show')
+                                    ? route('admin.email_marketing.campaigns.show', $camp->id)
+                                    : url('admin/email-marketing/campaigns/view/' . $camp->id);
+
+                                $editCampaignUrl = Route::has('admin.email_marketing.campaigns.edit')
+                                    ? route('admin.email_marketing.campaigns.edit', $camp->id)
+                                    : url('admin/email-marketing/campaigns/' . $camp->id . '/edit');
+
+                                $dispatchNowUrl = Route::has('admin.email_marketing.campaigns.dispatch_now')
+                                    ? route('admin.email_marketing.campaigns.dispatch_now', $camp->id)
+                                    : url('admin/email-marketing/campaigns/dispatch-now/' . $camp->id);
+
+                                $pauseCampaignUrl = Route::has('admin.email_marketing.campaigns.pause')
+                                    ? route('admin.email_marketing.campaigns.pause', $camp->id)
+                                    : url('admin/email-marketing/campaigns/pause/' . $camp->id);
+
+                                $resumeCampaignUrl = Route::has('admin.email_marketing.campaigns.resume')
+                                    ? route('admin.email_marketing.campaigns.resume', $camp->id)
+                                    : url('admin/email-marketing/campaigns/resume/' . $camp->id);
+
+                                $testSendUrl = Route::has('admin.email_marketing.campaigns.send_test')
+                                    ? route('admin.email_marketing.campaigns.send_test', $camp->id)
+                                    : url('admin/email-marketing/campaigns/send-test/' . $camp->id);
+
+                                $deleteCampaignUrl = Route::has('admin.email_marketing.campaigns.destroy')
+                                    ? route('admin.email_marketing.campaigns.destroy', $camp->id)
+                                    : url('admin/email-marketing/campaigns/delete/' . $camp->id);
                             @endphp
                             <tr class="campaign-entry-row align-middle" id="campaign-row-{{ $camp->id }}" data-search="{{ $rowSearchData }}" data-status="{{ strtolower($camp->status) }}">
                                 <td class="ps-3 col-cp-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
@@ -620,7 +659,7 @@
                                 </td>
                                 <td class="col-cp-name">
                                     <div class="min-w-0" style="line-height: 1.3;">
-                                        <a href="{{ url('admin/email-marketing/campaigns/view/' . $camp->id) }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $camp->name }}">
+                                        <a href="{{ $showCampaignUrl }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $camp->name }}">
                                             {{ $camp->name }}
                                         </a>
                                         <small class="text-muted d-block text-truncate font-monospace" style="font-size: 10px;" title="{{ $camp->subject }}">
@@ -675,42 +714,42 @@
                                 <td class="text-end pe-3 col-cp-actions">
                                     <div class="d-inline-flex align-items-center gap-1">
                                         {{-- 1. View Analytics / Overview --}}
-                                        <a href="{{ url('admin/email-marketing/campaigns/view/' . $camp->id) }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="View Full Report">
+                                        <a href="{{ $showCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="View Full Report">
                                             <i class="fas fa-chart-line" style="font-size: 10px;"></i>
                                         </a>
 
                                         {{-- 2. Dispatch Now (for draft/scheduled) --}}
                                         @if(in_array($camp->status, ['draft', 'scheduled']))
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Dispatch Campaign', 'Queue this campaign for immediate broadcast to all target recipients?', '{{ url('admin/email-marketing/campaigns/dispatch-now/' . $camp->id) }}', 'dispatch')" title="Dispatch / Send Now">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Dispatch Campaign', 'Queue this campaign for immediate broadcast to all target recipients?', '{{ $dispatchNowUrl }}', 'dispatch')" title="Dispatch / Send Now">
                                                 <i class="fas fa-paper-plane" style="font-size: 10px;"></i>
                                             </button>
                                         @endif
 
                                         {{-- 3. Pause / Resume --}}
                                         @if(in_array($camp->status, ['queued', 'sending']))
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-warning shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ url('admin/email-marketing/campaigns/pause/' . $camp->id) }}', 'Pause Broadcast', 'POST')" title="Pause Dispatch">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-warning shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ $pauseCampaignUrl }}', 'Pause Broadcast', 'POST')" title="Pause Dispatch">
                                                 <i class="fas fa-pause" style="font-size: 10px;"></i>
                                             </button>
                                         @elseif($camp->status === 'paused')
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ url('admin/email-marketing/campaigns/resume/' . $camp->id) }}', 'Resume Broadcast', 'POST')" title="Resume Dispatch">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ $resumeCampaignUrl }}', 'Resume Broadcast', 'POST')" title="Resume Dispatch">
                                                 <i class="fas fa-play" style="font-size: 10px;"></i>
                                             </button>
                                         @endif
 
                                         {{-- 4. Centralized Test Send Trigger --}}
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-info shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="openTestMailModal({{ $camp->id }}, '{{ addslashes($camp->name) }}', '{{ url('admin/email-marketing/campaigns/send-test/' .$camp->id) }}')" title="Send Test Email">
+                                        <button type="button" class="btn btn-sm btn-light border p-1 text-info shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="openTestMailModal({{ $camp->id }}, '{{ addslashes($camp->name) }}', '{{$testSendUrl }}')" title="Send Test Email">
                                             <i class="fas fa-vial" style="font-size: 10px;"></i>
                                         </button>
 
                                         {{-- 5. Edit (only if editable) --}}
-                                        @if($camp->isEditable())
-                                            <a href="{{ url('admin/email-marketing/campaigns/edit/' . $camp->id) }}" class="btn btn-sm btn-light border p-1 text-secondary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="Edit Campaign Settings">
+                                        @if(method_exists($camp, 'isEditable') ? $camp->isEditable() : in_array($camp->status, ['draft', 'scheduled']))
+                                            <a href="{{ $editCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-secondary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="Edit Campaign Settings">
                                                 <i class="fas fa-pencil" style="font-size: 10px;"></i>
                                             </a>
                                         @endif
 
                                         {{-- 6. Delete via Custom Modal --}}
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Delete Campaign', 'Are you sure you want to delete this campaign? All recipient delivery records will be removed.', '{{ url('admin/email-marketing/campaigns/delete/' . $camp->id) }}', 'delete')" title="Delete Campaign">
+                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Delete Campaign', 'Are you sure you want to delete this campaign? All recipient delivery records will be removed.', '{{ $deleteCampaignUrl }}', 'delete')" title="Delete Campaign">
                                             <i class="fas fa-trash-can" style="font-size: 10px;"></i>
                                         </button>
                                     </div>
@@ -729,12 +768,12 @@
             </div>
 
             {{-- Bulletproof Responsive Pagination Footer --}}
-            <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print" id="campaigns-pagination-footer" style="{{ $campaigns->hasPages() ? '' : 'display: none;' }}">
+            <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print" id="campaigns-pagination-footer" style="{{ method_exists($campaigns, 'hasPages') &&$campaigns->hasPages() ? '' : 'display: none;' }}">
                 <small class="text-muted font-monospace bn-digit" id="pagination-info-text" style="font-size: 11px;">
-                    Showing {{ $campaigns->firstItem() ?? 0 }} to {{ $campaigns->lastItem() ?? 0 }} of {{$campaigns->total() }} campaigns
+                    Showing {{ method_exists($campaigns, 'firstItem') ? ($campaigns->firstItem() ?? 0) : 1 }} to {{ method_exists($campaigns, 'lastItem') ? ($campaigns->lastItem() ?? 0) : $campaigns->count() }} of {{ number_format($totalCampaignsCount) }} campaigns
                 </small>
                 <div id="campaigns-pagination-links">
-                    @if($campaigns->hasPages())
+                    @if(method_exists($campaigns, 'hasPages') &&$campaigns->hasPages())
                         {{ $campaigns->links('pagination::bootstrap-5') }}
                     @endif
                 </div>
@@ -772,7 +811,7 @@
     </div>
 </div>
 
-{{-- Modal 2: Reusable Action Confirmation Modal (Replaces Browser Confirm) --}}
+{{-- Modal 2: Reusable Action Confirmation Modal --}}
 <div class="modal fade campaigns-modal-scope" id="campaignActionModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
@@ -802,7 +841,7 @@
     let pendingActionUrl = '';
     let pendingActionMethod = 'POST';
 
-    // 1. Live Reload-Free Fetch (Uses DOMParser so no controller refactor is needed)
+    // 1. Live Reload-Free Fetch
     function fetchFilteredCampaigns(page = 1) {
         const query = (document.getElementById('campaignSearchInput')?.value || '').trim();
         const status = (document.getElementById('campaignStatusSelect')?.value || '').trim();
@@ -855,7 +894,6 @@
                 currentTotalBadge.innerHTML = newTotalBadge.innerHTML;
             }
 
-            // Client-side visual count sync
             filterCampaignsTableClient();
         })
         .catch(err => {
@@ -959,7 +997,8 @@
         .then(() => {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Test';
-            bootstrap.Modal.getInstance(document.getElementById('centralTestMailModal'))?.hide();
+            const modalEl = document.getElementById('centralTestMailModal');
+            if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
             showToast('Dispatched', `Test email sent successfully to ${email}.`, 'success');
         })
         .catch(() => {
@@ -1016,7 +1055,8 @@
         })
         .then(() => {
             btn.disabled = false;
-            bootstrap.Modal.getInstance(document.getElementById('campaignActionModal'))?.hide();
+            const modalEl = document.getElementById('campaignActionModal');
+            if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
             showToast('Success', 'Campaign operation executed successfully.', 'success');
             fetchFilteredCampaigns(1);
         })

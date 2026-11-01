@@ -16,6 +16,7 @@
     $pSubtotal = (float)($order->product_subtotal ?? ($order->subtotal ?? 0));
     $dCharge   = (float)($order->delivery_charge ?? ($order->shipping_charge ?? 0));
     $discount  = (float)($order->discount ?? ($order->discount_amount ?? 0));
+    $taxAmount = (float)($order->tax_amount ?? ($order->tax ?? 0));
     $grand     = (float)($order->grand_total ?? 0);
     $paid      = (float)($order->paid_amount ?? (($order->payment_status ?? '') === 'paid' ? $grand : 0));
     $due       = (float)($order->due_amount ?? max(0, $grand - $paid));
@@ -545,6 +546,10 @@
                                             $vTitle = count($parts) > 0 ? implode(' / ', $parts) : ($vRecord->name ?? $vTitle);
                                         }
                                     }
+
+                                    // Item level VAT metadata
+                                    $itemTax = (float)($item->tax_amount ?? 0);
+                                    $itemTaxRate = (float)($item->tax_rate ?? 0);
                                 @endphp
                                 <tr>
                                     <td class="text-wrap" style="min-width: 200px;">
@@ -570,6 +575,13 @@
                                             <small class="text-danger fw-bold d-block font-monospace bn-digit mt-1" style="font-size: 10px;">
                                                 <i class="fas fa-barcode me-1"></i> SKU: {{ $vSku }}
                                             </small>
+                                        @endif
+                                        @if($itemTax > 0)
+                                            <div class="mt-1">
+                                                <span class="badge bg-light text-primary border font-monospace bn-digit" style="font-size: 9px;">
+                                                    <i class="fas fa-percent me-1" style="font-size: 8px;"></i> VAT: ৳ {{ number_format($itemTax, 2) }} {{ $itemTaxRate > 0 ? "({$itemTaxRate}%)" : '' }}
+                                                </span>
+                                            </div>
                                         @endif
                                     </td>
                                     <td class="font-monospace bn-digit">৳ {{ number_format($unitPrice, 2) }}</td>
@@ -597,6 +609,17 @@
                                     <td class="text-end pe-3 font-monospace bn-digit text-danger">- ৳ {{ number_format($discount, 2) }}</td>
                                 </tr>
                             @endif
+
+                            {{-- Tax / VAT Row (Displayed when tax_amount > 0 as per Requirement 5) --}}
+                            @if($taxAmount > 0)
+                                <tr>
+                                    <td colspan="3" class="text-end fw-semibold small text-dark">
+                                        <i class="fas fa-percent text-primary me-1" style="font-size: 10px;"></i> VAT / Tax:
+                                    </td>
+                                    <td class="text-end pe-3 font-monospace bn-digit fw-bold text-dark">+ ৳ {{ number_format($taxAmount, 2) }}</td>
+                                </tr>
+                            @endif
+
                             <tr class="border-top">
                                 <td colspan="3" class="text-end fw-bold text-dark fs-6">Grand Total:</td>
                                 <td class="text-end pe-3 font-monospace fw-bold text-primary fs-6 bn-digit">৳ {{ number_format($grand, 2) }}</td>
@@ -746,7 +769,7 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <label class="form-label">Inspection Note</label>
-                            <input type="text" name="action_note" class="form-control" placeholder="Reason for return/exchange (e.g. wrong size)">
+                            <input type="text" name="action_note" class="form-control" placeholder="Reason for return/exchange (wrong size)">
                         </div>
                     </div>
 
@@ -941,7 +964,6 @@ function showOrderNotice(message, title = 'Notification', type = 'info') {
     }
 }
 
-// Global Media Chooser Integration for Payment Proof Attachment
 function extractMediaItem(mediaInput) {
     if (!mediaInput) return null;
     const item = Array.isArray(mediaInput) ? mediaInput[0] : mediaInput;

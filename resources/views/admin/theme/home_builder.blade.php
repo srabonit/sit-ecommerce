@@ -584,7 +584,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-8 col-md-7">
                             <label class="form-label">Section Title</label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g. New Arrivals">
+                            <input type="text" name="title" class="form-control" placeholder="New Arrivals">
                         </div>
                         <div class="col-4 col-md-2">
                             <label class="form-label">Title Color</label>
@@ -623,7 +623,7 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <label class="form-label text-muted" style="font-size: 10.5px;">Button Text</label>
-                                <input type="text" name="btn_text" class="form-control" placeholder="e.g. View All">
+                                <input type="text" name="btn_text" class="form-control" placeholder="View All">
                             </div>
                             <div class="col-6">
                                 <label class="form-label text-muted" style="font-size: 10.5px;">Target URL</label>

@@ -26,7 +26,7 @@
 
     $seoTitle = !empty($page->seo_title)
         ? $page->seo_title
-        : ($page->title . ' - ' . $siteBrandName);
+        : ($page->title . ' - ' .$siteBrandName);
 
     $seoDesc = !empty($page->seo_description)
         ? $page->seo_description
@@ -53,7 +53,32 @@
 
     /*
     |--------------------------------------------------------------------------
-    | 3. PAGE WIDTH LAYOUT HANDLER
+    | 3. DYNAMIC COLOR SETTINGS RESOLVER
+    |--------------------------------------------------------------------------
+    */
+    static $pageThemeSettingsCache = null;
+    if ($pageThemeSettingsCache === null) {
+        $pageThemeSettingsCache = \Illuminate\Support\Facades\Cache::remember('global_settings_cache', 86400, function() {
+            return DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $pageColors = $pageThemeSettingsCache ?? [];
+
+    $pageBg           = $pageColors['color_page_bg'] ?? ($pageColors['color_site_bg'] ?? '#f8fafc');
+    $pageText         = $pageColors['color_page_text'] ?? '#1e293b';
+    $pageTitleColor   = $pageColors['color_page_title'] ?? '#0f172a';
+    $pageCardBg       = $pageColors['color_page_card_bg'] ?? '#ffffff';
+    $pageCardBorder   = $pageColors['color_page_card_border'] ?? '#e2e8f0';
+    $pageSidebarBg    = $pageColors['color_page_sidebar_bg'] ?? '#ffffff';
+    $pageSidebarBorder= $pageColors['color_page_sidebar_border'] ?? '#e2e8f0';
+    $pageSidebarHead  = $pageColors['color_page_sidebar_header_text'] ?? '#0f172a';
+    $pageSidebarText  = $pageColors['color_page_sidebar_text'] ?? '#475569';
+    $pageBreadcrumb   = $pageColors['color_page_breadcrumb_link'] ?? '#64748b';
+    $pageBreadcrumbHov= $pageColors['color_page_breadcrumb_hover'] ?? '#2563eb';
+
+    /*
+    |--------------------------------------------------------------------------
+    | 4. PAGE WIDTH LAYOUT HANDLER
     |--------------------------------------------------------------------------
     */
 
@@ -62,15 +87,10 @@
     $containerClass = 'container py-4';
 
     if ($isFullWidth) {
-
         $containerClass = 'container-fluid px-0 py-0';
-
     } elseif (($page->page_width ?? '') === 'boxed') {
-
         $containerClass = 'container py-4';
-
     } elseif (($page->page_width ?? '') === 'contained-wide') {
-
         $containerClass = 'container py-4';
     }
 
@@ -113,6 +133,19 @@
 
 
 <style>
+    :root {
+        --page-bg: {{ $pageBg }};
+        --page-text: {{ $pageText }};
+        --page-title: {{ $pageTitleColor }};
+        --page-card-bg: {{ $pageCardBg }};
+        --page-card-border: {{ $pageCardBorder }};
+        --page-sidebar-bg: {{ $pageSidebarBg }};
+        --page-sidebar-border: {{ $pageSidebarBorder }};
+        --page-sidebar-head: {{ $pageSidebarHead }};
+        --page-sidebar-text: {{ $pageSidebarText }};
+        --page-breadcrumb-link: {{ $pageBreadcrumb }};
+        --page-breadcrumb-hover: {{ $pageBreadcrumbHov }};
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -121,13 +154,10 @@
     */
 
     .sit-dynamic-page-wrap {
-
         font-family: 'Plus Jakarta Sans', sans-serif;
-
-        color: #1e293b;
-
+        color: var(--page-text) !important;
+        background-color: var(--page-bg) !important;
         width: 100%;
-
         overflow-x: hidden;
     }
 
@@ -139,16 +169,12 @@
     */
 
     .sit-dynamic-page-title {
-
         font-size:
             {{ !empty($page->title_font_size)
                 ? $page->title_font_size
                 : '30px' }} !important;
-
         font-weight: 800;
-
-        color: #0f172a;
-
+        color: var(--page-title) !important;
         line-height: 1.3;
     }
 
@@ -160,10 +186,9 @@
     */
 
     .sit-raw-canvas {
-
         width: 100%;
-
         box-sizing: border-box;
+        color: var(--page-text) !important;
     }
 
 
@@ -174,22 +199,14 @@
     */
 
     .sit-main-content-card {
-
-        background: #ffffff;
-
+        background-color: var(--page-card-bg) !important;
         border-radius: 14px;
-
-        border: 1px solid #e2e8f0;
-
-        box-shadow:
-            0 1px 4px rgba(0, 0, 0, 0.04);
-
+        border: 1px solid var(--page-card-border) !important;
+        color: var(--page-text) !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
         width: 100%;
-
         box-sizing: border-box;
-
         overflow: hidden;
-
         position: relative;
     }
 
@@ -202,9 +219,7 @@
 
     .sit-raw-canvas img,
     .sit-main-content-card img {
-
         max-width: 100% !important;
-
         height: auto;
     }
 
@@ -217,7 +232,6 @@
 
     .sit-raw-canvas iframe,
     .sit-main-content-card iframe {
-
         max-width: 100% !important;
     }
 
@@ -230,13 +244,9 @@
 
     .sit-raw-canvas table,
     .sit-main-content-card table {
-
         width: 100% !important;
-
         max-width: 100% !important;
-
         overflow-x: auto;
-
         display: block;
     }
 
@@ -248,24 +258,15 @@
     */
 
     .sit-sidebar-card {
-
-        background: #ffffff;
-
+        background-color: var(--page-sidebar-bg) !important;
         border-radius: 12px;
-
-        border: 1px solid #e2e8f0;
-
-        box-shadow:
-            0 1px 3px rgba(0, 0, 0, 0.04);
-
+        border: 1px solid var(--page-sidebar-border) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         margin-bottom: 20px;
-
         overflow: hidden;
     }
 
-
     .sit-sidebar-card:last-child {
-
         margin-bottom: 0;
     }
 
@@ -277,17 +278,11 @@
     */
 
     .sit-sidebar-header {
-
         font-size: 14px;
-
         font-weight: 700;
-
         padding: 12px 16px;
-
-        border-bottom:
-            1px solid #f1f5f9;
-
-        color: #0f172a;
+        border-bottom: 1px solid var(--page-sidebar-border) !important;
+        color: var(--page-sidebar-head) !important;
     }
 
 
@@ -298,14 +293,32 @@
     */
 
     .sit-sidebar-body {
-
         padding: 14px 16px;
+        color: var(--page-sidebar-text) !important;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | DYNAMIC GRID LAYOUT (FROM HOME REFERENCE)
+    | BREADCRUMB STYLING
+    |--------------------------------------------------------------------------
+    */
+    .sit-page-breadcrumb a {
+        color: var(--page-breadcrumb-link) !important;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    .sit-page-breadcrumb a:hover {
+        color: var(--page-breadcrumb-hover) !important;
+    }
+    .sit-page-breadcrumb .breadcrumb-item.active {
+        color: var(--page-title) !important;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DYNAMIC GRID LAYOUT
     |--------------------------------------------------------------------------
     */
 
@@ -335,7 +348,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | PURE SHIMMER SKELETON CARD EFFECT (FROM HOME REFERENCE)
+    | PURE SHIMMER SKELETON CARD EFFECT
     |--------------------------------------------------------------------------
     */
 
@@ -383,7 +396,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | 100% RESPONSIVE & ALWAYS CENTERED PAGINATION (Mobile Fixed from Home)
+    | 100% RESPONSIVE & ALWAYS CENTERED PAGINATION
     |--------------------------------------------------------------------------
     */
 
@@ -469,17 +482,17 @@
     .featured-pagination-container .page-item.active .page-link,
     .sitcommerce-ajax-section-wrapper .sc-pagination-box .page-item.active .page-link,
     .sit-dynamic-page-wrap .sc-pagination-box .page-item.active .page-link {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
+        background-color: var(--common-btn-bg, #2563eb) !important;
+        border-color: var(--common-btn-bg, #2563eb) !important;
+        color: var(--common-btn-text, #ffffff) !important;
         box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
     }
 
     .featured-pagination-container .page-link:hover,
     .sitcommerce-ajax-section-wrapper .sc-pagination-box .page-link:hover,
     .sit-dynamic-page-wrap .sc-pagination-box .page-link:hover {
-        background-color: #eff6ff;
-        color: #2563eb;
+        background-color: var(--menu-active-bg, #eff6ff);
+        color: var(--common-btn-bg, #2563eb);
     }
 
     @media (max-width: 767.98px) {
@@ -536,29 +549,20 @@
 
     @if(!$isFullWidth)
 
-        <nav
-            aria-label="breadcrumb"
-            class="mb-3"
-        >
+        <nav aria-label="breadcrumb" class="mb-3 sit-page-breadcrumb">
 
             <ol class="breadcrumb small">
 
                 <li class="breadcrumb-item">
 
-                    <a
-                        href="{{ route('home') }}"
-                        class="text-decoration-none text-muted"
-                    >
+                    <a href="{{ route('home') }}">
                         Home
                     </a>
 
                 </li>
 
 
-                <li
-                    class="breadcrumb-item active fw-semibold"
-                    aria-current="page"
-                >
+                <li class="breadcrumb-item active fw-semibold" aria-current="page">
 
                     {{ $page->title }}
 
@@ -572,29 +576,20 @@
 
         <div class="container pt-3">
 
-            <nav
-                aria-label="breadcrumb"
-                class="mb-3"
-            >
+            <nav aria-label="breadcrumb" class="mb-3 sit-page-breadcrumb">
 
                 <ol class="breadcrumb small">
 
                     <li class="breadcrumb-item">
 
-                        <a
-                            href="{{ route('home') }}"
-                            class="text-decoration-none text-muted"
-                        >
+                        <a href="{{ route('home') }}">
                             Home
                         </a>
 
                     </li>
 
 
-                    <li
-                        class="breadcrumb-item active fw-semibold"
-                        aria-current="page"
-                    >
+                    <li class="breadcrumb-item active fw-semibold" aria-current="page">
 
                         {{ $page->title }}
 
@@ -613,10 +608,7 @@
          PAGE TITLE
     ====================================================== --}}
 
-    @if(
-        !isset($page->show_title)
-        || $page->show_title == 1
-    )
+    @if(!isset($page->show_title) || $page->show_title == 1)
 
         <div class="{{ $isFullWidth ? 'container py-2' : '' }}">
 
@@ -635,32 +627,15 @@
          FEATURED IMAGE (DYNAMIC RESOLVER)
     ====================================================== --}}
 
-    @if(
-        !empty($pageFeaturedImg)
-        &&
-        (
-            !isset($page->show_featured_image)
-            ||
-            $page->show_featured_image == 1
-        )
-    )
+    @if(!empty($pageFeaturedImg) && (!isset($page->show_featured_image) || $page->show_featured_image == 1))
 
-        <div
-            class="mb-4 text-center
-            {{ $isFullWidth ? 'w-100' : '' }}"
-        >
+        <div class="mb-4 text-center {{ $isFullWidth ? 'w-100' : '' }}">
 
             <img
                 src="{{ $pageFeaturedImg }}"
                 alt="{{ $page->title }}"
-                class="img-fluid
-                {{ $isFullWidth
-                    ? 'w-100 rounded-0'
-                    : 'rounded-4 shadow-xs w-100' }}"
-                style="
-                    max-height: 480px;
-                    object-fit: cover;
-                "
+                class="img-fluid {{ $isFullWidth ? 'w-100 rounded-0' : 'rounded-4 shadow-xs w-100' }}"
+                style="max-height: 480px; object-fit: cover;"
                 loading="lazy"
             >
 
@@ -690,14 +665,7 @@
 
                     <div class="sit-main-content-card p-3 p-md-4">
 
-
-                        {{-- =================================================
-                             IMPORTANT:
-                             Controller থেকে already parsed content আসছে।
-                        ================================================== --}}
-
                         {!! $renderedContent !!}
-
 
                     </div>
 
@@ -719,10 +687,7 @@
                              CUSTOM SIDEBAR WIDGETS
                         ================================================== --}}
 
-                        @forelse(
-                            $sidebarWidgets ?? []
-                            as $widget
-                        )
+                        @forelse($sidebarWidgets ?? [] as $widget)
 
 
                             <div class="sit-sidebar-card">
@@ -772,54 +737,20 @@
                                     <ul class="list-unstyled mb-0 small">
 
 
-                                        @forelse(
-                                            $popularCategories ?? []
-                                            as $cat
-                                        )
+                                        @forelse($popularCategories ?? [] as $cat)
 
 
-                                            <li
-                                                class="
-                                                    py-2.5
-                                                    px-3
-                                                    border-bottom
-                                                    d-flex
-                                                    justify-content-between
-                                                    align-items-center
-                                                "
-                                            >
+                                            <li class="py-2.5 px-3 border-bottom d-flex justify-content-between align-items-center">
 
 
-                                                <a
-                                                    href="{{ route(
-                                                        'category.products',
-                                                        $cat->slug ?? $cat->id
-                                                    ) }}"
-                                                    class="
-                                                        text-decoration-none
-                                                        text-secondary
-                                                        fw-medium
-                                                    "
-                                                >
+                                                <a href="{{ route('category.products', $cat->slug ?? $cat->id) }}" class="text-decoration-none fw-medium" style="color: var(--page-sidebar-text);">
 
                                                     {{ $cat->name }}
 
                                                 </a>
 
 
-                                                <span
-                                                    class="
-                                                        badge
-                                                        bg-light
-                                                        text-muted
-                                                        border
-                                                        px-2
-                                                        py-1
-                                                    "
-                                                    style="
-                                                        font-size: 10px;
-                                                    "
-                                                >
+                                                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px;">
 
                                                     Explore
 
@@ -856,39 +787,12 @@
                             ================================================== --}}
 
                             <div
-                                class="
-                                    card
-                                    border-0
-                                    shadow-xs
-                                    rounded-4
-                                    p-4
-                                    text-center
-                                    text-white
-                                "
-                                style="
-                                    background:
-                                    linear-gradient(
-                                        135deg,
-                                        #2563eb 0%,
-                                        #1d4ed8 100%
-                                    );
-                                "
+                                class="card border-0 shadow-xs rounded-4 p-4 text-center text-white"
+                                style="background: linear-gradient(135deg, var(--common-btn-bg, #2563eb) 0%, #1d4ed8 100%);"
                             >
 
 
-                                <span
-                                    class="
-                                        badge
-                                        bg-warning
-                                        text-dark
-                                        align-self-center
-                                        mb-2
-                                        px-3
-                                        py-1
-                                        font-monospace
-                                        fw-bold
-                                    "
-                                >
+                                <span class="badge bg-warning text-dark align-self-center mb-2 px-3 py-1 font-monospace fw-bold">
 
                                     SPECIAL OFFER
 
@@ -909,20 +813,7 @@
                                 </p>
 
 
-                                <a
-                                    href="{{ route('shop') }}"
-                                    class="
-                                        btn
-                                        btn-light
-                                        btn-sm
-                                        fw-bold
-                                        rounded-pill
-                                        px-4
-                                        py-2
-                                        text-primary
-                                        shadow-xs
-                                    "
-                                >
+                                <a href="{{ route('shop') }}" class="btn btn-light btn-sm fw-bold rounded-pill px-4 py-2 text-primary theme-text-primary shadow-xs">
 
                                     Shop Now
 
@@ -953,24 +844,9 @@
              FULL CANVAS / NO SIDEBAR
         ====================================================== --}}
 
-        <div
-            class="
-                sit-raw-canvas
-                {{ $isFullWidth
-                    ? ''
-                    : 'container py-4 p-3 p-md-4 bg-white rounded-4 border shadow-xs'
-                }}
-            "
-        >
-
-
-            {{-- =================================================
-                 IMPORTANT:
-                 Shortcodes are already parsed in Controller.
-            ================================================== --}}
+        <div class="sit-raw-canvas {{ $isFullWidth ? '' : 'container py-4 p-3 p-md-4 bg-white rounded-4 border shadow-xs' }}">
 
             {!! $renderedContent !!}
-
 
         </div>
 
@@ -1077,6 +953,5 @@
     {!! $page->custom_js ?? '' !!}
 
 </script>
-
 
 @endsection

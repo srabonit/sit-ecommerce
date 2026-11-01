@@ -578,16 +578,16 @@
         <div class="orders-summary-strip d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3">
                 <span class="summary-badge-item text-dark">
-                    <i class="fas fa-receipt text-primary"></i> Total: <strong id="summaryCountOrders" class="text-primary bn-digit font-monospace ms-0.5">{{ $orders->total() }}</strong>
+                    <i class="fas fa-receipt text-primary"></i> Total: <strong id="summaryCountOrders" class="text-primary bn-digit font-monospace ms-1">{{ $orders->total() }}</strong>
                 </span>
                 <span class="summary-badge-item text-dark border-start ps-2 ps-md-3">
-                    <i class="fas fa-wallet text-secondary"></i> Gross Sales: <strong id="stripTotalAmount" class="text-dark bn-digit font-monospace ms-0.5">৳{{ number_format($totalAmountSum ?? 0, 2) }}</strong>
+                    <i class="fas fa-wallet text-secondary"></i> Gross Sales: <strong id="stripTotalAmount" class="text-dark bn-digit font-monospace ms-1">৳{{ number_format($totalAmountSum ?? 0, 2) }}</strong>
                 </span>
                 <span class="summary-badge-item text-success border-start ps-2 ps-md-3">
-                    <i class="fas fa-check-circle"></i> Paid: <strong id="stripTotalPaid" class="bn-digit font-monospace ms-0.5">৳{{ number_format($totalPaidSum ?? 0, 2) }}</strong>
+                    <i class="fas fa-check-circle"></i> Paid: <strong id="stripTotalPaid" class="bn-digit font-monospace ms-1">৳{{ number_format($totalPaidSum ?? 0, 2) }}</strong>
                 </span>
                 <span class="summary-badge-item text-danger border-start ps-2 ps-md-3">
-                    <i class="fas fa-exclamation-circle"></i> Due: <strong id="stripTotalDue" class="bn-digit font-monospace ms-0.5">৳{{ number_format($totalDueSum ?? 0, 2) }}</strong>
+                    <i class="fas fa-exclamation-circle"></i> Due: <strong id="stripTotalDue" class="bn-digit font-monospace ms-1">৳{{ number_format($totalDueSum ?? 0, 2) }}</strong>
                 </span>
             </div>
             <div>
@@ -1034,6 +1034,46 @@ function confirmDeleteOrder(orderId) {
 
     modal.show();
 }
+
+/**
+ * 1-Click Manual SMS Dispatcher for Orders
+ */
+window.sendManualOrderSms = function (orderId, btnElement) {
+    if (!orderId) return;
+
+    let originalHtml = '';
+    if (btnElement) {
+        btnElement.disabled = true;
+        originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+
+    fetch(`/admin/orders/send-manual-sms/${orderId}`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showInfoModal('SMS Sent', data.message || 'SMS dispatched successfully.', true);
+        } else {
+            showInfoModal('SMS Failed', data.message || 'Failed to send SMS. Check settings or gateway balance.', false);
+        }
+    })
+    .catch(err => {
+        showInfoModal('Error', 'Gateway connection error while triggering SMS.', false);
+    })
+    .finally(() => {
+        if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = originalHtml;
+        }
+    });
+};
 
 function handleBulkActionClick() {
     const bulkSelect = document.getElementById('bulkActionSelect');

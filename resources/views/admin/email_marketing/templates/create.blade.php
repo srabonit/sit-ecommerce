@@ -263,7 +263,7 @@
                             <label class="form-label" for="template_name">
                                 Template Name <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="name" id="template_name" class="form-control" placeholder="e.g. Black Friday Special Promo" value="{{ old('name') }}" required>
+                            <input type="text" name="name" id="template_name" class="form-control" placeholder="Black Friday Special Promo" value="{{ old('name') }}" required>
                         </div>
 
                         <div class="col-12 col-md-3">
@@ -280,7 +280,7 @@
 
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="template_subject">Default Subject Line (Optional)</label>
-                            <input type="text" name="subject" id="template_subject" class="form-control" placeholder="e.g. Exclusive Weekend Deal Inside..." value="{{ old('subject') }}">
+                            <input type="text" name="subject" id="template_subject" class="form-control" placeholder="Exclusive Weekend Deal Inside..." value="{{ old('subject') }}">
                         </div>
                     </div>
                 </div>

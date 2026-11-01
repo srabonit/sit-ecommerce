@@ -528,7 +528,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text queue-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                                <input type="text" id="queueSearchInput" class="form-control border-start-0 ps-0 queue-filter-control shadow-none font-monospace" placeholder="e.g. customer@example.com, Spring Promo..." onkeyup="filterQueueTable()">
+                                <input type="text" id="queueSearchInput" class="form-control border-start-0 ps-0 queue-filter-control shadow-none font-monospace" placeholder="customer@example.com, Spring Promo..." onkeyup="filterQueueTable()">
                             </div>
                         </div>
 

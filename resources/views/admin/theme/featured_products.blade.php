@@ -317,7 +317,7 @@
                             </label>
                             <input type="number" name="featured_products_count" id="featured_products_count_input" class="form-control font-monospace bn-digit" value="{{ $featuredCount }}" min="1" max="100" required>
                             <small class="text-muted d-block mt-1 font-monospace" style="font-size: 10.5px;">
-                                Enter any valid number (e.g. 8, 10, 12, 16 or 24).
+                                Enter any valid number (8, 10, 12, 16 or 24).
                             </small>
                         </div>
                     </div>

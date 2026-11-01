@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Schema;
 
 class ActivityLogger
 {
-    /**
-     * যে সকল সংবেদনশীল ফিল্ড কখনোই অডিট লগে সেভ হবে না
-     */
     protected static array $blacklistedFields = [
         'password',
         'password_confirmation',
@@ -26,24 +23,31 @@ class ActivityLogger
     ];
 
     /**
-     * সেন্ট্রাল অ্যাক্টিভিটি লগ রেকর্ড মেথড
-     *
-     * @param string $action (login, logout, create, update, delete, status_change, etc.)
-     * @param string $module (orders, products, courier, users, etc.)
-     * @param string $description (লগের সংক্ষিপ্ত বিবরণ)
-     * @param array $options (record_id, record_ref, old_values, new_values, result, etc.)
-     * @return void
+     * Flexible Central Activity Logger (Supports both 3-arg and 4-arg calls safely)
      */
-    public static function log(string $action, string $module, string $description, array $options = []): void
+    public static function log(string $action, mixed $module = 'system', mixed $description = '', array $options = []): void
     {
         try {
             if (!Schema::hasTable('activity_logs')) {
                 return;
             }
 
+            // Fix for TypeError: If 3 arguments passed: log($action, $description, $optionsArray)
+            if (is_array($description) && empty($options)) {
+                $options = $description;
+                $description = is_string($module) ? $module : $action;
+                $module = $options['module'] ?? 'general';
+            } elseif (is_array($module)) {
+                $options = $module;
+                $description = $options['description'] ?? $action;
+                $module = $options['module'] ?? 'general';
+            } elseif (empty($description) && is_string($module)) {
+                $description = $module;
+                $module = 'general';
+            }
+
             $user = Auth::user();
 
-            // কাস্টমারদের কার্যকলাপ বাদ দিয়ে কেবল ইন্টারনাল কর্মীদের লগ রাখা হবে
             if ($user && method_exists($user, 'isCustomer') && $user->isCustomer()) {
                 return;
             }
@@ -51,7 +55,7 @@ class ActivityLogger
             $userId   = $options['user_id'] ?? ($user ? $user->id : null);
             $userName = $options['user_name'] ?? ($user ? $user->name : 'System/Guest');
             $role     = $options['role'] ?? ($user ? $user->role : 'system');
-            $branchId = $options['branch_id'] ?? ($user ? $user->branch_id : null);
+            $branchId = $options['branch_id'] ?? ($user ? ($user->branch_id ?? null) : null);
 
             $oldValues = isset($options['old_values']) ? self::cleanSensitiveData($options['old_values']) : null;
             $newValues = isset($options['new_values']) ? self::cleanSensitiveData($options['new_values']) : null;
@@ -64,12 +68,12 @@ class ActivityLogger
                 'user_name'   => $userName,
                 'role'        => $role,
                 'branch_id'   => $branchId,
-                'action'      => strtolower(trim($action)),
-                'module'      => strtolower(trim($module)),
+                'action'      => strtolower(trim((string)$action)),
+                'module'      => strtolower(trim((string)$module)),
                 'record_type' => $options['record_type'] ?? null,
                 'record_id'   => isset($options['record_id']) ? (string)$options['record_id'] : null,
                 'record_ref'  => isset($options['record_ref']) ? (string)$options['record_ref'] : null,
-                'description' => $description,
+                'description' => (string)$description,
                 'old_values'  => $oldValues ? json_encode($oldValues, JSON_UNESCAPED_UNICODE) : null,
                 'new_values'  => $newValues ? json_encode($newValues, JSON_UNESCAPED_UNICODE) : null,
                 'ip_address'  => Request::ip(),
@@ -80,14 +84,10 @@ class ActivityLogger
                 'updated_at'  => now(),
             ]);
         } catch (\Throwable $e) {
-            // অডিট লগে ত্রুটি দেখা দিলে মূল অপারেশন বন্ধ হবে না
             report($e);
         }
     }
 
-    /**
-     * সংবেদনশীল তথ্য মাস্কিং ফিল্টার
-     */
     protected static function cleanSensitiveData(mixed $data): mixed
     {
         if (is_object($data)) {
@@ -114,9 +114,6 @@ class ActivityLogger
         return $data;
     }
 
-    /**
-     * ইউজার এজেন্ট থেকে ডিভাইস টাইপ নির্ণয়
-     */
     protected static function detectDeviceType(?string $userAgent): string
     {
         if (empty($userAgent)) {

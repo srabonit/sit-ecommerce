@@ -2,6 +2,33 @@
 
 @section('title', 'Cart & Abandoned Recovery - Email Marketing')
 
+@php
+    $abandonedCarts = $abandonedCarts ?? collect();
+    $stats = $stats ?? [];
+    $totalCartsCount = $stats['total'] ?? (method_exists($abandonedCarts, 'total') ? $abandonedCarts->total() : $abandonedCarts->count());
+
+    $automationsIndexRoute = Route::has('admin.email_marketing.automations.index') 
+        ? route('admin.email_marketing.automations.index') 
+        : url('admin/email-marketing/automations');
+
+    $dashboardRoute = Route::has('admin.email_marketing.dashboard') 
+        ? route('admin.email_marketing.dashboard') 
+        : url('admin/email-marketing/dashboard');
+
+    $indexUrl = Route::has('admin.email_marketing.cart_wishlist_marketing')
+        ? route('admin.email_marketing.cart_wishlist_marketing')
+        : url('admin/email-marketing/cart-wishlist');
+
+    $exportCsvUrl = Route::has('admin.email_marketing.cart_wishlist.export_csv')
+        ? route('admin.email_marketing.cart_wishlist.export_csv')
+        : url('admin/email-marketing/cart-wishlist/export-csv');
+
+    $sendRecoveryBaseUrl = url('admin/email-marketing/cart-wishlist/send-recovery');
+    $bulkSendUrl        = url('admin/email-marketing/cart-wishlist/bulk-send');
+    $deleteBaseUrl       = url('admin/email-marketing/cart-wishlist/delete');
+    $bulkDeleteUrl       = url('admin/email-marketing/cart-wishlist/bulk-delete');
+@endphp
+
 @section('admin_content')
 <style>
     /* Strict 5px Element Radius Across All Controls */
@@ -41,7 +68,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -199,20 +226,20 @@
         margin-bottom: 0;
     }
     .custom-carts-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-carts-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -389,7 +416,7 @@
                     <span>Abandoned Cart Recovery Engine</span>
                 </h5>
                 <span class="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace px-2 py-1" id="carts-total-badge" style="font-size: 10px;">
-                    {{ $stats['total'] ?? $abandonedCarts->total() }} Sessions
+                    {{ number_format($totalCartsCount) }} Sessions
                 </span>
             </div>
             <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
@@ -401,10 +428,10 @@
             <button type="button" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-semibold" onclick="exportCartsCsv()" title="Export current filtered cart list to CSV">
                 <i class="fas fa-file-csv me-1 text-success"></i> <span>Export CSV</span>
             </button>
-            <a href="{{ route('admin.email_marketing.automations.index') }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold">
+            <a href="{{ $automationsIndexRoute }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold bg-white">
                 <i class="fas fa-robot me-1"></i> <span>Automations</span>
             </a>
-            <a href="{{ route('admin.email_marketing.dashboard') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+            <a href="{{ $dashboardRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold bg-white">
                 <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>
             </a>
         </div>
@@ -518,7 +545,7 @@
     </div>
 
     {{-- 3. Advanced Multi-Dimensional Filter Toolbar (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-filter text-primary me-1"></i> Multi-Dimensional Abandoned Cart Filters
@@ -534,7 +561,7 @@
                     <div class="row g-2 align-items-center">
                         <div class="col-12 col-md-4">
                             <div class="input-group">
-                                <span class="input-group-text cart-addon-text border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
+                                <span class="input-group-text cart-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
                                 <input type="text" name="search" id="filter-search-input" class="form-control border-start-0 ps-0 cart-filter-control shadow-none font-monospace" placeholder="Search customer, email, phone...">
                             </div>
                         </div>
@@ -689,7 +716,7 @@
             </span>
         </div>
         <div class="text-muted font-monospace bn-digit small" style="font-size: 11px;">
-            <span id="showing-entries-text">Showing {{ $abandonedCarts->firstItem() ?? 0 }} to {{ $abandonedCarts->lastItem() ?? 0 }} of {{ $abandonedCarts->total() }} carts</span>
+            <span id="showing-entries-text">Showing {{ method_exists($abandonedCarts, 'firstItem') ? ($abandonedCarts->firstItem() ?? 0) : 1 }} to {{ method_exists($abandonedCarts, 'lastItem') ? ($abandonedCarts->lastItem() ?? 0) : $abandonedCarts->count() }} of {{ number_format($totalCartsCount) }} carts</span>
         </div>
     </div>
 
@@ -720,9 +747,9 @@
     </div>
 
     {{-- 6. Responsive Pagination Footer --}}
-    <div class="d-flex justify-content-center justify-content-md-end mb-4" id="carts-pagination-footer" style="{{ $abandonedCarts->hasPages() ? '' : 'display: none;' }}">
+    <div class="d-flex justify-content-center justify-content-md-end mb-4" id="carts-pagination-footer" style="{{ method_exists($abandonedCarts, 'hasPages') && $abandonedCarts->hasPages() ? '' : 'display: none;' }}">
         <div id="carts-pagination-links">
-            @if($abandonedCarts->hasPages())
+            @if(method_exists($abandonedCarts, 'hasPages') && $abandonedCarts->hasPages())
                 {{ $abandonedCarts->links('pagination::bootstrap-5') }}
             @endif
         </div>
@@ -749,7 +776,7 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="bulk-recovery-subject">Email Subject <span class="text-danger">*</span></label>
-                        <input type="text" id="bulk-recovery-subject" class="form-control font-monospace shadow-none" placeholder="e.g. Complete your order at Shop Now BD - Items waiting in your cart!" required>
+                        <input type="text" id="bulk-recovery-subject" class="form-control font-monospace shadow-none" placeholder="Complete your order at Shop Now BD - Items waiting in your cart!" required>
                     </div>
 
                     <div class="mb-2">
@@ -806,6 +833,14 @@
     let searchTimeout = null;
     let pendingConfirmCallback = null;
 
+    const indexUrl            = "{{ $indexUrl }}";
+    const exportCsvUrl        = "{{ $exportCsvUrl }}";
+    const sendRecoveryBaseUrl = "{{ $sendRecoveryBaseUrl }}";
+    const bulkSendUrl         = "{{ $bulkSendUrl }}";
+    const deleteBaseUrl        = "{{ $deleteBaseUrl }}";
+    const bulkDeleteUrl        = "{{ $bulkDeleteUrl }}";
+    const csrfToken           = "{{ csrf_token() }}";
+
     // 1. Live Reload-free Fetch
     function fetchFilteredCarts(page = 1) {
         const form = document.getElementById('cart-filter-form');
@@ -816,7 +851,7 @@
         const tbody = document.getElementById('abandoned-carts-table-tbody');
         if (tbody) tbody.style.opacity = '0.35';
 
-        fetch("{{ url('admin/email-marketing/cart-wishlist') }}?" + params.toString(), {
+        fetch(indexUrl + '?' + params.toString(), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
@@ -989,16 +1024,16 @@
         const form = document.getElementById('cart-filter-form');
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        const url = "{{ url('admin/email-marketing/cart-wishlist/export-csv') }}?" + params.toString();
+        const url = exportCsvUrl + '?' + params.toString();
         window.open(url, '_blank');
     }
 
     // 7. Direct Recovery Reminder Trigger AJAX
     function sendCartRecoveryDirectAjax(cartId, email) {
-        fetch(`{{ url('admin/email-marketing/cart-wishlist/send-recovery') }}/${cartId}`, {
+        fetch(`${sendRecoveryBaseUrl}/${cartId}`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
@@ -1026,7 +1061,10 @@
 
         const countEl = document.getElementById('bulk-modal-cart-count');
         if (countEl) countEl.innerText = selected.length;
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('bulkRecoveryModal')).show();
+        const modalEl = document.getElementById('bulkRecoveryModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     function insertPlaceholderToBody(tag) {
@@ -1058,11 +1096,11 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Broadcasting...';
         }
 
-        fetch("{{ url('admin/email-marketing/cart-wishlist/bulk-send') }}", {
+        fetch(bulkSendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
@@ -1078,7 +1116,8 @@
                 btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Reminders';
             }
             if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById('bulkRecoveryModal'))?.hide();
+                const modalEl = document.getElementById('bulkRecoveryModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 document.getElementById('bulkRecoveryForm')?.reset();
                 showToast('Success', data.message, 'success');
                 fetchFilteredCarts(1);
@@ -1103,26 +1142,31 @@
         if (msgEl) msgEl.innerHTML = `Are you sure you want to delete abandoned session <strong>#${cartId}</strong> (${email})?`;
 
         pendingConfirmCallback = function() {
-            fetch(`{{ url('admin/email-marketing/cart-wishlist/delete') }}/${cartId}`, {
+            fetch(`${deleteBaseUrl}/${cartId}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
             .then(res => res.json())
             .then(data => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 showToast('Deleted', data.message, 'danger');
                 fetchFilteredCarts(1);
             })
             .catch(() => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 fetchFilteredCarts(1);
             });
         };
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('customConfirmModal')).show();
+        const modalEl = document.getElementById('customConfirmModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     // 10. Bulk Cart Deletion
@@ -1139,11 +1183,11 @@
         if (msgEl) msgEl.innerHTML = `Are you sure you want to delete <strong>${selected.length}</strong> selected abandoned session(s)?`;
 
         pendingConfirmCallback = function() {
-            fetch("{{ url('admin/email-marketing/cart-wishlist/bulk-delete') }}", {
+            fetch(bulkDeleteUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
@@ -1152,17 +1196,22 @@
             })
             .then(res => res.json())
             .then(data => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 showToast('Deleted', data.message, 'danger');
                 fetchFilteredCarts(1);
             })
             .catch(() => {
-                bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'))?.hide();
+                const modalEl = document.getElementById('customConfirmModal');
+                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
                 fetchFilteredCarts(1);
             });
         };
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('customConfirmModal')).show();
+        const modalEl = document.getElementById('customConfirmModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
 
     document.getElementById('btn-confirm-action-execute')?.addEventListener('click', function() {

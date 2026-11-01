@@ -3,8 +3,48 @@
 @section('title', 'Topbar Settings - ' . config('app.name'))
 
 @section('admin_content')
+<!-- Font Awesome 6.5.1 CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Google Fonts: Plus Jakarta Sans & Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* Professional Enterprise Typography */
+    #topbarSettingsRoot,
+    .topbar-modal-scope {
+        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        letter-spacing: -0.01em;
+        color: #1e293b;
+    }
+
+    /* FontAwesome Icon Protection */
+    #topbarSettingsRoot i,
+    #topbarSettingsRoot .fa,
+    #topbarSettingsRoot .fas,
+    #topbarSettingsRoot .far,
+    #topbarSettingsRoot .fab,
+    #topbarSettingsRoot .fa-solid,
+    #topbarSettingsRoot .fa-regular,
+    .topbar-modal-scope i,
+    .topbar-modal-scope .fa,
+    .topbar-modal-scope .fa-solid,
+    .topbar-modal-scope .fa-regular {
+        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+        font-style: normal;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: normal !important;
+        display: inline-block;
+    }
+    #topbarSettingsRoot .far,
+    .topbar-modal-scope .far {
+        font-weight: 400 !important;
+    }
+
+    /* Strict 5px Element Radius Across Controls */
     #topbarSettingsRoot .btn,
     #topbarSettingsRoot .btn-sm,
     #topbarSettingsRoot button,
@@ -18,11 +58,7 @@
     #topbarSettingsRoot .toggle-item-box,
     #topbarSettingsRoot .color-sync-card,
     #topbarSettingsRoot .notice-item-card,
-    #topbarSettingsRoot .collapse-toggle-btn,
-    .topbar-modal-scope .modal-content,
-    .topbar-modal-scope .btn,
-    .topbar-modal-scope .form-control,
-    .topbar-modal-scope .badge {
+    #topbarSettingsRoot .collapse-toggle-btn {
         border-radius: 5px !important;
     }
 
@@ -35,16 +71,18 @@
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
+    /* Clean Tabular Numbers */
     .bn-digit,
-    .font-monospace {
+    .font-tabular {
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
         font-weight: 700 !important;
+        font-variant-numeric: tabular-nums;
     }
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 14px !important;
+        font-size: 11px !important;
+        padding: 6px 14px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
         display: inline-flex;
@@ -54,11 +92,33 @@
         transition: all 0.15s ease;
     }
 
+    .btn-primary {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #ffffff !important;
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8 !important;
+        border-color: #1d4ed8 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-outline-secondary {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    .btn-outline-secondary:hover {
+        background-color: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+        color: #0f172a !important;
+    }
+
     /* Square Delete Button */
     .btn-notice-delete-sq {
-        width: 28px !important;
-        height: 28px !important;
-        min-width: 28px !important;
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
@@ -67,7 +127,9 @@
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #ef4444;
+        border-radius: 5px !important;
         transition: all 0.15s ease;
+        cursor: pointer;
     }
     .btn-notice-delete-sq:hover {
         background: #ef4444;
@@ -75,13 +137,13 @@
         border-color: #ef4444;
     }
 
-    /* Enterprise Surface Header Card */
+    /* Clean White Theme Enterprise Header Card */
     .topbar-header-card {
-        background: #0f172a;
-        color: #ffffff;
+        background: #ffffff;
+        color: #0f172a;
         padding: 14px 18px;
-        border: 1px solid #1e293b;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         margin-bottom: 14px;
     }
 
@@ -92,16 +154,17 @@
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         margin-bottom: 14px;
         overflow: hidden;
+        border-radius: 6px !important;
     }
     .topbar-section-header {
         padding: 11px 16px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
     }
     .section-title-text {
         font-size: 12.5px;
         font-weight: 700;
-        color: #1e293b;
+        color: #0f172a;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -117,20 +180,22 @@
         justify-content: space-between;
         gap: 8px;
         height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        border-radius: 6px !important;
     }
 
     /* Toggle Item Box */
     .toggle-item-box {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 10px 14px;
+        padding: 12px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
         transition: all 0.15s ease;
         height: 100%;
+        border-radius: 6px !important;
     }
     .toggle-item-box:hover {
         border-color: #cbd5e1;
@@ -141,6 +206,7 @@
     .color-sync-card {
         background: #ffffff;
         border: 1px solid #cbd5e1;
+        border-radius: 5px !important;
         padding: 4px 8px;
         display: flex;
         align-items: center;
@@ -164,7 +230,6 @@
         border: none;
         border-left: 1px solid #e2e8f0;
         padding: 3px 8px;
-        font-family: ui-monospace, SFMono-Regular, monospace;
         font-size: 11.5px;
         outline: none;
         width: 100%;
@@ -176,20 +241,24 @@
     /* Notice Item Card */
     .notice-item-card {
         background: #ffffff;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px !important;
         padding: 6px 10px;
         margin-bottom: 6px;
         display: flex;
         align-items: center;
         gap: 6px;
+        transition: border-color 0.15s ease;
+    }
+    .notice-item-card:hover {
+        border-color: #cbd5e1;
     }
     .notice-icon-input {
         max-width: 150px;
-        font-family: ui-monospace, SFMono-Regular, monospace;
         font-size: 11.5px;
     }
     .notice-text-input {
-        font-size: 11.5px;
+        font-size: 12px;
     }
 
     /* Collapsible Trigger Buttons & Rotating Chevron */
@@ -204,6 +273,7 @@
         border: 1px solid #cbd5e1;
         color: #475569;
         transition: all 0.2s ease;
+        cursor: pointer;
     }
     .collapse-toggle-btn:hover {
         background-color: #2563eb;
@@ -228,10 +298,11 @@
     }
     #topbarSettingsRoot .form-control,
     .topbar-modal-scope .form-control {
-        min-height: 32px;
+        min-height: 34px;
         font-size: 12px;
+        font-weight: 500;
         border: 1px solid #cbd5e1;
-        padding: 5px 10px;
+        padding: 6px 10px;
         color: #0f172a;
         box-shadow: none;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -243,7 +314,8 @@
         outline: none;
     }
     textarea.form-control {
-        min-height: 70px;
+        min-height: 72px;
+        line-height: 1.45;
     }
 
     /* Enhanced Toggle Switches */
@@ -252,6 +324,7 @@
         height: 18px;
         cursor: pointer;
         border-color: #cbd5e1;
+        border-radius: 20px !important;
         transition: background-color 0.15s ease, border-color 0.15s ease;
     }
     .form-switch .form-check-input:checked {
@@ -259,11 +332,89 @@
         border-color: #2563eb;
     }
     .form-check-label {
-        font-size: 11.5px;
+        font-size: 12px;
         font-weight: 600;
         color: #1e293b;
         cursor: pointer;
         user-select: none;
+    }
+
+    /* Minimal Modal System (Screenshot Reference) */
+    .minimal-modal-card {
+        background: #ffffff !important;
+        border: 1px solid #f1f5f9 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(15, 23, 42, 0.04) !important;
+        padding: 24px 26px !important;
+        text-align: left !important;
+    }
+    .minimal-modal-title {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        margin-bottom: 6px !important;
+        letter-spacing: -0.02em !important;
+    }
+    .minimal-modal-subtext {
+        font-size: 13px !important;
+        color: #64748b !important;
+        margin-bottom: 22px !important;
+        line-height: 1.45 !important;
+    }
+    .btn-minimal-delete {
+        background-color: #c93424 !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 7px 22px !important;
+        border-radius: 7px !important;
+        box-shadow: 0 4px 12px rgba(201, 52, 36, 0.28) !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .btn-minimal-delete:hover {
+        background-color: #b02717 !important;
+        box-shadow: 0 6px 14px rgba(201, 52, 36, 0.38) !important;
+        color: #ffffff !important;
+    }
+    .btn-minimal-action {
+        background-color: #2563eb !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 7px 22px !important;
+        border-radius: 7px !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .btn-minimal-action:hover {
+        background-color: #1d4ed8 !important;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.38) !important;
+        color: #ffffff !important;
+    }
+    .btn-minimal-cancel {
+        background: transparent !important;
+        border: none !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        font-size: 13.5px !important;
+        padding: 7px 14px !important;
+        box-shadow: none !important;
+        transition: color 0.15s ease !important;
+        cursor: pointer !important;
+    }
+    .btn-minimal-cancel:hover {
+        color: #0f172a !important;
+        background: transparent !important;
     }
 
     /* Mobile Responsive (< 768px) */
@@ -296,8 +447,9 @@
         }
         .btn-notice-delete-sq {
             width: 100% !important;
-            height: 30px !important;
+            height: 32px !important;
         }
+        .minimal-modal-card { padding: 20px 20px !important; }
     }
 </style>
 
@@ -306,25 +458,25 @@
     <!-- 1. Top Header & Quick Controls -->
     <div class="topbar-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 9px;">
-                    <i class="fas fa-bullhorn me-1"></i> STOREFRONT RIBBON
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9.5px; font-weight: 700;">
+                    <i class="fas fa-bullhorn me-1"></i> Storefront Ribbon
                 </span>
-                <span class="badge bg-light text-white-50 border border-secondary font-monospace" style="font-size: 9px;">
-                    LIVE BROADCAST
+                <span class="badge bg-light text-secondary border" style="font-size: 9.5px; font-weight: 600;">
+                    Live Broadcast
                 </span>
             </div>
-            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 17px;">
+            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-dark" style="font-size: 18px;">
                 <i class="fas fa-bullhorn text-primary"></i>
                 <span>Topbar Notification Ribbon Settings</span>
             </h5>
-            <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
                 Configure announcement ribbon visibility, two-way color palette, sliding ticker and fallback content.
             </small>
         </div>
 
         <div class="top-action-btns d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-compact text-white border-white-50 shadow-xs" onclick="toggleAllTopbarSections()">
+            <button type="button" class="btn btn-outline-secondary btn-compact shadow-xs" onclick="toggleAllTopbarSections()">
                 <i class="fas fa-arrows-up-down me-1"></i>
                 <span id="expandAllTopbarBtnText">Collapse All</span>
             </button>
@@ -346,8 +498,8 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Desktop Screen View</small>
-                    <strong class="text-{{ $desktopOn ? 'success' : 'secondary' }} d-block" style="font-size: 13px;">
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Desktop Screen View</small>
+                    <strong class="text-{{ $desktopOn ? 'success' : 'secondary' }} d-block" style="font-size: 13.5px;">
                         {{ $desktopOn ? 'Enabled (Active)' : 'Disabled (Hidden)' }}
                     </strong>
                 </div>
@@ -360,8 +512,8 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Mobile &amp; Tablet Screen</small>
-                    <strong class="text-{{ $mobileOn ? 'success' : 'secondary' }} d-block" style="font-size: 13px;">
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Mobile &amp; Tablet Screen</small>
+                    <strong class="text-{{ $mobileOn ? 'success' : 'secondary' }} d-block" style="font-size: 13.5px;">
                         {{ $mobileOn ? 'Enabled (Active)' : 'Disabled (Hidden)' }}
                     </strong>
                 </div>
@@ -374,8 +526,8 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Ticker Notices Queue</small>
-                    <strong class="text-primary d-block font-monospace bn-digit" style="font-size: 13px;">
+                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Ticker Notices Queue</small>
+                    <strong class="text-primary d-block bn-digit font-tabular" style="font-size: 13.5px;">
                         {{ $noticesCount }} Active {{ Str::plural('Notice', $noticesCount) }}
                     </strong>
                 </div>
@@ -407,7 +559,7 @@
                     <span>Display Visibility &amp; Device Matrix</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 8.5px;">DEVICE ACCESS</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Device Access</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseVisibilitySection" aria-expanded="true" aria-controls="collapseVisibilitySection" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -421,10 +573,10 @@
                         <div class="col-12 col-md-6">
                             <div class="toggle-item-box">
                                 <div class="pe-2">
-                                    <label class="form-check-label d-block fw-bold text-dark" for="sw_show_desktop" style="font-size: 12px; cursor: pointer;">
+                                    <label class="form-check-label d-block text-dark" for="sw_show_desktop" style="font-size: 12px;">
                                         Desktop Monitor View
                                     </label>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px;">
+                                    <small class="text-muted d-block" style="font-size: 11px;">
                                         Display notification ribbon across standard laptop and desktop screens.
                                     </small>
                                 </div>
@@ -438,10 +590,10 @@
                         <div class="col-12 col-md-6">
                             <div class="toggle-item-box">
                                 <div class="pe-2">
-                                    <label class="form-check-label d-block fw-bold text-dark" for="sw_show_mobile" style="font-size: 12px; cursor: pointer;">
+                                    <label class="form-check-label d-block text-dark" for="sw_show_mobile" style="font-size: 12px;">
                                         Mobile &amp; Tablet Handheld View
                                     </label>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px;">
+                                    <small class="text-muted d-block" style="font-size: 11px;">
                                         Display compact announcement ribbon on handheld touch devices.
                                     </small>
                                 </div>
@@ -463,7 +615,7 @@
                     <span>Ribbon Color Palette &amp; Contrast</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 8.5px;">PALETTE SYNC</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Palette Sync</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseColorsSection" aria-expanded="true" aria-controls="collapseColorsSection" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -503,7 +655,7 @@
                     <span>Text Slider Ticker Animation Control</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace text-uppercase" style="font-size: 8.5px;">TICKER MOTION</span>
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Ticker Motion</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseAnimationSection" aria-expanded="true" aria-controls="collapseAnimationSection" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -517,10 +669,10 @@
                         <div class="col-12 col-md-6">
                             <div class="toggle-item-box">
                                 <div class="pe-2">
-                                    <label class="form-check-label d-block fw-bold text-dark" for="sw_slider_desktop" style="font-size: 12px; cursor: pointer;">
+                                    <label class="form-check-label d-block text-dark" for="sw_slider_desktop" style="font-size: 12px;">
                                         Desktop Screen Slider
                                     </label>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px;">
+                                    <small class="text-muted d-block" style="font-size: 11px;">
                                         Enables auto-sliding announcement ticker on widescreen monitors.
                                     </small>
                                 </div>
@@ -534,10 +686,10 @@
                         <div class="col-12 col-md-6">
                             <div class="toggle-item-box">
                                 <div class="pe-2">
-                                    <label class="form-check-label d-block fw-bold text-dark" for="sw_slider_mobile" style="font-size: 12px; cursor: pointer;">
+                                    <label class="form-check-label d-block text-dark" for="sw_slider_mobile" style="font-size: 12px;">
                                         Mobile Screen Slider
                                     </label>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px;">
+                                    <small class="text-muted d-block" style="font-size: 11px;">
                                         Enables smooth ticker cycling on phone and tablet devices.
                                     </small>
                                 </div>
@@ -559,7 +711,7 @@
                     <span>Slider Notice Items &amp; Announcements</span>
                 </div>
                 <div class="d-flex align-items-center gap-1">
-                    <button type="button" class="btn btn-primary btn-compact py-0 px-2 shadow-xs" style="height: 24px; font-size: 10px !important;" data-bs-toggle="modal" data-bs-target="#addNoticeModal">
+                    <button type="button" class="btn btn-primary btn-compact py-0 px-2 shadow-xs" style="height: 26px; font-size: 10.5px !important;" data-bs-toggle="modal" data-bs-target="#addNoticeModal">
                         <i class="fas fa-plus me-1"></i> Add Notice
                     </button>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseNoticesSection" aria-expanded="true" aria-controls="collapseNoticesSection" title="Toggle Section">
@@ -571,10 +723,10 @@
             <div class="collapse show" id="collapseNoticesSection">
                 <div class="p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted font-monospace" style="font-size: 10.5px;">
+                        <small class="text-muted" style="font-size: 11px;">
                             Announcement queue items (displayed sequentially in the ticker):
                         </small>
-                        <span class="badge bg-light text-dark border font-monospace bn-digit px-1.5 py-0" style="font-size: 9px;" id="noticesCountBadge">
+                        <span class="badge bg-light text-dark border bn-digit font-tabular px-2 py-0.5" style="font-size: 10px;" id="noticesCountBadge">
                             {{ count($notices) }} Items
                         </span>
                     </div>
@@ -602,7 +754,7 @@
                     <span>Static HTML / Text Content Fallback</span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-secondary-subtle text-secondary border font-monospace text-uppercase" style="font-size: 8.5px;">STATIC MODE</span>
+                    <span class="badge bg-secondary-subtle text-secondary border text-uppercase" style="font-size: 9px; font-weight: 700;">Static Mode</span>
                     <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseFallbackSection" aria-expanded="true" aria-controls="collapseFallbackSection" title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
@@ -611,7 +763,7 @@
 
             <div class="collapse show" id="collapseFallbackSection">
                 <div class="p-3 bg-light bg-opacity-25">
-                    <small class="text-muted d-block mb-2 font-monospace" style="font-size: 10.5px;">
+                    <small class="text-muted d-block mb-2" style="font-size: 11px;">
                         This static dual-column content displays whenever the animated slider ticker is turned OFF.
                     </small>
 
@@ -619,13 +771,13 @@
                         <!-- Left Column HTML -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Left Column Content (HTML Allowed)</label>
-                            <textarea name="topbar_left_html" class="form-control font-monospace" rows="3" placeholder="Left contact hotline or HTML tags...">{{ $settings['topbar_left_html'] ?? '' }}</textarea>
+                            <textarea name="topbar_left_html" class="form-control" rows="3" placeholder="Left contact hotline or HTML tags...">{{ $settings['topbar_left_html'] ?? '' }}</textarea>
                         </div>
 
                         <!-- Right Column HTML -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Right Column Content (HTML Allowed)</label>
-                            <textarea name="topbar_right_html" class="form-control font-monospace" rows="3" placeholder="Right links or social handles...">{{ $settings['topbar_right_html'] ?? '' }}</textarea>
+                            <textarea name="topbar_right_html" class="form-control" rows="3" placeholder="Right links or social handles...">{{ $settings['topbar_right_html'] ?? '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -634,7 +786,7 @@
 
         <!-- Bottom Action Bar -->
         <div class="d-flex justify-content-end pt-2 pb-3">
-            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 35px; font-size: 12px;">
+            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 36px; font-size: 12px;">
                 <i class="fas fa-check-circle me-1"></i> Save Topbar Settings
             </button>
         </div>
@@ -644,19 +796,19 @@
 <!-- ================= MODAL: ADD NOTICE ITEM ================= -->
 <div class="modal fade topbar-modal-scope" id="addNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white py-2 px-3 d-flex justify-content-between align-items-center">
-                <h6 class="modal-title fw-bold d-flex align-items-center gap-1 mb-0" style="font-size: 13.5px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 8px !important;">
+            <div class="modal-header bg-light border-bottom py-2.5 px-3 d-flex justify-content-between align-items-center">
+                <h6 class="modal-title fw-bold text-dark d-flex align-items-center gap-1 mb-0" style="font-size: 13.5px;">
                     <i class="fas fa-plus-circle text-primary"></i> <span>Add Announcement</span>
                 </h6>
-                <button type="button" class="btn-close btn-close-white btn-sm shadow-none" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body p-3">
                 <div class="mb-2">
                     <label class="form-label">FontAwesome Icon Class</label>
-                    <input type="text" id="modalNoticeIcon" class="form-control font-monospace" placeholder="fas fa-check-circle" value="fas fa-check-circle">
-                    <small class="text-muted font-monospace" style="font-size: 10px;">e.g. <code>fas fa-truck</code>, <code>fas fa-bolt</code>, <code>fas fa-headset</code></small>
+                    <input type="text" id="modalNoticeIcon" class="form-control" placeholder="fas fa-check-circle" value="fas fa-check-circle">
+                    <small class="text-muted d-block mt-1" style="font-size: 10.5px;"><code>fas fa-truck</code>, <code>fas fa-bolt</code>, <code>fas fa-headset</code></small>
                 </div>
                 <div>
                     <label class="form-label">Announcement Text *</label>
@@ -664,7 +816,7 @@
                 </div>
             </div>
 
-            <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
+            <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between border-top">
                 <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" onclick="addNoticeFromModal()">Add to List</button>
             </div>
@@ -672,70 +824,49 @@
     </div>
 </div>
 
-<!-- ================= MODAL: DELETE NOTICE CONFIRMATION ================= -->
+<!-- ================= MODAL: MINIMAL DELETE CONFIRMATION (Screenshot Reference) ================= -->
 <div class="modal fade topbar-modal-scope" id="deleteNoticeConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3">
-            <div class="modal-body p-1">
-                <div class="mb-2 text-danger">
-                    <i class="fas fa-trash-can fa-2x"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1" style="font-size: 14.5px;">Remove Notice Item?</h6>
-                <p class="text-muted small mb-2" style="font-size: 12px; line-height: 1.45;">
-                    Are you sure you want to remove <strong id="deleteNoticePreviewText" class="text-dark">this notice</strong>?
-                </p>
-                
-                <!-- Guard Warning: At least 1 notice required -->
-                <div id="deleteNoticeWarning" class="alert alert-warning border-0 py-1 px-2 mt-2 mb-2 small d-none" style="font-size: 10.5px;">
-                    <i class="fas fa-exclamation-triangle me-1"></i> You must keep at least one announcement item.
-                </div>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content minimal-modal-card">
+            <h6 class="minimal-modal-title">Are you sure you wanna delete this?</h6>
+            <p class="minimal-modal-subtext mb-2">
+                <span id="deleteNoticePreviewText" class="fw-semibold text-dark">This notice</span> will be removed from the ticker queue.
+            </p>
+            
+            <!-- Guard Warning: At least 1 notice required -->
+            <div id="deleteNoticeWarning" class="alert alert-warning border-0 py-1.5 px-2 mt-2 mb-3 small d-none" style="font-size: 11px; border-radius: 5px;">
+                <i class="fas fa-exclamation-triangle me-1"></i> You must keep at least one announcement item.
+            </div>
 
-                <div class="d-flex justify-content-center gap-2 pt-2">
-                    <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirmDeleteNoticeBtn" class="btn btn-danger btn-compact shadow-xs fw-bold" onclick="executeNoticeDelete()">Delete</button>
-                </div>
+            <div class="d-flex align-items-center gap-3 pt-1">
+                <button type="button" id="confirmDeleteNoticeBtn" class="btn-minimal-delete" onclick="executeNoticeDelete()">Delete</button>
+                <button type="button" class="btn-minimal-cancel" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ================= MODAL: CUSTOM NOTICE / ALERT ================= -->
+<!-- ================= MODAL: MINIMAL NOTICE / ALERT (Screenshot Reference) ================= -->
 <div class="modal fade topbar-modal-scope" id="topbarNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 108500;">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3">
-            <div class="modal-body p-1">
-                <div class="mb-2" id="topbarNoticeIconWrap">
-                    <i class="fas fa-circle-check text-success fa-2x"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1" id="topbarNoticeTitle" style="font-size: 14px;">Notification</h6>
-                <p class="text-muted small mb-3" id="topbarNoticeMessage" style="font-size: 12px; line-height: 1.45;"></p>
-                <button type="button" class="btn btn-primary btn-compact px-4" data-bs-dismiss="modal">Acknowledge</button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+        <div class="modal-content minimal-modal-card">
+            <h6 class="minimal-modal-title" id="topbarNoticeTitle">Notification</h6>
+            <p class="minimal-modal-subtext" id="topbarNoticeMessage" style="margin-bottom: 16px !important;"></p>
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn-minimal-action" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Universal Notice Modal (Replaces native browser alert)
-function showTopbarModalNotice(message, title = 'Notice', type = 'info') {
+// Universal Notice Modal (Minimal Style)
+function showTopbarModalNotice(message, title = 'Notification') {
     const titleEl = document.getElementById('topbarNoticeTitle');
     const msgEl   = document.getElementById('topbarNoticeMessage');
-    const iconEl  = document.getElementById('topbarNoticeIconWrap');
 
     if (titleEl) titleEl.innerText = title;
     if (msgEl) msgEl.innerText = message;
-
-    if (iconEl) {
-        if (type === 'danger' || type === 'error') {
-            iconEl.innerHTML = '<i class="fas fa-circle-xmark text-danger fa-2x"></i>';
-        } else if (type === 'success') {
-            iconEl.innerHTML = '<i class="fas fa-circle-check text-success fa-2x"></i>';
-        } else if (type === 'warning') {
-            iconEl.innerHTML = '<i class="fas fa-triangle-exclamation text-warning fa-2x"></i>';
-        } else {
-            iconEl.innerHTML = '<i class="fas fa-circle-info text-primary fa-2x"></i>';
-        }
-    }
 
     const modalEl = document.getElementById('topbarNoticeModal');
     if (modalEl && window.bootstrap) {
@@ -772,7 +903,7 @@ function addNoticeFromModal() {
 
     if (!textVal) {
         textInput.focus();
-        showTopbarModalNotice('Please provide announcement text before saving.', 'Required Field', 'warning');
+        showTopbarModalNotice('Please provide announcement text before saving.', 'Required Field');
         return;
     }
 
@@ -787,17 +918,15 @@ function addNoticeFromModal() {
         </button>
     `;
 
-    // Prepend to top of container
     container.insertBefore(newRow, container.firstChild);
     updateNoticeItemCount();
 
-    // Reset & close modal
     textInput.value = '';
     const modalElem = document.getElementById('addNoticeModal');
     if (modalElem && window.bootstrap) {
         bootstrap.Modal.getInstance(modalElem)?.hide();
     }
-    showTopbarModalNotice('New announcement notice item added to the ticker queue.', 'Item Added', 'success');
+    showTopbarModalNotice('New announcement notice item added to the ticker queue.', 'Item Added');
 }
 
 // Delete Confirmation Modal Handling
@@ -835,7 +964,7 @@ function executeNoticeDelete() {
         targetNoticeRow.remove();
         targetNoticeRow = null;
         updateNoticeItemCount();
-        showTopbarModalNotice('Notice item removed from ticker queue.', 'Deleted', 'info');
+        showTopbarModalNotice('Notice item removed from ticker queue.', 'Deleted');
     }
     const modalElem = document.getElementById('deleteNoticeConfirmModal');
     if (modalElem && window.bootstrap) {

@@ -563,7 +563,7 @@
                             <label class="form-label">
                                 Expense Description / Title <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g. Facebook Ads Campaign #4, Carton Box Purchase" required>
+                            <input type="text" name="title" class="form-control" placeholder="Facebook Ads Campaign #4, Carton Box Purchase" required>
                         </div>
 
                         <!-- Category -->
@@ -628,7 +628,7 @@
                         <!-- Voucher / Memo # -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Voucher / Memo #</label>
-                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="e.g. VCH-0012">
+                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="VCH-0012">
                         </div>
 
                         <!-- Receipt Attachment -->
@@ -667,7 +667,7 @@
                 @csrf
                 <div class="modal-body p-3">
                     <label class="form-label">Category Name *</label>
-                    <input type="text" name="name" class="form-control" placeholder="e.g. Office Stationery" required>
+                    <input type="text" name="name" class="form-control" placeholder="Office Stationery" required>
                 </div>
                 <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
                     <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>

@@ -142,7 +142,7 @@ class EmailAutomationLog extends Model
     }
 
     /**
-     * Mark log entry as skipped (e.g. order already completed or consent missing)
+     * Mark log entry as skipped (order already completed or consent missing)
      */
     public function markAsSkipped(?string $reason = null): bool
     {

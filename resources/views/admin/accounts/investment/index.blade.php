@@ -640,7 +640,7 @@
                             <label class="form-label">
                                 Investor Name / Capital Source <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="investor_name" class="form-control" placeholder="e.g. Founder Equity, Angel Investor (Mr. Rahim)" required>
+                            <input type="text" name="investor_name" class="form-control" placeholder="Founder Equity, Angel Investor (Mr. Rahim)" required>
                         </div>
 
                         <!-- Amount -->
@@ -692,7 +692,7 @@
                         <!-- Reference No -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Reference / Slip #</label>
-                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="e.g. SLIP-09823">
+                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="SLIP-09823">
                         </div>
 
                         <!-- Modern Global Media Chooser Component for Attachment -->

@@ -188,6 +188,21 @@
         {{-- 8. ACTIONS --}}
         <td class="col-cell-action text-end pe-2 text-nowrap">
             <div class="d-inline-flex gap-1 align-items-center justify-content-end">
+                {{-- 1-Click Manual SMS Dispatch Trigger --}}
+                @php
+                    $isManualSmsEnabled = !class_exists(\App\Models\SmsSetting::class) || \App\Models\SmsSetting::isEnabled('manual_order_sms_enabled', true);
+                    $orderPhone = $order->shipping_phone ?? ($order->customer_phone ?? ($order->phone ?? ''));
+                @endphp
+                @if($isManualSmsEnabled)
+                    <button type="button" 
+                            class="btn btn-outline-success table-action-btn shadow-xs {{ empty($orderPhone) ? 'disabled opacity-50' : '' }}" 
+                            title="{{ empty($orderPhone) ? 'Phone number not available' : 'Send Instant Status SMS' }}" 
+                            onclick="{{ empty($orderPhone) ? 'return false;' : 'sendManualOrderSms(' . $order->id . ', this)' }}" 
+                            {{ empty($orderPhone) ? 'disabled' : '' }}>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                @endif
+
                 <a href="{{ route('admin.order.view', $order->id) }}" class="btn btn-outline-primary table-action-btn shadow-xs" title="View &amp; Edit Order">
                     <i class="fas fa-eye"></i>
                 </a>

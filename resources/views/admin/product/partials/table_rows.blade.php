@@ -152,6 +152,11 @@
                 $costDisplay = '৳' . number_format($baseCost, 2);
             }
         }
+
+        // Tax & VAT Representation (Percentage vs Flat Amount)
+        $hasVat = isset($prod->vat_amount) && !is_null($prod->vat_amount) && (float)$prod->vat_amount > 0;
+        $vatType = strtolower($prod->vat_type ?? 'percent');
+        $isFlat = in_array($vatType, ['flat', 'fixed']);
     @endphp
     <tr id="product-row-{{ $prod->id }}" class="align-middle border-bottom">
         <!-- 1. Row Selection Checkbox -->
@@ -303,7 +308,28 @@
             <span class="text-truncate d-block">{{ $costDisplay }}</span>
         </td>
 
-        <!-- 11. Featured Star Toggle -->
+        <!-- 11. VAT / Tax Amount & Type (Percentage % vs Flat ৳) -->
+        <td class="col-tax text-nowrap font-monospace bn-digit py-1 px-1" style="overflow: hidden;">
+            @if($hasVat)
+                @if($isFlat)
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-0.5" style="font-size: 9.5px; border-radius: 5px !important;" title="Flat VAT: ৳{{ number_format((float)$prod->vat_amount, 2) }} per unit">
+                        <i class="fas fa-coins me-1"></i>৳{{ number_format((float)$prod->vat_amount, 2) }}
+                    </span>
+                    <small class="text-muted d-block font-monospace" style="font-size: 8.5px;">Flat (৳)</small>
+                @else
+                    <span class="badge bg-info-subtle text-info border border-info-subtle px-1.5 py-0.5" style="font-size: 9.5px; border-radius: 5px !important;" title="Percentage VAT: {{ (float)$prod->vat_amount }}%">
+                        <i class="fas fa-percent me-1"></i>{{ (float)$prod->vat_amount }}%
+                    </span>
+                    <small class="text-muted d-block font-monospace" style="font-size: 8.5px;">Percent (%)</small>
+                @endif
+            @else
+                <span class="badge bg-light text-secondary border px-1.5 py-0.5" style="font-size: 9px; border-radius: 5px !important;" title="No VAT configured">
+                    No VAT (0)
+                </span>
+            @endif
+        </td>
+
+        <!-- 12. Featured Star Toggle -->
         <td class="col-featured text-center text-nowrap py-1 px-1">
             <button type="button" class="btn btn-sm border-0 p-0 text-warning shadow-none" onclick="toggleFeaturedAjax({{ $prod->id }}, this)" id="btn-feat-{{ $prod->id }}" title="Click to toggle featured" style="line-height: 1;">
                 @if($prod->is_featured)
@@ -314,7 +340,7 @@
             </button>
         </td>
 
-        <!-- 12. Actions Column -->
+        <!-- 13. Actions Column -->
         <td class="col-action text-end text-nowrap pe-2 py-1">
             <div class="d-inline-flex justify-content-end align-items-center gap-1">
                 <!-- Front Live View -->
@@ -336,7 +362,7 @@
     </tr>
 @empty
     <tr>
-        <td colspan="12" class="text-center py-5 text-muted small">
+        <td colspan="13" class="text-center py-5 text-muted small">
             <i class="fas fa-box-open fa-2x mb-2 d-block opacity-25"></i>
             <span class="fw-semibold">No matching products found.</span>
         </td>

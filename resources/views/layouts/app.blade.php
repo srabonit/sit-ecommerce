@@ -20,34 +20,46 @@ if (!function_exists('cleanGlobalImageUrl')) {
 $dbSiteIcon = $globalSettings['site_icon'] ?? null;
 $finalFavicon = cleanGlobalImageUrl($dbSiteIcon);
 
+// 1. App Master Layout & Global Background
 $themeSiteBg = $globalSettings['color_site_bg'] ?? '#f8fafc';
-$themeCardBg = $globalSettings['color_card_bg'] ?? '#ffffff';
-$themeHeaderBg = $globalSettings['color_header_bg'] ?? '#ffffff';
-$themeHeaderText = $globalSettings['color_header_text'] ?? '#334155';
-$themeSearchBtnBg = $globalSettings['color_header_search_btn_bg'] ?? '#2563eb';
-$themeMenuText = $globalSettings['color_menu_text'] ?? '#334155';
-$themeMenuHover = $globalSettings['color_menu_hover'] ?? '#00a8ff';
-$themeMenuActiveBg = $globalSettings['color_menu_active_bg'] ?? '#e0f2fe';
 
-$themeCardBtnCartBg = $globalSettings['color_card_btn_cart_bg'] ?? '#2563eb';
-$themeCardBtnCartText = $globalSettings['color_card_btn_cart_text'] ?? '#ffffff';
-$themeCardBtnOrderBg = $globalSettings['color_card_btn_order_bg'] ?? '#0f172a';
-$themeCardBtnOrderText = $globalSettings['color_card_btn_order_text'] ?? '#ffffff';
+// 2. App Sticky Single Product Bar Scoped Colors
+$appSpbBg             = $globalSettings['color_app_spb_bg'] ?? '#ffffff';
+$appSpbBorder         = $globalSettings['color_app_spb_border'] ?? 'rgba(226, 232, 240, 0.9)';
+$appSpbTitle          = $globalSettings['color_app_spb_title'] ?? '#0f172a';
+$appSpbTitleHover     = $globalSettings['color_app_spb_title_hover'] ?? '#2563eb';
+$appSpbPrice          = $globalSettings['color_app_spb_price'] ?? '#2563eb';
+$appSpbCartBtnBg      = $globalSettings['color_app_spb_cart_btn_bg'] ?? '#f8fafc';
+$appSpbCartBtnText    = $globalSettings['color_app_spb_cart_btn_text'] ?? '#0f172a';
+$appSpbCartBtnHoverBg = $globalSettings['color_app_spb_cart_btn_hover_bg'] ?? '#e2e8f0';
+$appSpbBuyNowBg       = $globalSettings['color_app_spb_buynow_bg'] ?? '#0dcaf0';
+$appSpbBuyNowText     = $globalSettings['color_app_spb_buynow_text'] ?? '#ffffff';
+$appSpbBuyNowHoverBg  = $globalSettings['color_app_spb_buynow_hover_bg'] ?? '#0bb5d8';
+$appSpbBuyNowHoverText= $globalSettings['color_app_spb_buynow_hover_text'] ?? '#ffffff';
 
-$themeDetailsBtnOrderBg = $globalSettings['color_details_btn_order_bg'] ?? '#0dcaf0';
-$themeDetailsBtnOrderText = $globalSettings['color_details_btn_order_text'] ?? '#ffffff';
-$themeDetailsBtnCartBg = $globalSettings['color_details_btn_cart_bg'] ?? '#ffc107';
-$themeDetailsBtnCartText = $globalSettings['color_details_btn_cart_text'] ?? '#212529';
+// 3. App Bottom Search Modal Scoped Colors
+$appSearchModalBg     = $globalSettings['color_app_search_modal_bg'] ?? '#ffffff';
+$appSearchModalBorder = $globalSettings['color_app_search_modal_border'] ?? '#e2e8f0';
+$appSearchPrice       = $globalSettings['color_app_search_price'] ?? '#2563eb';
+$appSearchCartBtnBg   = $globalSettings['color_app_search_cart_btn_bg'] ?? '#2563eb';
+$appSearchCartBtnText = $globalSettings['color_app_search_cart_btn_text'] ?? '#ffffff';
+$appSearchCartBtnHoverBg = $globalSettings['color_app_search_cart_btn_hover_bg'] ?? '#1d4ed8';
+$appSearchCartBtnHoverText = $globalSettings['color_app_search_cart_btn_hover_text'] ?? '#ffffff';
 
-$themeCommonBtnBg = $globalSettings['color_common_btn_bg'] ?? '#2563eb';
-$themeCommonBtnText = $globalSettings['color_common_btn_text'] ?? '#ffffff';
+// 4. App Drawer Cart & Quick View Scoped Colors
+$appDrawerBg          = $globalSettings['color_app_drawer_bg'] ?? '#ffffff';
+$appDrawerBorder      = $globalSettings['color_app_drawer_border'] ?? '#e2e8f0';
+$appDrawerIcon        = $globalSettings['color_app_drawer_icon'] ?? '#2563eb';
+$appDrawerTotalPrice  = $globalSettings['color_app_drawer_total_price'] ?? '#dc2626';
+$appDrawerCheckoutBg  = $globalSettings['color_app_drawer_checkout_bg'] ?? '#0f172a';
+$appDrawerCheckoutText= $globalSettings['color_app_drawer_checkout_text'] ?? '#ffffff';
+$appDrawerCheckoutHoverBg = $globalSettings['color_app_drawer_checkout_hover_bg'] ?? '#1e293b';
+$appDrawerCheckoutHoverText = $globalSettings['color_app_drawer_checkout_hover_text'] ?? '#ffffff';
+$appQuickViewSpinner  = $globalSettings['color_app_quickview_spinner'] ?? '#2563eb';
 
-$themeSectionTitle = $globalSettings['color_section_title'] ?? '#0f172a';
-$themeProductTitle = $globalSettings['color_product_title'] ?? '#1e293b';
-$themeProductPrice = $globalSettings['color_product_price'] ?? '#2563eb';
-
-$themeFooterBg = $globalSettings['color_footer_bg'] ?? '#0f172a';
-$themeFooterText = $globalSettings['color_footer_text'] ?? '#94a3b8';
+// 5. Scroll to Top
+$appScrollTopBg       = $globalSettings['color_app_scroll_top_bg'] ?? '#ea580c';
+$appScrollTopColor    = $globalSettings['color_app_scroll_top_color'] ?? '#ffffff';
 
 $enableFloatingCart = ($globalSettings['feature_floating_cart_modal'] ?? '1') == '1';
 $enableInstantCheckout = ($globalSettings['feature_instant_checkout_modal'] ?? '0') == '1';
@@ -64,6 +76,8 @@ $desktopStyle = $globalSettings['sticky_footer_desktop_style'] ?? 'boxed_floatin
 $footerGlass = ($globalSettings['sticky_footer_glassmorphism'] ?? '1') == '1';
 $footerHideOnScroll = ($globalSettings['sticky_footer_hide_on_scroll'] ?? '0') == '1';
 
+// Dynamic Footer Row Background & Nav Colors
+$footerRowBg = $globalSettings['sticky_footer_row_bg'] ?? 'transparent';
 $footerBg = $globalSettings['sticky_footer_bg'] ?? '#ffffff';
 $footerTextColor = $globalSettings['sticky_footer_text_color'] ?? '#64748b';
 $footerActiveColor = $globalSettings['sticky_footer_active_color'] ?? '#2563eb';
@@ -81,10 +95,24 @@ $enableStickyProductBar = ($globalSettings['feature_sticky_product_bar'] ?? '1')
 $spbShowMobile = !isset($globalSettings['sticky_product_bar_show_mobile']) || $globalSettings['sticky_product_bar_show_mobile'] == '1';
 $spbShowTablet = !isset($globalSettings['sticky_product_bar_show_tablet']) || $globalSettings['sticky_product_bar_show_tablet'] == '1';
 $spbShowDesktop = !isset($globalSettings['sticky_product_bar_show_desktop']) || $globalSettings['sticky_product_bar_show_desktop'] == '1';
-$spbPosition = $globalSettings['sticky_product_bar_position'] ?? 'top';
+$spbPosition = $globalSettings['sticky_product_bar_position'] ?? 'bottom';
 $spbShowBuyNow = ($globalSettings['sticky_product_bar_show_buynow'] ?? '1') == '1';
 
-// অ্যাকাউন্ট ডেসটিনেশন রেজলভার (স্টাফ/ম্যানেজারদের সরাসরি অ্যাডমিন প্যানেল)
+// Collision Resolver
+$displayEngineInstance = app(\App\Services\DisplayRuleEngine::class);
+$allActiveWidgetsList = $displayEngineInstance->getActiveWidgets(request());
+$hasRightSideWidgets = $allActiveWidgetsList->where('position', 'bottom_right')->isNotEmpty() || ($enableScrollTop && $stPosition !== 'left');
+$hasLeftSideWidgets  = $allActiveWidgetsList->where('position', 'bottom_left')->isNotEmpty() || ($enableScrollTop && $stPosition === 'left');
+
+if ($hasRightSideWidgets) {
+    $spbAvoidClass = 'spb-avoid-right';
+} elseif ($hasLeftSideWidgets) {
+    $spbAvoidClass = 'spb-avoid-left';
+} else {
+    $spbAvoidClass = 'spb-full-width';
+}
+
+// Account Destination Resolver
 $accountTargetUrl = route('login');
 if (auth()->check()) {
     $currUser = auth()->user();
@@ -283,7 +311,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
         <link rel="shortcut icon" type="image/x-icon" href="{{ $finalFavicon }}">
     @endif
     
-    <!-- Multi-Language Typography: Plus Jakarta Sans (UI) + Hind Siliguri (300/700 Safe Bengali Digits) + Devanagari -->
+    <!-- Multi-Language Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -296,32 +324,53 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
         :root {
             --app-font-family: 'Plus Jakarta Sans', 'Hind Siliguri', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --site-bg-color: {{ !empty($themeSiteBg) ? $themeSiteBg : '#f8fafc' }};
-            --card-bg-color: {{ !empty($themeCardBg) ? $themeCardBg : '#ffffff' }};
-            --header-bg-color: {{ !empty($themeHeaderBg) ? $themeHeaderBg : '#ffffff' }};
-            --header-text-color: {{ !empty($themeHeaderText) ? $themeHeaderText : '#334155' }};
-            --search-btn-bg: {{ !empty($themeSearchBtnBg) ? $themeSearchBtnBg : '#2563eb' }};
-            --menu-text-color: {{ !empty($themeMenuText) ? $themeMenuText : '#334155' }};
-            --menu-hover-color: {{ !empty($themeMenuHover) ? $themeMenuHover : '#00a8ff' }};
-            --menu-active-bg: {{ !empty($themeMenuActiveBg) ? $themeMenuActiveBg : '#e0f2fe' }};
-            --card-btn-cart-bg: {{ !empty($themeCardBtnCartBg) ? $themeCardBtnCartBg : '#2563eb' }};
-            --card-btn-cart-text: {{ !empty($themeCardBtnCartText) ? $themeCardBtnCartText : '#ffffff' }};
-            --card-btn-order-bg: {{ !empty($themeCardBtnOrderBg) ? $themeCardBtnOrderBg : '#0f172a' }};
-            --card-btn-order-text: {{ !empty($themeCardBtnOrderText) ? $themeCardBtnOrderText : '#ffffff' }};
-            --details-btn-order-bg: {{ !empty($themeDetailsBtnOrderBg) ? $themeDetailsBtnOrderBg : '#0dcaf0' }};
-            --details-btn-order-text: {{ !empty($themeDetailsBtnOrderText) ? $themeDetailsBtnOrderText : '#ffffff' }};
-            --details-btn-cart-bg: {{ !empty($themeDetailsBtnCartBg) ? $themeDetailsBtnCartBg : '#ffc107' }};
-            --details-btn-cart-text: {{ !empty($themeDetailsBtnCartText) ? $themeDetailsBtnCartText : '#212529' }};
-            --common-btn-bg: {{ !empty($themeCommonBtnBg) ? $themeCommonBtnBg : '#2563eb' }};
-            --common-btn-text: {{ !empty($themeCommonBtnText) ? $themeCommonBtnText : '#ffffff' }};
-            --section-title-color: {{ !empty($themeSectionTitle) ? $themeSectionTitle : '#0f172a' }};
-            --product-title-color: {{ !empty($themeProductTitle) ? $themeProductTitle : '#1e293b' }};
-            --product-price-color: {{ !empty($themeProductPrice) ? $themeProductPrice : '#2563eb' }};
-            --footer-bg-color: {{ !empty($themeFooterBg) ? $themeFooterBg : '#0f172a' }};
-            --footer-text-color: {{ !empty($themeFooterText) ? $themeFooterText : '#94a3b8' }};
+
+            /* Dynamic Footer Row Background & Nav Colors */
+            --sf-row-bg: {{ !empty($footerRowBg) ? $footerRowBg : 'transparent' }};
+            --sf-bar-bg: {{ !empty($footerBg) ? $footerBg : '#ffffff' }};
             --sf-text-color: {{ !empty($footerTextColor) ? $footerTextColor : '#64748b' }};
             --sf-active-color: {{ !empty($footerActiveColor) ? $footerActiveColor : '#2563eb' }};
+
+            /* App Sticky Single Product Bar Variables */
+            --app-spb-bg: {{ $appSpbBg }};
+            --app-spb-border: {{ $appSpbBorder }};
+            --app-spb-title: {{ $appSpbTitle }};
+            --app-spb-title-hover: {{ $appSpbTitleHover }};
+            --app-spb-price: {{ $appSpbPrice }};
+            --app-spb-cart-btn-bg: {{ $appSpbCartBtnBg }};
+            --app-spb-cart-btn-text: {{ $appSpbCartBtnText }};
+            --app-spb-cart-btn-hover-bg: {{ $appSpbCartBtnHoverBg }};
+            --app-spb-buynow-bg: {{ $appSpbBuyNowBg }};
+            --app-spb-buynow-text: {{ $appSpbBuyNowText }};
+            --app-spb-buynow-hover-bg: {{ $appSpbBuyNowHoverBg }};
+            --app-spb-buynow-hover-text: {{ $appSpbBuyNowHoverText }};
+
+            /* App Bottom Search Modal Variables */
+            --app-search-modal-bg: {{ $appSearchModalBg }};
+            --app-search-modal-border: {{ $appSearchModalBorder }};
+            --app-search-price: {{ $appSearchPrice }};
+            --app-search-cart-btn-bg: {{ $appSearchCartBtnBg }};
+            --app-search-cart-btn-text: {{ $appSearchCartBtnText }};
+            --app-search-cart-btn-hover-bg: {{ $appSearchCartBtnHoverBg }};
+            --app-search-cart-btn-hover-text: {{ $appSearchCartBtnHoverText }};
+
+            /* App Drawer Cart & Quick View Variables */
+            --app-drawer-bg: {{ $appDrawerBg }};
+            --app-drawer-border: {{ $appDrawerBorder }};
+            --app-drawer-icon: {{ $appDrawerIcon }};
+            --app-drawer-total-price: {{ $appDrawerTotalPrice }};
+            --app-drawer-checkout-bg: {{ $appDrawerCheckoutBg }};
+            --app-drawer-checkout-text: {{ $appDrawerCheckoutText }};
+            --app-drawer-checkout-hover-bg: {{ $appDrawerCheckoutHoverBg }};
+            --app-drawer-checkout-hover-text: {{ $appDrawerCheckoutHoverText }};
+            --app-quickview-spinner: {{ $appQuickViewSpinner }};
+
+            /* Scroll to Top Variables */
+            --app-scroll-top-bg: {{ $appScrollTopBg }};
+            --app-scroll-top-color: {{ $appScrollTopColor }};
         }
 
+        /* 1. Global / Body Background */
         body, #site-body {
             background-color: var(--site-bg-color) !important;
             font-family: var(--app-font-family);
@@ -330,6 +379,121 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
+        }
+
+        /* 2. Sticky Product Bar Scoped Elements */
+        .sticky-single-product-bar {
+            position: fixed !important;
+            z-index: 1030 !important;
+            background: var(--app-spb-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            display: none;
+            align-items: center !important;
+            justify-content: space-between !important;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease !important;
+            opacity: 0;
+            visibility: hidden;
+            border: 1px solid var(--app-spb-border) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 6px 24px rgba(15, 23, 42, 0.1) !important;
+            box-sizing: border-box !important;
+        }
+
+        .sticky-single-product-bar.bar-visible {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+        }
+
+        .app-spb-title {
+            color: var(--app-spb-title) !important;
+            transition: color 0.15s ease;
+        }
+        .app-spb-title:hover {
+            color: var(--app-spb-title-hover) !important;
+        }
+        .app-spb-price {
+            color: var(--app-spb-price) !important;
+        }
+        .app-spb-cart-icon {
+            color: var(--app-spb-cart-btn-text) !important;
+        }
+        #spb-add-cart-btn.btn-spb-cart {
+            background-color: var(--app-spb-cart-btn-bg) !important;
+            color: var(--app-spb-cart-btn-text) !important;
+            border: 1px solid var(--app-spb-border) !important;
+            transition: all 0.2s ease;
+        }
+        #spb-add-cart-btn.btn-spb-cart:hover {
+            background-color: var(--app-spb-cart-btn-hover-bg) !important;
+        }
+        .app-spb-buynow-btn {
+            background-color: var(--app-spb-buynow-bg) !important;
+            border-color: var(--app-spb-buynow-bg) !important;
+            color: var(--app-spb-buynow-text) !important;
+            transition: all 0.2s ease;
+        }
+        .app-spb-buynow-btn:hover {
+            background-color: var(--app-spb-buynow-hover-bg) !important;
+            border-color: var(--app-spb-buynow-hover-bg) !important;
+            color: var(--app-spb-buynow-hover-text) !important;
+        }
+
+        /* 3. Bottom Search Modal Scoped Elements */
+        .bottom-nav-search-modal .modal-content {
+            background-color: var(--app-search-modal-bg) !important;
+            border: 1px solid var(--app-search-modal-border) !important;
+        }
+        .app-search-item-price {
+            color: var(--app-search-price) !important;
+        }
+        .app-search-item-cart-btn {
+            background-color: var(--app-search-cart-btn-bg) !important;
+            border-color: var(--app-search-cart-btn-bg) !important;
+            color: var(--app-search-cart-btn-text) !important;
+            transition: all 0.2s ease;
+        }
+        .app-search-item-cart-btn:hover {
+            background-color: var(--app-search-cart-btn-hover-bg) !important;
+            border-color: var(--app-search-cart-btn-hover-bg) !important;
+            color: var(--app-search-cart-btn-hover-text) !important;
+        }
+
+        /* 4. Drawer Cart & Quick View Scoped Elements */
+        #sideDrawerCart {
+            width: 380px;
+            max-width: 100vw;
+            background-color: var(--app-drawer-bg) !important;
+            border-left: 1px solid var(--app-drawer-border) !important;
+            box-shadow: -10px 0 35px rgba(15, 23, 42, 0.08);
+        }
+
+        .app-quickview-spinner {
+            color: var(--app-quickview-spinner) !important;
+        }
+        .app-drawer-cart-icon {
+            color: var(--app-drawer-icon) !important;
+        }
+        .app-drawer-spinner {
+            color: var(--app-drawer-icon) !important;
+        }
+        .app-drawer-checkout-btn {
+            background-color: var(--app-drawer-checkout-bg) !important;
+            border-color: var(--app-drawer-checkout-bg) !important;
+            color: var(--app-drawer-checkout-text) !important;
+            transition: all 0.2s ease;
+        }
+        .app-drawer-checkout-btn:hover {
+            background-color: var(--app-drawer-checkout-hover-bg) !important;
+            border-color: var(--app-drawer-checkout-hover-bg) !important;
+            color: var(--app-drawer-checkout-hover-text) !important;
+        }
+        #sideDrawerCartFooter #sideDrawerCartTotal {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            color: var(--app-drawer-total-price) !important;
+            white-space: nowrap;
         }
 
         .bn-digit, 
@@ -342,17 +506,6 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             font-weight: 700 !important;
         }
 
-        #sideDrawerCart {
-            width: 380px;
-            max-width: 100vw;
-            border-left: 1px solid #e2e8f0;
-            box-shadow: -10px 0 35px rgba(15, 23, 42, 0.08);
-        }
-
-        ul.pagination {
-            margin-left: 5px !important;
-        }
-
         @media (max-width: 575.98px) {
             #sideDrawerCart {
                 width: 86vw !important;
@@ -363,8 +516,8 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
         #sideDrawerCart .offcanvas-footer,
         #sideDrawerCartFooter {
             padding: 16px !important;
-            background-color: #ffffff !important;
-            border-top: 1px solid #f1f5f9;
+            background-color: var(--app-drawer-bg) !important;
+            border-top: 1px solid var(--app-drawer-border);
             box-sizing: border-box !important;
             width: 100% !important;
         }
@@ -391,13 +544,6 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             white-space: nowrap;
         }
 
-        #sideDrawerCartFooter #sideDrawerCartTotal {
-            font-size: 18px !important;
-            font-weight: 700 !important;
-            color: #dc2626 !important;
-            white-space: nowrap;
-        }
-
         #sideDrawerCartFooter .btn-dark {
             font-size: 13.5px !important;
             padding: 11px 0 !important;
@@ -405,16 +551,6 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             font-weight: 700 !important;
             letter-spacing: 0.3px;
             transition: all 0.2s ease;
-        }
-
-        #sideDrawerCartFooter .btn-dark:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-        }
-
-        #sideDrawerCartFooter button.btn-link {
-            font-size: 12px !important;
-            margin-top: 4px !important;
         }
 
         .master-site-header {
@@ -453,18 +589,37 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             .header-spacer { display: none; }
         @endif
 
-        .site-sticky-bottom-bar {
+        /* ========================================================================= */
+        /* STICKY FOOTER DYNAMIC ROW & INNER BAR STYLING                             */
+        /* ========================================================================= */
+        .site-sticky-footer-wrapper {
             position: fixed !important;
             bottom: 0 !important;
             left: 0 !important;
             right: 0 !important;
+            width: 100% !important;
             z-index: 1035 !important;
+            pointer-events: none !important;
+            background-color: var(--sf-row-bg) !important;
             display: none;
+            justify-content: center !important;
+            align-items: center !important;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+        }
+
+        .site-sticky-footer-wrapper.sf-hidden {
+            transform: translateY(100%) !important;
+            opacity: 0 !important;
+        }
+
+        .site-sticky-bottom-bar {
+            pointer-events: auto !important;
+            display: flex !important;
             justify-content: space-around !important;
             align-items: center !important;
             padding: 8px 12px !important;
             box-sizing: border-box !important;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+            width: 100% !important;
 
             @if($footerGlass)
                 background-color: {{ $footerBg }}e6 !important;
@@ -473,26 +628,19 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
                 border-top: 1px solid rgba(226, 232, 240, 0.6) !important;
                 box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.06) !important;
             @else
-                background-color: {{ $footerBg }} !important;
+                background-color: var(--sf-bar-bg) !important;
                 border-top: 1px solid #e2e8f0 !important;
                 box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
             @endif
         }
 
-        .site-sticky-bottom-bar.sf-hidden {
-            transform: translateY(100%) !important;
-            opacity: 0 !important;
-        }
-
         @if($enableStickyFooter)
             @if($showOnMobile)
                 @media (max-width: 767.98px) {
-                    .site-sticky-bottom-bar {
+                    .site-sticky-footer-wrapper {
                         display: flex !important;
-                        bottom: 0 !important;
-                        left: 0 !important;
-                        right: 0 !important;
-                        margin: 0 !important;
+                    }
+                    .site-sticky-bottom-bar {
                         border-radius: 0 !important;
                     }
                     body { padding-bottom: 64px !important; }
@@ -501,12 +649,10 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
 
             @if($showOnTablet)
                 @media (min-width: 768px) and (max-width: 991.98px) {
-                    .site-sticky-bottom-bar {
+                    .site-sticky-footer-wrapper {
                         display: flex !important;
-                        bottom: 0 !important;
-                        left: 0 !important;
-                        right: 0 !important;
-                        margin: 0 !important;
+                    }
+                    .site-sticky-bottom-bar {
                         border-radius: 0 !important;
                     }
                     body { padding-bottom: 68px !important; }
@@ -515,19 +661,19 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
 
             @if($showOnDesktop)
                 @media (min-width: 992px) {
-                    .site-sticky-bottom-bar {
+                    .site-sticky-footer-wrapper {
                         display: flex !important;
+                        padding: 6px 0 !important;
+                    }
+                    .site-sticky-bottom-bar {
                         @if($desktopStyle === 'full_width')
-                            bottom: 0 !important;
-                            left: 0 !important;
-                            right: 0 !important;
-                            margin: 0 !important;
                             border-radius: 0 !important;
+                            max-width: 100% !important;
                         @else
                             max-width: 620px !important;
-                            margin: 0 auto 12px auto !important;
                             border-radius: 14px !important;
                             border: 1px solid #e2e8f0 !important;
+                            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
                         @endif
                     }
                     body { padding-bottom: 74px !important; }
@@ -571,32 +717,9 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             line-height: 1.2;
         }
 
-        .sticky-single-product-bar {
-            position: fixed !important;
-            left: 0 !important;
-            right: 0 !important;
-            z-index: 1030 !important;
-            background: rgba(255, 255, 255, 0.96) !important;
-            backdrop-filter: blur(16px) saturate(180%) !important;
-            -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-            display: none;
-            align-items: center !important;
-            justify-content: space-between !important;
-            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease !important;
-            opacity: 0;
-            visibility: hidden;
-            border: 1px solid rgba(226, 232, 240, 0.9) !important;
-        }
-        .sticky-single-product-bar.bar-visible {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: translateY(0) !important;
-        }
-
         @if($spbPosition === 'top')
             .sticky-single-product-bar {
                 top: {{ $isStickyHeader ? '110px' : '0' }} !important;
-                box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
                 transform: translateY(-10px);
             }
             @media (min-width: 992px) {
@@ -604,31 +727,107 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             }
         @else
             .sticky-single-product-bar {
-                bottom: {{ $enableStickyFooter ? '60px' : '0' }} !important;
-                box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
+                bottom: {{ $enableStickyFooter ? '72px' : '14px' }} !important;
                 transform: translateY(10px);
             }
             @media (min-width: 992px) {
-                .sticky-single-product-bar { bottom: {{ $enableStickyFooter ? '70px' : '0' }} !important; }
+                .sticky-single-product-bar {
+                    bottom: {{ $enableStickyFooter ? '78px' : '16px' }} !important;
+                }
             }
         @endif
 
+        /* Avoid Floating Widget Collision */
+        .sticky-single-product-bar.spb-avoid-right {
+            left: 10px !important;
+            right: 66px !important;
+            width: auto !important;
+        }
+        @media (min-width: 768px) {
+            .sticky-single-product-bar.spb-avoid-right {
+                left: 20px !important;
+                right: 76px !important;
+                max-width: 1200px !important;
+                margin-left: auto !important;
+            }
+        }
+
+        .sticky-single-product-bar.spb-avoid-left {
+            left: 66px !important;
+            right: 10px !important;
+            width: auto !important;
+        }
+        @media (min-width: 768px) {
+            .sticky-single-product-bar.spb-avoid-left {
+                left: 76px !important;
+                right: 20px !important;
+                max-width: 1200px !important;
+                margin-right: auto !important;
+            }
+        }
+
+        .sticky-single-product-bar.spb-full-width {
+            left: 8px !important;
+            right: 8px !important;
+            width: auto !important;
+        }
+        @media (min-width: 992px) {
+            .sticky-single-product-bar.spb-full-width {
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+        }
+
         @media (max-width: 767.98px) {
-            .sticky-single-product-bar { padding: 8px 12px !important; }
-            .spb-container { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-            .spb-thumb { width: 38px !important; height: 38px !important; border-radius: 8px !important; }
-            .spb-title { font-size: 11.5px !important; max-width: 140px !important; line-height: 1.25 !important; }
-            .spb-price { font-size: 12.5px !important; }
-            .btn-spb { font-size: 11.5px !important; padding: 6px 12px !important; border-radius: 8px !important; }
+            .sticky-single-product-bar { 
+                bottom: {{ $enableStickyFooter ? '72px' : '14px' }} !important;
+                padding: 7px 10px !important; 
+                min-height: 50px !important;
+            }
+            .spb-container { 
+                width: 100%; 
+                display: flex; 
+                align-items: center; 
+                justify-content: space-between; 
+                gap: 8px; 
+            }
+            .spb-thumb { 
+                width: 36px !important; 
+                height: 36px !important; 
+                border-radius: 7px !important; 
+            }
+            .spb-title { 
+                font-size: 11px !important; 
+                max-width: 115px !important; 
+                line-height: 1.25 !important; 
+            }
+            .spb-price { 
+                font-size: 11.5px !important; 
+            }
+            .spb-btn-group {
+                gap: 8px !important;
+            }
+            .btn-spb { 
+                font-size: 10px !important; 
+                padding: 6px 9px !important; 
+                border-radius: 6px !important; 
+                letter-spacing: -0.01em;
+            }
+            .btn-spb i {
+                font-size: 11px !important;
+            }
         }
 
         @media (min-width: 768px) {
-            .sticky-single-product-bar { padding: 12px 24px !important; }
+            .sticky-single-product-bar { padding: 10px 20px !important; }
             .spb-container { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; align-items: center; justify-content: space-between; }
-            .spb-thumb { width: 48px !important; height: 48px !important; border-radius: 10px !important; }
-            .spb-title { font-size: 14px !important; max-width: 380px !important; }
-            .spb-price { font-size: 15px !important; }
-            .btn-spb { font-size: 13px !important; padding: 8px 18px !important; border-radius: 8px !important; }
+            .spb-thumb { width: 44px !important; height: 44px !important; border-radius: 8px !important; }
+            .spb-title { font-size: 13.5px !important; max-width: 360px !important; }
+            .spb-price { font-size: 14.5px !important; }
+            .spb-btn-group { gap: 10px !important; }
+            .btn-spb { font-size: 12.5px !important; padding: 7px 16px !important; border-radius: 8px !important; }
         }
 
         @if($enableStickyProductBar)
@@ -637,49 +836,68 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             @if($spbShowDesktop) @media (min-width: 992px) { .sticky-single-product-bar { display: flex !important; } } @endif
         @endif
 
+        /* Back to Top Button */
         .btn-scroll-to-top {
             position: fixed !important;
-            z-index: 1030 !important;
-            width: 42px;
-            height: 42px;
+            z-index: 1045 !important;
+            width: 44px !important;
+            height: 44px !important;
             display: none;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.25s ease-in-out;
+            border-radius: 50% !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.2) !important;
+            border: 2px solid #ffffff !important;
+            font-size: 16px !important;
+            outline: none !important;
             opacity: 0;
             visibility: hidden;
-            border: none;
-            outline: none;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+            bottom: {{ $enableStickyFooter ? '83px' : '21px' }} !important;
+            background-color: var(--app-scroll-top-bg) !important;
+            color: var(--app-scroll-top-color) !important;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.22s ease,
+                        opacity 0.25s ease,
+                        bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
+
         .btn-scroll-to-top.active-visible {
-            opacity: 1;
-            visibility: visible;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .btn-scroll-to-top:hover,
+        .btn-scroll-to-top:active {
+            transform: scale(1.1) translateY(-2px) !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.32) !important;
+            filter: brightness(1.1);
         }
 
         @if($stPosition === 'left')
-            .btn-scroll-to-top { left: 18px !important; }
+            .btn-scroll-to-top { left: 18px !important; right: auto !important; }
         @else
-            .btn-scroll-to-top { right: 18px !important; }
+            .btn-scroll-to-top { right: 18px !important; left: auto !important; }
         @endif
 
-        @if($enableStickyFooter)
-            .btn-scroll-to-top { bottom: 72px !important; }
-            @media (min-width: 992px) { .btn-scroll-to-top { bottom: 82px !important; } }
-        @else
-            .btn-scroll-to-top { bottom: 24px !important; }
-        @endif
-
-        .st-style-classic_rounded { background: #2563eb; color: #fff; border-radius: 50% !important; }
-        .st-style-square_modern { background: #0f172a; color: #fff; border-radius: 10px !important; }
-        .st-style-minimal_clean { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1 !important; border-radius: 10px !important; }
-        .st-style-pulse_glow { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; border-radius: 50% !important; box-shadow: 0 0 16px rgba(249,115,22,0.4); }
+        @media (max-width: 767.98px) {
+            .btn-scroll-to-top {
+                bottom: {{ $enableStickyFooter ? '76px' : '18px' }} !important;
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 15px !important;
+            }
+            @if($stPosition === 'left')
+                .btn-scroll-to-top { left: 14px !important; }
+            @else
+                .btn-scroll-to-top { right: 14px !important; }
+            @endif
+        }
 
         @if($enableScrollTop)
-            @if($stShowMobile) @media (max-width: 767.98px) { .btn-scroll-to-top { display: flex !important; } } @endif
-            @if($stShowTablet) @media (min-width: 768px) and (max-width: 991.98px) { .btn-scroll-to-top { display: flex !important; } } @endif
-            @if($stShowDesktop) @media (min-width: 992px) { .btn-scroll-to-top { display: flex !important; } } @endif
+            @if($stShowMobile) @media (max-width: 767.98px) { .btn-scroll-to-top { display: inline-flex !important; } } @endif
+            @if($stShowTablet) @media (min-width: 768px) and (max-width: 991.98px) { .btn-scroll-to-top { display: inline-flex !important; } } @endif
+            @if($stShowDesktop) @media (min-width: 992px) { .btn-scroll-to-top { display: inline-flex !important; } } @endif
         @endif
     </style>
 </head>
@@ -693,64 +911,67 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
 
     @include('layouts.footer')
 
+    {{-- Sticky Footer Nav with Outer Row Background Wrapper --}}
     @if($enableStickyFooter)
-        <div class="site-sticky-bottom-bar" id="siteStickyBottomBar">
-            @foreach($stickyFooterNavItems as $navItem)
-                @php
-                    $actType = $navItem['action_type'] ?? 'link';
-                    $targetUrl = $navItem['url'] ?? '#';
-                    $btnClass = '';
-                    $clickAttr = '';
+        <div class="site-sticky-footer-wrapper" id="siteStickyFooterWrapper">
+            <div class="site-sticky-bottom-bar" id="siteStickyBottomBar">
+                @foreach($stickyFooterNavItems as $navItem)
+                    @php
+                        $actType = $navItem['action_type'] ?? 'link';
+                        $targetUrl = $navItem['url'] ?? '#';
+                        $btnClass = '';
+                        $clickAttr = '';
 
-                    // অ্যাকাউন্ট বাটন ক্লিক করলে ডায়নামিক অ্যাডমিন বা কাস্টমার প্যানেল নির্ধারণ
-                    if ($actType === 'link' && strtolower($navItem['title'] ?? '') === 'account') {
-                        $targetUrl = $accountTargetUrl;
-                    }
-
-                    if ($actType === 'cart') {
-                        $btnClass = $enableFloatingCart ? 'btn-open-cart-drawer' : '';
-                        if (!$enableFloatingCart) {
-                            $targetUrl = route('cart.index');
+                        if ($actType === 'link' && strtolower($navItem['title'] ?? '') === 'account') {
+                            $targetUrl = $accountTargetUrl;
                         }
-                    } elseif ($actType === 'search') {
-                        $clickAttr = "onclick=\"event.preventDefault(); window.openBottomSearchModal();\"";
-                    }
-                @endphp
-                <a href="{{ $targetUrl }}" class="sticky-footer-btn {{ $btnClass }}" {!! $clickAttr !!}>
-                    <i class="{{ $navItem['icon'] ?? 'fas fa-circle' }}"></i>
-                    <span>{{ $navItem['title'] ?? '' }}</span>
-                    @if($actType === 'cart')
-                        <span class="sticky-footer-badge cart-drawer-count {{ $totalCartCount > 0 ? '' : 'd-none' }}">{{ $totalCartCount }}</span>
-                    @elseif($actType === 'wishlist')
-                        <span class="sticky-footer-badge wishlist-badge-count {{ $wishlistCount > 0 ? '' : 'd-none' }}">{{ $wishlistCount }}</span>
-                    @endif
-                </a>
-            @endforeach
+
+                        if ($actType === 'cart') {
+                            $btnClass = $enableFloatingCart ? 'btn-open-cart-drawer' : '';
+                            if (!$enableFloatingCart) {
+                                $targetUrl = route('cart.index');
+                            }
+                        } elseif ($actType === 'search') {
+                            $clickAttr = "onclick=\"event.preventDefault(); window.openBottomSearchModal();\"";
+                        }
+                    @endphp
+                    <a href="{{ $targetUrl }}" class="sticky-footer-btn {{ $btnClass }}" {!! $clickAttr !!}>
+                        <i class="{{ $navItem['icon'] ?? 'fas fa-circle' }}"></i>
+                        <span>{{ $navItem['title'] ?? '' }}</span>
+                        @if($actType === 'cart')
+                            <span class="sticky-footer-badge cart-drawer-count {{ $totalCartCount > 0 ? '' : 'd-none' }}">{{ $totalCartCount }}</span>
+                        @elseif($actType === 'wishlist')
+                            <span class="sticky-footer-badge wishlist-badge-count {{ $wishlistCount > 0 ? '' : 'd-none' }}">{{ $wishlistCount }}</span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
         </div>
     @endif
 
+    {{-- Sticky Product Bar with Gap and Collision-Free Class --}}
     @if($enableStickyProductBar)
-        <div id="stickySingleProductBar" class="sticky-single-product-bar">
+        <div id="stickySingleProductBar" class="sticky-single-product-bar {{ $spbAvoidClass }}">
             <div class="spb-container">
                 <div class="d-flex align-items-center gap-2 gap-sm-3 min-w-0">
                     <img id="spb-img" src="https://placehold.co/80x80?text=Product" alt="Product" class="border flex-shrink-0 bg-light spb-thumb" style="object-fit: cover;">
                     <div class="min-w-0">
-                        <h6 id="spb-title" class="fw-bold text-dark text-truncate mb-0 spb-title">Product Title</h6>
+                        <h6 id="spb-title" class="fw-bold text-dark text-truncate mb-0 spb-title app-spb-title">Product Title</h6>
                         <div class="d-flex align-items-center gap-2 mt-0">
-                            <span id="spb-price" class="fw-bold text-primary spb-price">৳0.00</span>
+                            <span id="spb-price" class="fw-bold spb-price app-spb-price">৳0.00</span>
                             <del id="spb-old-price" class="text-muted small d-none" style="font-size: 11px;"></del>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                    <button type="button" id="spb-add-cart-btn" class="btn btn-light border text-dark fw-bold btn-spb btn-spb-cart d-flex align-items-center justify-content-center gap-1.5 shadow-sm">
-                        <i class="fas fa-shopping-cart text-primary"></i>
-                        <span class="d-none d-sm-inline">Add to Cart</span>
+                <div class="d-flex align-items-center flex-shrink-0 spb-btn-group">
+                    <button type="button" id="spb-add-cart-btn" class="btn btn-spb btn-spb-cart d-flex align-items-center justify-content-center shadow-sm">
+                        <i class="fas fa-shopping-cart app-spb-cart-icon"></i>
+                        <span class="d-none d-sm-inline ms-1">Add to Cart</span>
                     </button>
                     @if($spbShowBuyNow)
-                        <button type="button" id="spb-buy-now-btn" class="btn btn-primary fw-bold btn-spb d-flex align-items-center justify-content-center gap-1.5 shadow-sm">
-                            <i class="fas fa-bolt text-warning"></i>
+                        <button type="button" id="spb-buy-now-btn" class="btn fw-bold btn-spb app-spb-buynow-btn d-flex align-items-center justify-content-center shadow-sm">
+                            <i class="fas fa-bolt text-warning me-1"></i>
                             <span>Buy Now</span>
                         </button>
                     @endif
@@ -760,7 +981,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
     @endif
 
     @if($enableScrollTop)
-        <button type="button" id="btnScrollToTop" class="btn-scroll-to-top st-style-{{ $stStyle }}" title="Back to top">
+        <button type="button" id="btnScrollToTop" class="btn-scroll-to-top" title="Back to top">
             <i class="fas fa-chevron-up"></i>
         </button>
     @endif
@@ -789,7 +1010,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 border-0 shadow-lg" id="globalQuickViewContent" style="background: #ffffff; min-height: 250px;">
                 <div class="text-center py-5">
-                    <div class="spinner-border text-primary"></div>
+                    <div class="spinner-border text-primary app-quickview-spinner"></div>
                     <div class="small text-muted mt-2 fw-semibold">Loading product preview...</div>
                 </div>
             </div>
@@ -801,7 +1022,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
         <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="sideDrawerCart" aria-labelledby="sideDrawerCartLabel" style="z-index: 105000;">
             <div class="offcanvas-header bg-white border-bottom py-3 px-3">
                 <h6 class="offcanvas-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="sideDrawerCartLabel" style="font-size: 14px;">
-                    <i class="fas fa-shopping-bag text-primary"></i> Shopping Cart (<span class="cart-drawer-count">{{ $totalCartCount }}</span>)
+                    <i class="fas fa-shopping-bag app-drawer-cart-icon"></i> Shopping Cart (<span class="cart-drawer-count">{{ $totalCartCount }}</span>)
                 </h6>
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
             </div>
@@ -820,7 +1041,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
 
             <div class="offcanvas-body p-2 p-sm-3 overflow-y-auto" id="sideDrawerCartBody" style="max-height: calc(100vh - 240px);">
                 <div class="text-center py-5 my-auto">
-                    <div class="spinner-border text-primary"></div>
+                    <div class="spinner-border app-drawer-spinner"></div>
                 </div>
             </div>
 
@@ -836,7 +1057,7 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <a href="{{ route('checkout') }}" class="btn btn-dark fw-bold py-2.5 rounded-3 text-center shadow-sm w-100">
+                    <a href="{{ route('checkout') }}" class="btn fw-bold py-2.5 rounded-3 text-center shadow-sm w-100 app-drawer-checkout-btn">
                         Checkout Now <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                     <button type="button" class="btn btn-link text-muted small text-decoration-none text-center p-0" data-bs-dismiss="offcanvas">
@@ -857,6 +1078,10 @@ $seoFinalTitle = trim(strip_tags(html_entity_decode($seoFinalTitle, ENT_QUOTES, 
             <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('global-cart-toast').style.setProperty('display', 'none', 'important')"></button>
         </div>
     </div>
+
+    {{-- Dynamic Popups & Floating Contact Action Widgets Integration --}}
+    @include('frontend.partials.dynamic_popups')
+    @include('frontend.partials.floating_widgets')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('assets/js/custom.js') }}"></script>
@@ -916,7 +1141,7 @@ window.triggerQuickViewModal = function(productId) {
 
     content.innerHTML = `
         <div class="modal-body p-5 text-center">
-            <div class="spinner-border text-primary mb-2" role="status"></div>
+            <div class="spinner-border text-primary app-quickview-spinner mb-2" role="status"></div>
             <div class="small text-muted fw-bold">Loading product preview...</div>
         </div>
     `;
@@ -1239,7 +1464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <div class="text-truncate">
                                             <div class="fw-semibold text-truncate small">${p.title}</div>
                                             <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="fw-bold text-primary small bn-digit">৳${p.price}</span>
+                                                <span class="fw-bold text-primary small bn-digit app-search-item-price">৳${p.price}</span>
                                                 ${p.sku ? `<span class="badge bg-light text-muted border px-2 py-0.5" style="font-size: 10px;">SKU: ${p.sku}</span>` : ''}
                                             </div>
                                         </div>
@@ -1250,7 +1475,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <span id="modal-search-qty-${p.id}" class="small fw-bold px-1.5 bn-digit">1</span>
                                             <button type="button" class="btn btn-sm p-0 px-1 border-0" onclick="changeModalSearchQty(${p.id}, 1)">+</button>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-primary rounded-2 px-2.5 py-1" onclick="addModalSearchItemToCart(${p.id})">
+                                        <button type="button" class="btn btn-sm btn-primary rounded-2 px-2.5 py-1 app-search-item-cart-btn" onclick="addModalSearchItemToCart(${p.id})">
                                             <i class="fas fa-shopping-cart"></i>
                                         </button>
                                     </div>
@@ -1266,15 +1491,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    @if($enableStickyFooter &&$footerHideOnScroll)
+    @if($enableStickyFooter && $footerHideOnScroll)
         let lastScrollY = window.scrollY;
-        const stickyNav = document.getElementById('siteStickyBottomBar');
+        const stickyNavWrapper = document.getElementById('siteStickyFooterWrapper') || document.getElementById('siteStickyBottomBar');
         window.addEventListener('scroll', () => {
-            if (!stickyNav) return;
+            if (!stickyNavWrapper) return;
             if (window.scrollY > lastScrollY && window.scrollY > 80) {
-                stickyNav.classList.add('sf-hidden');
+                stickyNavWrapper.classList.add('sf-hidden');
             } else {
-                stickyNav.classList.remove('sf-hidden');
+                stickyNavWrapper.classList.remove('sf-hidden');
             }
             lastScrollY = window.scrollY;
         }, { passive: true });

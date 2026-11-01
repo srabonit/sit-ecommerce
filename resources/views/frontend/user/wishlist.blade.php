@@ -1,56 +1,176 @@
 @extends('layouts.dashboard')
 
+@php
+    // সেন্ট্রাল গ্লোবাল সেটিংস ক্যাশ রেজলভার
+    static $wishSettingsCache = null;
+    if ($wishSettingsCache === null) {
+        $wishSettingsCache = \Illuminate\Support\Facades\Cache::remember('global_settings_cache', 86400, function() {
+            return \Illuminate\Support\Facades\DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $wishSettings = $wishSettingsCache ?? [];
+
+    // ডায়নামিক থিম কালার ভ্যারিয়েবল (Existing Default Colors)
+    $wishCardBg        = $wishSettings['color_auth_card_bg'] ?? '#ffffff';
+    $wishCardBorder    = $wishSettings['color_auth_card_border'] ?? '#edf2f7';
+    $wishTitleColor    = $wishSettings['color_page_title'] ?? '#0f172a';
+    $wishTextColor     = $wishSettings['color_auth_text'] ?? '#64748b';
+    $wishBoxBg         = $wishSettings['color_site_bg'] ?? '#f8fafc';
+    $wishInputBg       = $wishSettings['color_auth_input_bg'] ?? '#ffffff';
+    $wishInputBorder   = $wishSettings['color_auth_input_border'] ?? '#cbd5e1';
+    $wishInputFocus    = $wishSettings['color_auth_input_focus_border'] ?? ($wishSettings['color_common_btn_bg'] ?? '#2563eb');
+    
+    $wishPrimaryColor  = $wishSettings['color_common_btn_bg'] ?? ($wishSettings['color_hdr_menu_hover_text'] ?? '#2563eb');
+    $wishPrimaryHover  = $wishSettings['color_auth_btn_hover'] ?? '#1d4ed8';
+    $wishActiveBg      = $wishSettings['color_hdr_menu_active_bg'] ?? '#eff6ff';
+    $wishHeartColor    = '#ff8a00'; // Existing Orange Heart
+@endphp
+
 @section('title', 'My Wishlist - ' . config('app.name', 'Shop Now BD'))
 
 @section('dashboard_content')
 <style>
-    /* ================= SHOP STYLE TOP CONTROLS & FILTER ================= */
+    :root {
+        --wish-card-bg: {{ $wishCardBg }};
+        --wish-card-border: {{ $wishCardBorder }};
+        --wish-title: {{ $wishTitleColor }};
+        --wish-text: {{ $wishTextColor }};
+        --wish-box-bg: {{ $wishBoxBg }};
+        --wish-input-bg: {{ $wishInputBg }};
+        --wish-input-border: {{ $wishInputBorder }};
+        --wish-input-focus: {{ $wishInputFocus }};
+        --wish-primary: {{ $wishPrimaryColor }};
+        --wish-primary-hover: {{ $wishPrimaryHover }};
+        --wish-active-bg: {{ $wishActiveBg }};
+        --wish-heart: {{ $wishHeartColor }};
+    }
+
+    /* Universal Strict Link Text Decoration */
+    .wishlist-page-root a,
+    .wishlist-page-root a:hover {
+        text-decoration: none !important;
+    }
+
+    /* Main Container Card */
+    .wishlist-main-card-wrap {
+        background-color: var(--wish-card-bg) !important;
+        border: 1px solid var(--wish-card-border) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+        padding: 24px;
+        transition: all 0.25s ease;
+    }
+
+    .wishlist-header-title {
+        color: var(--wish-title) !important;
+        font-weight: 700;
+        font-size: 1.2rem;
+        line-height: 1.35;
+    }
+
+    .wishlist-header-subtitle {
+        color: var(--wish-text) !important;
+        font-size: 12.5px;
+        line-height: 1.45;
+    }
+
+    .wishlist-heart-icon {
+        color: var(--wish-heart) !important;
+    }
+
+    /* Top Action Buttons */
+    .btn-wishlist-action {
+        border-radius: 50px !important;
+        padding: 6px 16px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        min-height: 34px;
+    }
+
+    .btn-wishlist-add {
+        border: 1px solid var(--wish-primary) !important;
+        color: var(--wish-primary) !important;
+        background: transparent !important;
+    }
+
+    .btn-wishlist-add:hover {
+        background-color: var(--wish-primary) !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25) !important;
+    }
+
+    .btn-wishlist-clear {
+        border: 1px solid #fee2e2 !important;
+        color: #ef4444 !important;
+        background: #ffffff !important;
+    }
+
+    .btn-wishlist-clear:hover {
+        background-color: #fef2f2 !important;
+        border-color: #fca5a5 !important;
+        color: #dc2626 !important;
+    }
+
+    /* Top Controls / Filter Bar */
     .wishlist-top-controls {
-        background: #ffffff;
-        border: 1px solid #edf2f7;
-        border-radius: 14px;
+        background: var(--wish-box-bg) !important;
+        border: 1px solid var(--wish-card-border) !important;
+        border-radius: 12px;
         padding: 10px 16px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .wishlist-showing-label {
+        font-size: 12.5px;
+        color: var(--wish-text);
+        font-weight: 600;
     }
 
     .wishlist-sort-select {
         border-radius: 10px;
         font-size: 13px;
         font-weight: 600;
-        color: #334155;
-        border-color: #cbd5e1;
-        background-color: #f8fafc;
+        color: var(--wish-title);
+        border: 1px solid var(--wish-input-border);
+        background-color: #ffffff;
         padding: 6px 30px 6px 12px;
         cursor: pointer;
-        min-width: 175px;
+        min-width: 170px;
         transition: all 0.2s ease;
     }
+
     .wishlist-sort-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-        background-color: #ffffff;
+        border-color: var(--wish-input-focus);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        outline: none;
     }
 
-    /* ================= 100% RESPONSIVE PAGINATION ================= */
+    /* 100% Responsive Pagination Bar */
     .wishlist-pagination-card {
-        background: #ffffff;
-        border: 1px solid #edf2f7;
+        background: var(--wish-card-bg) !important;
+        border: 1px solid var(--wish-card-border) !important;
         border-radius: 14px;
         padding: 16px 20px;
-        margin-top: 30px;
+        margin-top: 24px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 14px;
         width: 100%;
     }
 
     .pagination-counter-text {
-        font-size: 13.5px;
-        color: #64748b;
-        font-weight: 500;
+        font-size: 13px;
+        color: var(--wish-text);
+        font-weight: 600;
         margin: 0;
         white-space: nowrap;
     }
@@ -98,8 +218,8 @@
 
     .pagination-buttons-wrapper .page-link {
         border-radius: 8px !important;
-        border: 1px solid #e2e8f0;
-        color: #334155;
+        border: 1px solid var(--wish-card-border);
+        color: var(--wish-title);
         font-weight: 600;
         font-size: 13px;
         padding: 6px 12px;
@@ -114,58 +234,19 @@
     }
 
     .pagination-buttons-wrapper .page-item.active .page-link {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
+        background-color: var(--wish-primary) !important;
+        border-color: var(--wish-primary) !important;
         color: #ffffff !important;
         box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
     }
 
     .pagination-buttons-wrapper .page-link:hover {
-        background-color: #eff6ff;
-        color: #2563eb;
-        border-color: #93c5fd;
+        background-color: var(--wish-active-bg);
+        color: var(--wish-primary);
+        border-color: var(--wish-primary);
     }
 
-    @media (max-width: 767.98px) {
-        .wishlist-pagination-card {
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-            gap: 12px !important;
-            padding: 14px 10px !important;
-        }
-
-        .pagination-counter-text {
-            font-size: 12.5px !important;
-            text-align: center !important;
-            width: 100% !important;
-        }
-
-        .pagination-buttons-wrapper {
-            width: 100% !important;
-            justify-content: center !important;
-        }
-
-        .pagination-buttons-wrapper nav {
-            width: 100% !important;
-            justify-content: center !important;
-        }
-
-        .pagination-buttons-wrapper .pagination {
-            margin: 0 auto !important;
-            justify-content: center !important;
-        }
-
-        .pagination-buttons-wrapper .page-link {
-            font-size: 12px !important;
-            padding: 4px 9px !important;
-            min-width: 32px !important;
-            height: 32px !important;
-        }
-    }
-
-    /* ================= SHIMMER SKELETON GLOW ANIMATION ================= */
+    /* Shimmer Skeleton Glow Animation */
     .sc-skel-glow {
         background: #f1f5f9;
         background-image: linear-gradient(90deg, #f1f5f9 0px, #e2e8f0 50px, #f1f5f9 100px);
@@ -177,136 +258,172 @@
         100% { background-position: 300px 0; }
     }
 
-    /* ================= MOBILE COMPACT GRID ================= */
+    /* Bengali digit protection */
+    .bn-digit {
+        font-weight: 700 !important;
+    }
+
+    /* Small Screen Optimization (iPhone SE, 320px–575px) */
     @media (max-width: 575.98px) {
-        .wishlist-compact-container {
-            padding: 12px 10px !important;
+        .wishlist-main-card-wrap {
+            padding: 16px 12px !important;
             border-radius: 14px !important;
         }
+
+        .wishlist-header-title {
+            font-size: 1.1rem !important;
+        }
+
+        .wishlist-top-controls {
+            padding: 10px 12px !important;
+        }
+
+        .wishlist-sort-select {
+            width: 100% !important;
+            min-width: 100%;
+            font-size: 12.5px;
+        }
+
+        .btn-wishlist-action {
+            padding: 5px 12px !important;
+            font-size: 11.5px !important;
+            min-height: 32px;
+        }
+
+        /* 2-Column Mobile Product Grid Tight Balance */
         .wishlist-compact-grid {
             --bs-gutter-x: 8px !important;
             --bs-gutter-y: 8px !important;
         }
         .wishlist-compact-grid .card {
             border-radius: 12px !important;
+            border: 1px solid var(--wish-card-border) !important;
         }
         .wishlist-compact-grid .card-body {
             padding: 8px !important;
         }
         .wishlist-compact-grid .card-img-top {
-            max-height: 125px !important;
+            max-height: 130px !important;
             padding: 4px !important;
         }
         .wishlist-compact-grid .card-title {
             font-size: 11.5px !important;
             margin-bottom: 2px !important;
+            line-height: 1.3;
         }
-        .wishlist-compact-grid small {
-            font-size: 10px !important;
+
+        .wishlist-pagination-card {
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 12px !important;
+            padding: 14px 10px !important;
         }
-        .wishlist-compact-grid .fs-6 {
-            font-size: 12.5px !important;
-        }
-        .wishlist-compact-grid .btn-sm {
-            padding: 4px 6px !important;
-            font-size: 10px !important;
-        }
-        .wishlist-compact-grid .btn-wishlist-toggle {
-            width: 28px !important;
-            height: 28px !important;
-            margin: 4px !important;
-        }
-        .wishlist-compact-grid .btn-wishlist-toggle i {
+
+        .pagination-counter-text {
             font-size: 12px !important;
+            width: 100% !important;
+        }
+
+        .pagination-buttons-wrapper .page-link {
+            font-size: 12px !important;
+            padding: 4px 8px !important;
+            min-width: 30px !important;
+            height: 30px !important;
         }
     }
 </style>
 
-<div class="card border-0 shadow-sm rounded-4 p-3 p-md-4 bg-white wishlist-compact-container" id="wishlist-main-card">
-    
-    <!-- Top Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-1" style="font-size: 1.15rem;">
-                <i class="fas fa-heart text-warning" style="color: #ff8a00 !important;"></i> My Wishlist
-            </h5>
-            <p class="text-muted small mb-0" style="font-size: 11.5px;">Saved products to purchase later</p>
-        </div>
-
+<div class="wishlist-page-root">
+    <div class="wishlist-main-card-wrap wishlist-compact-container" id="wishlist-main-card">
+        
         @php
             $hasItems = isset($wishlistProducts) && $wishlistProducts->total() > 0;
         @endphp
 
-        <div class="d-flex align-items-center gap-2">
-            <!-- 1-Click Clear All Wishlist Button -->
-            <button type="button" 
-                    id="btn-clear-all-wishlist" 
-                    class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold text-nowrap {{ $hasItems ? '' : 'd-none' }}" 
-                    onclick="openClearWishlistModal()">
-                <i class="fas fa-trash-alt me-1"></i> Clear All
-            </button>
+        <!-- Top Header Bar -->
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2" style="border-color: var(--wish-card-border) !important;">
+            <div>
+                <h5 class="wishlist-header-title mb-1 d-flex align-items-center gap-1.5">
+                    <i class="fas fa-heart wishlist-heart-icon"></i> <span>My Wishlist</span>
+                </h5>
+                <p class="wishlist-header-subtitle mb-0">Saved products to purchase later</p>
+            </div>
 
-            <a href="{{ route('shop') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold text-nowrap">
-                <i class="fas fa-plus me-1"></i> Add Items
+            <div class="d-flex align-items-center gap-2">
+                <!-- 1-Click Clear All Wishlist Button -->
+                <button type="button" 
+                        id="btn-clear-all-wishlist" 
+                        class="btn btn-wishlist-action btn-wishlist-clear {{ $hasItems ? '' : 'd-none' }}" 
+                        onclick="openClearWishlistModal()">
+                    <i class="fas fa-trash-alt"></i> <span>Clear All</span>
+                </button>
+
+                <a href="{{ route('shop') }}" class="btn btn-wishlist-action btn-wishlist-add">
+                    <i class="fas fa-plus"></i> <span>Add Items</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- AJAX Filter & Sorting Bar -->
+        <div class="wishlist-top-controls d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 {{ $hasItems ? '' : 'd-none' }}" id="wishlist-controls-bar">
+            <div>
+                <span id="wishlist-showing-text" class="wishlist-showing-label bn-digit">
+                    Showing {{ $wishlistProducts->firstItem() ?? 0 }} to {{ $wishlistProducts->lastItem() ?? 0 }} of {{ $wishlistProducts->total() ?? 0 }} items
+                </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 align-self-stretch align-self-sm-auto">
+                <label for="wishlistSortFilter" class="small fw-bold text-nowrap mb-0 d-none d-sm-inline" style="color: var(--wish-text);">
+                    <i class="fas fa-sort-amount-down me-1" style="color: var(--wish-primary);"></i> Sort by:
+                </label>
+                <select id="wishlistSortFilter" class="form-select form-select-sm wishlist-sort-select flex-grow-1 flex-sm-grow-0" onchange="applyAjaxWishlistFilter()">
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest Items</option>
+                    <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                    <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                    <option value="sale" {{ request('sort') == 'sale' ? 'selected' : '' }}>On Sale Deals</option>
+                    <option value="in_stock" {{ request('sort') == 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Products Grid Container -->
+        <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-xl-3 g-2 g-md-3 wishlist-compact-grid {{ $hasItems ? '' : 'd-none' }}" id="wishlist-grid-container">
+            @if($hasItems)
+                @foreach($wishlistProducts as $product)
+                    <div class="col product-card-wrap" id="wishlist-col-{{ $product->id }}">
+                        <x-product-card :product="$product" style="modern" btnStyle="pill" />
+                    </div>
+                @endforeach
+            @endif
+        </div>
+
+        <!-- Empty Wishlist Fallback Message -->
+        <div class="text-center py-5 {{ $hasItems ? 'd-none' : '' }}" id="wishlist-empty-state">
+            <i class="far fa-heart fa-3x mb-3 wishlist-heart-icon opacity-50"></i>
+            <h6 class="fw-bold mb-1" style="color: var(--wish-title);">Your wishlist is empty</h6>
+            <p class="small mb-3" style="color: var(--wish-text);">Save items you love by clicking the heart icon while browsing.</p>
+            <a href="{{ route('shop') }}" class="btn btn-sm rounded-pill px-4 py-2 fw-bold shadow-sm" style="background-color: var(--wish-primary); color: #ffffff;">
+                <i class="fas fa-shopping-bag me-1"></i> Explore Products
             </a>
         </div>
-    </div>
 
-    <!-- AJAX Filter & Sorting Bar -->
-    <div class="wishlist-top-controls d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 {{ $hasItems ? '' : 'd-none' }}" id="wishlist-controls-bar">
-        <div>
-            <span id="wishlist-showing-text" class="text-muted small fw-semibold">
-                Showing {{ $wishlistProducts->firstItem() ?? 0 }} to {{ $wishlistProducts->lastItem() ?? 0 }} of {{ $wishlistProducts->total() ?? 0 }} items
-            </span>
+        <!-- Pagination Container -->
+        <div id="wishlist-pagination-container">
+            @if($hasItems && $wishlistProducts->hasPages())
+                <div class="wishlist-pagination-card">
+                    <p class="pagination-counter-text bn-digit" id="wishlist-pagination-bottom-summary">
+                        Showing {{ $wishlistProducts->firstItem() }} to {{ $wishlistProducts->lastItem() }} of {{ $wishlistProducts->total() }} results
+                    </p>
+                    <div class="pagination-buttons-wrapper">
+                        {{ $wishlistProducts->onEachSide(1)->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            @endif
         </div>
 
-        <div class="d-flex align-items-center gap-2 align-self-stretch align-self-sm-auto">
-            <label for="wishlistSortFilter" class="small fw-bold text-muted text-nowrap mb-0 d-none d-sm-inline">
-                <i class="fas fa-sort-amount-down text-primary me-1"></i> Sort by:
-            </label>
-            <select id="wishlistSortFilter" class="form-select form-select-sm wishlist-sort-select flex-grow-1 flex-sm-grow-0" onchange="applyAjaxWishlistFilter()">
-                <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest Items</option>
-                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
-                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
-                <option value="sale" {{ request('sort') == 'sale' ? 'selected' : '' }}>On Sale Deals</option>
-                <option value="in_stock" {{ request('sort') == 'in_stock' ? 'selected' : '' }}>In Stock Only</option>
-            </select>
-        </div>
     </div>
-
-    <!-- Products Grid Container -->
-    <div class="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-xl-3 g-2 g-md-3 wishlist-compact-grid {{ $hasItems ? '' : 'd-none' }}" id="wishlist-grid-container">
-        @if($hasItems)
-            @foreach($wishlistProducts as $product)
-                <div class="col product-card-wrap" id="wishlist-col-{{ $product->id }}">
-                    <x-product-card :product="$product" style="modern" btnStyle="pill" />
-                </div>
-            @endforeach
-        @endif
-    </div>
-
-    <!-- Empty Wishlist Fallback Message -->
-    <div class="text-center py-5 text-muted {{ $hasItems ? 'd-none' : '' }}" id="wishlist-empty-state">
-        <i class="far fa-heart fa-3x mb-3 text-warning opacity-50" style="color: #ff8a00 !important;"></i>
-        <h6 class="fw-bold text-dark">Your wishlist is empty</h6>
-        <p class="small text-secondary mb-3">Save items you love by clicking the heart icon while browsing.</p>
-        <a href="{{ route('shop') }}" class="btn btn-primary rounded-pill px-4 btn-sm fw-bold shadow-sm">Explore Products</a>
-    </div>
-
-    <!-- Pagination Container -->
-    <div id="wishlist-pagination-container">
-        @if($hasItems && $wishlistProducts->hasPages())
-            <div class="wishlist-pagination-card">
-                <p class="pagination-counter-text" id="wishlist-pagination-bottom-summary">
-                    Showing {{ $wishlistProducts->firstItem() }} to {{ $wishlistProducts->lastItem() }} of {{ $wishlistProducts->total() }} results
-                </p>
-                <div class="pagination-buttons-wrapper">
-                    {{ $wishlistProducts->onEachSide(1)->links('pagination::bootstrap-5') }}
-                </div>
-            </div>
-        @endif
-    </div>
-
 </div>
 
 <!-- Custom UI Clear Confirmation Modal -->
@@ -369,7 +486,6 @@
         .then(data => {
             if (btnEl) btnEl.disabled = false;
 
-            // Modal hide
             const modalEl = document.getElementById('clearWishlistModal');
             if (modalEl && window.bootstrap && bootstrap.Modal) {
                 const modal = bootstrap.Modal.getInstance(modalEl);
@@ -395,7 +511,6 @@
                 const emptyState = document.getElementById('wishlist-empty-state');
                 if (emptyState) emptyState.classList.remove('d-none');
 
-                // Header Saved Counter Badge Reset
                 const badge = document.getElementById('wishlist-counter-badge');
                 if (badge) {
                     badge.innerText = '0';

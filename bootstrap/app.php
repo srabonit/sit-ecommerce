@@ -12,19 +12,29 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Middleware alias mapping[cite: 16]
+        // Middleware alias mapping
         $middleware->alias([
-            'admin'            => \App\Http\Middleware\AdminMiddleware::class,
-            'check.permission' => \App\Http\Middleware\CheckPermission::class,
-            'branch.scope'     => \App\Http\Middleware\EnsureBranchAccess::class,
+            'admin'             => \App\Http\Middleware\AdminMiddleware::class,
+            'check.permission'  => \App\Http\Middleware\CheckPermission::class,
+            'branch.scope'      => \App\Http\Middleware\EnsureBranchAccess::class,
+            'security.firewall' => \App\Http\Middleware\SecurityFirewallMiddleware::class,
+            'security.tracker'  => \App\Http\Middleware\SecurityActivityTrackerMiddleware::class,
         ]);
 
         // Global Web Middleware Group
         $middleware->web(append: [
+            \App\Http\Middleware\SecurityFirewallMiddleware::class,
             \App\Http\Middleware\TrackUserSession::class,
+            \App\Http\Middleware\SecurityActivityTrackerMiddleware::class,
         ]);
 
-        // CSRF Token Exceptions[cite: 16]
+        // Global API Middleware Group
+        $middleware->api(append: [
+            \App\Http\Middleware\SecurityFirewallMiddleware::class,
+            \App\Http\Middleware\SecurityActivityTrackerMiddleware::class,
+        ]);
+
+        // CSRF Token Exceptions
         $middleware->validateCsrfTokens(except: [
             '/payment/sslcommerz/*',
             '/payment/shurjopay/*',

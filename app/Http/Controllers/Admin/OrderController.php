@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\DigitalProductDeliveryMail;
+use App\Models\SmsSetting;
 use App\Services\DigitalProductService;
 use App\Services\CourierService;
 use App\Services\PaymentTransactionService;
 use App\Services\InventoryService;
+use App\Services\DiscountEngineService;
+use App\Services\TaxEngineService;
+use App\Services\Sms\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +20,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Throwable;
 
 class OrderController extends Controller
 {
@@ -27,18 +32,42 @@ class OrderController extends Controller
     {
         $baseQuery = DB::table('orders');
 
+        // Dynamic Schema Detection to prevent SQL 1054 Column Not Found Errors
+        $hasOrderSource = Schema::hasColumn('orders', 'order_source');
+        $hasOrderType   = Schema::hasColumn('orders', 'order_type');
+        $hasIsPos       = Schema::hasColumn('orders', 'is_pos');
+        $hasPosOrder    = Schema::hasColumn('orders', 'pos_order');
+        $hasBranchId    = Schema::hasColumn('orders', 'branch_id');
+
         // 1. Order Source filter (All, Web/Online Order, POS Order, Manual Order)
         if ($request->filled('order_source') && $request->order_source !== 'all') {
             $source = strtolower($request->order_source);
-            $hasOrderSource = Schema::hasColumn('orders', 'order_source');
-            $hasOrderType   = Schema::hasColumn('orders', 'order_type');
 
             if ($source === 'pos') {
-                $baseQuery->where(function ($q) use ($hasOrderSource, $hasOrderType) {
+                $baseQuery->where(function ($q) use ($hasOrderSource, $hasOrderType, $hasIsPos, $hasPosOrder, $hasBranchId) {
+                    $matched = false;
                     if ($hasOrderSource) {
-                        $q->where('order_source', 'pos');
-                    } elseif ($hasOrderType) {
-                        $q->where('order_type', 'pos');
+                        $q->orWhere('order_source', 'pos');
+                        $matched = true;
+                    }
+                    if ($hasOrderType) {
+                        $q->orWhere('order_type', 'pos');
+                        $matched = true;
+                    }
+                    if ($hasIsPos) {
+                        $q->orWhere('is_pos', 1);
+                        $matched = true;
+                    }
+                    if ($hasPosOrder) {
+                        $q->orWhere('pos_order', 1);
+                        $matched = true;
+                    }
+                    if (!$matched && $hasBranchId) {
+                        $q->whereNotNull('branch_id');
+                        $matched = true;
+                    }
+                    if (!$matched) {
+                        $q->whereRaw('0 = 1');
                     }
                 });
             } elseif ($source === 'manual') {
@@ -50,7 +79,7 @@ class OrderController extends Controller
                     }
                 });
             } elseif ($source === 'web' || $source === 'online') {
-                $baseQuery->where(function ($q) use ($hasOrderSource, $hasOrderType) {
+                $baseQuery->where(function ($q) use ($hasOrderSource, $hasOrderType, $hasIsPos, $hasPosOrder, $hasBranchId) {
                     if ($hasOrderSource) {
                         $q->where(function ($sq) {
                             $sq->whereNull('order_source')
@@ -60,8 +89,15 @@ class OrderController extends Controller
                     } elseif ($hasOrderType) {
                         $q->where(function ($sq) {
                             $sq->whereNull('order_type')
-                               ->orWhere('order_type', 'online');
+                               ->orWhere('order_type', 'online')
+                               ->orWhere('order_type', 'web');
                         });
+                    } elseif ($hasIsPos) {
+                        $q->where(function ($sq) {
+                            $sq->whereNull('is_pos')->orWhere('is_pos', 0);
+                        });
+                    } elseif ($hasBranchId) {
+                        $q->whereNull('branch_id');
                     }
                 });
             }
@@ -242,9 +278,18 @@ class OrderController extends Controller
             }
         }
 
-        // 8. Filter Summary
+        // 8. Filter Summary (Safe calculation for all tax columns)
         $summaryQuery   = clone $query;
         $totalAmountSum = (float) $summaryQuery->sum('grand_total');
+
+        $totalTaxSum = 0.00;
+        if (Schema::hasColumn('orders', 'tax_amount')) {
+            $totalTaxSum = (float) (clone $query)->sum('tax_amount');
+        } elseif (Schema::hasColumn('orders', 'product_tax_amount')) {
+            $totalTaxSum = (float) (clone $query)->sum('product_tax_amount');
+        } elseif (Schema::hasColumn('orders', 'tax')) {
+            $totalTaxSum = (float) (clone $query)->sum('tax');
+        }
 
         if (Schema::hasColumn('orders', 'paid_amount')) {
             $totalPaidSum = (float) (clone $query)->sum(DB::raw("
@@ -313,6 +358,7 @@ class OrderController extends Controller
                     'counts'          => $counts,
                     'summary'         => [
                         'total_amount' => number_format($totalAmountSum, 2),
+                        'total_tax'    => number_format($totalTaxSum, 2),
                         'total_paid'   => number_format($totalPaidSum, 2),
                         'total_due'    => number_format($totalDueSum, 2),
                     ]
@@ -326,6 +372,7 @@ class OrderController extends Controller
             'orders',
             'counts',
             'totalAmountSum',
+            'totalTaxSum',
             'totalPaidSum',
             'totalDueSum',
             'perPage',
@@ -361,6 +408,7 @@ class OrderController extends Controller
             'Order Status',
             'Product Subtotal',
             'Delivery Charge',
+            'VAT / Tax (BDT)',
             'Order Total (BDT)',
             'Paid Amount (BDT)',
             'Due Amount (BDT)'
@@ -379,6 +427,16 @@ class OrderController extends Controller
                 $orderDue  = max(0, ($order->grand_total ?? 0) - $orderPaid);
                 $pSubtotal = (float)($order->product_subtotal ?? ($order->subtotal ?? 0));
                 $dCharge   = (float)($order->delivery_charge ?? ($order->shipping_charge ?? 0));
+                $taxVal    = (float)($order->tax_amount ?? ($order->product_tax_amount ?? ($order->tax ?? 0)));
+
+                $channel = 'WEB';
+                if (!empty($order->order_source)) {
+                    $channel = strtoupper($order->order_source);
+                } elseif (!empty($order->order_type)) {
+                    $channel = strtoupper($order->order_type);
+                } elseif (!empty($order->is_pos) || !empty($order->pos_order) || !empty($order->branch_id)) {
+                    $channel = 'POS';
+                }
 
                 fputcsv($file, [
                     '#' . $order->id,
@@ -387,7 +445,7 @@ class OrderController extends Controller
                     $order->shipping_name ?? ($order->customer_name ?? ($order->name ?? 'Guest Customer')),
                     $order->shipping_phone ?? ($order->customer_phone ?? ($order->phone ?? 'N/A')),
                     $order->shipping_address ?? ($order->customer_address ?? ($order->address ?? '')),
-                    strtoupper($order->order_source ?? ($order->order_type ?? 'WEB')),
+                    $channel,
                     $order->courier_name ?? 'Not Assigned',
                     $order->courier_tracking_id ?? ($order->tracking_code ?? ($order->parcel_id ?? '')),
                     strtoupper($order->payment_method ?? 'COD'),
@@ -395,6 +453,7 @@ class OrderController extends Controller
                     strtoupper(str_replace('_', ' ', $order->order_status ?? 'PENDING')),
                     number_format($pSubtotal, 2, '.', ''),
                     number_format($dCharge, 2, '.', ''),
+                    number_format($taxVal, 2, '.', ''),
                     number_format($order->grand_total ?? 0, 2, '.', ''),
                     number_format($orderPaid, 2, '.', ''),
                     number_format($orderDue, 2, '.', ''),
@@ -403,7 +462,7 @@ class OrderController extends Controller
 
             fputcsv($file, []);
             fputcsv($file, [
-                'SUMMARY TOTALS', '', '', '', '', '', '', '', '', '', '', '', '',
+                'SUMMARY TOTALS', '', '', '', '', '', '', '', '', '', '', '', '', '',
                 'TOTAL STATS:',
                 number_format($totalAmount, 2, '.', '') . ' BDT',
                 number_format($totalPaid, 2, '.', '') . ' BDT',
@@ -426,10 +485,11 @@ class OrderController extends Controller
             return redirect()->route('admin.order.online')->with('error', 'Order not found.');
         }
 
-        $itemsQuery = DB::table('order_items')->where('order_items.order_id', $order->id);
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+        $itemsQuery = DB::table($itemsTable)->where("{$itemsTable}.order_id", $order->id);
 
-        if (Schema::hasTable('product_variants') && Schema::hasColumn('order_items', 'variant_id')) {
-            $selectFields = ['order_items.*'];
+        if (Schema::hasTable('product_variants') && Schema::hasColumn($itemsTable, 'variant_id')) {
+            $selectFields = ["{$itemsTable}.*"];
 
             if (Schema::hasColumn('product_variants', 'color')) {
                 $selectFields[] = 'product_variants.color as pv_color';
@@ -444,7 +504,7 @@ class OrderController extends Controller
                 $selectFields[] = 'product_variants.sku as pv_sku';
             }
 
-            $itemsQuery->leftJoin('product_variants', 'order_items.variant_id', '=', 'product_variants.id')
+            $itemsQuery->leftJoin('product_variants', "{$itemsTable}.variant_id", '=', 'product_variants.id')
                 ->select($selectFields);
         }
 
@@ -466,7 +526,51 @@ class OrderController extends Controller
     }
 
     /**
-     * 3. Status update, Stock Deduction/Restoration, Transaction Sync, Courier Sync & Delivery Emails
+     * Automated Tax Reversal Logger
+     */
+    protected function recordTaxAdjustment(int $orderId, string $type, string $reason, ?float $customAmount = null): void
+    {
+        if (!Schema::hasTable('tax_adjustments')) {
+            return;
+        }
+
+        try {
+            $order = DB::table('orders')->where('id', $orderId)->first();
+            if (!$order) return;
+
+            $origTax = (float)($order->tax_amount ?? ($order->product_tax_amount ?? ($order->tax ?? 0.0)));
+            if ($origTax <= 0) return;
+
+            $alreadyReversed = DB::table('tax_adjustments')
+                ->where('order_id', $orderId)
+                ->where('adjustment_type', $type)
+                ->exists();
+
+            if ($alreadyReversed && $type !== 'exchange') {
+                return;
+            }
+
+            $netTaxChange = !is_null($customAmount) ? (float)$customAmount : $origTax;
+
+            DB::table('tax_adjustments')->insert([
+                'order_id'            => $orderId,
+                'adjustment_type'     => $type,
+                'original_tax_amount' => $origTax,
+                'adjusted_tax_amount' => max(0, $origTax - $netTaxChange),
+                'net_tax_change'      => $netTaxChange,
+                'reason'              => $reason,
+                'reference_no'        => $order->invoice_no ?? ('ORD-' . $orderId),
+                'created_by'          => auth()->id(),
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Tax adjustment record failed for Order #{$orderId}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * 3. Status update, Stock Deduction/Restoration, Transaction Sync, Courier Sync, Discount Restoration & Delivery Emails/SMS
      */
     public function updateStatus(Request $request, $id)
     {
@@ -491,7 +595,8 @@ class OrderController extends Controller
         $targetPaymentStatus  = $explicitPayInput ?: $currentPaymentStatus;
         $targetOrderStatus    = strtolower(trim($request->order_status));
 
-        $orderItems = DB::table('order_items')->where('order_id', $order->id)->get();
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+        $orderItems = DB::table($itemsTable)->where('order_id', $order->id)->get();
         $hasPhysical = false;
         $hasDigital = false;
 
@@ -553,10 +658,22 @@ class OrderController extends Controller
 
             if ($targetOrderStatus === 'cancelled' && $currentOrderStatus !== 'cancelled') {
                 $this->restoreOrderStock($order, 'cancelled', $request->admin_note ?? 'Order cancelled');
+                
+                if (class_exists(DiscountEngineService::class)) {
+                    DiscountEngineService::restoreOrderDiscounts((int)$id, $request->admin_note ?? 'Order cancelled');
+                }
+
+                $this->recordTaxAdjustment((int)$id, 'cancellation', $request->admin_note ?? 'Order cancelled');
             }
 
             if (in_array($targetOrderStatus, ['returned', 'return']) && !in_array($currentOrderStatus, ['returned', 'return'])) {
                 $this->restoreOrderStock($order, 'returned', $request->admin_note ?? 'Order returned');
+
+                if (class_exists(DiscountEngineService::class)) {
+                    DiscountEngineService::restoreOrderDiscounts((int)$id, $request->admin_note ?? 'Order returned');
+                }
+
+                $this->recordTaxAdjustment((int)$id, 'refund', $request->admin_note ?? 'Order returned');
             }
         } catch (\Throwable $stockEx) {
             Log::error("Stock transition failed for Order #{$id} to {$targetOrderStatus}: " . $stockEx->getMessage());
@@ -646,6 +763,16 @@ class OrderController extends Controller
 
         $updatedOrder = DB::table('orders')->where('id', $id)->first();
 
+        // ---------------------------------------------------------
+        // 1. AUTOMATED STATUS SMS DISPATCH (Lifecycle Trigger)
+        // ---------------------------------------------------------
+        if ($targetOrderStatus !== $currentOrderStatus) {
+            $this->dispatchOrderStatusSms($updatedOrder, $targetOrderStatus, false);
+        }
+
+        // ---------------------------------------------------------
+        // 2. AUTOMATED STATUS EMAIL NOTIFICATION (Controlled)
+        // ---------------------------------------------------------
         $userEmail = $updatedOrder->customer_email ?? ($updatedOrder->shipping_email ?? ($updatedOrder->email ?? null));
         if (empty($userEmail) && !empty($updatedOrder->user_id)) {
             $u = DB::table('users')->where('id', $updatedOrder->user_id)->first();
@@ -676,7 +803,23 @@ class OrderController extends Controller
             }
         }
 
-        if ($isValidEmail && !$digitalMailSent) {
+        // Strict Global and Order Email Switches Check from Database
+        $isGlobalEmailEnabled = true;
+        if (Schema::hasTable('sms_settings')) {
+            $val = DB::table('sms_settings')->where('key', 'global_email_enabled')->value('value');
+            if ($val !== null && in_array(strtolower(trim((string)$val)), ['0', 'false', 'off', 'no'], true)) {
+                $isGlobalEmailEnabled = false;
+            }
+        }
+        $isOrderEmailEnabled = true;
+        if (Schema::hasTable('sms_settings')) {
+            $val = DB::table('sms_settings')->where('key', 'auto_email_order_status')->value('value');
+            if ($val !== null && in_array(strtolower(trim((string)$val)), ['0', 'false', 'off', 'no'], true)) {
+                $isOrderEmailEnabled = false;
+            }
+        }
+
+        if ($isValidEmail && !$digitalMailSent && $isGlobalEmailEnabled && $isOrderEmailEnabled && ($targetOrderStatus !== $currentOrderStatus)) {
             try {
                 $mailData = [
                     'invoice_no'   => $updatedOrder->invoice_no ?? $updatedOrder->id,
@@ -718,7 +861,7 @@ class OrderController extends Controller
     }
 
     /**
-     * 4. Courier Dispatch o Tracking Code Save (Automated API + Safe Fallback + Courier Booking Table Sync)
+     * 4. Courier Dispatch o Tracking Code Save (Auto triggers Order Shipped SMS)
      */
     public function sendToCourier(Request $request, $id)
     {
@@ -801,6 +944,10 @@ class OrderController extends Controller
             ]);
         }
 
+        // Auto Trigger 'order_shipped' SMS with courier tracking details
+        $updatedOrder = DB::table('orders')->where('id', $id)->first();
+        $this->dispatchOrderStatusSms($updatedOrder, 'shipped', false);
+
         $msg = "Order #{$id} dispatched to {$courierName}! Tracking Code: {$trackingCode}" . ($apiSuccessMsg ? " ({$apiSuccessMsg})" : "");
 
         if ($request->ajax()) {
@@ -816,7 +963,162 @@ class OrderController extends Controller
     }
 
     /**
-     * 5. Invoice Print View
+     * Dedicated Order Status SMS Dispatcher (Supporting all 10 Order Lifecycle Statuses with Switch Control)
+     */
+    public function dispatchOrderStatusSms($order, string $status, bool $isManual = false): array
+    {
+        try {
+            $orderObj = is_array($order) ? (object) $order : $order;
+
+            $phone = $orderObj->shipping_phone ?? ($orderObj->customer_phone ?? ($orderObj->phone ?? null));
+            if (empty($phone)) {
+                return ['success' => false, 'message' => 'Customer phone number not available.'];
+            }
+
+            // Map all 10 order lifecycle statuses to exact template keys
+            $templateKeyMap = [
+                'pending'            => 'order_placed',
+                'received'           => 'order_received',
+                'confirmed'          => 'order_confirmed',
+                'processing'         => 'order_processing',
+                'packed'             => 'order_processing',
+                'shipped'            => 'order_shipped',
+                'attempt_to_deliver' => 'order_attempt_to_deliver',
+                'attempted'          => 'order_attempt_to_deliver',
+                'attempt_delivery'   => 'order_attempt_to_deliver',
+                'delivered'          => 'order_delivered',
+                'completed'          => 'order_delivered',
+                'exchange'           => 'order_exchange',
+                'exchanged'          => 'order_exchange',
+                'exchange_requested' => 'order_exchange',
+                'returned'           => 'order_returned',
+                'return'             => 'order_returned',
+                'cancelled'          => 'order_cancelled',
+                'cancel'             => 'order_cancelled',
+            ];
+
+            $normalizedStatus = strtolower(trim($status));
+            $templateKey = $templateKeyMap[$normalizedStatus] ?? null;
+
+            if (!$templateKey) {
+                return ['success' => false, 'message' => "No SMS template mapped for status '{$status}'."];
+            }
+
+            // Map template key to direct database switch in sms_settings
+            $settingKeyMap = [
+                'order_placed'             => 'auto_sms_order_placed_customer',
+                'order_received'           => 'auto_sms_order_received',
+                'order_confirmed'          => 'auto_sms_order_confirmed',
+                'order_processing'         => 'auto_sms_order_processing',
+                'order_shipped'            => 'auto_sms_order_shipped',
+                'order_attempt_to_deliver' => 'auto_sms_order_attempt_to_deliver',
+                'order_delivered'          => 'auto_sms_order_delivered',
+                'order_exchange'           => 'auto_sms_order_exchange',
+                'order_returned'           => 'auto_sms_order_returned',
+                'order_cancelled'          => 'auto_sms_order_cancelled',
+            ];
+
+            // 1. Status-specific switch validation: Strict Database Check
+            if (!$isManual) {
+                $settingKey = $settingKeyMap[$templateKey] ?? "auto_sms_{$templateKey}";
+                $isAllowed = true;
+
+                if (Schema::hasTable('sms_settings')) {
+                    $val = DB::table('sms_settings')->where('key', $settingKey)->value('value');
+                    if ($val !== null) {
+                        $isAllowed = !in_array(strtolower(trim((string)$val)), ['0', 'false', 'off', 'no'], true);
+                    }
+                }
+
+                if (!$isAllowed) {
+                    return ['success' => false, 'message' => "Automatic SMS notification for '{$status}' is disabled in settings."];
+                }
+            } else {
+                // Manual SMS master switch check
+                $isManualAllowed = true;
+                if (Schema::hasTable('sms_settings')) {
+                    $val = DB::table('sms_settings')->where('key', 'manual_order_sms_enabled')->value('value');
+                    if ($val !== null) {
+                        $isManualAllowed = !in_array(strtolower(trim((string)$val)), ['0', 'false', 'off', 'no'], true);
+                    }
+                }
+
+                if (!$isManualAllowed) {
+                    return ['success' => false, 'message' => 'Manual SMS trigger is disabled in SMS settings.'];
+                }
+            }
+
+            if (!class_exists(SmsService::class)) {
+                return ['success' => false, 'message' => 'SmsService is not loaded.'];
+            }
+
+            /** @var SmsService $smsService */
+            $smsService = app(SmsService::class);
+
+            $customerName = $orderObj->shipping_name ?? ($orderObj->customer_name ?? ($orderObj->name ?? 'Valued Customer'));
+            $invoiceNo    = $orderObj->invoice_no ?? $orderObj->id;
+            $orderTotal   = number_format((float) ($orderObj->grand_total ?? 0), 2);
+            $courierName  = $orderObj->courier_name ?? 'Courier';
+            $trackingCode = $orderObj->courier_tracking_id ?? ($orderObj->parcel_id ?? ($orderObj->tracking_code ?? 'N/A'));
+            $storeName    = config('app.name', 'SHOP NOW BD');
+
+            $variables = [
+                'store_name'    => $storeName,
+                'website_url'   => url('/'),
+                'customer_name' => $customerName,
+                'order_id'      => $orderObj->id,
+                'invoice_no'    => $invoiceNo,
+                'order_total'   => $orderTotal,
+                'order_status'  => strtoupper(str_replace('_', ' ', $status)),
+                'courier_name'  => $courierName,
+                'tracking_code' => $trackingCode,
+            ];
+
+            $options = [
+                'order_id'       => $orderObj->id,
+                'user_id'        => $orderObj->user_id ?? null,
+                'bypass_global'  => $isManual, // Manual triggers can bypass global pause
+                'bypass_setting' => $isManual,
+            ];
+
+            // Send via dynamic template engine (SmsService handles fallbacks internally)
+            $res = $smsService->sendTemplate($templateKey, $phone, $variables, $options);
+
+            return [
+                'success'    => (bool) ($res['status'] ?? false),
+                'message'    => $res['message'] ?? 'SMS processed.',
+                'message_id' => $res['message_id'] ?? null,
+                'log_id'     => $res['log_id'] ?? null,
+            ];
+        } catch (Throwable $e) {
+            Log::error("dispatchOrderStatusSms error for Order #" . ($order->id ?? 'unknown') . ": " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Manual 1-Click Status SMS Trigger from Order Management Table/View (AJAX)
+     */
+    public function sendManualSms(Request $request, $id)
+    {
+        $order = DB::table('orders')->where('id', $id)->first();
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+
+        $res = $this->dispatchOrderStatusSms($order, $order->order_status ?? 'pending', true);
+
+        return response()->json([
+            'success' => $res['success'],
+            'message' => $res['success'] 
+                ? "SMS sent successfully to " . ($order->shipping_phone ?? $order->customer_phone ?? $order->phone)
+                : "SMS delivery failed: " . ($res['message'] ?? 'Check SMS settings/balance'),
+            'log_id'  => $res['log_id'] ?? null,
+        ], $res['success'] ? 200 : 422);
+    }
+
+    /**
+     * 5. Invoice Print View (Mushak 6.3 / BIN Supported)
      */
     public function printInvoice($id)
     {
@@ -825,12 +1127,13 @@ class OrderController extends Controller
             abort(404, 'Order not found');
         }
 
-        $orderItems = DB::table('order_items')->where('order_id', $order->id)->get();
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+        $orderItems = DB::table($itemsTable)->where('order_id', $order->id)->get();
         return view('admin.orders.invoice', compact('order', 'orderItems'));
     }
 
     /**
-     * 6. Single Order Delete (Safely cleans stock & bookings)
+     * 6. Single Order Delete (Safely cleans stock, bookings, adjustments & restores discounts)
      */
     public function destroy(Request $request, $id)
     {
@@ -839,14 +1142,24 @@ class OrderController extends Controller
             try {
                 if (!in_array(strtolower($order->order_status ?? ''), ['cancelled', 'returned', 'return'])) {
                     $this->restoreOrderStock($order, 'cancelled', "Stock cancelled on permanent Order #{$id} deletion");
+                    
+                    if (class_exists(DiscountEngineService::class)) {
+                        DiscountEngineService::restoreOrderDiscounts((int)$id, "Order #{$id} deleted");
+                    }
+
+                    $this->recordTaxAdjustment((int)$id, 'cancellation', "Order #{$id} deleted permanently");
                 }
             } catch (\Throwable $e) {
-                Log::error("Stock cancellation on deletion failed for Order #{$id}: " . $e->getMessage());
+                Log::error("Stock/Discount cancellation on deletion failed for Order #{$id}: " . $e->getMessage());
             }
 
-            DB::table('order_items')->where('order_id', $id)->delete();
+            $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+            DB::table($itemsTable)->where('order_id', $id)->delete();
             if (Schema::hasTable('courier_bookings')) {
                 DB::table('courier_bookings')->where('order_id', $id)->delete();
+            }
+            if (Schema::hasTable('tax_adjustments')) {
+                DB::table('tax_adjustments')->where('order_id', $id)->delete();
             }
             DB::table('orders')->where('id', $id)->delete();
         }
@@ -862,7 +1175,7 @@ class OrderController extends Controller
     }
 
     /**
-     * 7. Bulk Action Handler (Includes Enterprise Processing, Restocking, and Cancellation)
+     * 7. Bulk Action Handler (Fully Linked to Automated SMS Notifications)
      */
     public function bulkAction(Request $request)
     {
@@ -880,13 +1193,18 @@ class OrderController extends Controller
                 if ($order && !in_array(strtolower($order->order_status ?? ''), ['cancelled', 'returned', 'return'])) {
                     try {
                         $this->restoreOrderStock($order, 'cancelled', "Bulk deletion of Order #{$oId}");
+                        if (class_exists(DiscountEngineService::class)) {
+                            DiscountEngineService::restoreOrderDiscounts((int)$oId, "Bulk deletion of Order #{$oId}");
+                        }
+                        $this->recordTaxAdjustment((int)$oId, 'cancellation', "Bulk deletion of Order #{$oId}");
                     } catch (\Throwable $e) {
-                        Log::error("Bulk delete stock cancellation failed for Order #{$oId}: " . $e->getMessage());
+                        Log::error("Bulk delete stock/discount cancellation failed for Order #{$oId}: " . $e->getMessage());
                     }
                 }
             }
 
-            DB::table('order_items')->whereIn('order_id', $orderIds)->delete();
+            $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+            DB::table($itemsTable)->whereIn('order_id', $orderIds)->delete();
             if (Schema::hasTable('courier_bookings')) {
                 DB::table('courier_bookings')->whereIn('order_id', $orderIds)->delete();
             }
@@ -917,13 +1235,28 @@ class OrderController extends Controller
 
                     if ($newStatus === 'cancelled' && $prevStatus !== 'cancelled') {
                         $this->restoreOrderStock($orderObj, 'cancelled', "Bulk status update to cancelled");
+                        if (class_exists(DiscountEngineService::class)) {
+                            DiscountEngineService::restoreOrderDiscounts((int)$oId, "Bulk status update to cancelled");
+                        }
+                        $this->recordTaxAdjustment((int)$oId, 'cancellation', "Bulk status update to cancelled");
                     }
 
                     if (in_array($newStatus, ['returned', 'return']) && !in_array($prevStatus, ['returned', 'return'])) {
                         $this->restoreOrderStock($orderObj, 'returned', "Bulk status update to returned");
+                        if (class_exists(DiscountEngineService::class)) {
+                            DiscountEngineService::restoreOrderDiscounts((int)$oId, "Bulk status update to returned");
+                        }
+                        $this->recordTaxAdjustment((int)$oId, 'refund', "Bulk status update to returned");
                     }
                 } catch (\Throwable $stkEx) {
-                    Log::error("Bulk stock update failed for Order #{$oId} to {$newStatus}: " . $stkEx->getMessage());
+                    Log::error("Bulk stock/discount update failed for Order #{$oId} to {$newStatus}: " . $stkEx->getMessage());
+                }
+
+                // Dispatch Automated Status SMS for each updated order across all 10 lifecycle statuses
+                if ($newStatus !== $prevStatus) {
+                    $freshOrder = clone $orderObj;
+                    $freshOrder->order_status = $newStatus;
+                    $this->dispatchOrderStatusSms($freshOrder, $newStatus, false);
                 }
             }
 
@@ -960,7 +1293,7 @@ class OrderController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => count($orderIds) . ' orders updated to ' . strtoupper(str_replace('_', ' ', $newStatus))
+                    'message' => count($orderIds) . ' orders updated to ' . strtoupper(str_replace('_', ' ', $newStatus)) . ' & notifications dispatched.'
                 ]);
             }
 
@@ -976,7 +1309,6 @@ class OrderController extends Controller
 
     /**
      * Restore stock for all items in an order upon cancellation or return.
-     * Delegates to central enterprise InventoryService for strict consistency and idempotency.
      */
     protected function restoreOrderStock($order, string $newStatus, ?string $note = null): void
     {
@@ -995,7 +1327,8 @@ class OrderController extends Controller
     protected function reDeductOrderStock($order, string $newStatus): void
     {
         $refId = $order->invoice_no ?? (string)$order->id;
-        $items = DB::table('order_items')->where('order_id', $order->id)->get();
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+        $items = DB::table($itemsTable)->where('order_id', $order->id)->get();
 
         foreach ($items as $item) {
             $productId = (int) $item->product_id;
@@ -1331,7 +1664,7 @@ class OrderController extends Controller
                     ->orWhere('product_code', 'like', "%{$q}%")
                     ->orWhere('id', $q);
             })
-            ->select('id', 'title', 'sku', 'product_code', 'regular_price', 'sale_price', 'stock', 'thumbnail', 'product_type')
+            ->select('id', 'title', 'sku', 'product_code', 'regular_price', 'sale_price', 'stock', 'thumbnail', 'product_type', 'vat_type', 'vat_amount')
             ->limit(20)
             ->get();
 
@@ -1532,8 +1865,54 @@ class OrderController extends Controller
             $productSubtotal += ((float)$it['unit_price'] * (int)$it['quantity']);
         }
 
-        $grandTotal = max(0.00, ($productSubtotal + $deliveryCharge) - $discount);
-        $paidAmount = min($grandTotal, (float) $request->input('paid_amount', 0.00));
+        // Standardized Tax Calculation via TaxEngineService::calculateOrderTax()
+        $formattedCart = [];
+        foreach ($items as $idx => $it) {
+            $formattedCart[$idx] = [
+                'id'         => (int)$it['product_id'],
+                'product_id' => (int)$it['product_id'],
+                'variant_id' => !empty($it['variant_id']) ? (int)$it['variant_id'] : null,
+                'price'      => (float)$it['unit_price'],
+                'quantity'   => (int)$it['quantity'],
+            ];
+        }
+
+        $branchId = $request->filled('branch_id') 
+            ? (int)$request->branch_id 
+            : (auth()->user()->branch_id ?? null);
+
+        $taxCalc = class_exists(TaxEngineService::class)
+            ? TaxEngineService::calculateOrderTax(
+                $formattedCart,
+                $productSubtotal,
+                $discount,
+                $deliveryCharge,
+                $branchId,
+                $district,
+                null,
+                auth()->id()
+            )
+            : [
+                'is_vat_enabled'          => false,
+                'total_tax_amount'        => 0.00,
+                'product_tax_amount'      => 0.00,
+                'shipping_tax_amount'     => 0.00,
+                'taxable_product_base'    => $productSubtotal,
+                'is_tax_inclusive'        => false,
+                'product_exclusive_tax'   => 0.00,
+                'final_payable'           => max(0.00, round(($productSubtotal + $deliveryCharge) - $discount, 2)),
+                'items'                   => [],
+            ];
+
+        $exclusiveTax = (float)($taxCalc['product_exclusive_tax'] ?? 0.0) + (float)($taxCalc['shipping_tax_amount'] ?? 0.0);
+        $grandTotal = (float)($taxCalc['final_payable'] ?? max(0.00, round(($productSubtotal + $deliveryCharge + $exclusiveTax) - $discount, 2)));
+        
+        $inputPaid = (float) $request->input('paid_amount', 0.00);
+        if ($request->input('payment_status') === 'paid' && $inputPaid <= 0) {
+            $inputPaid = $grandTotal;
+        }
+
+        $paidAmount = min($grandTotal, $inputPaid);
         $dueAmount  = max(0.00, $grandTotal - $paidAmount);
 
         if ($grandTotal <= 0 || $dueAmount <= 0) {
@@ -1550,7 +1929,7 @@ class OrderController extends Controller
         $isCOD = in_array(strtolower(trim($request->payment_method)), ['cash on delivery', 'cod']);
         $expectedCOD = $isCOD ? $dueAmount : ($paymentStatus === 'paid' ? 0.00 : $dueAmount);
 
-        $safeOrderType = 'online';
+        $safeOrderType = 'manual';
         if (Schema::hasColumn('orders', 'order_type')) {
             try {
                 $colInfo = DB::select("SHOW COLUMNS FROM `orders` LIKE 'order_type'");
@@ -1565,7 +1944,7 @@ class OrderController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                $safeOrderType = 'online';
+                $safeOrderType = 'manual';
             }
         }
 
@@ -1576,9 +1955,12 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
+            $totalTaxVal = (float)($taxCalc['total_tax_amount'] ?? ($taxCalc['total_tax'] ?? 0.0));
+
             $orderData = [
                 'invoice_no'          => $invoiceNo,
                 'user_id'             => auth()->id(),
+                'branch_id'           => $branchId,
                 'subtotal'            => $productSubtotal,
                 'product_subtotal'    => $productSubtotal,
                 'grand_total'         => $grandTotal,
@@ -1610,6 +1992,14 @@ class OrderController extends Controller
                 'is_stock_deducted'   => false,
                 'is_stock_restored'   => false,
                 'is_cod_settled'      => false,
+                'tax_amount'          => $totalTaxVal,
+                'tax'                 => $totalTaxVal,
+                'total_tax'           => $totalTaxVal,
+                'product_tax_amount'  => (float)($taxCalc['product_tax_amount'] ?? $totalTaxVal),
+                'shipping_tax_amount' => (float)($taxCalc['shipping_tax_amount'] ?? 0.0),
+                'taxable_base_amount' => (float)($taxCalc['taxable_product_base'] ?? ($taxCalc['taxable_base'] ?? $productSubtotal)),
+                'is_tax_inclusive'    => (bool)($taxCalc['is_tax_inclusive'] ?? false),
+                'tax_breakdown'       => json_encode($taxCalc['items'] ?? []),
                 'admin_note'          => $adminNoteText,
                 'created_at'          => now(),
                 'updated_at'          => now(),
@@ -1623,8 +2013,9 @@ class OrderController extends Controller
             }
 
             $orderId = DB::table('orders')->insertGetId($filteredData);
+            $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
 
-            foreach ($items as $it) {
+            foreach ($items as $idx => $it) {
                 $pId = (int) $it['product_id'];
                 $vId = !empty($it['variant_id']) ? (int) $it['variant_id'] : null;
                 $qty = (int) $it['quantity'];
@@ -1654,33 +2045,55 @@ class OrderController extends Controller
 
                 InventoryService::recordOrderEstimate($pId, $vId, $qty, $invoiceNo);
 
+                $lineTax = $taxCalc['items'][$idx] ?? null;
+
                 $itemData = [
-                    'order_id'          => $orderId,
-                    'product_id'        => $pId,
-                    'product_title'     => $pTitle,
-                    'variant_id'        => $vId,
-                    'variant_title'     => $vTitle,
-                    'color'             => $color,
-                    'size'              => $size,
-                    'sku'               => $sku,
-                    'quantity'          => $qty,
-                    'unit_price'        => $unitPrice,
-                    'subtotal'          => $unitPrice * $qty,
-                    'purchase_cost'     => $purchaseCost,
-                    'cogs'              => round($purchaseCost * $qty, 2),
-                    'is_cost_estimated' => ($purchaseCost <= 0),
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
+                    'order_id'            => $orderId,
+                    'product_id'          => $pId,
+                    'product_title'       => $pTitle,
+                    'product_name'        => $pTitle,
+                    'name'                => $pTitle,
+                    'title'               => $pTitle,
+                    'variant_id'          => $vId,
+                    'variant_title'       => $vTitle,
+                    'color'               => $color,
+                    'size'                => $size,
+                    'sku'                 => $sku,
+                    'quantity'            => $qty,
+                    'qty'                 => $qty,
+                    'unit_price'          => $unitPrice,
+                    'price'               => $unitPrice,
+                    'subtotal'            => $unitPrice * $qty,
+                    'total'               => $unitPrice * $qty,
+                    'total_price'         => $unitPrice * $qty,
+                    'tax_rate'            => (float)($lineTax['tax_rate'] ?? 0.0),
+                    'tax_amount'          => (float)($lineTax['tax_amount'] ?? 0.0),
+                    'taxable_base_amount' => (float)($lineTax['calculated_base'] ?? ($lineTax['net_taxable_base'] ?? ($unitPrice * $qty))),
+                    'is_tax_inclusive'    => (bool)($lineTax['is_inclusive'] ?? false),
+                    'is_inclusive'        => (bool)($lineTax['is_inclusive'] ?? false),
+                    'tax_rule_id'         => $lineTax['tax_rule_id'] ?? null,
+                    'tax_class_id'        => null,
+                    'tax_class'           => $lineTax['tax_class'] ?? 'STANDARD',
+                    'purchase_cost'       => $purchaseCost,
+                    'cogs'                => round($purchaseCost * $qty, 2),
+                    'is_cost_estimated'   => ($purchaseCost <= 0),
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
                 ];
 
                 $filteredItem = [];
                 foreach ($itemData as $col => $val) {
-                    if (Schema::hasColumn('order_items', $col)) {
+                    if (Schema::hasColumn($itemsTable, $col)) {
                         $filteredItem[$col] = $val;
                     }
                 }
 
-                DB::table('order_items')->insert($filteredItem);
+                DB::table($itemsTable)->insert($filteredItem);
+            }
+
+            // Permanently record immutable tax snapshot
+            if (class_exists(TaxEngineService::class) && method_exists(TaxEngineService::class, 'recordOrderTaxSnapshot')) {
+                TaxEngineService::recordOrderTaxSnapshot($orderId, $taxCalc);
             }
 
             $savedOrder = DB::table('orders')->where('id', $orderId)->first();
@@ -1699,6 +2112,9 @@ class OrderController extends Controller
                     'submitted_amount' => $paidAmount,
                 ]);
             }
+
+            // Trigger Order Placed SMS for Manual Entry (respecting setting)
+            $this->dispatchOrderStatusSms($savedOrder, $targetOrderStatus, false);
 
             DB::commit();
 
@@ -1746,6 +2162,7 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
         }
 
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
         $processType = $request->process_type;
         $returnItemsInput = $request->return_items;
         $exchangeItemsInput = $request->input('exchange_items', []);
@@ -1755,12 +2172,13 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $totalReturnValue = 0.00;
+            $totalReturnTaxValue = 0.00;
             $adminId = auth()->id();
             $invoiceNo = $order->invoice_no ?? ('ORD-' . $order->id);
 
             // 1. Process Return Items & Restock / Damage Routing
             foreach ($returnItemsInput as $rItem) {
-                $orderItem = DB::table('order_items')
+                $orderItem = DB::table($itemsTable)
                     ->where('id', $rItem['item_id'])
                     ->where('order_id', $order->id)
                     ->first();
@@ -1769,20 +2187,26 @@ class OrderController extends Controller
                     continue;
                 }
 
-                $retQty = min((int) $rItem['qty'], (int) ($orderItem->quantity ?? 1));
+                $retQty = min((int) $rItem['qty'], (int) ($orderItem->quantity ?? ($orderItem->qty ?? 1)));
                 $unitPrice = (float) ($orderItem->unit_price ?? ($orderItem->price ?? 0.00));
                 $lineReturnValue = $unitPrice * $retQty;
-                $totalReturnValue +=$lineReturnValue;
+                $totalReturnValue += $lineReturnValue;
+
+                // Line Item Proportional Tax Reversal
+                $itemTotalQty = max(1, (int)($orderItem->quantity ?? ($orderItem->qty ?? 1)));
+                $itemLineTax = (float)($orderItem->tax_amount ?? 0.0);
+                $lineReturnTax = round(($itemLineTax / $itemTotalQty) * $retQty, 2);
+                $totalReturnTaxValue += $lineReturnTax;
 
                 $pId = (int)$orderItem->product_id;
                 $vId = !empty($orderItem->variant_id) ? (int)$orderItem->variant_id : null;
-                $condition =$rItem['condition'];
+                $condition = $rItem['condition'];
 
                 if ($condition === 'restock') {
-                    // Safe call to restoreStock in InventoryService
                     InventoryService::restoreStock(
                         $pId,
-                        $vId,$retQty,
+                        $vId,
+                        $retQty,
                         'order_return_restock',
                         $invoiceNo,
                         'admin_return_inspection',
@@ -1790,10 +2214,11 @@ class OrderController extends Controller
                         "Order #{$invoiceNo} inspected item restocked in good condition ({$retQty} pcs)"
                     );
                 } else {
-                    // Damaged item: Logged cleanly via InventoryService without raw SQL column crashes
                     InventoryService::recordDamagedReturn(
-                        $pId,$vId,
-                        $retQty,$invoiceNo,
+                        $pId,
+                        $vId,
+                        $retQty,
+                        $invoiceNo,
                         (float) ($orderItem->purchase_cost ?? 0.00),
                         $adminId,
                         "Order #{$invoiceNo} item damaged: Scrapped/Write-off ({$retQty} pcs)"
@@ -1803,73 +2228,93 @@ class OrderController extends Controller
 
             // 2. Process Replacement Exchange Items
             $totalExchangeValue = 0.00;
+            $totalExchangeTaxValue = 0.00;
             if ($processType === 'exchange' && !empty($exchangeItemsInput)) {
-                foreach ($exchangeItemsInput as $eItem) {$epId = (int) $eItem['product_id'];$evId = !empty($eItem['variant_id']) ? (int)$eItem['variant_id'] : null;
+                foreach ($exchangeItemsInput as $eItem) {
+                    $epId = (int) $eItem['product_id'];
+                    $evId = !empty($eItem['variant_id']) ? (int)$eItem['variant_id'] : null;
                     $eqty = (int)$eItem['qty'];
                     $ePrice = (float)$eItem['unit_price'];
 
-                    $avail = InventoryService::checkStockAvailability($epId, $evId,$eqty);
+                    $avail = InventoryService::checkStockAvailability($epId, $evId, $eqty);
                     if (!$avail['available']) {
                         throw new \Exception("Insufficient stock for exchange item '{$avail['title']}'. Available: {$avail['stock']}");
                     }
 
                     $totalExchangeValue += ($ePrice * $eqty);
 
-                    InventoryService::recordOrderEstimate($epId,$evId, $eqty,$invoiceNo);
+                    InventoryService::recordOrderEstimate($epId, $evId, $eqty, $invoiceNo);
 
-                    $pRec = DB::table('products')->where('id', $epId)->first();$vRec = !empty($evId) ? DB::table('product_variants')->where('id', $evId)->first() : null;
+                    $pRec = DB::table('products')->where('id', $epId)->first();
+                    $vRec = !empty($evId) ? DB::table('product_variants')->where('id', $evId)->first() : null;
 
-                    $pTitle =$pRec->title ?? "Exchange Product #{$epId}";
-                    $color =$vRec->color ?? null;
-                    $size =$vRec->size ?? null;
-                    $parts = array_filter([$color,$size]);
+                    $pTitle = $pRec->title ?? "Exchange Product #{$epId}";
+                    $color = $vRec->color ?? null;
+                    $size = $vRec->size ?? null;
+                    $parts = array_filter([$color, $size]);
                     $vTitle = count($parts) > 0 ? implode(' / ', $parts) : ($vRec->name ?? null);
                     $sku = $vRec->product_code ?? ($vRec->sku ?? ($pRec->sku ?? "EXC-{$epId}"));
                     $purchaseCost = (float) ($vRec->purchase_cost ?? ($pRec->purchase_cost ?? 0.00));
 
+                    $exchLineTax = class_exists(TaxEngineService::class)
+                        ? TaxEngineService::calculateOrderTax(
+                            [['id' => $epId, 'product_id' => $epId, 'variant_id' => $evId, 'price' => $ePrice, 'quantity' => $eqty]],
+                            ($ePrice * $eqty),
+                            0,
+                            0,
+                            $order->branch_id ?? null,
+                            $order->district ?? 'Dhaka'
+                        )
+                        : ['total_tax_amount' => 0.0, 'items' => []];
+
+                    $newItemTax = (float)($exchLineTax['total_tax_amount'] ?? 0.0);
+                    $totalExchangeTaxValue += $newItemTax;
+
                     $newItemData = [
-                        'order_id'          => $order->id,
-                        'product_id'        => $epId,
-                        'product_title'     => "[Exchange] " . $pTitle,
-                        'variant_id'        => $evId,
-                        'variant_title'     => $vTitle,
-                        'color'             => $color,
-                        'size'              => $size,
-                        'sku'               => $sku,
-                        'quantity'          => $eqty,
-                        'unit_price'        => $ePrice,
-                        'subtotal'          => $ePrice * $eqty,
-                        'purchase_cost'     => $purchaseCost,
-                        'cogs'              => round($purchaseCost * $eqty, 2),
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
+                        'order_id'            => $order->id,
+                        'product_id'          => $epId,
+                        'product_title'       => "[Exchange] " . $pTitle,
+                        'product_name'        => "[Exchange] " . $pTitle,
+                        'title'               => "[Exchange] " . $pTitle,
+                        'variant_id'          => $evId,
+                        'variant_title'       => $vTitle,
+                        'color'               => $color,
+                        'size'                => $size,
+                        'sku'                 => $sku,
+                        'quantity'            => $eqty,
+                        'qty'                 => $eqty,
+                        'unit_price'          => $ePrice,
+                        'price'               => $ePrice,
+                        'subtotal'            => $ePrice * $eqty,
+                        'total'               => $ePrice * $eqty,
+                        'tax_rate'            => (float)($exchLineTax['items'][0]['tax_rate'] ?? 0.0),
+                        'tax_amount'          => $newItemTax,
+                        'taxable_base_amount' => $ePrice * $eqty,
+                        'purchase_cost'       => $purchaseCost,
+                        'cogs'                => round($purchaseCost * $eqty, 2),
+                        'created_at'          => now(),
+                        'updated_at'          => now(),
                     ];
 
                     $filteredItem = [];
-                    foreach ($newItemData as $k =>$v) {
-                        if (Schema::hasColumn('order_items', $k)) {$filteredItem[$k] =$v;
+                    foreach ($newItemData as $k => $v) {
+                        if (Schema::hasColumn($itemsTable, $k)) {
+                            $filteredItem[$k] = $v;
                         }
                     }
 
-                    if (Schema::hasColumn('order_items', 'price') && !isset($filteredItem['price'])) {
-                        $filteredItem['price'] =$ePrice;
-                    }
-                    if (Schema::hasColumn('order_items', 'qty') && !isset($filteredItem['qty'])) {
-                        $filteredItem['qty'] =$eqty;
-                    }
-                    if (Schema::hasColumn('order_items', 'total') && !isset($filteredItem['total'])) {$filteredItem['total'] = $ePrice * $eqty;
-                    }
-
-                    DB::table('order_items')->insert($filteredItem);
+                    DB::table($itemsTable)->insert($filteredItem);
                 }
             }
 
             // 3. Financial Rebalancing & Order Status Transition
             $prevPaid = (float) ($order->paid_amount ?? 0.00);
             $prevGrand = (float) ($order->grand_total ?? 0.00);
+            $prevTax = (float) ($order->tax_amount ?? ($order->product_tax_amount ?? 0.00));
 
+            $newStatus = ($processType === 'return') ? 'returned' : 'exchange';
             $orderUpdate = [
-                'order_status' => ($processType === 'return') ? 'returned' : 'exchange',
+                'order_status' => $newStatus,
                 'updated_at'   => now(),
             ];
 
@@ -1878,38 +2323,57 @@ class OrderController extends Controller
                     $orderUpdate['is_stock_restored'] = true;
                 }
                 $notePrefix = "[Returned] Processed return for inspected items.";
+
+                if (class_exists(DiscountEngineService::class)) {
+                    DiscountEngineService::restoreOrderDiscounts((int)$id, 'Order return processed');
+                }
+
+                $this->recordTaxAdjustment((int)$id, 'refund', "Items returned on Order #{$invoiceNo}", $totalReturnTaxValue);
             } else {
-                $newSubtotal = max(0.00, ((float)($order->subtotal ?? $prevGrand) - $totalReturnValue) +$totalExchangeValue);
-                $newGrand = max(0.00,$newSubtotal + $exchangeDelivery);$newDue = max(0.00, $newGrand -$prevPaid);
+                $newSubtotal = max(0.00, ((float)($order->subtotal ?? $prevGrand) - $totalReturnValue) + $totalExchangeValue);
+                $netTaxDiff = round($totalExchangeTaxValue - $totalReturnTaxValue, 2);
+                $newTax = max(0.00, $prevTax + $netTaxDiff);
+
+                $newGrand = max(0.00, $newSubtotal + $exchangeDelivery + max(0, $netTaxDiff));
+                $newDue = max(0.00, $newGrand - $prevPaid);
 
                 if (Schema::hasColumn('orders', 'subtotal')) {
-                    $orderUpdate['subtotal'] =$newSubtotal;
+                    $orderUpdate['subtotal'] = $newSubtotal;
                 }
                 if (Schema::hasColumn('orders', 'product_subtotal')) {
-                    $orderUpdate['product_subtotal'] =$newSubtotal;
+                    $orderUpdate['product_subtotal'] = $newSubtotal;
+                }
+                if (Schema::hasColumn('orders', 'tax_amount')) {
+                    $orderUpdate['tax_amount'] = $newTax;
+                }
+                if (Schema::hasColumn('orders', 'product_tax_amount')) {
+                    $orderUpdate['product_tax_amount'] = $newTax;
                 }
                 if (Schema::hasColumn('orders', 'grand_total')) {
-                    $orderUpdate['grand_total'] =$newGrand;
+                    $orderUpdate['grand_total'] = $newGrand;
                 }
                 if (Schema::hasColumn('orders', 'due_amount')) {
-                    $orderUpdate['due_amount'] =$newDue;
+                    $orderUpdate['due_amount'] = $newDue;
                 }
                 if (Schema::hasColumn('orders', 'payment_status')) {
                     $orderUpdate['payment_status'] = ($newDue <= 0.00) ? 'paid' : 'partially_paid';
                 }
 
                 $notePrefix = "[Exchange] Return Credit: BDT {$totalReturnValue}, New Replacement: BDT {$totalExchangeValue}, Exchange Shipping: BDT {$exchangeDelivery}.";
+
+                $this->recordTaxAdjustment((int)$id, 'exchange', "Exchange replacement on Order #{$invoiceNo}", abs($totalReturnTaxValue));
             }
 
-            $currentNote =$order->admin_note ?? '';
+            $currentNote = $order->admin_note ?? '';
             $finalNote = trim($notePrefix . ' ' . $actionNote . ($currentNote ? " | Previous: " . $currentNote : ''));
             if (Schema::hasColumn('orders', 'admin_note')) {
-                $orderUpdate['admin_note'] =$finalNote;
+                $orderUpdate['admin_note'] = $finalNote;
             }
 
             $safeOrderUpdate = [];
-            foreach ($orderUpdate as $col =>$val) {
-                if (Schema::hasColumn('orders', $col)) {$safeOrderUpdate[$col] =$val;
+            foreach ($orderUpdate as $col => $val) {
+                if (Schema::hasColumn('orders', $col)) {
+                    $safeOrderUpdate[$col] = $val;
                 }
             }
 
@@ -1927,11 +2391,15 @@ class OrderController extends Controller
                     ]);
             }
 
+            // Auto-trigger Return or Exchange SMS if enabled
+            $freshOrder = DB::table('orders')->where('id', $order->id)->first();
+            $this->dispatchOrderStatusSms($freshOrder, $newStatus, false);
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => ucfirst($processType) . " processed successfully! Inventory and financials rebalanced.",
+                'message' => ucfirst($processType) . " processed successfully! Inventory, financials and tax liabilities rebalanced.",
                 'redirect'=> route('admin.order.view', $order->id)
             ]);
 

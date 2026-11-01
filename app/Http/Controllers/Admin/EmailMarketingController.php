@@ -201,6 +201,13 @@ class EmailMarketingController extends Controller
                   ->orWhere('first_name', 'like', "%{$s}%")
                   ->orWhere('last_name', 'like', "%{$s}%")
                   ->orWhere('phone', 'like', "%{$s}%");
+
+                if (Schema::hasColumn('email_subscribers', 'name')) {
+                    $q->orWhere('name', 'like', "%{$s}%");
+                }
+                if (Schema::hasColumn('email_subscribers', 'tags')) {
+                    $q->orWhere('tags', 'like', "%{$s}%");
+                }
             });
         }
 
@@ -208,8 +215,17 @@ class EmailMarketingController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Support both source column and consent_source
         if ($request->filled('source')) {
-            $query->where('consent_source', $request->source);
+            $src = $request->source;
+            $query->where(function ($q) use ($src) {
+                if (Schema::hasColumn('email_subscribers', 'source')) {
+                    $q->where('source', $src);
+                }
+                if (Schema::hasColumn('email_subscribers', 'consent_source')) {
+                    $q->orWhere('consent_source', $src);
+                }
+            });
         }
 
         if ($request->filled('account_type')) {
@@ -279,7 +295,10 @@ class EmailMarketingController extends Controller
             'last_name'      => 'nullable|string|max:100',
             'phone'          => 'nullable|string|max:30',
             'consent_source' => 'nullable|string|max:50',
+            'source'         => 'nullable|string|max:50',
         ]);
+
+        $src = $validated['source'] ?? ($validated['consent_source'] ?? 'admin_manual');
 
         $subscriber = EmailSubscriber::create([
             'email'             => strtolower(trim($validated['email'])),
@@ -289,11 +308,12 @@ class EmailMarketingController extends Controller
             'status'            => 'subscribed',
             'marketing_consent' => true,
             'consent_at'        => now(),
-            'consent_source'    => $validated['consent_source'] ?? 'admin_manual',
+            'consent_source'    => $src,
+            'source'            => $src,
             'consent_ip'        => $request->ip(),
         ]);
 
-        EmailConsentLog::logConsent($subscriber->email, 'opt_in', 'admin_manual', $subscriber->id);
+        EmailConsentLog::logConsent($subscriber->email, 'opt_in', $src, $subscriber->id);
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Subscriber added successfully.']);
@@ -388,7 +408,7 @@ class EmailMarketingController extends Controller
                     $row->phone,
                     ucfirst($row->status),
                     $row->user_id ? 'Registered User' : 'Guest Subscriber',
-                    $row->consent_source,
+                    $row->source ?: ($row->consent_source ?: 'Organic'),
                     $row->campaign_deliveries_count ?? 0,
                     $row->created_at ? $row->created_at->format('Y-m-d H:i:s') : '',
                 ]);
@@ -2056,11 +2076,19 @@ class EmailMarketingController extends Controller
 
         return redirect()->away($targetUrl);
     }
-
-    public function unsubscribePage($token)
+public function unsubscribePage($token)
     {
         $subscriber = EmailSubscriber::where('unsubscribe_token', $token)->firstOrFail();
-        return view('frontend.email.unsubscribe', compact('subscriber', 'token'));
+        
+        $view = view()->exists('frontend.email.unsubscribe')
+            ? 'frontend.email.unsubscribe'
+            : (view()->exists('emails.unsubscribe') ? 'emails.unsubscribe' : null);
+
+        if ($view) {
+            return view($view, compact('subscriber', 'token'));
+        }
+
+        return response()->view('emails.unsubscribe', compact('subscriber', 'token'));
     }
 
     public function processUnsubscribe(Request $request, $token)
@@ -2069,13 +2097,23 @@ class EmailMarketingController extends Controller
         $reason = $request->input('reason', 'User requested unsubscription');
 
         $subscriber->unsubscribe($reason);
-        EmailConsentLog::logConsent($subscriber->email, 'opt_out', 'one_click_unsubscribe', $subscriber->id);
+        if (class_exists(EmailConsentLog::class)) {
+            EmailConsentLog::logConsent($subscriber->email, 'opt_out', 'one_click_unsubscribe', $subscriber->id);
+        }
 
-        if ($request->boolean('block_all')) {
+        if ($request->boolean('block_all') && class_exists(EmailSuppressionList::class)) {
             EmailSuppressionList::suppress($subscriber->email, 'unsubscribe', $reason);
         }
 
-        return view('frontend.email.unsubscribe_success', compact('subscriber'));
+        $view = view()->exists('frontend.email.unsubscribe_success')
+            ? 'frontend.email.unsubscribe_success'
+            : (view()->exists('emails.unsubscribe_success') ? 'emails.unsubscribe_success' : null);
+
+        if ($view) {
+            return view($view, compact('subscriber'));
+        }
+
+        return redirect()->route('home')->with('success', 'You have been successfully unsubscribed.');
     }
 
     public function recoverCart($token)

@@ -593,7 +593,7 @@
                             <label class="form-label">
                                 Income Title / Source <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g. Scrap carton box sale, Affiliate commission" required>
+                            <input type="text" name="title" class="form-control" placeholder="Scrap carton box sale, Affiliate commission" required>
                         </div>
 
                         <!-- Category -->
@@ -658,7 +658,7 @@
                         <!-- Reference / Receipt # -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Reference / Receipt #</label>
-                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="e.g. INC-0012">
+                            <input type="text" name="reference_no" class="form-control font-monospace" placeholder="INC-0012">
                         </div>
 
                         <!-- Receipt Attachment -->
@@ -697,7 +697,7 @@
                 @csrf
                 <div class="modal-body p-3">
                     <label class="form-label">Category Name *</label>
-                    <input type="text" name="name" class="form-control" placeholder="e.g. Courier Claims" required>
+                    <input type="text" name="name" class="form-control" placeholder="Courier Claims" required>
                 </div>
                 <div class="modal-footer py-2 px-3 bg-light d-flex justify-content-between">
                     <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>

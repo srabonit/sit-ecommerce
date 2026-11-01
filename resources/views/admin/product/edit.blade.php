@@ -213,7 +213,7 @@
         border-radius: 3px;
     }
     .variant-table {
-        min-width: 1160px !important; /* Prevents any input crushing on PC and Mobile */
+        min-width: 1160px !important;
         width: 100%;
         margin-bottom: 0;
         border-collapse: separate;
@@ -494,6 +494,20 @@
                         <div class="col-6 col-md-3">
                             <label class="form-label">Discount (%)</label>
                             <input type="number" step="0.01" name="discount_percentage" id="disc-pct" class="form-control form-control-sm bg-white bn-digit font-monospace" readonly value="{{ old('discount_percentage', $product->discount_percentage) }}">
+                        </div>
+
+                        <!-- Optional VAT Settings (Requirement 1) -->
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Product VAT Type (Optional)</label>
+                            <select name="vat_type" id="vat-type" class="form-select form-select-sm">
+                                <option value="percent" {{ old('vat_type', $product->vat_type ?? 'percent') === 'percent' ? 'selected' : '' }}>Percentage (%)</option>
+                                <option value="flat" {{ old('vat_type', $product->vat_type ?? '') === 'flat' ? 'selected' : '' }}>Flat Amount (৳)</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">Product VAT Amount (Optional)</label>
+                            <input type="number" step="0.01" min="0" name="vat_amount" id="vat-amount" class="form-control form-control-sm bn-digit font-monospace" value="{{ old('vat_amount', $product->vat_amount ?? '') }}" placeholder="Leave blank for 0 VAT">
+                            <small class="text-muted d-block mt-1" style="font-size: 10.5px;">Khali rakhle 0 VAT thakbe. % ba flat dile order calculation-e eita calculate hobe.</small>
                         </div>
 
                         <div class="col-12 col-md-4">
@@ -1692,7 +1706,8 @@
 
     $(document).on('change', '.cat-cb-child', function() {
         if ($(this).is(':checked')) {
-            let parentId = $(this).data('parent');$('#cat-p-' + parentId).prop('checked', true);
+            let parentId = $(this).data('parent');
+            $('#cat-p-' + parentId).prop('checked', true);
         }
     });
 

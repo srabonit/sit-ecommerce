@@ -481,7 +481,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="logsSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="e.g. user@example.com, Order #104, Cart #22..." onkeyup="filterLogsTable()">
+                            <input type="text" id="logsSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="user@example.com, Order #104, Cart #22..." onkeyup="filterLogsTable()">
                         </div>
                     </div>
 

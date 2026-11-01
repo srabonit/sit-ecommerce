@@ -495,7 +495,7 @@
                         </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="couponSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="e.g. WELCOME10, EID2026, 100..." onkeyup="filterCouponsTable()">
+                            <input type="text" id="couponSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="WELCOME10, EID2026, 100..." onkeyup="filterCouponsTable()">
                         </div>
                     </div>
 

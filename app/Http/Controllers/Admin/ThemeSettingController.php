@@ -149,7 +149,6 @@ class ThemeSettingController extends Controller
 
         $clean = ltrim($relativePath, '/');
 
-        // Global Media Library er file gulo onno jaygay use thakay disk theke direct delete kora jabe na
         if (str_starts_with($clean, 'uploads/media/') || str_starts_with($clean, 'media/')) {
             return;
         }
@@ -181,7 +180,7 @@ class ThemeSettingController extends Controller
         if (is_file($file3)) @unlink($file3);
     }
 
-    // ================= HOME PAGE BUILDER (ELEMENTOR & SHORTCODE ENGINE) =================
+    // ================= HOME PAGE BUILDER =================
     public function homeBuilderIndex()
     {
         $sections = DB::table('home_sections')->orderBy('order_index', 'asc')->get();
@@ -226,7 +225,7 @@ class ThemeSettingController extends Controller
 
         DB::table('home_sections')->insert($data);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return redirect()->back()->with('success', 'New section block added to Home Page.');
     }
@@ -266,7 +265,7 @@ class ThemeSettingController extends Controller
 
         DB::table('home_sections')->where('id', $id)->update($data);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return redirect()->back()->with('success', 'Section block updated.');
     }
@@ -274,7 +273,7 @@ class ThemeSettingController extends Controller
     public function homeBuilderDestroy($id)
     {
         DB::table('home_sections')->where('id', $id)->delete();
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
         return back()->with('success', 'Section block deleted.');
     }
 
@@ -305,27 +304,12 @@ class ThemeSettingController extends Controller
 
         $gridPc = $request->input('featured_grid_pc', '4');
 
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'show_featured_products_section'],
-            ['value' => $status, 'updated_at' => now()]
-        );
+        DB::table('settings')->updateOrInsert(['key' => 'show_featured_products_section'], ['value' => $status, 'updated_at' => now()]);
+        DB::table('settings')->updateOrInsert(['key' => 'featured_enable_pagination'], ['value' => $pagination, 'updated_at' => now()]);
+        DB::table('settings')->updateOrInsert(['key' => 'featured_products_count'], ['value' => (string)$count, 'updated_at' => now()]);
+        DB::table('settings')->updateOrInsert(['key' => 'featured_grid_pc'], ['value' => (string)$gridPc, 'updated_at' => now()]);
 
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'featured_enable_pagination'],
-            ['value' => $pagination, 'updated_at' => now()]
-        );
-
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'featured_products_count'],
-            ['value' => (string)$count, 'updated_at' => now()]
-        );
-
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'featured_grid_pc'],
-            ['value' => (string)$gridPc, 'updated_at' => now()]
-        );
-
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Featured Products settings updated successfully.');
     }
@@ -392,7 +376,7 @@ class ThemeSettingController extends Controller
 
         DB::table('hero_sliders')->insert($data);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Slider created successfully.');
     }
@@ -464,7 +448,7 @@ class ThemeSettingController extends Controller
 
         DB::table('hero_sliders')->where('id', $id)->update($data);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Slider updated successfully.');
     }
@@ -477,7 +461,7 @@ class ThemeSettingController extends Controller
         }
         DB::table('hero_sliders')->where('id', $id)->delete();
         
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
         
         return back()->with('success', 'Slider deleted.');
     }
@@ -546,12 +530,9 @@ class ThemeSettingController extends Controller
         ]);
 
         $catMenuVal = $request->has('show_home_category_menu') ? '1' : '0';
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'show_home_category_menu'],
-            ['value' => $catMenuVal, 'updated_at' => now()]
-        );
+        DB::table('settings')->updateOrInsert(['key' => 'show_home_category_menu'], ['value' => $catMenuVal, 'updated_at' => now()]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Settings updated successfully.');
     }
@@ -586,7 +567,7 @@ class ThemeSettingController extends Controller
             'updated_at'  => now(),
         ]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'New offer slide added successfully.');
     }
@@ -634,7 +615,7 @@ class ThemeSettingController extends Controller
             'updated_at'  => now(),
         ]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Offer slide updated successfully.');
     }
@@ -647,7 +628,7 @@ class ThemeSettingController extends Controller
         }
         DB::table('offer_cards')->where('id', $id)->delete();
         
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
         
         return back()->with('success', 'Offer slide deleted.');
     }
@@ -669,18 +650,12 @@ class ThemeSettingController extends Controller
     public function popularCategoriesUpdate(Request $request)
     {
         $statusVal = $request->has('show_popular_categories_section') ? '1' : '0';
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'show_popular_categories_section'],
-            ['value' => $statusVal, 'updated_at' => now()]
-        );
+        DB::table('settings')->updateOrInsert(['key' => 'show_popular_categories_section'], ['value' => $statusVal, 'updated_at' => now()]);
 
         $selectedIds = $request->input('category_ids', []);
-        DB::table('settings')->updateOrInsert(
-            ['key' => 'popular_category_ids'],
-            ['value' => json_encode(array_values($selectedIds)), 'updated_at' => now()]
-        );
+        DB::table('settings')->updateOrInsert(['key' => 'popular_category_ids'], ['value' => json_encode(array_values($selectedIds)), 'updated_at' => now()]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Popular Category Slider settings updated successfully.');
     }
@@ -729,8 +704,8 @@ class ThemeSettingController extends Controller
         $formattedNotices = [];
 
         foreach ($texts as $i => $txt) {
-            $t = trim($txt);
-            if (!empty($t)) {
+            $t = trim($txt ?? '');
+            if ($t !== '') {
                 $formattedNotices[] = [
                     'text' => $t,
                     'icon' => !empty($icons[$i]) ? trim($icons[$i]) : 'fas fa-check-circle'
@@ -742,59 +717,1271 @@ class ThemeSettingController extends Controller
         DB::table('settings')->updateOrInsert(['key' => 'topbar_left_html'], ['value' => $request->topbar_left_html ?? '', 'updated_at' => now()]);
         DB::table('settings')->updateOrInsert(['key' => 'topbar_right_html'], ['value' => $request->topbar_right_html ?? '', 'updated_at' => now()]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Topbar settings updated successfully.');
     }
 
-    // ================= THEME COLORS CONTROL =================
+    // ================= THEME COLORS CONTROL (ALL STOREFRONT MODULES) =================
     public function themeColorsIndex()
     {
-        $colorKeys = [
-            'color_site_bg', 'color_card_bg', 'color_header_bg', 'color_header_text',
-            'color_header_search_btn_bg', 'color_menu_text', 'color_menu_hover',
-            'color_menu_active_bg', 'color_card_btn_cart_bg', 'color_card_btn_cart_text',
-            'color_card_btn_order_bg', 'color_card_btn_order_text', 'color_details_btn_cart_bg',
-            'color_details_btn_cart_text', 'color_details_btn_order_bg', 'color_details_btn_order_text',
-            'color_common_btn_bg', 'color_common_btn_text', 'color_section_title',
-            'color_product_title', 'color_product_price', 'color_footer_bg', 'color_footer_text'
+        $allSettings = DB::table('settings')->pluck('value', 'key')->toArray();
+
+        // 1. App Master Layout & Global Elements
+        $appColorKeys = [
+            'color_site_bg', 'color_common_btn_bg', 'color_common_btn_text',
+            'color_app_spb_bg', 'color_app_spb_border', 'color_app_spb_title', 'color_app_spb_title_hover', 'color_app_spb_price',
+            'color_app_spb_cart_btn_bg', 'color_app_spb_cart_btn_text', 'color_app_spb_cart_btn_hover_bg',
+            'color_app_spb_buynow_bg', 'color_app_spb_buynow_text', 'color_app_spb_buynow_hover_bg', 'color_app_spb_buynow_hover_text',
+            'color_app_search_modal_bg', 'color_app_search_modal_border',
+            'color_app_search_price', 'color_app_search_cart_btn_bg', 'color_app_search_cart_btn_text', 'color_app_search_cart_btn_hover_bg', 'color_app_search_cart_btn_hover_text',
+            'color_app_drawer_bg', 'color_app_drawer_border', 'color_app_drawer_icon', 'color_app_drawer_total_price',
+            'color_app_drawer_checkout_bg', 'color_app_drawer_checkout_text', 'color_app_drawer_checkout_hover_bg', 'color_app_drawer_checkout_hover_text',
+            'color_app_quickview_spinner',
+            'color_app_scroll_top_bg', 'color_app_scroll_top_color'
         ];
 
-        $colors = DB::table('settings')->whereIn('key', $colorKeys)->pluck('value', 'key')->toArray();
+        // 2. Header Scoped Elements
+        $headerColorKeys = [
+            'color_hdr_bg', 'color_hdr_border', 'color_hdr_sec_menu_bg', 'color_hdr_sec_menu_border',
+            'color_hdr_search_border', 'color_hdr_search_bg', 'color_hdr_search_input_text', 'color_hdr_search_placeholder',
+            'color_hdr_search_cat_bg', 'color_hdr_search_cat_text', 'color_hdr_search_btn_bg', 'color_hdr_search_btn_text', 'color_hdr_search_btn_hover_bg', 'color_hdr_search_btn_hover_text',
+            'color_hdr_icon_text', 'color_hdr_icon_hover', 'color_hdr_icon_active', 'color_hdr_badge_bg', 'color_hdr_badge_text',
+            'color_hdr_cat_btn_bg', 'color_hdr_cat_btn_text', 'color_hdr_cat_btn_hover_bg', 'color_hdr_cat_btn_hover_text', 'color_hdr_cat_btn_active_bg', 'color_hdr_cat_btn_active_text',
+            'color_hdr_cat_drop_bg', 'color_hdr_cat_drop_text', 'color_hdr_cat_drop_hover_bg', 'color_hdr_cat_drop_hover_text',
+            'color_hdr_menu_text', 'color_hdr_menu_bg', 'color_hdr_menu_hover_text', 'color_hdr_menu_hover_bg', 'color_hdr_menu_active_text', 'color_hdr_menu_active_bg',
+            'color_hdr_menu_drop_bg', 'color_hdr_menu_drop_text', 'color_hdr_menu_drop_hover_bg', 'color_hdr_menu_drop_hover_text',
+            'color_hdr_support_icon', 'color_hdr_support_label', 'color_hdr_support_phone', 'color_hdr_support_phone_hover',
+            'color_hdr_mob_toggle_bg', 'color_hdr_mob_toggle_icon', 'color_hdr_mob_toggle_hover_bg', 'color_hdr_mob_toggle_hover_icon',
+            'color_hdr_mob_head_bg', 'color_hdr_mob_head_text', 'color_hdr_mob_head_icon',
+            'color_hdr_mob_tab_bg', 'color_hdr_mob_tab_text', 'color_hdr_mob_tab_active_bg', 'color_hdr_mob_tab_active_text',
+            'color_hdr_mob_body_bg', 'color_hdr_mob_item_text', 'color_hdr_mob_item_border', 'color_hdr_mob_item_hover_bg', 'color_hdr_mob_item_hover_text',
+            'color_hdr_mob_item_active_bg', 'color_hdr_mob_item_active_text'
+        ];
+
+        // 3. Footer Scoped Elements (Desktop + Mobile + Social Icon Normal & Hover)
+        $footerColorKeys = [
+            'color_ftr_bg', 'color_ftr_border', 'color_ftr_text', 'color_ftr_logo_border',
+            'color_ftr_brand_title', 'color_ftr_brand_tagline', 'color_ftr_about_text',
+            'color_ftr_heading', 'color_ftr_heading_icon',
+            'color_ftr_link_text', 'color_ftr_link_hover_text', 'color_ftr_link_icon', 'color_ftr_link_hover_icon',
+            'color_ftr_contact_icon', 'color_ftr_contact_text', 'color_ftr_contact_hover',
+            
+            // Social Icons Normal & Hover Controls
+            'color_ftr_social_icon', 'color_ftr_social_bg', 'color_ftr_social_border',
+            'color_ftr_social_hover_icon', 'color_ftr_social_hover_bg', 'color_ftr_social_hover_border',
+
+            'color_ftr_payment_bg', 'color_ftr_payment_border', 'color_ftr_payment_text', 'color_ftr_payment_logo_border',
+            'color_ftr_payment_hover_bg', 'color_ftr_payment_hover_border',
+            'color_ftr_bottom_bg', 'color_ftr_bottom_border', 'color_ftr_copyright_text', 'color_ftr_developer_text',
+
+            // Mobile Footer Elements
+            'color_ftr_mob_brand_bg', 'color_ftr_mob_brand_border', 'color_ftr_mob_logo_box_bg', 'color_ftr_mob_logo_box_border',
+            'color_ftr_mob_brand_arrow', 'color_ftr_mob_acc_bg', 'color_ftr_mob_acc_border', 'color_ftr_mob_acc_item_border',
+            'color_ftr_mob_acc_btn_text', 'color_ftr_mob_acc_btn_icon', 'color_ftr_mob_acc_chevron', 'color_ftr_mob_acc_chevron_active',
+            'color_ftr_mob_acc_body_bg', 'color_ftr_mob_acc_link_text', 'color_ftr_mob_acc_link_hover',
+            'color_ftr_mob_pay_pill_bg', 'color_ftr_mob_pay_pill_border', 'color_ftr_mob_pay_pill_text',
+            'color_ftr_mob_secure_border', 'color_ftr_mob_secure_icon', 'color_ftr_mob_secure_text'
+        ];
+
+        // 4. Product Card Scoped Elements
+        $productCardColorKeys = [
+            'color_cpc_card_bg', 'color_cpc_card_border', 'color_cpc_card_border_hover', 'color_cpc_card_shadow_hover',
+            'color_cpc_img_wrap_bg', 'color_cpc_body_bg',
+            'color_cpc_title', 'color_cpc_title_hover', 'color_cpc_category', 'color_cpc_category_hover',
+            'color_cpc_price', 'color_cpc_old_price', 'color_cpc_rating_star', 'color_cpc_rating_text',
+            'color_cpc_sale_badge_bg', 'color_cpc_sale_badge_text', 'color_cpc_sale_badge_border',
+            'color_cpc_wishlist_bg', 'color_cpc_wishlist_icon', 'color_cpc_wishlist_border',
+            'color_cpc_wishlist_hover_bg', 'color_cpc_wishlist_hover_icon', 'color_cpc_wishlist_hover_border',
+            'color_cpc_wishlist_active_bg', 'color_cpc_wishlist_active_icon', 'color_cpc_wishlist_active_border',
+            'color_cpc_qv_bg', 'color_cpc_qv_icon', 'color_cpc_qv_border',
+            'color_cpc_qv_hover_bg', 'color_cpc_qv_hover_icon', 'color_cpc_qv_hover_border',
+            'color_cpc_cart_bg', 'color_cpc_cart_text', 'color_cpc_cart_border', 'color_cpc_cart_icon',
+            'color_cpc_cart_hover_bg', 'color_cpc_cart_hover_text', 'color_cpc_cart_hover_border', 'color_cpc_cart_hover_icon',
+            'color_cpc_order_bg', 'color_cpc_order_text', 'color_cpc_order_border', 'color_cpc_order_icon',
+            'color_cpc_order_hover_bg', 'color_cpc_order_hover_text', 'color_cpc_order_hover_border', 'color_cpc_order_hover_icon',
+            'color_cpc_opt_bg', 'color_cpc_opt_text', 'color_cpc_opt_border', 'color_cpc_opt_icon',
+            'color_cpc_opt_hover_bg', 'color_cpc_opt_hover_text', 'color_cpc_opt_hover_border', 'color_cpc_opt_hover_icon',
+            'color_cpc_stockout_bg', 'color_cpc_stockout_text', 'color_cpc_stockout_border', 'color_cpc_stockout_icon',
+        ];
+
+        // 5. Product Details & Quick View Modal Elements (with WhatsApp Normal & Hover controls)
+        $productDetailColorKeys = [
+            'color_pdp_wrapper_bg', 'color_pdp_card_bg', 'color_pdp_card_border',
+            'color_pdp_zoom_bg', 'color_pdp_zoom_border', 'color_pdp_lens_border',
+            'color_pdp_thumb_border', 'color_pdp_thumb_active_border',
+            'color_pdp_thumb_arrow_bg', 'color_pdp_thumb_arrow_text', 'color_pdp_thumb_arrow_hover_bg', 'color_pdp_thumb_arrow_hover_text',
+            'color_pdp_discount_bg', 'color_pdp_discount_text',
+            'color_pdp_breadcrumb_link', 'color_pdp_breadcrumb_hover', 'color_pdp_breadcrumb_active',
+            'color_pdp_title', 'color_pdp_rating_star', 'color_pdp_rating_text',
+            'color_pdp_action_btn_bg', 'color_pdp_action_btn_border', 'color_pdp_action_btn_icon',
+            'color_pdp_action_btn_hover_bg', 'color_pdp_action_btn_hover_border', 'color_pdp_action_btn_hover_icon',
+            'color_pdp_action_btn_active_bg', 'color_pdp_action_btn_active_border', 'color_pdp_action_btn_active_icon',
+            'color_pdp_sku_badge_bg', 'color_pdp_sku_badge_text', 'color_pdp_sku_badge_border',
+            'color_pdp_stock_in_bg', 'color_pdp_stock_in_text', 'color_pdp_stock_in_border',
+            'color_pdp_stock_out_bg', 'color_pdp_stock_out_text', 'color_pdp_stock_out_border',
+            'color_pdp_stock_pre_bg', 'color_pdp_stock_pre_text', 'color_pdp_stock_pre_border',
+            'color_pdp_price_box_bg', 'color_pdp_price_box_border',
+            'color_pdp_price', 'color_pdp_old_price',
+            'color_pdp_saving_bg', 'color_pdp_saving_text', 'color_pdp_estimated_text',
+            'color_pdp_short_desc_bg', 'color_pdp_short_desc_border', 'color_pdp_short_desc_text',
+            'color_pdp_swatch_label', 'color_pdp_swatch_active_label',
+            'color_pdp_swatch_bg', 'color_pdp_swatch_text', 'color_pdp_swatch_border',
+            'color_pdp_swatch_hover_bg', 'color_pdp_swatch_hover_border',
+            'color_pdp_swatch_active_bg', 'color_pdp_swatch_active_text', 'color_pdp_swatch_active_border',
+            'color_pdp_qty_label', 'color_pdp_qty_border',
+            'color_pdp_qty_btn_bg', 'color_pdp_qty_btn_text', 'color_pdp_qty_btn_border',
+            'color_pdp_qty_btn_hover_bg', 'color_pdp_qty_btn_hover_text',
+            'color_pdp_qty_input_bg', 'color_pdp_qty_input_text',
+
+            // Buy Now Full Controls
+            'color_pdp_buynow_bg', 'color_pdp_buynow_text', 'color_pdp_buynow_border', 'color_pdp_buynow_icon',
+            'color_pdp_buynow_hover_bg', 'color_pdp_buynow_hover_text', 'color_pdp_buynow_hover_border', 'color_pdp_buynow_hover_icon',
+
+            // Add to Cart Full Controls
+            'color_pdp_cart_bg', 'color_pdp_cart_text', 'color_pdp_cart_border', 'color_pdp_cart_icon',
+            'color_pdp_cart_hover_bg', 'color_pdp_cart_hover_text', 'color_pdp_cart_hover_border', 'color_pdp_cart_hover_icon',
+
+            // WhatsApp Normal & Hover Controls
+            'color_pdp_wa_bg', 'color_pdp_wa_text', 'color_pdp_wa_border', 'color_pdp_wa_icon',
+            'color_pdp_wa_hover_bg', 'color_pdp_wa_hover_text', 'color_pdp_wa_hover_border', 'color_pdp_wa_hover_icon',
+
+            'color_pdp_stockout_bg', 'color_pdp_stockout_text', 'color_pdp_stockout_border', 'color_pdp_stockout_icon',
+            'color_pdp_sidebar_bg', 'color_pdp_sidebar_border', 'color_pdp_sidebar_brand_title',
+            'color_pdp_sidebar_verified_badge', 'color_pdp_sidebar_heading',
+            'color_pdp_sidebar_feature_icon_bg', 'color_pdp_sidebar_feature_icon', 'color_pdp_sidebar_feature_text',
+            'color_pdp_sidebar_social_bg', 'color_pdp_sidebar_social_border', 'color_pdp_sidebar_social_icon',
+            'color_pdp_sidebar_social_hover_bg', 'color_pdp_sidebar_social_hover_border', 'color_pdp_sidebar_social_hover_icon',
+            'color_pdp_tab_border', 'color_pdp_tab_link_text', 'color_pdp_tab_link_active_text', 'color_pdp_tab_link_active_border',
+            'color_pdp_desc_text',
+            'color_pdp_spec_th_bg', 'color_pdp_spec_th_text', 'color_pdp_spec_td_bg', 'color_pdp_spec_td_text', 'color_pdp_spec_border',
+            'color_pdp_review_box_bg', 'color_pdp_review_box_border',
+            'color_pdp_review_author', 'color_pdp_review_date', 'color_pdp_review_comment',
+            'color_pdp_review_star', 'color_pdp_review_verified_badge_bg', 'color_pdp_review_verified_badge_text'
+        ];
+
+        // 6. Cart Drawer & Main Cart Page Scoped Elements
+        $cartColorKeys = [
+            'color_cart_page_bg', 'color_cart_panel_bg', 'color_cart_panel_border',
+            'color_cart_item_bg', 'color_cart_item_border', 'color_cart_item_border_hover',
+            'color_cart_item_img_bg', 'color_cart_item_img_border',
+            'color_cart_item_title', 'color_cart_item_title_hover', 'color_cart_item_price',
+            'color_cart_variant_bg', 'color_cart_variant_text', 'color_cart_variant_border',
+            'color_cart_sku_text',
+            'color_cart_qty_btn_bg', 'color_cart_qty_btn_text', 'color_cart_qty_btn_border',
+            'color_cart_qty_btn_hover_bg', 'color_cart_qty_btn_hover_text',
+            'color_cart_remove_btn', 'color_cart_remove_btn_hover',
+            'color_cart_checkout_btn_bg', 'color_cart_checkout_btn_text', 'color_cart_checkout_btn_hover',
+            'color_cart_empty_icon', 'color_cart_empty_btn_bg', 'color_cart_empty_btn_text', 'color_cart_empty_btn_hover_bg'
+        ];
+
+        // 7. Checkout Page Scoped Elements
+        $checkoutColorKeys = [
+            'color_checkout_page_bg', 'color_checkout_card_bg', 'color_checkout_card_border',
+            'color_checkout_heading', 'color_checkout_text', 'color_checkout_label',
+            'color_checkout_input_bg', 'color_checkout_input_border', 'color_checkout_input_focus_border',
+            'color_checkout_paybox_bg', 'color_checkout_paybox_border',
+            'color_checkout_paybox_active_bg', 'color_checkout_paybox_active_border',
+            'color_checkout_total_price',
+            'color_checkout_btn_bg', 'color_checkout_btn_text', 'color_checkout_btn_hover'
+        ];
+
+        // 8. Order Confirmation & Thermal Token Elements
+        $tokenColorKeys = [
+            'color_token_page_bg', 'color_token_success_icon_bg', 'color_token_success_icon_text',
+            'color_token_heading', 'color_token_subtext',
+            'color_token_total_card_bg', 'color_token_total_card_border', 'color_token_total_card_label', 'color_token_total_price',
+            'color_token_download_btn_bg', 'color_token_download_btn_text', 'color_token_download_btn_hover',
+            'color_token_continue_btn_bg', 'color_token_continue_btn_text', 'color_token_continue_btn_border', 'color_token_continue_btn_hover',
+            'color_token_memo_bg', 'color_token_memo_border', 'color_token_memo_text', 'color_token_memo_divider',
+            'color_token_digital_box_bg', 'color_token_digital_box_border'
+        ];
+
+        // 9. Reusable Components (Category Card, Section Header, etc.)
+        $componentColorKeys = [
+            'color_cat_card_bg', 'color_cat_card_border', 'color_cat_card_border_hover',
+            'color_cat_card_title', 'color_cat_card_title_hover', 'color_cat_card_count',
+            'color_section_title', 'color_section_link', 'color_section_link_hover',
+        ];
+
+        // 10. Home Page Specific Colors
+        $homeColorKeys = [
+            'color_home_cat_menu_bg', 'color_home_cat_menu_border', 'color_home_cat_header_text', 'color_home_cat_header_icon',
+            'color_home_cat_header_badge_bg', 'color_home_cat_header_badge_text', 'color_home_cat_item_text', 'color_home_cat_item_hover_bg',
+            'color_home_cat_item_hover_text', 'color_home_cat_item_active_bg', 'color_home_cat_item_active_text', 'color_home_cat_flyout_bg',
+            'color_home_cat_flyout_border', 'color_home_cat_flyout_item_text', 'color_home_cat_flyout_item_hover_bg', 'color_home_cat_flyout_item_hover_text',
+            'color_home_deals_card_bg', 'color_home_deals_card_border', 'color_home_deals_timer_box_bg', 'color_home_deals_badge_bg',
+            'color_home_deals_badge_text', 'color_home_deals_title', 'color_home_deals_subtitle', 'color_home_deals_tile_bg',
+            'color_home_deals_tile_text', 'color_home_deals_tile_label',
+            'color_home_pop_card_bg', 'color_home_pop_card_border', 'color_home_pop_title', 'color_home_pop_title_icon',
+            'color_home_pop_btn_text', 'color_home_pop_btn_border', 'color_home_pop_btn_hover_bg', 'color_home_pop_btn_hover_text',
+            'color_home_pop_pill_bg', 'color_home_pop_pill_border', 'color_home_pop_pill_hover_border', 'color_home_pop_pill_icon_bg',
+            'color_home_pop_pill_icon', 'color_home_pop_pill_text', 'color_home_pop_pill_count',
+            'color_home_feat_card_bg', 'color_home_feat_card_border', 'color_home_feat_title', 'color_home_feat_title_icon',
+            'color_home_feat_subtitle', 'color_home_feat_filter_active_bg', 'color_home_feat_filter_active_text', 'color_home_feat_filter_btn_bg',
+            'color_home_feat_filter_btn_text', 'color_home_feat_filter_btn_border', 'color_home_feat_filter_btn_hover_bg', 'color_home_feat_filter_btn_hover_text'
+        ];
+
+        // 11. Shop Page Specific Colors
+        $shopColorKeys = [
+            'color_shop_page_bg', 'color_shop_top_bg', 'color_shop_top_border', 'color_shop_heading', 'color_shop_showing_text',
+            'color_shop_sort_bg', 'color_shop_sort_text', 'color_shop_sort_border', 'color_shop_sort_focus_border',
+            'color_shop_sidebar_bg', 'color_shop_sidebar_border', 'color_shop_cat_head_text', 'color_shop_cat_head_icon',
+            'color_shop_cat_badge_bg', 'color_shop_cat_badge_text', 'color_shop_cat_item_text', 'color_shop_cat_item_hover_bg',
+            'color_shop_cat_item_hover_text', 'color_shop_cat_item_active_bg', 'color_shop_cat_item_active_text', 'color_shop_flyout_bg',
+            'color_shop_flyout_border', 'color_shop_flyout_text', 'color_shop_flyout_hover_bg', 'color_shop_flyout_hover_text',
+            'color_shop_pag_card_bg', 'color_shop_pag_card_border', 'color_shop_pag_counter_text', 'color_shop_pag_btn_bg',
+            'color_shop_pag_btn_text', 'color_shop_pag_btn_border', 'color_shop_pag_btn_hover_bg', 'color_shop_pag_btn_hover_text',
+            'color_shop_pag_btn_active_bg', 'color_shop_pag_btn_active_text'
+        ];
+
+        // 12. Custom Dynamic Page Specific Colors
+        $pageColorKeys = [
+            'color_page_bg', 'color_page_text', 'color_page_title', 'color_page_card_bg', 'color_page_card_border',
+            'color_page_sidebar_bg', 'color_page_sidebar_border', 'color_page_sidebar_header_text', 'color_page_sidebar_text',
+            'color_page_breadcrumb_link', 'color_page_breadcrumb_hover'
+        ];
+
+        // 13. Blog Pages Specific Colors
+        $blogColorKeys = [
+            'color_blog_page_bg', 'color_blog_hero_bg', 'color_blog_hero_border', 'color_blog_hero_badge_bg', 'color_blog_hero_badge_text',
+            'color_blog_hero_title', 'color_blog_hero_desc',
+            'color_blog_search_bg', 'color_blog_search_text', 'color_blog_search_border', 'color_blog_search_btn_bg', 'color_blog_search_btn_text',
+            'color_blog_chip_bg', 'color_blog_chip_text', 'color_blog_chip_border', 'color_blog_chip_active_bg', 'color_blog_chip_active_text',
+            'color_blog_chip_hover_bg', 'color_blog_chip_hover_text',
+            'color_blog_card_bg', 'color_blog_card_border', 'color_blog_card_hover_border', 'color_blog_badge_bg', 'color_blog_badge_text',
+            'color_blog_meta_text', 'color_blog_meta_icon', 'color_blog_title', 'color_blog_title_hover', 'color_blog_excerpt', 'color_blog_divider',
+            'color_blog_readmore', 'color_blog_readmore_hover',
+            'color_blog_pag_active_bg', 'color_blog_pag_active_text', 'color_blog_pag_btn_bg', 'color_blog_pag_btn_text', 'color_blog_pag_btn_border',
+            'color_blog_single_text', 'color_blog_comment_bubble_bg', 'color_blog_comment_text', 'color_blog_comment_btn_bg', 'color_blog_comment_btn_text'
+        ];
+
+        // 14. Auth (Login/Register/Reset) & Error Templates
+        $authErrorColorKeys = [
+            'color_auth_page_bg', 'color_auth_card_bg', 'color_auth_card_border',
+            'color_auth_heading', 'color_auth_text',
+            'color_auth_input_bg', 'color_auth_input_border', 'color_auth_input_focus_border',
+            'color_auth_btn_bg', 'color_auth_btn_text', 'color_auth_btn_hover',
+            'color_auth_link', 'color_auth_link_hover'
+        ];
+
+        $productModuleKeys = array_merge($productCardColorKeys, $productDetailColorKeys);
+        $colorKeys = array_merge(
+            $appColorKeys, $headerColorKeys, $footerColorKeys, $productModuleKeys,
+            $cartColorKeys, $checkoutColorKeys, $tokenColorKeys, $componentColorKeys,
+            $homeColorKeys, $shopColorKeys, $pageColorKeys, $blogColorKeys, $authErrorColorKeys
+        );
+
+        $defaults = [
+            // App Layout Defaults
+            'color_site_bg'                       => '#f8fafc',
+            'color_common_btn_bg'                 => '#2563eb',
+            'color_common_btn_text'               => '#ffffff',
+            'color_app_spb_bg'                    => '#ffffff',
+            'color_app_spb_border'                => 'rgba(226, 232, 240, 0.9)',
+            'color_app_spb_title'                 => '#0f172a',
+            'color_app_spb_title_hover'           => '#2563eb',
+            'color_app_spb_price'                 => '#2563eb',
+            'color_app_spb_cart_btn_bg'           => '#f8fafc',
+            'color_app_spb_cart_btn_text'         => '#0f172a',
+            'color_app_spb_cart_btn_hover_bg'     => '#e2e8f0',
+            'color_app_spb_buynow_bg'             => '#0dcaf0',
+            'color_app_spb_buynow_text'           => '#ffffff',
+            'color_app_spb_buynow_hover_bg'       => '#0bb5d8',
+            'color_app_spb_buynow_hover_text'     => '#ffffff',
+            'color_app_search_modal_bg'           => '#ffffff',
+            'color_app_search_modal_border'       => '#e2e8f0',
+            'color_app_search_price'              => '#2563eb',
+            'color_app_search_cart_btn_bg'        => '#2563eb',
+            'color_app_search_cart_btn_text'      => '#ffffff',
+            'color_app_search_cart_btn_hover_bg'  => '#1d4ed8',
+            'color_app_search_cart_btn_hover_text'=> '#ffffff',
+            'color_app_drawer_bg'                 => '#ffffff',
+            'color_app_drawer_border'             => '#e2e8f0',
+            'color_app_drawer_icon'               => '#2563eb',
+            'color_app_drawer_total_price'        => '#dc2626',
+            'color_app_drawer_checkout_bg'        => '#0f172a',
+            'color_app_drawer_checkout_text'      => '#ffffff',
+            'color_app_drawer_checkout_hover_bg'  => '#1e293b',
+            'color_app_drawer_checkout_hover_text'=> '#ffffff',
+            'color_app_quickview_spinner'         => '#2563eb',
+            'color_app_scroll_top_bg'             => '#ea580c',
+            'color_app_scroll_top_color'          => '#ffffff',
+
+            // Header Defaults
+            'color_hdr_bg'                        => '#ffffff',
+            'color_hdr_border'                    => '#e2e8f0',
+            'color_hdr_sec_menu_bg'               => '#ffffff',
+            'color_hdr_sec_menu_border'           => '#f1f5f9',
+            'color_hdr_search_border'             => '#2563eb',
+            'color_hdr_search_bg'                 => '#ffffff',
+            'color_hdr_search_input_text'         => '#0f172a',
+            'color_hdr_search_placeholder'        => '#94a3b8',
+            'color_hdr_search_cat_bg'             => '#f8fafc',
+            'color_hdr_search_cat_text'           => '#475569',
+            'color_hdr_search_btn_bg'             => '#2563eb',
+            'color_hdr_search_btn_text'           => '#ffffff',
+            'color_hdr_search_btn_hover_bg'       => '#1d4ed8',
+            'color_hdr_search_btn_hover_text'     => '#ffffff',
+            'color_hdr_icon_text'                 => '#334155',
+            'color_hdr_icon_hover'                => '#2563eb',
+            'color_hdr_icon_active'               => '#f59e0b',
+            'color_hdr_badge_bg'                  => '#ef4444',
+            'color_hdr_badge_text'                => '#ffffff',
+            'color_hdr_cat_btn_bg'                => '#f8fafc',
+            'color_hdr_cat_btn_text'              => '#0f172a',
+            'color_hdr_cat_btn_hover_bg'          => '#e2e8f0',
+            'color_hdr_cat_btn_hover_text'        => '#2563eb',
+            'color_hdr_cat_btn_active_bg'         => '#2563eb',
+            'color_hdr_cat_btn_active_text'       => '#ffffff',
+            'color_hdr_cat_drop_bg'               => '#ffffff',
+            'color_hdr_cat_drop_text'             => '#334155',
+            'color_hdr_cat_drop_hover_bg'         => '#f1f5f9',
+            'color_hdr_cat_drop_hover_text'       => '#2563eb',
+            'color_hdr_menu_text'                 => '#334155',
+            'color_hdr_menu_bg'                   => 'transparent',
+            'color_hdr_menu_hover_text'           => '#00a8ff',
+            'color_hdr_menu_hover_bg'             => '#e0f2fe',
+            'color_hdr_menu_active_text'          => '#2563eb',
+            'color_hdr_menu_active_bg'            => '#e0f2fe',
+            'color_hdr_menu_drop_bg'              => '#ffffff',
+            'color_hdr_menu_drop_text'            => '#475569',
+            'color_hdr_menu_drop_hover_bg'        => '#f8fafc',
+            'color_hdr_menu_drop_hover_text'      => '#2563eb',
+            'color_hdr_support_icon'              => '#2563eb',
+            'color_hdr_support_label'             => '#64748b',
+            'color_hdr_support_phone'             => '#0f172a',
+            'color_hdr_support_phone_hover'       => '#2563eb',
+            'color_hdr_mob_toggle_bg'             => '#f8fafc',
+            'color_hdr_mob_toggle_icon'           => '#0f172a',
+            'color_hdr_mob_toggle_hover_bg'       => '#e2e8f0',
+            'color_hdr_mob_toggle_hover_icon'     => '#2563eb',
+            'color_hdr_mob_head_bg'               => '#f8fafc',
+            'color_hdr_mob_head_text'             => '#0f172a',
+            'color_hdr_mob_head_icon'             => '#2563eb',
+            'color_hdr_mob_tab_bg'                => '#e2e8f0',
+            'color_hdr_mob_tab_text'              => '#64748b',
+            'color_hdr_mob_tab_active_bg'         => '#2563eb',
+            'color_hdr_mob_tab_active_text'       => '#ffffff',
+            'color_hdr_mob_body_bg'               => '#ffffff',
+            'color_hdr_mob_item_text'             => '#0f172a',
+            'color_hdr_mob_item_border'           => '#f1f5f9',
+            'color_hdr_mob_item_hover_bg'         => '#f8fafc',
+            'color_hdr_mob_item_hover_text'       => '#2563eb',
+            'color_hdr_mob_item_active_bg'        => '#eff6ff',
+            'color_hdr_mob_item_active_text'      => '#2563eb',
+
+            // Footer Defaults (with Social Icons Hover Fix)
+            'color_ftr_bg'                        => '#020b18',
+            'color_ftr_border'                    => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_text'                      => '#94a3b8',
+            'color_ftr_logo_border'               => 'transparent',
+            'color_ftr_brand_title'               => '#ffffff',
+            'color_ftr_brand_tagline'             => '#94a3b8',
+            'color_ftr_about_text'                => '#94a3b8',
+            'color_ftr_heading'                   => '#ffffff',
+            'color_ftr_heading_icon'              => '#f59e0b',
+            'color_ftr_link_text'                 => '#94a3b8',
+            'color_ftr_link_hover_text'           => '#ffffff',
+            'color_ftr_link_icon'                 => 'rgba(148, 163, 184, 0.6)',
+            'color_ftr_link_hover_icon'           => '#f59e0b',
+            'color_ftr_contact_icon'              => '#f59e0b',
+            'color_ftr_contact_text'              => '#94a3b8',
+            'color_ftr_contact_hover'             => '#ffffff',
+            
+            // Social Normal & Hover
+            'color_ftr_social_icon'               => '#ffffff',
+            'color_ftr_social_bg'                 => 'rgba(255, 255, 255, 0.06)',
+            'color_ftr_social_border'             => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_social_hover_icon'         => '#ffffff',
+            'color_ftr_social_hover_bg'           => '#2563eb',
+            'color_ftr_social_hover_border'       => '#2563eb',
+
+            'color_ftr_payment_bg'                => 'rgba(255, 255, 255, 0.03)',
+            'color_ftr_payment_border'            => 'rgba(255, 255, 255, 0.1)',
+            'color_ftr_payment_text'              => '#ffffff',
+            'color_ftr_payment_logo_border'       => 'transparent',
+            'color_ftr_payment_hover_bg'          => 'rgba(255, 255, 255, 0.07)',
+            'color_ftr_payment_hover_border'      => 'rgba(255, 255, 255, 0.22)',
+            'color_ftr_bottom_bg'                 => '#010813',
+            'color_ftr_bottom_border'             => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_copyright_text'            => '#94a3b8',
+            'color_ftr_developer_text'            => '#ffffff',
+
+            // Mobile Footer Defaults
+            'color_ftr_mob_brand_bg'              => 'rgba(255, 255, 255, 0.03)',
+            'color_ftr_mob_brand_border'          => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_mob_logo_box_bg'           => 'rgba(255, 255, 255, 0.06)',
+            'color_ftr_mob_logo_box_border'       => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_mob_brand_arrow'           => '#94a3b8',
+            'color_ftr_mob_acc_bg'                => 'rgba(255, 255, 255, 0.02)',
+            'color_ftr_mob_acc_border'            => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_mob_acc_item_border'       => 'rgba(255, 255, 255, 0.06)',
+            'color_ftr_mob_acc_btn_text'          => '#ffffff',
+            'color_ftr_mob_acc_btn_icon'          => '#94a3b8',
+            'color_ftr_mob_acc_chevron'           => '#94a3b8',
+            'color_ftr_mob_acc_chevron_active'    => '#f59e0b',
+            'color_ftr_mob_acc_body_bg'           => 'transparent',
+            'color_ftr_mob_acc_link_text'         => '#94a3b8',
+            'color_ftr_mob_acc_link_hover'        => '#ffffff',
+            'color_ftr_mob_pay_pill_bg'           => '#ffffff',
+            'color_ftr_mob_pay_pill_border'       => 'transparent',
+            'color_ftr_mob_pay_pill_text'         => '#0f172a',
+            'color_ftr_mob_secure_border'         => 'rgba(255, 255, 255, 0.08)',
+            'color_ftr_mob_secure_icon'           => '#ffffff',
+            'color_ftr_mob_secure_text'           => '#94a3b8',
+
+            // Product Card Defaults
+            'color_cpc_card_bg'                   => '#ffffff',
+            'color_cpc_card_border'               => '#edf2f7',
+            'color_cpc_card_border_hover'         => '#cbd5e1',
+            'color_cpc_card_shadow_hover'         => 'rgba(0,0,0,0.06)',
+            'color_cpc_img_wrap_bg'               => '#f8fafc',
+            'color_cpc_body_bg'                   => 'transparent',
+            'color_cpc_title'                     => '#1e293b',
+            'color_cpc_title_hover'               => '#2563eb',
+            'color_cpc_category'                  => '#64748b',
+            'color_cpc_category_hover'            => '#2563eb',
+            'color_cpc_price'                     => '#0f172a',
+            'color_cpc_old_price'                 => '#94a3b8',
+            'color_cpc_rating_star'               => '#f59e0b',
+            'color_cpc_rating_text'               => '#64748b',
+            'color_cpc_sale_badge_bg'             => '#ef4444',
+            'color_cpc_sale_badge_text'           => '#ffffff',
+            'color_cpc_sale_badge_border'         => 'transparent',
+            'color_cpc_wishlist_bg'               => '#f1592a',
+            'color_cpc_wishlist_icon'             => '#ffffff',
+            'color_cpc_wishlist_border'           => 'rgba(255, 255, 255, 0.4)',
+            'color_cpc_wishlist_hover_bg'         => '#1f2033',
+            'color_cpc_wishlist_hover_icon'       => '#ffffff',
+            'color_cpc_wishlist_hover_border'     => 'transparent',
+            'color_cpc_wishlist_active_bg'        => '#dc2626',
+            'color_cpc_wishlist_active_icon'      => '#ffffff',
+            'color_cpc_wishlist_active_border'    => 'transparent',
+            'color_cpc_qv_bg'                     => '#ef4444',
+            'color_cpc_qv_icon'                   => '#ffffff',
+            'color_cpc_qv_border'                 => 'rgba(255, 255, 255, 0.4)',
+            'color_cpc_qv_hover_bg'               => '#1f2033',
+            'color_cpc_qv_hover_icon'             => '#ffffff',
+            'color_cpc_qv_hover_border'           => 'transparent',
+            'color_cpc_cart_bg'                   => '#2563eb',
+            'color_cpc_cart_text'                 => '#ffffff',
+            'color_cpc_cart_border'               => '#2563eb',
+            'color_cpc_cart_icon'                 => '#ffffff',
+            'color_cpc_cart_hover_bg'             => '#1d4ed8',
+            'color_cpc_cart_hover_text'           => '#ffffff',
+            'color_cpc_cart_hover_border'         => '#1d4ed8',
+            'color_cpc_cart_hover_icon'           => '#ffffff',
+            'color_cpc_order_bg'                  => '#0f172a',
+            'color_cpc_order_text'                => '#ffffff',
+            'color_cpc_order_border'              => '#0f172a',
+            'color_cpc_order_icon'                => '#f59e0b',
+            'color_cpc_order_hover_bg'            => '#1e293b',
+            'color_cpc_order_hover_text'          => '#ffffff',
+            'color_cpc_order_hover_border'        => '#1e293b',
+            'color_cpc_order_hover_icon'          => '#f59e0b',
+            'color_cpc_opt_bg'                    => '#0f172a',
+            'color_cpc_opt_text'                  => '#ffffff',
+            'color_cpc_opt_border'                => '#0f172a',
+            'color_cpc_opt_icon'                  => '#ffffff',
+            'color_cpc_opt_hover_bg'              => '#1e293b',
+            'color_cpc_opt_hover_text'            => '#ffffff',
+            'color_cpc_opt_hover_border'          => '#1e293b',
+            'color_cpc_opt_hover_icon'            => '#ffffff',
+            'color_cpc_stockout_bg'               => '#fee2e2',
+            'color_cpc_stockout_text'             => '#dc2626',
+            'color_cpc_stockout_border'           => '#fca5a5',
+            'color_cpc_stockout_icon'             => '#dc2626',
+
+            // Product Details & Quick View Defaults (with Buy Now, Cart & WhatsApp Fixed)
+            'color_pdp_wrapper_bg'                => '#f8fafc',
+            'color_pdp_card_bg'                   => '#ffffff',
+            'color_pdp_card_border'               => '#edf2f7',
+            'color_pdp_zoom_bg'                   => '#ffffff',
+            'color_pdp_zoom_border'               => '#f1f5f9',
+            'color_pdp_lens_border'               => '#2563eb',
+            'color_pdp_thumb_border'              => '#e2e8f0',
+            'color_pdp_thumb_active_border'       => '#2563eb',
+            'color_pdp_thumb_arrow_bg'            => '#f8fafc',
+            'color_pdp_thumb_arrow_text'          => '#475569',
+            'color_pdp_thumb_arrow_hover_bg'      => '#2563eb',
+            'color_pdp_thumb_arrow_hover_text'    => '#ffffff',
+            'color_pdp_discount_bg'               => '#ef4444',
+            'color_pdp_discount_text'             => '#ffffff',
+            'color_pdp_breadcrumb_link'           => '#64748b',
+            'color_pdp_breadcrumb_hover'          => '#2563eb',
+            'color_pdp_breadcrumb_active'         => '#0f172a',
+            'color_pdp_title'                     => '#0f172a',
+            'color_pdp_rating_star'               => '#f59e0b',
+            'color_pdp_rating_text'               => '#64748b',
+            'color_pdp_action_btn_bg'             => '#ffffff',
+            'color_pdp_action_btn_border'         => '#e2e8f0',
+            'color_pdp_action_btn_icon'           => '#64748b',
+            'color_pdp_action_btn_hover_bg'       => '#f8fafc',
+            'color_pdp_action_btn_hover_border'   => '#cbd5e1',
+            'color_pdp_action_btn_hover_icon'     => '#2563eb',
+            'color_pdp_action_btn_active_bg'      => '#fee2e2',
+            'color_pdp_action_btn_active_border'  => '#fca5a5',
+            'color_pdp_action_btn_active_icon'    => '#ef4444',
+            'color_pdp_sku_badge_bg'              => '#f8fafc',
+            'color_pdp_sku_badge_text'            => '#2563eb',
+            'color_pdp_sku_badge_border'          => '#e2e8f0',
+            'color_pdp_stock_in_bg'               => '#ecfdf5',
+            'color_pdp_stock_in_text'             => '#059669',
+            'color_pdp_stock_in_border'           => '#a7f3d0',
+            'color_pdp_stock_out_bg'              => '#fef2f2',
+            'color_pdp_stock_out_text'            => '#dc2626',
+            'color_pdp_stock_out_border'          => '#fecaca',
+            'color_pdp_stock_pre_bg'              => '#fffbeb',
+            'color_pdp_stock_pre_text'            => '#d97706',
+            'color_pdp_stock_pre_border'          => '#fde68a',
+            'color_pdp_price_box_bg'              => '#f8fafc',
+            'color_pdp_price_box_border'          => '#edf2f7',
+            'color_pdp_price'                     => '#dc2626',
+            'color_pdp_old_price'                 => '#94a3b8',
+            'color_pdp_saving_bg'                 => '#fee2e2',
+            'color_pdp_saving_text'               => '#dc2626',
+            'color_pdp_estimated_text'            => '#475569',
+            'color_pdp_short_desc_bg'             => '#fdfdfd',
+            'color_pdp_short_desc_border'         => '#2563eb',
+            'color_pdp_short_desc_text'           => '#475569',
+            'color_pdp_swatch_label'              => '#475569',
+            'color_pdp_swatch_active_label'       => '#2563eb',
+            'color_pdp_swatch_bg'                 => '#ffffff',
+            'color_pdp_swatch_text'               => '#1e293b',
+            'color_pdp_swatch_border'             => '#cbd5e1',
+            'color_pdp_swatch_hover_bg'           => '#f8fafc',
+            'color_pdp_swatch_hover_border'       => '#94a3b8',
+            'color_pdp_swatch_active_bg'          => '#eff6ff',
+            'color_pdp_swatch_active_text'        => '#2563eb',
+            'color_pdp_swatch_active_border'      => '#2563eb',
+            'color_pdp_qty_label'                 => '#0f172a',
+            'color_pdp_qty_border'                => '#cbd5e1',
+            'color_pdp_qty_btn_bg'                => '#f8fafc',
+            'color_pdp_qty_btn_text'              => '#334155',
+            'color_pdp_qty_btn_border'            => '#cbd5e1',
+            'color_pdp_qty_btn_hover_bg'          => '#e2e8f0',
+            'color_pdp_qty_btn_hover_text'        => '#0f172a',
+            'color_pdp_qty_input_bg'              => '#ffffff',
+            'color_pdp_qty_input_text'            => '#0f172a',
+
+            // Buy Now Controls
+            'color_pdp_buynow_bg'                 => '#0dcaf0',
+            'color_pdp_buynow_text'               => '#ffffff',
+            'color_pdp_buynow_border'             => '#0dcaf0',
+            'color_pdp_buynow_icon'               => '#ffffff',
+            'color_pdp_buynow_hover_bg'           => '#0bb5d8',
+            'color_pdp_buynow_hover_text'         => '#ffffff',
+            'color_pdp_buynow_hover_border'       => '#0bb5d8',
+            'color_pdp_buynow_hover_icon'         => '#ffffff',
+
+            // Cart Controls
+            'color_pdp_cart_bg'                   => '#ffc107',
+            'color_pdp_cart_text'                 => '#212529',
+            'color_pdp_cart_border'               => '#ffc107',
+            'color_pdp_cart_icon'                 => '#212529',
+            'color_pdp_cart_hover_bg'             => '#e0a800',
+            'color_pdp_cart_hover_text'           => '#212529',
+            'color_pdp_cart_hover_border'         => '#e0a800',
+            'color_pdp_cart_hover_icon'           => '#212529',
+
+            // WhatsApp Controls Fixed
+            'color_pdp_wa_bg'                     => '#25D366',
+            'color_pdp_wa_text'                   => '#ffffff',
+            'color_pdp_wa_border'                 => '#25D366',
+            'color_pdp_wa_icon'                   => '#ffffff',
+            'color_pdp_wa_hover_bg'               => '#128C7E',
+            'color_pdp_wa_hover_text'             => '#ffffff',
+            'color_pdp_wa_hover_border'           => '#128C7E',
+            'color_pdp_wa_hover_icon'             => '#ffffff',
+
+            'color_pdp_stockout_bg'               => '#fee2e2',
+            'color_pdp_stockout_text'             => '#dc2626',
+            'color_pdp_stockout_border'           => '#fca5a5',
+            'color_pdp_stockout_icon'             => '#dc2626',
+            'color_pdp_sidebar_bg'                => '#ffffff',
+            'color_pdp_sidebar_border'            => '#edf2f7',
+            'color_pdp_sidebar_brand_title'       => '#0f172a',
+            'color_pdp_sidebar_verified_badge'    => '#16a34a',
+            'color_pdp_sidebar_heading'           => '#475569',
+            'color_pdp_sidebar_feature_icon_bg'   => '#eff6ff',
+            'color_pdp_sidebar_feature_icon'      => '#2563eb',
+            'color_pdp_sidebar_feature_text'      => '#475569',
+            'color_pdp_sidebar_social_bg'         => '#ffffff',
+            'color_pdp_sidebar_social_border'     => '#cbd5e1',
+            'color_pdp_sidebar_social_icon'       => '#64748b',
+            'color_pdp_sidebar_social_hover_bg'   => '#2563eb',
+            'color_pdp_sidebar_social_hover_border'=> '#2563eb',
+            'color_pdp_sidebar_social_hover_icon' => '#ffffff',
+            'color_pdp_tab_border'                => '#e2e8f0',
+            'color_pdp_tab_link_text'             => '#64748b',
+            'color_pdp_tab_link_active_text'      => '#2563eb',
+            'color_pdp_tab_link_active_border'    => '#2563eb',
+            'color_pdp_desc_text'                 => '#334155',
+            'color_pdp_spec_th_bg'                => '#f8fafc',
+            'color_pdp_spec_th_text'              => '#0f172a',
+            'color_pdp_spec_td_bg'                => '#ffffff',
+            'color_pdp_spec_td_text'              => '#334155',
+            'color_pdp_spec_border'               => '#e2e8f0',
+            'color_pdp_review_box_bg'             => '#f8fafc',
+            'color_pdp_review_box_border'         => '#e2e8f0',
+            'color_pdp_review_author'             => '#0f172a',
+            'color_pdp_review_date'               => '#64748b',
+            'color_pdp_review_comment'            => '#334155',
+            'color_pdp_review_star'               => '#f59e0b',
+            'color_pdp_review_verified_badge_bg'  => '#ecfdf5',
+            'color_pdp_review_verified_badge_text'=> '#059669',
+
+            // Cart & Drawer Defaults
+            'color_cart_page_bg'                  => '#f8fafc',
+            'color_cart_panel_bg'                 => '#ffffff',
+            'color_cart_panel_border'             => '#edf2f7',
+            'color_cart_item_bg'                  => '#ffffff',
+            'color_cart_item_border'              => '#edf2f7',
+            'color_cart_item_border_hover'        => '#cbd5e1',
+            'color_cart_item_img_bg'              => '#f8fafc',
+            'color_cart_item_img_border'          => '#e2e8f0',
+            'color_cart_item_title'               => '#0f172a',
+            'color_cart_item_title_hover'         => '#2563eb',
+            'color_cart_item_price'               => '#0f172a',
+            'color_cart_variant_bg'               => '#f8fafc',
+            'color_cart_variant_text'             => '#64748b',
+            'color_cart_variant_border'           => '#e2e8f0',
+            'color_cart_sku_text'                 => '#94a3b8',
+            'color_cart_qty_btn_bg'               => '#f8fafc',
+            'color_cart_qty_btn_text'             => '#334155',
+            'color_cart_qty_btn_border'           => '#e2e8f0',
+            'color_cart_qty_btn_hover_bg'         => '#e2e8f0',
+            'color_cart_qty_btn_hover_text'       => '#0f172a',
+            'color_cart_remove_btn'               => '#ef4444',
+            'color_cart_remove_btn_hover'         => '#dc2626',
+            'color_cart_checkout_btn_bg'          => '#2563eb',
+            'color_cart_checkout_btn_text'        => '#ffffff',
+            'color_cart_checkout_btn_hover'       => '#1d4ed8',
+            'color_cart_empty_icon'               => '#94a3b8',
+            'color_cart_empty_btn_bg'             => '#2563eb',
+            'color_cart_empty_btn_text'           => '#ffffff',
+            'color_cart_empty_btn_hover_bg'       => '#1d4ed8',
+
+            // Checkout Page Defaults
+            'color_checkout_page_bg'              => '#f8fafc',
+            'color_checkout_card_bg'              => '#ffffff',
+            'color_checkout_card_border'          => '#edf2f7',
+            'color_checkout_heading'              => '#0f172a',
+            'color_checkout_text'                 => '#334155',
+            'color_checkout_label'                => '#0f172a',
+            'color_checkout_input_bg'             => '#ffffff',
+            'color_checkout_input_border'         => '#cbd5e1',
+            'color_checkout_input_focus_border'   => '#2563eb',
+            'color_checkout_paybox_bg'            => '#ffffff',
+            'color_checkout_paybox_border'        => '#e2e8f0',
+            'color_checkout_paybox_active_bg'     => '#eff6ff',
+            'color_checkout_paybox_active_border' => '#2563eb',
+            'color_checkout_total_price'          => '#2563eb',
+            'color_checkout_btn_bg'               => '#2563eb',
+            'color_checkout_btn_text'             => '#ffffff',
+            'color_checkout_btn_hover'            => '#1d4ed8',
+
+            // Order Confirmation / Token Defaults
+            'color_token_page_bg'                 => '#f1f5f9',
+            'color_token_success_icon_bg'         => '#16a34a',
+            'color_token_success_icon_text'       => '#ffffff',
+            'color_token_heading'                 => '#0f172a',
+            'color_token_subtext'                 => '#64748b',
+            'color_token_total_card_bg'           => '#ffffff',
+            'color_token_total_card_border'       => '#cbd5e1',
+            'color_token_total_card_label'        => '#64748b',
+            'color_token_total_price'             => '#0f172a',
+            'color_token_download_btn_bg'         => '#0f172a',
+            'color_token_download_btn_text'       => '#ffffff',
+            'color_token_download_btn_hover'      => '#1e293b',
+            'color_token_continue_btn_bg'         => '#ffffff',
+            'color_token_continue_btn_text'       => '#475569',
+            'color_token_continue_btn_border'     => '#cbd5e1',
+            'color_token_continue_btn_hover'      => '#f8fafc',
+            'color_token_memo_bg'                 => '#ffffff',
+            'color_token_memo_border'             => '#94a3b8',
+            'color_token_memo_text'               => '#0f172a',
+            'color_token_memo_divider'            => '#475569',
+            'color_token_digital_box_bg'          => '#f8fafc',
+            'color_token_digital_box_border'      => '#2563eb',
+
+            // Category Card Component Defaults
+            'color_cat_card_bg'                   => '#f8fafc',
+            'color_cat_card_border'               => '#edf2f7',
+            'color_cat_card_border_hover'         => '#2563eb',
+            'color_cat_card_title'                => '#0f172a',
+            'color_cat_card_title_hover'          => '#2563eb',
+            'color_cat_card_count'                => '#64748b',
+
+            // Section Header Component Defaults
+            'color_section_title'                 => '#0f172a',
+            'color_section_link'                  => '#2563eb',
+            'color_section_link_hover'            => '#1d4ed8',
+
+            // Home Page Defaults
+            'color_home_cat_menu_bg'              => '#ffffff',
+            'color_home_cat_menu_border'          => '#edf2f7',
+            'color_home_cat_header_text'          => '#0f172a',
+            'color_home_cat_header_icon'          => '#2563eb',
+            'color_home_cat_header_badge_bg'      => '#eff6ff',
+            'color_home_cat_header_badge_text'    => '#2563eb',
+            'color_home_cat_item_text'            => '#334155',
+            'color_home_cat_item_hover_bg'        => '#f1f5f9',
+            'color_home_cat_item_hover_text'      => '#2563eb',
+            'color_home_cat_item_active_bg'       => '#eff6ff',
+            'color_home_cat_item_active_text'     => '#2563eb',
+            'color_home_cat_flyout_bg'            => '#ffffff',
+            'color_home_cat_flyout_border'        => '#e2e8f0',
+            'color_home_cat_flyout_item_text'     => '#475569',
+            'color_home_cat_flyout_item_hover_bg' => '#f8fafc',
+            'color_home_cat_flyout_item_hover_text'=> '#2563eb',
+            'color_home_deals_card_bg'            => '#ffffff',
+            'color_home_deals_card_border'        => '#fee2e2',
+            'color_home_deals_timer_box_bg'       => '#0f172a',
+            'color_home_deals_badge_bg'           => '#ef4444',
+            'color_home_deals_badge_text'         => '#ffffff',
+            'color_home_deals_title'              => '#ffffff',
+            'color_home_deals_subtitle'           => 'rgba(255, 255, 255, 0.7)',
+            'color_home_deals_tile_bg'            => '#ffffff',
+            'color_home_deals_tile_text'          => '#0f172a',
+            'color_home_deals_tile_label'         => 'rgba(255, 255, 255, 0.7)',
+            'color_home_pop_card_bg'              => '#ffffff',
+            'color_home_pop_card_border'          => '#edf2f7',
+            'color_home_pop_title'                => '#0f172a',
+            'color_home_pop_title_icon'           => '#2563eb',
+            'color_home_pop_btn_text'             => '#2563eb',
+            'color_home_pop_btn_border'           => '#2563eb',
+            'color_home_pop_btn_hover_bg'         => '#2563eb',
+            'color_home_pop_btn_hover_text'       => '#ffffff',
+            'color_home_pop_pill_bg'              => '#ffffff',
+            'color_home_pop_pill_border'          => '#edf2f7',
+            'color_home_pop_pill_hover_border'    => '#3b82f6',
+            'color_home_pop_pill_icon_bg'         => '#f1f5f9',
+            'color_home_pop_pill_icon'            => '#475569',
+            'color_home_pop_pill_text'            => '#0f172a',
+            'color_home_pop_pill_count'           => '#94a3b8',
+            'color_home_feat_card_bg'             => '#ffffff',
+            'color_home_feat_card_border'         => '#edf2f7',
+            'color_home_feat_title'               => '#0f172a',
+            'color_home_feat_title_icon'          => '#ef4444',
+            'color_home_feat_subtitle'            => '#64748b',
+            'color_home_feat_filter_active_bg'    => '#2563eb',
+            'color_home_feat_filter_active_text'  => '#ffffff',
+            'color_home_feat_filter_btn_bg'       => '#ffffff',
+            'color_home_feat_filter_btn_text'     => '#475569',
+            'color_home_feat_filter_btn_border'   => '#e2e8f0',
+            'color_home_feat_filter_btn_hover_bg' => '#eff6ff',
+            'color_home_feat_filter_btn_hover_text'=> '#2563eb',
+
+            // Shop Page Defaults
+            'color_shop_page_bg'                  => '#f8fafc',
+            'color_shop_top_bg'                   => '#ffffff',
+            'color_shop_top_border'               => '#edf2f7',
+            'color_shop_heading'                  => '#0f172a',
+            'color_shop_showing_text'             => '#64748b',
+            'color_shop_sort_bg'                  => '#f8fafc',
+            'color_shop_sort_text'                => '#334155',
+            'color_shop_sort_border'              => '#cbd5e1',
+            'color_shop_sort_focus_border'        => '#2563eb',
+            'color_shop_sidebar_bg'               => '#ffffff',
+            'color_shop_sidebar_border'           => '#edf2f7',
+            'color_shop_cat_head_text'            => '#0f172a',
+            'color_shop_cat_head_icon'            => '#2563eb',
+            'color_shop_cat_badge_bg'             => '#eff6ff',
+            'color_shop_cat_badge_text'           => '#2563eb',
+            'color_shop_cat_item_text'            => '#334155',
+            'color_shop_cat_item_hover_bg'        => '#f1f5f9',
+            'color_shop_cat_item_hover_text'      => '#2563eb',
+            'color_shop_cat_item_active_bg'       => '#eff6ff',
+            'color_shop_cat_item_active_text'     => '#2563eb',
+            'color_shop_flyout_bg'                => '#ffffff',
+            'color_shop_flyout_border'            => '#e2e8f0',
+            'color_shop_flyout_text'              => '#475569',
+            'color_shop_flyout_hover_bg'          => '#f8fafc',
+            'color_shop_flyout_hover_text'        => '#2563eb',
+            'color_shop_pag_card_bg'              => '#ffffff',
+            'color_shop_pag_card_border'          => '#edf2f7',
+            'color_shop_pag_counter_text'         => '#64748b',
+            'color_shop_pag_btn_bg'               => '#ffffff',
+            'color_shop_pag_btn_text'             => '#334155',
+            'color_shop_pag_btn_border'           => '#e2e8f0',
+            'color_shop_pag_btn_hover_bg'         => '#eff6ff',
+            'color_shop_pag_btn_hover_text'       => '#2563eb',
+            'color_shop_pag_btn_active_bg'        => '#2563eb',
+            'color_shop_pag_btn_active_text'      => '#ffffff',
+
+            // Custom Page Defaults
+            'color_page_bg'                       => '#f8fafc',
+            'color_page_text'                     => '#1e293b',
+            'color_page_title'                    => '#0f172a',
+            'color_page_card_bg'                  => '#ffffff',
+            'color_page_card_border'              => '#e2e8f0',
+            'color_page_sidebar_bg'               => '#ffffff',
+            'color_page_sidebar_border'           => '#e2e8f0',
+            'color_page_sidebar_header_text'      => '#0f172a',
+            'color_page_sidebar_text'             => '#475569',
+            'color_page_breadcrumb_link'          => '#64748b',
+            'color_page_breadcrumb_hover'         => '#2563eb',
+
+            // Blog Pages Defaults
+            'color_blog_page_bg'                  => '#f8fafc',
+            'color_blog_hero_bg'                  => '#f8fafc',
+            'color_blog_hero_border'              => '#e2e8f0',
+            'color_blog_hero_badge_bg'            => '#2563eb',
+            'color_blog_hero_badge_text'          => '#ffffff',
+            'color_blog_hero_title'               => '#0f172a',
+            'color_blog_hero_desc'                => '#64748b',
+            'color_blog_search_bg'                => '#ffffff',
+            'color_blog_search_text'              => '#0f172a',
+            'color_blog_search_border'            => '#cbd5e1',
+            'color_blog_search_btn_bg'            => '#2563eb',
+            'color_blog_search_btn_text'          => '#ffffff',
+            'color_blog_chip_bg'                  => '#ffffff',
+            'color_blog_chip_text'                => '#475569',
+            'color_blog_chip_border'              => '#e2e8f0',
+            'color_blog_chip_active_bg'           => '#2563eb',
+            'color_blog_chip_active_text'         => '#ffffff',
+            'color_blog_chip_hover_bg'            => '#eff6ff',
+            'color_blog_chip_hover_text'          => '#2563eb',
+            'color_blog_card_bg'                  => '#ffffff',
+            'color_blog_card_border'              => '#edf2f7',
+            'color_blog_card_hover_border'        => '#cbd5e1',
+            'color_blog_badge_bg'                 => 'rgba(15, 23, 42, 0.75)',
+            'color_blog_badge_text'               => '#ffffff',
+            'color_blog_meta_text'                => '#64748b',
+            'color_blog_meta_icon'                => '#94a3b8',
+            'color_blog_title'                    => '#0f172a',
+            'color_blog_title_hover'              => '#2563eb',
+            'color_blog_excerpt'                  => '#64748b',
+            'color_blog_divider'                  => '#f1f5f9',
+            'color_blog_readmore'                 => '#2563eb',
+            'color_blog_readmore_hover'           => '#1d4ed8',
+            'color_blog_pag_active_bg'            => '#2563eb',
+            'color_blog_pag_active_text'          => '#ffffff',
+            'color_blog_pag_btn_bg'               => '#ffffff',
+            'color_blog_pag_btn_text'             => '#334155',
+            'color_blog_pag_btn_border'           => '#e2e8f0',
+            'color_blog_single_text'              => '#334155',
+            'color_blog_comment_bubble_bg'        => '#f1f5f9',
+            'color_blog_comment_text'             => '#1e293b',
+            'color_blog_comment_btn_bg'           => '#2563eb',
+            'color_blog_comment_btn_text'         => '#ffffff',
+
+            // Auth Defaults
+            'color_auth_page_bg'                  => '#f8fafc',
+            'color_auth_card_bg'                  => '#ffffff',
+            'color_auth_card_border'              => '#edf2f7',
+            'color_auth_heading'                  => '#0f172a',
+            'color_auth_text'                     => '#64748b',
+            'color_auth_input_bg'                 => '#ffffff',
+            'color_auth_input_border'             => '#cbd5e1',
+            'color_auth_input_focus_border'       => '#2563eb',
+            'color_auth_btn_bg'                   => '#2563eb',
+            'color_auth_btn_text'                 => '#ffffff',
+            'color_auth_btn_hover'                => '#1d4ed8',
+            'color_auth_link'                     => '#2563eb',
+            'color_auth_link_hover'               => '#1d4ed8',
+        ];
+
+        $colors = [];
+        foreach ($colorKeys as $k) {
+            $colors[$k] = $allSettings[$k] ?? ($defaults[$k] ?? '#ffffff');
+        }
 
         return view('admin.theme.colors', compact('colors'));
     }
 
     public function themeColorsUpdate(Request $request)
     {
-        $colorKeys = [
-            'color_site_bg', 'color_card_bg', 'color_header_bg', 'color_header_text',
-            'color_header_search_btn_bg', 'color_menu_text', 'color_menu_hover',
-            'color_menu_active_bg', 'color_card_btn_cart_bg', 'color_card_btn_cart_text',
-            'color_card_btn_order_bg', 'color_card_btn_order_text', 'color_details_btn_cart_bg',
-            'color_details_btn_cart_text', 'color_details_btn_order_bg', 'color_details_btn_order_text',
-            'color_common_btn_bg', 'color_common_btn_text', 'color_section_title',
-            'color_product_title', 'color_product_price', 'color_footer_bg', 'color_footer_text'
+        $appColorKeys = [
+            'color_site_bg', 'color_common_btn_bg', 'color_common_btn_text',
+            'color_app_spb_bg', 'color_app_spb_border', 'color_app_spb_title', 'color_app_spb_title_hover', 'color_app_spb_price',
+            'color_app_spb_cart_btn_bg', 'color_app_spb_cart_btn_text', 'color_app_spb_cart_btn_hover_bg',
+            'color_app_spb_buynow_bg', 'color_app_spb_buynow_text', 'color_app_spb_buynow_hover_bg', 'color_app_spb_buynow_hover_text',
+            'color_app_search_modal_bg', 'color_app_search_modal_border',
+            'color_app_search_price', 'color_app_search_cart_btn_bg', 'color_app_search_cart_btn_text', 'color_app_search_cart_btn_hover_bg', 'color_app_search_cart_btn_hover_text',
+            'color_app_drawer_bg', 'color_app_drawer_border', 'color_app_drawer_icon', 'color_app_drawer_total_price',
+            'color_app_drawer_checkout_bg', 'color_app_drawer_checkout_text', 'color_app_drawer_checkout_hover_bg', 'color_app_drawer_checkout_hover_text',
+            'color_app_quickview_spinner',
+            'color_app_scroll_top_bg', 'color_app_scroll_top_color'
         ];
 
-        if ($request->has('reset_defaults')) {
+        $headerColorKeys = [
+            'color_hdr_bg', 'color_hdr_border', 'color_hdr_sec_menu_bg', 'color_hdr_sec_menu_border',
+            'color_hdr_search_border', 'color_hdr_search_bg', 'color_hdr_search_input_text', 'color_hdr_search_placeholder',
+            'color_hdr_search_cat_bg', 'color_hdr_search_cat_text', 'color_hdr_search_btn_bg', 'color_hdr_search_btn_text', 'color_hdr_search_btn_hover_bg', 'color_hdr_search_btn_hover_text',
+            'color_hdr_icon_text', 'color_hdr_icon_hover', 'color_hdr_icon_active', 'color_hdr_badge_bg', 'color_hdr_badge_text',
+            'color_hdr_cat_btn_bg', 'color_hdr_cat_btn_text', 'color_hdr_cat_btn_hover_bg', 'color_hdr_cat_btn_hover_text', 'color_hdr_cat_btn_active_bg', 'color_hdr_cat_btn_active_text',
+            'color_hdr_cat_drop_bg', 'color_hdr_cat_drop_text', 'color_hdr_cat_drop_hover_bg', 'color_hdr_cat_drop_hover_text',
+            'color_hdr_menu_text', 'color_hdr_menu_bg', 'color_hdr_menu_hover_text', 'color_hdr_menu_hover_bg', 'color_hdr_menu_active_text', 'color_hdr_menu_active_bg',
+            'color_hdr_menu_drop_bg', 'color_hdr_menu_drop_text', 'color_hdr_menu_drop_hover_bg', 'color_hdr_menu_drop_hover_text',
+            'color_hdr_support_icon', 'color_hdr_support_label', 'color_hdr_support_phone', 'color_hdr_support_phone_hover',
+            'color_hdr_mob_toggle_bg', 'color_hdr_mob_toggle_icon', 'color_hdr_mob_toggle_hover_bg', 'color_hdr_mob_toggle_hover_icon',
+            'color_hdr_mob_head_bg', 'color_hdr_mob_head_text', 'color_hdr_mob_head_icon',
+            'color_hdr_mob_tab_bg', 'color_hdr_mob_tab_text', 'color_hdr_mob_tab_active_bg', 'color_hdr_mob_tab_active_text',
+            'color_hdr_mob_body_bg', 'color_hdr_mob_item_text', 'color_hdr_mob_item_border', 'color_hdr_mob_item_hover_bg', 'color_hdr_mob_item_hover_text',
+            'color_hdr_mob_item_active_bg', 'color_hdr_mob_item_active_text'
+        ];
+
+        $footerColorKeys = [
+            'color_ftr_bg', 'color_ftr_border', 'color_ftr_text', 'color_ftr_logo_border',
+            'color_ftr_brand_title', 'color_ftr_brand_tagline', 'color_ftr_about_text',
+            'color_ftr_heading', 'color_ftr_heading_icon',
+            'color_ftr_link_text', 'color_ftr_link_hover_text', 'color_ftr_link_icon', 'color_ftr_link_hover_icon',
+            'color_ftr_contact_icon', 'color_ftr_contact_text', 'color_ftr_contact_hover',
+            
+            // Social Icons Normal & Hover
+            'color_ftr_social_icon', 'color_ftr_social_bg', 'color_ftr_social_border',
+            'color_ftr_social_hover_icon', 'color_ftr_social_hover_bg', 'color_ftr_social_hover_border',
+
+            'color_ftr_payment_bg', 'color_ftr_payment_border', 'color_ftr_payment_text', 'color_ftr_payment_logo_border',
+            'color_ftr_payment_hover_bg', 'color_ftr_payment_hover_border',
+            'color_ftr_bottom_bg', 'color_ftr_bottom_border', 'color_ftr_copyright_text', 'color_ftr_developer_text',
+
+            'color_ftr_mob_brand_bg', 'color_ftr_mob_brand_border', 'color_ftr_mob_logo_box_bg', 'color_ftr_mob_logo_box_border',
+            'color_ftr_mob_brand_arrow', 'color_ftr_mob_acc_bg', 'color_ftr_mob_acc_border', 'color_ftr_mob_acc_item_border',
+            'color_ftr_mob_acc_btn_text', 'color_ftr_mob_acc_btn_icon', 'color_ftr_mob_acc_chevron', 'color_ftr_mob_acc_chevron_active',
+            'color_ftr_mob_acc_body_bg', 'color_ftr_mob_acc_link_text', 'color_ftr_mob_acc_link_hover',
+            'color_ftr_mob_pay_pill_bg', 'color_ftr_mob_pay_pill_border', 'color_ftr_mob_pay_pill_text',
+            'color_ftr_mob_secure_border', 'color_ftr_mob_secure_icon', 'color_ftr_mob_secure_text'
+        ];
+
+        $productCardColorKeys = [
+            'color_cpc_card_bg', 'color_cpc_card_border', 'color_cpc_card_border_hover', 'color_cpc_card_shadow_hover',
+            'color_cpc_img_wrap_bg', 'color_cpc_body_bg',
+            'color_cpc_title', 'color_cpc_title_hover', 'color_cpc_category', 'color_cpc_category_hover',
+            'color_cpc_price', 'color_cpc_old_price', 'color_cpc_rating_star', 'color_cpc_rating_text',
+            'color_cpc_sale_badge_bg', 'color_cpc_sale_badge_text', 'color_cpc_sale_badge_border',
+            'color_cpc_wishlist_bg', 'color_cpc_wishlist_icon', 'color_cpc_wishlist_border',
+            'color_cpc_wishlist_hover_bg', 'color_cpc_wishlist_hover_icon', 'color_cpc_wishlist_hover_border',
+            'color_cpc_wishlist_active_bg', 'color_cpc_wishlist_active_icon', 'color_cpc_wishlist_active_border',
+            'color_cpc_qv_bg', 'color_cpc_qv_icon', 'color_cpc_qv_border',
+            'color_cpc_qv_hover_bg', 'color_cpc_qv_hover_icon', 'color_cpc_qv_hover_border',
+            'color_cpc_cart_bg', 'color_cpc_cart_text', 'color_cpc_cart_border', 'color_cpc_cart_icon',
+            'color_cpc_cart_hover_bg', 'color_cpc_cart_hover_text', 'color_cpc_cart_hover_border', 'color_cpc_cart_hover_icon',
+            'color_cpc_order_bg', 'color_cpc_order_text', 'color_cpc_order_border', 'color_cpc_order_icon',
+            'color_cpc_order_hover_bg', 'color_cpc_order_hover_text', 'color_cpc_order_hover_border', 'color_cpc_order_hover_icon',
+            'color_cpc_opt_bg', 'color_cpc_opt_text', 'color_cpc_opt_border', 'color_cpc_opt_icon',
+            'color_cpc_opt_hover_bg', 'color_cpc_opt_hover_text', 'color_cpc_opt_hover_border', 'color_cpc_opt_hover_icon',
+            'color_cpc_stockout_bg', 'color_cpc_stockout_text', 'color_cpc_stockout_border', 'color_cpc_stockout_icon',
+        ];
+
+        $productDetailColorKeys = [
+            'color_pdp_wrapper_bg', 'color_pdp_card_bg', 'color_pdp_card_border',
+            'color_pdp_zoom_bg', 'color_pdp_zoom_border', 'color_pdp_lens_border',
+            'color_pdp_thumb_border', 'color_pdp_thumb_active_border',
+            'color_pdp_thumb_arrow_bg', 'color_pdp_thumb_arrow_text', 'color_pdp_thumb_arrow_hover_bg', 'color_pdp_thumb_arrow_hover_text',
+            'color_pdp_discount_bg', 'color_pdp_discount_text',
+            'color_pdp_breadcrumb_link', 'color_pdp_breadcrumb_hover', 'color_pdp_breadcrumb_active',
+            'color_pdp_title', 'color_pdp_rating_star', 'color_pdp_rating_text',
+            'color_pdp_action_btn_bg', 'color_pdp_action_btn_border', 'color_pdp_action_btn_icon',
+            'color_pdp_action_btn_hover_bg', 'color_pdp_action_btn_hover_border', 'color_pdp_action_btn_hover_icon',
+            'color_pdp_action_btn_active_bg', 'color_pdp_action_btn_active_border', 'color_pdp_action_btn_active_icon',
+            'color_pdp_sku_badge_bg', 'color_pdp_sku_badge_text', 'color_pdp_sku_badge_border',
+            'color_pdp_stock_in_bg', 'color_pdp_stock_in_text', 'color_pdp_stock_in_border',
+            'color_pdp_stock_out_bg', 'color_pdp_stock_out_text', 'color_pdp_stock_out_border',
+            'color_pdp_stock_pre_bg', 'color_pdp_stock_pre_text', 'color_pdp_stock_pre_border',
+            'color_pdp_price_box_bg', 'color_pdp_price_box_border',
+            'color_pdp_price', 'color_pdp_old_price',
+            'color_pdp_saving_bg', 'color_pdp_saving_text', 'color_pdp_estimated_text',
+            'color_pdp_short_desc_bg', 'color_pdp_short_desc_border', 'color_pdp_short_desc_text',
+            'color_pdp_swatch_label', 'color_pdp_swatch_active_label',
+            'color_pdp_swatch_bg', 'color_pdp_swatch_text', 'color_pdp_swatch_border',
+            'color_pdp_swatch_hover_bg', 'color_pdp_swatch_hover_border',
+            'color_pdp_swatch_active_bg', 'color_pdp_swatch_active_text', 'color_pdp_swatch_active_border',
+            'color_pdp_qty_label', 'color_pdp_qty_border',
+            'color_pdp_qty_btn_bg', 'color_pdp_qty_btn_text', 'color_pdp_qty_btn_border',
+            'color_pdp_qty_btn_hover_bg', 'color_pdp_qty_btn_hover_text',
+            'color_pdp_qty_input_bg', 'color_pdp_qty_input_text',
+
+            // Buy Now Controls
+            'color_pdp_buynow_bg', 'color_pdp_buynow_text', 'color_pdp_buynow_border', 'color_pdp_buynow_icon',
+            'color_pdp_buynow_hover_bg', 'color_pdp_buynow_hover_text', 'color_pdp_buynow_hover_border', 'color_pdp_buynow_hover_icon',
+
+            // Cart Controls
+            'color_pdp_cart_bg', 'color_pdp_cart_text', 'color_pdp_cart_border', 'color_pdp_cart_icon',
+            'color_pdp_cart_hover_bg', 'color_pdp_cart_hover_text', 'color_pdp_cart_hover_border', 'color_pdp_cart_hover_icon',
+
+            // WhatsApp Controls Fixed
+            'color_pdp_wa_bg', 'color_pdp_wa_text', 'color_pdp_wa_border', 'color_pdp_wa_icon',
+            'color_pdp_wa_hover_bg', 'color_pdp_wa_hover_text', 'color_pdp_wa_hover_border', 'color_pdp_wa_hover_icon',
+
+            'color_pdp_stockout_bg', 'color_pdp_stockout_text', 'color_pdp_stockout_border', 'color_pdp_stockout_icon',
+            'color_pdp_sidebar_bg', 'color_pdp_sidebar_border', 'color_pdp_sidebar_brand_title',
+            'color_pdp_sidebar_verified_badge', 'color_pdp_sidebar_heading',
+            'color_pdp_sidebar_feature_icon_bg', 'color_pdp_sidebar_feature_icon', 'color_pdp_sidebar_feature_text',
+            'color_pdp_sidebar_social_bg', 'color_pdp_sidebar_social_border', 'color_pdp_sidebar_social_icon',
+            'color_pdp_sidebar_social_hover_bg', 'color_pdp_sidebar_social_hover_border', 'color_pdp_sidebar_social_hover_icon',
+            'color_pdp_tab_border', 'color_pdp_tab_link_text', 'color_pdp_tab_link_active_text', 'color_pdp_tab_link_active_border',
+            'color_pdp_desc_text',
+            'color_pdp_spec_th_bg', 'color_pdp_spec_th_text', 'color_pdp_spec_td_bg', 'color_pdp_spec_td_text', 'color_pdp_spec_border',
+            'color_pdp_review_box_bg', 'color_pdp_review_box_border',
+            'color_pdp_review_author', 'color_pdp_review_date', 'color_pdp_review_comment',
+            'color_pdp_review_star', 'color_pdp_review_verified_badge_bg', 'color_pdp_review_verified_badge_text'
+        ];
+
+        $cartColorKeys = [
+            'color_cart_page_bg', 'color_cart_panel_bg', 'color_cart_panel_border',
+            'color_cart_item_bg', 'color_cart_item_border', 'color_cart_item_border_hover',
+            'color_cart_item_img_bg', 'color_cart_item_img_border',
+            'color_cart_item_title', 'color_cart_item_title_hover', 'color_cart_item_price',
+            'color_cart_variant_bg', 'color_cart_variant_text', 'color_cart_variant_border',
+            'color_cart_sku_text',
+            'color_cart_qty_btn_bg', 'color_cart_qty_btn_text', 'color_cart_qty_btn_border',
+            'color_cart_qty_btn_hover_bg', 'color_cart_qty_btn_hover_text',
+            'color_cart_remove_btn', 'color_cart_remove_btn_hover',
+            'color_cart_checkout_btn_bg', 'color_cart_checkout_btn_text', 'color_cart_checkout_btn_hover',
+            'color_cart_empty_icon', 'color_cart_empty_btn_bg', 'color_cart_empty_btn_text', 'color_cart_empty_btn_hover_bg'
+        ];
+
+        $checkoutColorKeys = [
+            'color_checkout_page_bg', 'color_checkout_card_bg', 'color_checkout_card_border',
+            'color_checkout_heading', 'color_checkout_text', 'color_checkout_label',
+            'color_checkout_input_bg', 'color_checkout_input_border', 'color_checkout_input_focus_border',
+            'color_checkout_paybox_bg', 'color_checkout_paybox_border',
+            'color_checkout_paybox_active_bg', 'color_checkout_paybox_active_border',
+            'color_checkout_total_price',
+            'color_checkout_btn_bg', 'color_checkout_btn_text', 'color_checkout_btn_hover'
+        ];
+
+        $tokenColorKeys = [
+            'color_token_page_bg', 'color_token_success_icon_bg', 'color_token_success_icon_text',
+            'color_token_heading', 'color_token_subtext',
+            'color_token_total_card_bg', 'color_token_total_card_border', 'color_token_total_card_label', 'color_token_total_price',
+            'color_token_download_btn_bg', 'color_token_download_btn_text', 'color_token_download_btn_hover',
+            'color_token_continue_btn_bg', 'color_token_continue_btn_text', 'color_token_continue_btn_border', 'color_token_continue_btn_hover',
+            'color_token_memo_bg', 'color_token_memo_border', 'color_token_memo_text', 'color_token_memo_divider',
+            'color_token_digital_box_bg', 'color_token_digital_box_border'
+        ];
+
+        $componentColorKeys = [
+            'color_cat_card_bg', 'color_cat_card_border', 'color_cat_card_border_hover',
+            'color_cat_card_title', 'color_cat_card_title_hover', 'color_cat_card_count',
+            'color_section_title', 'color_section_link', 'color_section_link_hover',
+        ];
+
+        $homeColorKeys = [
+            'color_home_cat_menu_bg', 'color_home_cat_menu_border', 'color_home_cat_header_text', 'color_home_cat_header_icon',
+            'color_home_cat_header_badge_bg', 'color_home_cat_header_badge_text', 'color_home_cat_item_text', 'color_home_cat_item_hover_bg',
+            'color_home_cat_item_hover_text', 'color_home_cat_item_active_bg', 'color_home_cat_item_active_text', 'color_home_cat_flyout_bg',
+            'color_home_cat_flyout_border', 'color_home_cat_flyout_item_text', 'color_home_cat_flyout_item_hover_bg', 'color_home_cat_flyout_item_hover_text',
+            'color_home_deals_card_bg', 'color_home_deals_card_border', 'color_home_deals_timer_box_bg', 'color_home_deals_badge_bg',
+            'color_home_deals_badge_text', 'color_home_deals_title', 'color_home_deals_subtitle', 'color_home_deals_tile_bg',
+            'color_home_deals_tile_text', 'color_home_deals_tile_label',
+            'color_home_pop_card_bg', 'color_home_pop_card_border', 'color_home_pop_title', 'color_home_pop_title_icon',
+            'color_home_pop_btn_text', 'color_home_pop_btn_border', 'color_home_pop_btn_hover_bg', 'color_home_pop_btn_hover_text',
+            'color_home_pop_pill_bg', 'color_home_pop_pill_border', 'color_home_pop_pill_hover_border', 'color_home_pop_pill_icon_bg',
+            'color_home_pop_pill_icon', 'color_home_pop_pill_text', 'color_home_pop_pill_count',
+            'color_home_feat_card_bg', 'color_home_feat_card_border', 'color_home_feat_title', 'color_home_feat_title_icon',
+            'color_home_feat_subtitle', 'color_home_feat_filter_active_bg', 'color_home_feat_filter_active_text', 'color_home_feat_filter_btn_bg',
+            'color_home_feat_filter_btn_text', 'color_home_feat_filter_btn_border', 'color_home_feat_filter_btn_hover_bg', 'color_home_feat_filter_btn_hover_text'
+        ];
+
+        $shopColorKeys = [
+            'color_shop_page_bg', 'color_shop_top_bg', 'color_shop_top_border', 'color_shop_heading', 'color_shop_showing_text',
+            'color_shop_sort_bg', 'color_shop_sort_text', 'color_shop_sort_border', 'color_shop_sort_focus_border',
+            'color_shop_sidebar_bg', 'color_shop_sidebar_border', 'color_shop_cat_head_text', 'color_shop_cat_head_icon',
+            'color_shop_cat_badge_bg', 'color_shop_cat_badge_text', 'color_shop_cat_item_text', 'color_shop_cat_item_hover_bg',
+            'color_shop_cat_item_hover_text', 'color_shop_cat_item_active_bg', 'color_shop_cat_item_active_text', 'color_shop_flyout_bg',
+            'color_shop_flyout_border', 'color_shop_flyout_text', 'color_shop_flyout_hover_bg', 'color_shop_flyout_hover_text',
+            'color_shop_pag_card_bg', 'color_shop_pag_card_border', 'color_shop_pag_counter_text', 'color_shop_pag_btn_bg',
+            'color_shop_pag_btn_text', 'color_shop_pag_btn_border', 'color_shop_pag_btn_hover_bg', 'color_shop_pag_btn_hover_text',
+            'color_shop_pag_btn_active_bg', 'color_shop_pag_btn_active_text'
+        ];
+
+        $pageColorKeys = [
+            'color_page_bg', 'color_page_text', 'color_page_title', 'color_page_card_bg', 'color_page_card_border',
+            'color_page_sidebar_bg', 'color_page_sidebar_border', 'color_page_sidebar_header_text', 'color_page_sidebar_text',
+            'color_page_breadcrumb_link', 'color_page_breadcrumb_hover'
+        ];
+
+        $blogColorKeys = [
+            'color_blog_page_bg', 'color_blog_hero_bg', 'color_blog_hero_border', 'color_blog_hero_badge_bg', 'color_blog_hero_badge_text',
+            'color_blog_hero_title', 'color_blog_hero_desc',
+            'color_blog_search_bg', 'color_blog_search_text', 'color_blog_search_border', 'color_blog_search_btn_bg', 'color_blog_search_btn_text',
+            'color_blog_chip_bg', 'color_blog_chip_text', 'color_blog_chip_border', 'color_blog_chip_active_bg', 'color_blog_chip_active_text',
+            'color_blog_chip_hover_bg', 'color_blog_chip_hover_text',
+            'color_blog_card_bg', 'color_blog_card_border', 'color_blog_card_hover_border', 'color_blog_badge_bg', 'color_blog_badge_text',
+            'color_blog_meta_text', 'color_blog_meta_icon', 'color_blog_title', 'color_blog_title_hover', 'color_blog_excerpt', 'color_blog_divider',
+            'color_blog_readmore', 'color_blog_readmore_hover',
+            'color_blog_pag_active_bg', 'color_blog_pag_active_text', 'color_blog_pag_btn_bg', 'color_blog_pag_btn_text', 'color_blog_pag_btn_border',
+            'color_blog_single_text', 'color_blog_comment_bubble_bg', 'color_blog_comment_text', 'color_blog_comment_btn_bg', 'color_blog_comment_btn_text'
+        ];
+
+        $authErrorColorKeys = [
+            'color_auth_page_bg', 'color_auth_card_bg', 'color_auth_card_border',
+            'color_auth_heading', 'color_auth_text',
+            'color_auth_input_bg', 'color_auth_input_border', 'color_auth_input_focus_border',
+            'color_auth_btn_bg', 'color_auth_btn_text', 'color_auth_btn_hover',
+            'color_auth_link', 'color_auth_link_hover'
+        ];
+
+        $productModuleKeys = array_merge($productCardColorKeys, $productDetailColorKeys);
+        $colorKeys = array_merge(
+            $appColorKeys, $headerColorKeys, $footerColorKeys, $productModuleKeys,
+            $cartColorKeys, $checkoutColorKeys, $tokenColorKeys, $componentColorKeys,
+            $homeColorKeys, $shopColorKeys, $pageColorKeys, $blogColorKeys, $authErrorColorKeys
+        );
+
+        // Header Reset
+        if ($request->input('reset_header') === '1') {
+            DB::table('settings')->whereIn('key', $headerColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'All header colors restored to system defaults.');
+        }
+
+        // Footer Reset
+        if ($request->input('reset_footer') === '1') {
+            DB::table('settings')->whereIn('key', $footerColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'All footer colors restored to system defaults.');
+        }
+
+        // Product Module Reset
+        if ($request->input('reset_product') === '1') {
+            DB::table('settings')->whereIn('key', $productModuleKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'All product card, details and quick view colors restored to defaults.');
+        }
+
+        // Cart Module Reset
+        if ($request->input('reset_cart') === '1') {
+            DB::table('settings')->whereIn('key', $cartColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Cart page and drawer colors restored to defaults.');
+        }
+
+        // Checkout Module Reset
+        if ($request->input('reset_checkout') === '1') {
+            DB::table('settings')->whereIn('key', $checkoutColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Checkout page colors restored to defaults.');
+        }
+
+        // Token Module Reset
+        if ($request->input('reset_token') === '1') {
+            DB::table('settings')->whereIn('key', $tokenColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Order Confirmation token colors restored to defaults.');
+        }
+
+        // Components Reset
+        if ($request->input('reset_components') === '1') {
+            DB::table('settings')->whereIn('key', $componentColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Category and section component colors restored to defaults.');
+        }
+
+        // App Master Layout Reset
+        if ($request->input('reset_master') === '1') {
+            DB::table('settings')->whereIn('key', $appColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'App Master layout and floating colors restored to defaults.');
+        }
+
+        // Home Page Reset
+        if ($request->input('reset_home') === '1') {
+            DB::table('settings')->whereIn('key', $homeColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Home page sections and widgets colors restored to defaults.');
+        }
+
+        // Shop Page Reset
+        if ($request->input('reset_shop') === '1') {
+            DB::table('settings')->whereIn('key', $shopColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Shop page and sidebar colors restored to defaults.');
+        }
+
+        // Custom Pages Reset
+        if ($request->input('reset_pages') === '1') {
+            DB::table('settings')->whereIn('key', $pageColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Custom dynamic page colors restored to defaults.');
+        }
+
+        // Blog Reset
+        if ($request->input('reset_blogs') === '1') {
+            DB::table('settings')->whereIn('key', $blogColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Blog and comment section colors restored to defaults.');
+        }
+
+        // Auth Reset
+        if ($request->input('reset_auth') === '1') {
+            DB::table('settings')->whereIn('key', $authErrorColorKeys)->delete();
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'Authentication and Form colors restored to defaults.');
+        }
+
+        // Global Defaults Reset
+        if ($request->input('reset_defaults') === '1') {
             DB::table('settings')->whereIn('key', $colorKeys)->delete();
-            Cache::forget('global_settings_cache');
-            return back()->with('success', 'All theme colors restored to factory defaults.');
+            $this->flushAllThemeCaches();
+            return back()->with('success', 'All theme colors restored to system defaults.');
         }
 
         foreach ($colorKeys as $key) {
-            if ($request->has($key)) {
+            if ($request->filled($key)) {
+                $val = trim($request->input($key));
                 DB::table('settings')->updateOrInsert(
                     ['key' => $key],
-                    ['value' => $request->input($key), 'updated_at' => now()]
+                    ['value' => $val, 'updated_at' => now()]
                 );
+
+                // Two-way sync with legacy settings for 100% backward compatibility
+                if ($key === 'color_hdr_bg') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_header_bg'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'header_bg'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_hdr_icon_text') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_header_text'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'header_text'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_hdr_search_btn_bg') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_header_search_btn_bg'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_hdr_menu_text') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_menu_text'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'menu_color'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_hdr_menu_hover_text') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_menu_hover'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'menu_hover_color'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_hdr_menu_active_bg') {
+                    DB::table('settings')->updateOrInsert(['key' => 'color_menu_active_bg'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'menu_hover_bg'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_ftr_bg') {
+                    DB::table('settings')->updateOrInsert(['key' => 'footer_bg'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'color_footer_bg'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_ftr_text') {
+                    DB::table('settings')->updateOrInsert(['key' => 'footer_text_color'], ['value' => $val, 'updated_at' => now()]);
+                    DB::table('settings')->updateOrInsert(['key' => 'color_footer_text'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_ftr_heading') {
+                    DB::table('settings')->updateOrInsert(['key' => 'footer_heading_color'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_ftr_bottom_bg') {
+                    DB::table('settings')->updateOrInsert(['key' => 'footer_bottom_bg'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_cpc_price' || $key === 'color_pdp_price') {
+                    DB::table('settings')->updateOrInsert(['key' => 'product_price_color'], ['value' => $val, 'updated_at' => now()]);
+                } elseif ($key === 'color_cpc_title' || $key === 'color_pdp_title') {
+                    DB::table('settings')->updateOrInsert(['key' => 'product_title_color'], ['value' => $val, 'updated_at' => now()]);
+                }
             }
         }
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Theme colors updated successfully.');
+    }
+
+    /**
+     * Flush all theme-related caches across the entire storefront
+     */
+    protected function flushAllThemeCaches(): void
+    {
+        Cache::forget('global_settings_cache');
+        Cache::forget('product_card_settings_cache');
+        Cache::forget('product_detail_theme_settings_cache');
+        cache()->forget('global_settings_cache');
+        cache()->forget('product_card_settings_cache');
+        cache()->forget('product_detail_theme_settings_cache');
     }
 
     // ================= FOOTER BUILDER / CUSTOMIZER =================
@@ -865,10 +2052,8 @@ class ThemeSettingController extends Controller
         ];
 
         foreach ($simpleKeys as $key) {
-            DB::table('settings')->updateOrInsert(
-                ['key' => $key],
-                ['value' => $request->input($key) ?? '', 'updated_at' => now()]
-            );
+            $val = $request->input($key) ?? '';
+            DB::table('settings')->updateOrInsert(['key' => $key], ['value' => $val, 'updated_at' => now()]);
         }
 
         if ($request->hasFile('footer_logo')) {
@@ -903,9 +2088,10 @@ class ThemeSettingController extends Controller
         $qUrls = $request->input('quick_link_urls', []);
         $formattedQuickLinks = [];
         foreach ($qLabels as $i => $lbl) {
-            if (!empty(trim($lbl))) {
+            $cleanLbl = trim($lbl ?? '');
+            if ($cleanLbl !== '') {
                 $formattedQuickLinks[] = [
-                    'label' => trim($lbl),
+                    'label' => $cleanLbl,
                     'url'   => !empty($qUrls[$i]) ? trim($qUrls[$i]) : '#'
                 ];
             }
@@ -916,9 +2102,10 @@ class ThemeSettingController extends Controller
         $sUrls = $request->input('support_link_urls', []);
         $formattedSupportLinks = [];
         foreach ($sLabels as $i => $lbl) {
-            if (!empty(trim($lbl))) {
+            $cleanSub = trim($lbl ?? '');
+            if ($cleanSub !== '') {
                 $formattedSupportLinks[] = [
-                    'label' => trim($lbl),
+                    'label' => $cleanSub,
                     'url'   => !empty($sUrls[$i]) ? trim($sUrls[$i]) : '#'
                 ];
             }
@@ -929,9 +2116,10 @@ class ThemeSettingController extends Controller
         $socUrls = $request->input('social_urls', []);
         $formattedSocials = [];
         foreach ($socIcons as $i => $ico) {
-            if (!empty(trim($ico))) {
+            $cleanIco = trim($ico ?? '');
+            if ($cleanIco !== '') {
                 $formattedSocials[] = [
-                    'icon' => trim($ico),
+                    'icon' => $cleanIco,
                     'url'  => !empty($socUrls[$i]) ? trim($socUrls[$i]) : '#'
                 ];
             }
@@ -948,16 +2136,17 @@ class ThemeSettingController extends Controller
             if (isset($uploadedImgs[$i]) && $uploadedImgs[$i]->isValid()) {
                 $imgPath = $this->saveThemeFile($uploadedImgs[$i], 'theme/payments');
             }
-            if (!empty(trim($name)) || !empty($imgPath)) {
+            $cleanName = trim($name ?? '');
+            if ($cleanName !== '' || !empty($imgPath)) {
                 $formattedPayments[] = [
-                    'name'  => trim($name ?? ''),
+                    'name'  => $cleanName,
                     'image' => $imgPath
                 ];
             }
         }
         DB::table('settings')->updateOrInsert(['key' => 'footer_payment_badges_json'], ['value' => json_encode($formattedPayments), 'updated_at' => now()]);
 
-        Cache::forget('global_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'Footer settings updated successfully.');
     }
@@ -995,8 +2184,7 @@ class ThemeSettingController extends Controller
             DB::table('settings')->updateOrInsert(['key' => 'card_hover_style'], ['value' => $request->card_hover_style, 'updated_at' => now()]);
         }
 
-        Cache::forget('global_settings_cache');
-        Cache::forget('product_card_settings_cache');
+        $this->flushAllThemeCaches();
 
         return redirect()->back()->with('success', 'Product Card & Review Settings updated successfully!');
     }
@@ -1107,7 +2295,7 @@ class ThemeSettingController extends Controller
         $itemsList = [];
         foreach ($titles as $i => $title) {
             $cleanTitle = trim($title ?? '');
-            if (!empty($cleanTitle)) {
+            if ($cleanTitle !== '') {
                 $itemsList[] = [
                     'title'       => $cleanTitle,
                     'icon'        => !empty($icons[$i]) ? trim($icons[$i]) : 'fas fa-circle',
@@ -1122,8 +2310,7 @@ class ThemeSettingController extends Controller
             ['value' => json_encode($itemsList), 'updated_at' => now()]
         );
 
-        Cache::forget('global_settings_cache');
-        Cache::forget('product_card_settings_cache');
+        $this->flushAllThemeCaches();
 
         return back()->with('success', 'All Feature Settings including Sticky Product Bar updated successfully!');
     }

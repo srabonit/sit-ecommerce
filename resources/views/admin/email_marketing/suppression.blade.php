@@ -520,7 +520,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text suppression-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                                <input type="text" id="suppressionSearchInput" class="form-control border-start-0 ps-0 suppression-filter-control shadow-none font-monospace" placeholder="e.g. user@example.com, bounce, spam report..." onkeyup="filterSuppressionTable()">
+                                <input type="text" id="suppressionSearchInput" class="form-control border-start-0 ps-0 suppression-filter-control shadow-none font-monospace" placeholder="user@example.com, bounce, spam report..." onkeyup="filterSuppressionTable()">
                             </div>
                         </div>
 

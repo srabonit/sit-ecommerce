@@ -268,7 +268,7 @@
                                     <label class="form-label" for="campaign_name">
                                         Campaign Name (Internal Reference) <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" name="name" id="campaign_name" class="form-control" placeholder="e.g. Flash Sale Announcement - Weekend Special" value="{{ old('name', $campaign->name) }}" required {{ !$campaign->isEditable() ? 'disabled' : '' }}>
+                                    <input type="text" name="name" id="campaign_name" class="form-control" placeholder="Flash Sale Announcement - Weekend Special" value="{{ old('name', $campaign->name) }}" required {{ !$campaign->isEditable() ? 'disabled' : '' }}>
                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">Internal name used to distinguish campaigns in performance analytics.</small>
                                 </div>
 
@@ -302,19 +302,19 @@
                                         <span>Preview / Snippet Text</span>
                                         <span class="text-muted font-monospace" style="font-size: 10px;" id="previewCharCount">0 chars</span>
                                     </label>
-                                    <input type="text" name="preview_text" id="campaignPreviewTextInput" class="form-control" value="{{ old('preview_text', $campaign->preview_text) }}" placeholder="e.g. Discover our exclusive weekly arrivals..." oninput="updateInboxPreview()" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
+                                    <input type="text" name="preview_text" id="campaignPreviewTextInput" class="form-control" value="{{ old('preview_text', $campaign->preview_text) }}" placeholder="Discover our exclusive weekly arrivals..." oninput="updateInboxPreview()" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">Preheader snippet shown next to the subject line in modern mail clients.</small>
                                 </div>
 
                                 <div class="col-12 col-md-6 mt-2">
                                     <label class="form-label" for="campaign_sender_name">Sender Display Name</label>
-                                    <input type="text" name="sender_name" id="campaign_sender_name" class="form-control" value="{{ old('sender_name', $campaign->sender_name) }}" placeholder="e.g. Shop Now BD" oninput="updateInboxPreview()" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
+                                    <input type="text" name="sender_name" id="campaign_sender_name" class="form-control" value="{{ old('sender_name', $campaign->sender_name) }}" placeholder="Shop Now BD" oninput="updateInboxPreview()" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">Leave blank to fall back to global store sender name.</small>
                                 </div>
 
                                 <div class="col-12 col-md-6 mt-2">
                                     <label class="form-label" for="campaign_sender_email">Sender Email Address</label>
-                                    <input type="email" name="sender_email" id="campaign_sender_email" class="form-control font-monospace" value="{{ old('sender_email', $campaign->sender_email) }}" placeholder="e.g. newsletter@shopnowbd.online" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
+                                    <input type="email" name="sender_email" id="campaign_sender_email" class="form-control font-monospace" value="{{ old('sender_email', $campaign->sender_email) }}" placeholder="newsletter@shopnowbd.online" {{ !$campaign->isEditable() ? 'disabled' : '' }}>
                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">Must match an authorized domain in your provider settings.</small>
                                 </div>
                             </div>

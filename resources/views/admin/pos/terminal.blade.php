@@ -197,7 +197,7 @@
             height: calc(100vh - 120px);
         }
         .pos-cart-items-scroll {
-            max-height: calc(100vh - 400px);
+            max-height: calc(100vh - 435px);
         }
         .pos-mobile-nav-bar,
         .pos-mobile-sticky-dock {
@@ -264,13 +264,18 @@
 </style>
 
 <div class="container-fluid py-2 px-2 px-md-3" id="posTerminalRoot">
-    <!-- Top Branch Header Bar (Compact & Single Row on Mobile) -->
+    <!-- Top Branch Header Bar (Compact, Single Row & NBR BIN Supported) -->
     <div class="d-flex justify-content-between align-items-center mb-2 bg-white p-2 px-3 shadow-xs border">
-        <div class="d-flex align-items-center gap-1.5 min-width-0">
+        <div class="d-flex align-items-center gap-1.5 min-width-0 flex-wrap">
             <span class="badge bg-warning text-dark fw-bold px-2 py-1 text-truncate" style="font-size: 11px;">
                 <i class="fas fa-store me-1"></i> {{ $branch->name }}
             </span>
             <small class="text-muted font-monospace bn-digit text-truncate d-none d-sm-inline" style="font-size: 10px;">{{ $branch->code }}</small>
+            @if(!empty($branch->bin_number))
+                <span class="badge bg-light text-dark border font-monospace ms-1" style="font-size: 10px;">
+                    <i class="fas fa-file-invoice text-primary me-1"></i>BIN: {{ $branch->bin_number }}
+                </span>
+            @endif
         </div>
         <a href="{{ route('admin.pos.index') }}" class="btn btn-outline-secondary btn-compact py-1 px-2.5 flex-shrink-0" style="font-size: 10.5px !important;">
             <i class="fas fa-exchange-alt me-1"></i> Change Branch
@@ -400,17 +405,34 @@
 
                 <!-- Billing Summary & Checkout Buttons -->
                 <div class="border-top pt-2 mt-auto">
+                    <!-- Subtotal -->
+                    <div class="d-flex justify-content-between align-items-center mb-1 text-muted" style="font-size: 10.5px;">
+                        <span>Subtotal:</span>
+                        <span class="fw-semibold text-dark font-monospace bn-digit" id="posSubtotalText">0.00 ৳</span>
+                    </div>
+
+                    <!-- Dynamic VAT Breakdown (Strictly Hidden when 0 or Disabled) -->
+                    <div class="d-flex justify-content-between align-items-center mb-1 text-muted" id="posVatRow" style="font-size: 10.5px; display: none;">
+                        <span>
+                            <span id="posVatLabelText">{{ $taxSettings['vat_label'] ?? 'Govt. VAT' }}</span>:
+                            <span class="badge bg-light text-muted border ms-1" style="font-size: 8px; padding: 1px 3px;" id="posVatRateBadge">NBR Compliant</span>
+                        </span>
+                        <span class="fw-semibold text-primary font-monospace bn-digit" id="posVatText">0.00 ৳</span>
+                    </div>
+
+                    <!-- Shipping & Discount Inputs -->
                     <div class="row g-1 mb-1">
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Shipping (৳)</span>
-                            <input type="number" id="posShipping" class="form-control form-control-xs font-monospace bn-digit" value="0" min="0" oninput="renderCartSummary()">
+                            <input type="number" id="posShipping" class="form-control form-control-xs font-monospace bn-digit" value="0" min="0" step="any" oninput="renderCartSummary()">
                         </div>
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Discount (৳)</span>
-                            <input type="number" id="posDiscount" class="form-control form-control-xs font-monospace bn-digit" value="0" min="0" oninput="renderCartSummary()">
+                            <input type="number" id="posDiscount" class="form-control form-control-xs font-monospace bn-digit" value="0" min="0" step="any" oninput="renderCartSummary()">
                         </div>
                     </div>
 
+                    <!-- Payment Method & Paid Amount -->
                     <div class="row g-1 mb-2">
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Payment Method</span>
@@ -422,16 +444,17 @@
                         </div>
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Paid Amount</span>
-                            <input type="number" id="posPaidAmount" class="form-control form-control-xs fw-bold text-success font-monospace bn-digit" value="0" min="0">
+                            <input type="number" id="posPaidAmount" class="form-control form-control-xs fw-bold text-success font-monospace bn-digit" value="0" min="0" step="any" oninput="handleManualPaidInput()">
                         </div>
                     </div>
 
+                    <!-- Total Payable -->
                     <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                        <span class="fw-bold text-muted">Total:</span>
+                        <span class="fw-bold text-muted">Total Payable:</span>
                         <h6 class="fw-bold text-dark mb-0 fs-6 font-monospace bn-digit" id="grandTotalText">0.00 ৳</h6>
                     </div>
 
-                    <!-- 3 Compact Action Buttons -->
+                    <!-- 3 Action Buttons -->
                     <div class="row g-1">
                         <div class="col-4">
                             <button type="button" class="btn btn-outline-dark w-100 pos-action-btn" onclick="submitPosOrder('only_order')">
@@ -454,7 +477,7 @@
         </div>
     </div>
 
-    <!-- Mobile Sticky Quick Checkout Dock (Appears when products are in cart) -->
+    <!-- Mobile Sticky Quick Checkout Dock -->
     <div id="posMobileStickyDock" class="pos-mobile-sticky-dock d-lg-none" style="display: none;">
         <div class="d-flex align-items-center justify-content-between p-2 px-3 bg-dark text-white shadow-lg border border-secondary" style="border-radius: 5px;">
             <div>
@@ -493,7 +516,7 @@
     </div>
 </div>
 
-<!-- Modal 2: Clean Custom Global Notice Modal -->
+<!-- Modal 2: Custom Notice Modal -->
 <div class="modal fade pos-modal-scope" id="posAlertModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
@@ -539,12 +562,18 @@
 const CSRF = "{{ csrf_token() }}";
 const BRANCH_ID = {{ $branch->id }};
 const BARCODE_SCAN_URL = "{{ route('admin.pos.scan.barcode') }}";
+
+// Central Tax & VAT Configuration injected safely from PosController
+const TAX_SETTINGS = @json($taxSettings);
+
 let posCart = [];
 let isScanning = false;
 let cameraScannerInstance = null;
 let currentMobileTab = 'products';
+let currentCalculatedGrandTotal = 0.00;
+let isPaidAmountManuallyEdited = false;
 
-// Audio synth for cashier beep without external assets
+// Audio synth for cashier beep
 function playBeep(type = 'success') {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -591,7 +620,7 @@ function showPosAlert(message, title = 'Notice', type = 'info') {
     alertModal.show();
 }
 
-// Mobile Tab Switcher Handler (Products vs Cart Memo)
+// Mobile Tab Switcher Handler
 function switchMobilePosTab(tab) {
     currentMobileTab = tab;
     const prodCol = document.getElementById('posProductsColumn');
@@ -724,7 +753,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Set initial view state for mobile
     if (window.innerWidth < 992) {
         switchMobilePosTab('products');
     }
@@ -732,6 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
     refocusBarcodeScanner();
 });
 
+// Add scanned product to cart (Strictly respects 0%, Flat, or specific VAT rate)
 function addScannedProductToCart(p) {
     const targetKeyId = p.variant_id ? `var-${p.variant_id}` : p.id;
     const existing = posCart.find(item => (item.variant_id ? `var-${item.variant_id}` : item.id) === targetKeyId);
@@ -741,6 +770,33 @@ function addScannedProductToCart(p) {
         playBeep('error');
         showPosAlert(`"${p.title}" is out of stock! Current stock: ${p.stock}`, 'Stock Alert', 'warning');
         return;
+    }
+
+    let pTaxRate = 0;
+    let pIsInclusive = (TAX_SETTINGS.default_calculation_type === 'inclusive');
+    let pTaxType = p.tax_type || 'percent';
+    let pTaxFixed = parseFloat(p.tax_fixed_amount) || 0;
+
+    const isVatGloballyActive = Boolean(TAX_SETTINGS.is_vat_enabled && TAX_SETTINGS.enable_pos_vat);
+
+    if (isVatGloballyActive) {
+        // If branch is exempt / zero_rated, force 0%
+        if (TAX_SETTINGS.branch_tax_mode === 'exempt' || TAX_SETTINGS.branch_tax_mode === 'zero_rated') {
+            pTaxRate = 0;
+            pTaxFixed = 0;
+        } else if (p.tax_rate !== undefined && p.tax_rate !== null && p.tax_rate !== '') {
+            // Strictly honor 0 as 0%, 2 as 2%, 10 as 10%
+            pTaxRate = parseFloat(p.tax_rate);
+            pIsInclusive = p.is_tax_inclusive !== undefined ? Boolean(p.is_tax_inclusive) : (TAX_SETTINGS.default_calculation_type === 'inclusive');
+        } else if (pTaxFixed > 0) {
+            pTaxRate = 0;
+        } else {
+            pTaxRate = parseFloat(TAX_SETTINGS.default_vat_rate) || 0;
+            pIsInclusive = (TAX_SETTINGS.default_calculation_type === 'inclusive');
+        }
+    } else {
+        pTaxRate = 0;
+        pTaxFixed = 0;
     }
 
     if (existing) {
@@ -753,7 +809,11 @@ function addScannedProductToCart(p) {
             price: parseFloat(p.price) || 0,
             stock: parseInt(p.stock) || 0,
             qty: 1,
-            code: p.product_code || p.barcode || ''
+            code: p.product_code || p.barcode || '',
+            tax_rate: pTaxRate,
+            is_tax_inclusive: pIsInclusive,
+            tax_type: pTaxType,
+            tax_fixed_amount: pTaxFixed
         });
     }
 
@@ -792,7 +852,11 @@ function handleMultipleBarcodeMatches(items) {
                 title: title + (details ? ' ('+details+')' : ''),
                 price: price,
                 stock: stock,
-                product_code: code
+                product_code: code,
+                tax_rate: it.tax_rate !== undefined ? it.tax_rate : null,
+                is_tax_inclusive: it.is_tax_inclusive || false,
+                tax_type: it.tax_type || 'percent',
+                tax_fixed_amount: parseFloat(it.tax_fixed_amount) || 0
             });
             bootstrap.Modal.getInstance(document.getElementById('multipleMatchesModal')).hide();
             refocusBarcodeScanner();
@@ -850,7 +914,7 @@ function stopCameraScanner() {
     }
 }
 
-// Product Grid Fetch Engine
+// Product Grid Fetch Engine (Intact AJAX Live Search & Filters)
 function fetchPosProducts(targetUrl = null) {
     const grid = document.getElementById('posProductGrid');
     const loader = document.getElementById('posGridLoader');
@@ -910,7 +974,8 @@ function onGridVariantChanged(productId, selectEl) {
     }
 }
 
-function addToPosMemo(id, title, price, stock, thumb) {
+// Add Item to Memo from Grid Card (Comprehensive Tax Extraction)
+function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, explicitIsInclusive = null, explicitTaxType = null, explicitTaxFixed = null) {
     const qtyInput = document.getElementById('gridQty' + id);
     const qtyToAdd = parseInt(qtyInput ? qtyInput.value : 1) || 1;
 
@@ -919,6 +984,11 @@ function addToPosMemo(id, title, price, stock, thumb) {
     let finalStock = parseInt(stock) || 0;
     let variantId = null;
     let itemCode = 'ID: #' + id;
+
+    let itemTaxRate = (explicitTaxRate !== null && explicitTaxRate !== undefined && explicitTaxRate !== '') ? parseFloat(explicitTaxRate) : null;
+    let itemIsTaxInclusive = explicitIsInclusive !== null ? Boolean(explicitIsInclusive) : (TAX_SETTINGS.default_calculation_type === 'inclusive');
+    let itemTaxType = explicitTaxType || 'percent';
+    let itemTaxFixed = explicitTaxFixed !== null ? parseFloat(explicitTaxFixed) : 0;
 
     const selectEl = document.getElementById('gridVariantSelect' + id);
     if (selectEl) {
@@ -937,6 +1007,58 @@ function addToPosMemo(id, title, price, stock, thumb) {
         finalStock = parseInt(opt.getAttribute('data-stock')) || 0;
         finalTitle = opt.getAttribute('data-title') || finalTitle;
         itemCode = opt.getAttribute('data-code') || ('VAR-#' + variantId);
+
+        if (opt.hasAttribute('data-tax-rate') && opt.getAttribute('data-tax-rate') !== '') {
+            itemTaxRate = parseFloat(opt.getAttribute('data-tax-rate'));
+        }
+        if (opt.hasAttribute('data-is-inclusive')) {
+            itemIsTaxInclusive = (opt.getAttribute('data-is-inclusive') === '1' || opt.getAttribute('data-is-inclusive') === 'true');
+        }
+        if (opt.hasAttribute('data-tax-type')) {
+            itemTaxType = opt.getAttribute('data-tax-type');
+        }
+        if (opt.hasAttribute('data-tax-fixed')) {
+            itemTaxFixed = parseFloat(opt.getAttribute('data-tax-fixed')) || 0;
+        }
+    } else {
+        // Deep search in parent card or input container
+        const cardEl = document.querySelector(`[data-product-id="${id}"]`) || (qtyInput ? qtyInput.closest('.card, [data-product-id]') : null);
+        if (cardEl) {
+            if (itemTaxRate === null && cardEl.hasAttribute('data-tax-rate') && cardEl.getAttribute('data-tax-rate') !== '') {
+                itemTaxRate = parseFloat(cardEl.getAttribute('data-tax-rate'));
+            }
+            if (cardEl.hasAttribute('data-is-inclusive')) {
+                itemIsTaxInclusive = (cardEl.getAttribute('data-is-inclusive') === '1' || cardEl.getAttribute('data-is-inclusive') === 'true');
+            }
+            if (cardEl.hasAttribute('data-tax-type')) {
+                itemTaxType = cardEl.getAttribute('data-tax-type');
+            }
+            if (cardEl.hasAttribute('data-tax-fixed')) {
+                itemTaxFixed = parseFloat(cardEl.getAttribute('data-tax-fixed')) || 0;
+            }
+        }
+    }
+
+    const isVatGloballyActive = Boolean(TAX_SETTINGS.is_vat_enabled && TAX_SETTINGS.enable_pos_vat);
+
+    if (isVatGloballyActive) {
+        // Branch 0% or exempt rule takes absolute precedence
+        if (TAX_SETTINGS.branch_tax_mode === 'exempt' || TAX_SETTINGS.branch_tax_mode === 'zero_rated') {
+            itemTaxRate = 0;
+            itemTaxFixed = 0;
+        } else if (itemTaxRate !== null && !isNaN(itemTaxRate)) {
+            // Strictly honor product or category rate (even 0% or 2%)
+            itemTaxRate = itemTaxRate;
+        } else if (itemTaxFixed > 0) {
+            itemTaxRate = 0;
+        } else {
+            // Fallback to Central Default VAT
+            itemTaxRate = parseFloat(TAX_SETTINGS.default_vat_rate) || 0;
+            itemIsTaxInclusive = (TAX_SETTINGS.default_calculation_type === 'inclusive');
+        }
+    } else {
+        itemTaxRate = 0;
+        itemTaxFixed = 0;
     }
 
     const targetKeyId = variantId ? `var-${variantId}` : id;
@@ -958,13 +1080,21 @@ function addToPosMemo(id, title, price, stock, thumb) {
             price: finalPrice,
             stock: finalStock,
             qty: qtyToAdd,
-            code: itemCode
+            code: itemCode,
+            tax_rate: itemTaxRate,
+            is_tax_inclusive: itemIsTaxInclusive,
+            tax_type: itemTaxType,
+            tax_fixed_amount: itemTaxFixed
         });
     }
 
     playBeep('success');
     renderCart();
     refocusBarcodeScanner();
+}
+
+function handleManualPaidInput() {
+    isPaidAmountManuallyEdited = true;
 }
 
 // Cart Items Render & Mobile Sticky Dock Update
@@ -974,7 +1104,6 @@ function renderCart() {
     const mobileTabCount = document.getElementById('mobileTabCartCount');
     const stickyDock = document.getElementById('posMobileStickyDock');
     const stickyItemCount = document.getElementById('stickyCartItemCount');
-    const stickyGrandTotal = document.getElementById('stickyCartGrandTotal');
 
     const totalQty = posCart.reduce((sum, item) => sum + item.qty, 0);
     if (countBadge) countBadge.textContent = totalQty;
@@ -984,11 +1113,11 @@ function renderCart() {
     if (posCart.length === 0) {
         container.innerHTML = '<div class="text-center py-4 text-muted" id="cartEmptyPlaceholder" style="font-size: 11px;">Cart is empty. Scan barcode or click items.</div>';
         if (stickyDock) stickyDock.style.display = 'none';
+        isPaidAmountManuallyEdited = false;
         renderCartSummary();
         return;
     }
 
-    // Toggle sticky footer on mobile when in product tab
     if (stickyDock) {
         if (window.innerWidth < 992 && currentMobileTab === 'products') {
             stickyDock.style.display = 'block';
@@ -1000,11 +1129,22 @@ function renderCart() {
     let html = '';
     posCart.forEach((item, index) => {
         const itemTotal = (item.price * item.qty).toFixed(0);
+
+        // Visual VAT badge in item row for complete transparency
+        let taxBadgeText = '';
+        if (item.tax_type === 'flat' && item.tax_fixed_amount > 0) {
+            taxBadgeText = ` &bull; <span class="text-primary fw-bold">VAT: ৳${item.tax_fixed_amount}</span>`;
+        } else if (item.tax_rate !== undefined && item.tax_rate !== null && item.tax_rate > 0) {
+            taxBadgeText = ` &bull; <span class="text-primary fw-bold">VAT: ${item.tax_rate}%</span>`;
+        } else if (item.tax_rate === 0) {
+            taxBadgeText = ` &bull; <span class="text-muted">VAT: 0%</span>`;
+        }
+
         html += `
             <div class="pos-item-row d-flex align-items-center justify-content-between">
                 <div style="width: 54%; line-height: 1.2;">
                     <div class="fw-semibold text-dark text-truncate" title="${item.title}">${item.title}</div>
-                    ${item.code ? `<small class="text-muted font-monospace bn-digit" style="font-size: 9px;">${item.code}</small><br>` : ''}
+                    ${item.code ? `<small class="text-muted font-monospace bn-digit" style="font-size: 9px;">${item.code}${taxBadgeText}</small><br>` : ''}
                     <span class="text-muted font-monospace bn-digit" style="font-size: 10px;">${item.price.toFixed(0)} × ${item.qty} = <strong class="text-dark">${itemTotal}৳</strong></span>
                 </div>
                 <div class="d-flex align-items-center gap-1">
@@ -1063,19 +1203,85 @@ function removeFromCart(index) {
 
 function clearPosCart() {
     posCart = [];
+    isPaidAmountManuallyEdited = false;
     renderCart();
     refocusBarcodeScanner();
 }
 
-// Summary Calculation
+// Summary Calculation with Subtotal & NBR Tax Estimation (Net Taxable Base Synchronized)
 function renderCartSummary() {
     const subtotal = posCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const shipping = parseFloat(document.getElementById('posShipping').value) || 0;
-    const discount = parseFloat(document.getElementById('posDiscount').value) || 0;
-    const grandTotal = Math.max(0, (subtotal + shipping) - discount);
+    const discountInput = parseFloat(document.getElementById('posDiscount').value) || 0;
+    const discount = Math.min(subtotal, Math.max(0, discountInput));
 
+    // Proportional discount ratio to match Backend NBR calculation exactly
+    const discountRatio = (subtotal > 0 && discount > 0) ? Math.min(1.0, discount / subtotal) : 0.0;
+
+    let calculatedTax = 0;
+    let exclusiveTax = 0;
+    const isVatActive = Boolean(TAX_SETTINGS.is_vat_enabled && TAX_SETTINGS.enable_pos_vat);
+
+    if (isVatActive) {
+        posCart.forEach(item => {
+            const lineTotal = (item.price * item.qty);
+            const lineDiscount = lineTotal * discountRatio;
+            const netLineBase = Math.max(0.0, lineTotal - lineDiscount);
+
+            const rate = (item.tax_rate !== undefined && item.tax_rate !== null) ? parseFloat(item.tax_rate) : 0;
+            const isInclusive = Boolean(item.is_tax_inclusive);
+
+            if (item.tax_type === 'flat' && parseFloat(item.tax_fixed_amount) > 0) {
+                const lineTax = parseFloat(item.tax_fixed_amount) * item.qty;
+                calculatedTax += lineTax;
+                exclusiveTax += lineTax;
+            } else if (rate > 0) {
+                if (isInclusive) {
+                    const lineTax = (netLineBase - (netLineBase / (1 + (rate / 100))));
+                    calculatedTax += lineTax;
+                } else {
+                    const lineTax = ((netLineBase * rate) / 100);
+                    calculatedTax += lineTax;
+                    exclusiveTax += lineTax;
+                }
+            }
+        });
+    }
+
+    calculatedTax = Math.round(calculatedTax * 100) / 100;
+    exclusiveTax  = Math.round(exclusiveTax * 100) / 100;
+
+    // Grand Total Formula: Subtotal - Discount + Exclusive Tax + Shipping
+    const grandTotal = Math.max(0, Math.round(((subtotal - discount) + exclusiveTax + shipping) * 100) / 100);
+    currentCalculatedGrandTotal = grandTotal;
+
+    const subtotalEl = document.getElementById('posSubtotalText');
+    if (subtotalEl) {
+        subtotalEl.textContent = subtotal.toFixed(2) + ' ৳';
+    }
+
+    const vatEl = document.getElementById('posVatText');
+    const vatRow = document.getElementById('posVatRow');
+    if (vatEl) {
+        vatEl.textContent = calculatedTax.toFixed(2) + ' ৳';
+    }
+
+    // Display toggle: Hide strictly if VAT is 0 or disabled or mode is hidden
+    if (vatRow) {
+        if (isVatActive && calculatedTax > 0 && TAX_SETTINGS.pos_vat_display_mode !== 'hidden') {
+            vatRow.style.display = 'flex';
+        } else {
+            vatRow.style.display = 'none';
+        }
+    }
+
+    // Total Payable and Paid Amount Synchronized
     document.getElementById('grandTotalText').textContent = grandTotal.toFixed(2) + ' ৳';
-    document.getElementById('posPaidAmount').value = grandTotal.toFixed(2);
+    
+    const paidInput = document.getElementById('posPaidAmount');
+    if (paidInput && !isPaidAmountManuallyEdited) {
+        paidInput.value = grandTotal.toFixed(2);
+    }
 
     const stickyGrandTotal = document.getElementById('stickyCartGrandTotal');
     if (stickyGrandTotal) {
@@ -1188,21 +1394,38 @@ function saveCustomerAjax() {
     });
 }
 
-// Order Placement Checkout Flow
+// Order Placement Checkout Flow with Confirmed Tax Return
 function submitPosOrder(actionType = 'only_order') {
     if (posCart.length === 0) {
         showPosAlert('Cart is empty! Please scan barcode or add products to memo first.', 'Empty Memo', 'warning');
         return;
     }
 
+    const shippingCharge = parseFloat(document.getElementById('posShipping').value) || 0;
+    const discountAmount = parseFloat(document.getElementById('posDiscount').value) || 0;
+    const paidAmountInput = document.getElementById('posPaidAmount');
+    const rawPaidVal = parseFloat(paidAmountInput.value);
+    
+    // Accurate numeric payable sync without currency parsing issues
+    const finalPaid = isNaN(rawPaidVal) ? currentCalculatedGrandTotal : rawPaidVal;
+
     const orderData = {
         branch_id: BRANCH_ID,
         customer_id: document.getElementById('posCustomerSelect').value || null,
-        items: posCart,
-        shipping_charge: parseFloat(document.getElementById('posShipping').value) || 0,
-        discount: parseFloat(document.getElementById('posDiscount').value) || 0,
+        items: posCart.map(item => ({
+            id: item.id,
+            variant_id: item.variant_id,
+            qty: item.qty,
+            price: item.price,
+            tax_rate: item.tax_rate,
+            is_tax_inclusive: item.is_tax_inclusive,
+            tax_type: item.tax_type,
+            tax_fixed_amount: item.tax_fixed_amount
+        })),
+        shipping_charge: shippingCharge,
+        discount: discountAmount,
         payment_method: document.getElementById('posPayMethod').value,
-        paid_amount: parseFloat(document.getElementById('posPaidAmount').value) || 0
+        paid_amount: finalPaid
     };
 
     fetch("{{ route('admin.pos.order.place') }}", {
@@ -1219,9 +1442,10 @@ function submitPosOrder(actionType = 'only_order') {
     .then(data => {
         if (data.success) {
             clearPosCart();
+            const taxMsg = data.tax_amount ? ` (VAT: ৳${Number(data.tax_amount).toFixed(2)})` : '';
 
             if (actionType === 'only_order') {
-                showPosAlert(`Order placed successfully! Invoice: ${data.invoice_no}`, 'Order Confirmed', 'success');
+                showPosAlert(`Order placed successfully! Invoice: ${data.invoice_no}${taxMsg}`, 'Order Confirmed', 'success');
                 fetchPosProducts();
             } else if (actionType === 'order_a5_print') {
                 window.open("{{ url('admin/pos/print-a5-memo') }}/" + data.order_id, '_blank');
@@ -1243,7 +1467,7 @@ function submitPosOrder(actionType = 'only_order') {
     });
 }
 
-// Page Initialization
+// Page Initialization (Preserves live search, debouncing and filters)
 document.addEventListener('DOMContentLoaded', function () {
     fetchPosProducts();
 

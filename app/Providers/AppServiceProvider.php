@@ -7,12 +7,16 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 use App\Models\Order;
 use App\Observers\OrderObserver;
+use App\Observers\OrderSmsObserver;
+use App\Listeners\SendCustomerWelcomeSmsNotification;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -115,12 +119,36 @@ class AppServiceProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | Model Event Observers (Abandoned Cart Auto-Recovery Sync)
+        | Model Event Observers (Abandoned Cart Sync & Automated SMS Alerts)
         |--------------------------------------------------------------------------
         */
         try {
-            if (class_exists(Order::class) && class_exists(OrderObserver::class)) {
-                Order::observe(OrderObserver::class);
+            if (class_exists(Order::class)) {
+                // Existing Order Observer (Abandoned Cart Auto-Recovery Sync)
+                if (class_exists(OrderObserver::class)) {
+                    Order::observe(OrderObserver::class);
+                }
+
+                // SMS Automation Observer (Order Placed & Status Updates)
+                if (class_exists(OrderSmsObserver::class)) {
+                    Order::observe(OrderSmsObserver::class);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Suppress errors during early migrations
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Customer Auth Events & SMS Listeners
+        |--------------------------------------------------------------------------
+        */
+        try {
+            if (class_exists(Registered::class) && class_exists(SendCustomerWelcomeSmsNotification::class)) {
+                Event::listen(
+                    Registered::class,
+                    SendCustomerWelcomeSmsNotification::class
+                );
             }
         } catch (\Throwable $e) {
             // Suppress errors during early migrations

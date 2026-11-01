@@ -1,1 +1,0 @@
-* * * * * cd /home/username/public_html && php artisan schedule:run >> /dev/null 2>&1

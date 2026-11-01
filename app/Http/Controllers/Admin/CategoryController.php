@@ -21,6 +21,34 @@ class CategoryController extends Controller
     }
 
     /**
+     * Ensure VAT columns exist on categories and sub_categories tables
+     */
+    protected function ensureCategoryVatColumns()
+    {
+        if (Schema::hasTable('categories')) {
+            Schema::table('categories', function ($table) {
+                if (!Schema::hasColumn('categories', 'vat_type')) {
+                    $table->string('vat_type', 20)->default('percent')->nullable();
+                }
+                if (!Schema::hasColumn('categories', 'vat_amount')) {
+                    $table->decimal('vat_amount', 10, 2)->nullable()->default(null);
+                }
+            });
+        }
+
+        if (Schema::hasTable('sub_categories')) {
+            Schema::table('sub_categories', function ($table) {
+                if (!Schema::hasColumn('sub_categories', 'vat_type')) {
+                    $table->string('vat_type', 20)->default('percent')->nullable();
+                }
+                if (!Schema::hasColumn('sub_categories', 'vat_amount')) {
+                    $table->decimal('vat_amount', 10, 2)->nullable()->default(null);
+                }
+            });
+        }
+    }
+
+    /**
      * Normalize Media Library or Input Path
      */
     protected function normalizeMediaInputPath($inputPath): ?string
@@ -145,12 +173,10 @@ class CategoryController extends Controller
 
         $clean = ltrim($relativePath, '/');
 
-        // Global Media Library থেকে সিলেক্ট করা ফাইল ডিস্ক থেকে কোনোভাবেই ডিলিট করা যাবে না
         if (str_starts_with($clean, 'uploads/media/') || str_starts_with($clean, 'media/')) {
             return;
         }
 
-        // মিডিয়া লাইব্রেরি টেবিলে এই ফাইলটি রেজিস্টার করা থাকলে ডিস্ক ফাইল সুরক্ষিত থাকবে
         if (Schema::hasTable('media_files')) {
             $isMedia = DB::table('media_files')
                 ->where('file_path', $relativePath)
@@ -180,6 +206,8 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
+        $this->ensureCategoryVatColumns();
+
         if (!Schema::hasTable('product_category')) {
             Schema::create('product_category', function ($table) {
                 $table->id();
@@ -190,7 +218,6 @@ class CategoryController extends Controller
             });
         }
 
-        // প্যারেন্ট ক্যাটাগরিতে নিজের সরাসরি প্রোডাক্ট + এর আন্ডারে থাকা সব সাব-ক্যাটাগরির প্রোডাক্ট ইউনিক কাউন্ট হবে
         $parentCountSubquery = '(
             SELECT COUNT(DISTINCT products.id) 
             FROM products 
@@ -201,7 +228,6 @@ class CategoryController extends Controller
                OR (product_category.category_id IN (SELECT id FROM sub_categories WHERE category_id = categories.id) AND product_category.type = "child")
         ) as products_count';
 
-        // চাইল্ড ক্যাটাগরিতে শুধু তার নিজের প্রোডাক্ট কাউন্ট হবে
         $childCountSubquery = '(
             SELECT COUNT(DISTINCT products.id) 
             FROM products 
@@ -219,6 +245,8 @@ class CategoryController extends Controller
                 'icon',
                 'image',
                 'description',
+                'vat_type',
+                'vat_amount',
                 'is_active',
                 DB::raw("'parent' as type"),
                 DB::raw("NULL as parent_name"),
@@ -235,6 +263,8 @@ class CategoryController extends Controller
                 'sub_categories.icon',
                 DB::raw("NULL as image"),
                 'sub_categories.description',
+                'sub_categories.vat_type',
+                'sub_categories.vat_amount',
                 'sub_categories.is_active',
                 DB::raw("'child' as type"),
                 'categories.name as parent_name',
@@ -287,15 +317,21 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $this->ensureCategoryVatColumns();
+
         $request->validate([
             'name'        => 'required|string|max:255',
             'slug'        => 'nullable|string|max:255',
+            'vat_type'    => 'nullable|string|in:percent,flat',
+            'vat_amount'  => 'nullable|numeric|min:0',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,svg|max:5120',
             'image_media' => 'nullable|string',
             'icon'        => 'nullable|string|max:100',
         ]);
 
         $slug = !empty($request->slug) ? Str::slug($request->slug) : Str::slug($request->name);
+        $vatType = $request->filled('vat_type') ? $request->vat_type : 'percent';
+        $vatAmount = ($request->filled('vat_amount') && $request->vat_amount !== '') ? (float)$request->vat_amount : null;
 
         if (!empty($request->parent_id)) {
             $originalSlug = $slug;
@@ -310,6 +346,8 @@ class CategoryController extends Controller
                 'slug'        => $slug,
                 'icon'        => $request->icon,
                 'description' => $request->description,
+                'vat_type'    => $vatType,
+                'vat_amount'  => $vatAmount,
                 'is_active'   => $request->has('is_active') ? 1 : 0,
                 'created_at'  => now(),
                 'updated_at'  => now(),
@@ -337,6 +375,8 @@ class CategoryController extends Controller
             'icon'        => $request->icon,
             'image'       => $imagePath,
             'description' => $request->description,
+            'vat_type'    => $vatType,
+            'vat_amount'  => $vatAmount,
             'is_active'   => $request->has('is_active') ? 1 : 0,
             'created_at'  => now(),
             'updated_at'  => now(),
@@ -347,6 +387,8 @@ class CategoryController extends Controller
 
     public function edit(Request $request, $id)
     {
+        $this->ensureCategoryVatColumns();
+
         $type = $request->get('type', 'parent');
 
         if ($type === 'child') {
@@ -356,6 +398,8 @@ class CategoryController extends Controller
                 $category->type = 'child';
                 $category->image = null;
                 $category->image_url = null;
+                $category->vat_type = $category->vat_type ?? 'percent';
+                $category->vat_amount = $category->vat_amount !== null ? (float)$category->vat_amount : '';
             }
         } else {
             $category = DB::table('categories')->where('id', $id)->first();
@@ -365,6 +409,8 @@ class CategoryController extends Controller
                 $category->image_url = !empty($category->image)
                     ? ImagePathService::resolveUrl($category->image, '')
                     : null;
+                $category->vat_type = $category->vat_type ?? 'percent';
+                $category->vat_amount = $category->vat_amount !== null ? (float)$category->vat_amount : '';
             }
         }
 
@@ -388,9 +434,20 @@ class CategoryController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->ensureCategoryVatColumns();
+
+        $request->validate([
+            'name'       => 'required|string|max:255',
+            'slug'       => 'nullable|string|max:255',
+            'vat_type'   => 'nullable|string|in:percent,flat',
+            'vat_amount' => 'nullable|numeric|min:0',
+        ]);
+
         $currentType = $request->input('category_type', 'parent');
         $newParentId = !empty($request->parent_id) ? (int)$request->parent_id : null;
         $slug = !empty($request->slug) ? Str::slug($request->slug) : Str::slug($request->name);
+        $vatType = $request->filled('vat_type') ? $request->vat_type : 'percent';
+        $vatAmount = ($request->filled('vat_amount') && $request->vat_amount !== '') ? (float)$request->vat_amount : null;
 
         if ($currentType === 'parent' && !empty($newParentId)) {
             $parentCat = DB::table('categories')->where('id', $id)->first();
@@ -408,6 +465,8 @@ class CategoryController extends Controller
                 'slug'        => $slug,
                 'icon'        => $request->icon ?? $parentCat->icon,
                 'description' => $request->description ?? $parentCat->description,
+                'vat_type'    => $vatType,
+                'vat_amount'  => $vatAmount,
                 'is_active'   => $request->has('is_active') ? 1 : 0,
                 'created_at'  => $parentCat->created_at ?? now(),
                 'updated_at'  => now(),
@@ -453,6 +512,8 @@ class CategoryController extends Controller
                 'icon'        => $request->icon ?? $childCat->icon,
                 'image'       => $imagePath,
                 'description' => $request->description ?? $childCat->description,
+                'vat_type'    => $vatType,
+                'vat_amount'  => $vatAmount,
                 'is_active'   => $request->has('is_active') ? 1 : 0,
                 'created_at'  => $childCat->created_at ?? now(),
                 'updated_at'  => now(),
@@ -478,6 +539,8 @@ class CategoryController extends Controller
                 'slug'        => $slug,
                 'icon'        => $request->icon,
                 'description' => $request->description,
+                'vat_type'    => $vatType,
+                'vat_amount'  => $vatAmount,
                 'is_active'   => $request->has('is_active') ? 1 : 0,
                 'updated_at'  => now(),
             ]);
@@ -524,6 +587,8 @@ class CategoryController extends Controller
             'icon'        => $request->icon,
             'image'       => $imagePath,
             'description' => $request->description,
+            'vat_type'    => $vatType,
+            'vat_amount'  => $vatAmount,
             'is_active'   => $request->has('is_active') ? 1 : 0,
             'updated_at'  => now(),
         ]);
@@ -578,14 +643,20 @@ class CategoryController extends Controller
 
     public function quickStoreAjax(Request $request)
     {
+        $this->ensureCategoryVatColumns();
+
         $request->validate([
-            'name'      => 'required|string|max:255',
-            'parent_id' => 'nullable|integer',
+            'name'       => 'required|string|max:255',
+            'parent_id'  => 'nullable|integer',
+            'vat_type'   => 'nullable|string|in:percent,flat',
+            'vat_amount' => 'nullable|numeric|min:0',
         ]);
 
         $name = trim($request->name);
         $slug = Str::slug($name);
         $parentId = $request->filled('parent_id') && (int)$request->parent_id > 0 ? (int)$request->parent_id : null;
+        $vatType = $request->filled('vat_type') ? $request->vat_type : 'percent';
+        $vatAmount = ($request->filled('vat_amount') && $request->vat_amount !== '') ? (float)$request->vat_amount : null;
 
         if ($parentId) {
             $originalSlug = $slug;
@@ -598,6 +669,8 @@ class CategoryController extends Controller
                 'category_id' => $parentId,
                 'name'        => $name,
                 'slug'        => $slug,
+                'vat_type'    => $vatType,
+                'vat_amount'  => $vatAmount,
                 'is_active'   => 1,
                 'created_at'  => now(),
                 'updated_at'  => now(),
@@ -622,6 +695,8 @@ class CategoryController extends Controller
         $id = DB::table('categories')->insertGetId([
             'name'        => $name,
             'slug'        => $slug,
+            'vat_type'    => $vatType,
+            'vat_amount'  => $vatAmount,
             'is_active'   => 1,
             'created_at'  => now(),
             'updated_at'  => now(),

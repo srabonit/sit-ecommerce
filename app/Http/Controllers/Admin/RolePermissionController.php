@@ -74,7 +74,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * সিস্টেমের সকল মডিউল ও তাদের রাউট-পারমিশন ডেফিনিশন (১০০% সম্পূর্ণ তালিকা)[cite: 63]
+     * সিস্টেমের সকল মডিউল ও তাদের রাউট-পারমিশন ডেফিনিশন (১০০% সম্পূর্ণ তালিকা)
      */
     public static function getSystemModules(): array
     {
@@ -151,6 +151,28 @@ class RolePermissionController extends Controller
                     'admin.product.brand.quick_store'     => 'Quick Add Brand via Modal',
                     'admin.product.brand.destroy'         => 'Delete Product Brand',
                     'admin.product.barcode'               => 'Generate & Print Product Barcodes',
+                ]
+            ],
+            'Product Reviews' => [
+                'icon'  => 'fas fa-star-half-stroke',
+                'color' => 'warning',
+                'permissions' => [
+                    'admin.product.reviews.index'             => 'View All Customer Reviews',
+                    'admin.product.reviews.dashboard'         => 'View Reviews Analytics Dashboard',
+                    'admin.product.reviews.show'              => 'Inspect Review Details & Modal',
+                    'admin.product.reviews.status'            => 'Approve / Reject Reviews',
+                    'admin.product.reviews.toggle_visibility' => 'Hide / Unhide Reviews (Storefront)',
+                    'admin.product.reviews.destroy'           => 'Delete Review Permanently',
+                    'admin.product.reviews.bulk_action'       => 'Execute Bulk Review Actions',
+                    'admin.product.reviews.reply'             => 'Post & Edit Admin Replies',
+                    'admin.product.reviews.reply.delete'      => 'Delete Admin Reply',
+                    'admin.product.reviews.toggle_pin'        => 'Pin / Unpin Reviews to Top',
+                    'admin.product.reviews.pin_order'         => 'Reorder Pinned Reviews Display',
+                    'admin.product.reviews.product'           => 'Manage Product-Wise Reviews & Settings',
+                    'admin.product.reviews.customer'          => 'View Customer Review History',
+                    'admin.product.reviews.auto_rules'        => 'Manage Auto-Reply Automation Rules',
+                    'admin.product.reviews.settings'          => 'Configure Global Review Settings',
+                    'admin.review.index'                      => 'Moderate Product Reviews (Legacy)',
                 ]
             ],
             'Branch Hubs' => [
@@ -336,7 +358,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * রাউটের নাম থেকে CRUD অ্যাকশন টাইপ নির্ণয়[cite: 63]
+     * রাউটের নাম থেকে CRUD অ্যাকশন টাইপ নির্ণয়
      */
     public static function detectActionType(string $routeName): string
     {
@@ -347,14 +369,14 @@ class RolePermissionController extends Controller
         if (str_contains($r, 'create') || str_contains($r, 'store') || str_contains($r, 'upload') || str_contains($r, 'booking') || str_contains($r, 'new.assign') || str_contains($r, 'assign.store')) {
             return 'create';
         }
-        if (str_contains($r, 'edit') || str_contains($r, 'update') || str_contains($r, 'toggle') || str_contains($r, 'status') || str_contains($r, 'reply') || str_contains($r, 'reorder') || str_contains($r, 'reset') || str_contains($r, 'replace')) {
+        if (str_contains($r, 'edit') || str_contains($r, 'update') || str_contains($r, 'toggle') || str_contains($r, 'status') || str_contains($r, 'reply') || str_contains($r, 'reorder') || str_contains($r, 'reset') || str_contains($r, 'replace') || str_contains($r, 'pin') || str_contains($r, 'bulk')) {
             return 'update';
         }
         return 'read';
     }
 
     /**
-     * ১. সকল রোলের তালিকা (অটো-ক্লিনআপ ও ডি-ডুপ্লিকেশন সহ)[cite: 63]
+     * ১. সকল রোলের তালিকা (অটো-ক্লিনআপ ও ডি-ডুপ্লিকেশন সহ)
      */
     public function index()
     {
@@ -424,7 +446,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * ২. নতুন রোল তৈরির ফর্ম[cite: 63]
+     * ২. নতুন রোল তৈরির ফর্ম
      */
     public function create()
     {
@@ -433,7 +455,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * ৩. রোল ও পারমিশন সংরক্ষণ (ডুপ্লিকেট শিল্ড সহ)[cite: 63]
+     * ৩. রোল ও পারমিশন সংরক্ষণ (ডুপ্লিকেট শিল্ড সহ)
      */
     public function store(Request $request)
     {
@@ -581,7 +603,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * ৪. রোলের পারমিশন সম্পাদনা পেজ[cite: 63]
+     * ৪. রোলের পারমিশন সম্পাদনা পেজ
      */
     public function edit(Request $request, $roleName)
     {
@@ -647,7 +669,7 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * ৫. রোল ডিলিট[cite: 63]
+     * ৫. রোল ডিলিট
      */
     public function destroy($roleName)
     {

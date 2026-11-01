@@ -1,31 +1,31 @@
 <!-- GLOBAL WORDPRESS-STYLE MEDIA PICKER MODAL -->
 <div class="modal fade" id="globalMediaPickerModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable my-2 my-md-4">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable my-2 my-md-3">
         <div class="modal-content border-0 shadow-lg overflow-hidden picker-modal-canvas">
             
             <!-- Modal Header with App-Style Segmented Tabs -->
-            <div class="modal-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center" style="font-size: 14.5px;">
+            <div class="modal-header bg-light border-bottom py-2 px-3 d-flex justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center text-truncate" style="font-size: 13.5px;">
                         <i class="fas fa-photo-video text-primary me-2"></i>
                         <span>Select or Upload Media</span>
                     </h6>
-                    <ul class="nav picker-segmented-tabs ms-md-2" id="mediaPickerTabs" role="tablist">
+                    <ul class="nav picker-segmented-tabs ms-auto ms-sm-2" id="mediaPickerTabs" role="tablist">
                         <li class="nav-item">
                             <button class="nav-link active btn-compact" id="tab-library-btn" data-bs-toggle="pill" data-bs-target="#tab-library" type="button">
-                                <i class="fas fa-images me-1" style="font-size: 11px;"></i>
+                                <i class="fas fa-images me-1" style="font-size: 10px;"></i>
                                 <span>Media Library</span>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link btn-compact" id="tab-upload-btn" data-bs-toggle="pill" data-bs-target="#tab-upload" type="button">
-                                <i class="fas fa-cloud-upload-alt me-1" style="font-size: 11px;"></i>
+                                <i class="fas fa-cloud-upload-alt me-1" style="font-size: 10px;"></i>
                                 <span>Upload Files</span>
                             </button>
                         </li>
                     </ul>
                 </div>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-sm shadow-none flex-shrink-0" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body (Fixed Viewport Canvas) -->
@@ -35,7 +35,7 @@
                     <!-- 1. MEDIA LIBRARY TAB -->
                     <div class="tab-pane fade show active h-100 d-flex flex-column" id="tab-library" role="tabpanel">
                         <!-- Top Filter & Search Bar -->
-                        <div class="p-2 p-md-3 bg-white border-bottom flex-shrink-0">
+                        <div class="p-2 p-md-2.5 bg-white border-bottom flex-shrink-0">
                             <div class="row g-2 align-items-center">
                                 <div class="col-5 col-sm-4 col-md-3">
                                     <select id="pickerFilterType" class="form-select form-select-sm picker-filter-select" onchange="fetchPickerMedia(1)">
@@ -46,7 +46,7 @@
                                 </div>
                                 <div class="col-7 col-sm-8 col-md-5 ms-auto">
                                     <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-light border-end-0 picker-search-addon"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
+                                        <span class="input-group-text bg-light border-end-0 picker-search-addon"><i class="fas fa-search text-muted" style="font-size: 10px;"></i></span>
                                         <input type="text" id="pickerSearchInput" class="form-control border-start-0 picker-filter-input" placeholder="Search media..." oninput="debouncePickerSearch()">
                                     </div>
                                 </div>
@@ -54,20 +54,23 @@
                         </div>
 
                         <!-- Grid + Details Split Canvas -->
-                        <div class="d-flex flex-column flex-md-row flex-grow-1 overflow-hidden position-relative">
+                        <div class="d-flex flex-column flex-md-row flex-grow-1 overflow-hidden position-relative h-100">
                             
                             <!-- Left: Media Grid Container (Scrollable) -->
                             <div class="picker-grid-column flex-grow-1 p-2 p-md-3 overflow-auto">
                                 <div id="pickerMediaLoader" class="text-center py-5 d-none">
                                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                    <div class="small text-muted mt-2 fw-semibold" style="font-size: 11.5px;">Loading media library...</div>
+                                    <div class="small text-muted mt-2 fw-semibold" style="font-size: 11px;">Loading media library...</div>
                                 </div>
 
                                 <div class="picker-media-grid" id="pickerGridWrapper"></div>
 
                                 <div id="pickerEmptyNotice" class="text-center py-5 text-muted d-none">
                                     <i class="far fa-images fa-2x mb-2 text-secondary opacity-50 d-block"></i>
-                                    <p class="small mb-0 fw-semibold" style="font-size: 12px;">No media found matching your filter.</p>
+                                    <p class="small mb-1 fw-semibold" style="font-size: 12px;">No media files found.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-compact" onclick="document.getElementById('tab-upload-btn')?.click()">
+                                        <i class="fas fa-cloud-upload-alt me-1"></i> Upload Your First File
+                                    </button>
                                 </div>
                                 
                                 <!-- Load More Pagination -->
@@ -88,11 +91,11 @@
                                     </div>
 
                                     <div class="text-center mb-2 bg-white p-2 border" style="border-radius: 5px;">
-                                        <img id="pickerDetailImg" src="" class="img-fluid" style="max-height: 130px; object-fit: contain; border-radius: 4px;">
+                                        <img id="pickerDetailImg" src="" class="img-fluid" style="max-height: 120px; object-fit: contain; border-radius: 4px;">
                                     </div>
 
-                                    <div class="small text-muted mb-3 bg-white p-2 border font-monospace bn-digit" style="font-size: 11px; line-height: 1.45; border-radius: 5px;">
-                                        <div class="text-truncate"><strong class="text-dark font-sans" id="pickerDetailName"></strong></div>
+                                    <div class="small text-muted mb-3 bg-white p-2 border font-monospace bn-digit" style="font-size: 10.5px; line-height: 1.4; border-radius: 5px;">
+                                        <div class="text-truncate"><strong class="text-dark" id="pickerDetailName"></strong></div>
                                         <div id="pickerDetailDate" class="text-muted"></div>
                                         <div id="pickerDetailDims" class="text-muted"></div>
                                         <div id="pickerDetailSize" class="text-muted"></div>
@@ -115,7 +118,7 @@
 
                                 <div id="pickerNoSelectionPanel" class="text-center py-5 text-muted">
                                     <i class="far fa-hand-pointer fa-2x mb-2 text-secondary opacity-25 d-block"></i>
-                                    <p class="small mb-0" style="font-size: 12px; line-height: 1.4;">Click any media thumbnail to view details and select.</p>
+                                    <p class="small mb-0" style="font-size: 11.5px; line-height: 1.4;">Click any media thumbnail to view details and select.</p>
                                 </div>
                             </div>
 
@@ -142,10 +145,10 @@
 
                         <!-- Upload Progress Area -->
                         <div id="pickerUploadProgress" class="mt-4 px-2 px-md-4 d-none">
-                            <div class="progress" style="height: 8px; border-radius: 5px;">
+                            <div class="progress" style="height: 6px; border-radius: 5px;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%;"></div>
                             </div>
-                            <div class="text-center small text-muted mt-2 fw-semibold" style="font-size: 11.5px;">
+                            <div class="text-center small text-muted mt-2 fw-semibold" style="font-size: 11px;">
                                 <i class="fas fa-spinner fa-spin me-1"></i> Uploading and optimizing files, please wait...
                             </div>
                         </div>
@@ -156,14 +159,14 @@
 
             <!-- Modal Footer (Sticky Bottom Action Bar) -->
             <div class="modal-footer bg-light py-2 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                    <div id="pickerFooterThumbPreview" class="d-none border bg-white p-0.5" style="border-radius: 4px; width: 28px; height: 28px; overflow: hidden;">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <div id="pickerFooterThumbPreview" class="d-none border bg-white p-0.5 flex-shrink-0" style="border-radius: 4px; width: 28px; height: 28px; overflow: hidden;">
                         <img id="pickerFooterThumbImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
-                    <div class="small text-muted bn-digit" id="pickerSelectedCountText" style="font-size: 11.5px;">No items selected</div>
+                    <div class="small text-muted bn-digit text-truncate" id="pickerSelectedCountText" style="font-size: 11px;">No items selected</div>
                 </div>
 
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-shrink-0">
                     <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" id="pickerInsertBtn" class="btn btn-primary btn-compact px-3 shadow-xs" disabled onclick="executeMediaSelection()">
                         <i class="fas fa-check me-1" style="font-size: 10px;"></i>
@@ -176,16 +179,16 @@
     </div>
 </div>
 
-<!-- Clean Modal for Media Chooser Alerts/Notices (Replaces raw alert()) -->
+<!-- Notice Modal -->
 <div class="modal fade" id="pickerNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px !important;">
+        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 5px !important;">
             <div class="modal-body p-1">
-                <div id="pickerNoticeIconWrap" class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 44px; height: 44px;">
-                    <i id="pickerNoticeIcon" class="fas fa-check-circle fs-4"></i>
+                <div id="pickerNoticeIconWrap" class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 40px; height: 40px;">
+                    <i id="pickerNoticeIcon" class="fas fa-check-circle fs-5"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="pickerNoticeTitle" style="font-size: 14px;">Notice</h6>
-                <p class="text-muted small mb-3" id="pickerNoticeMsg" style="font-size: 12px; line-height: 1.45;"></p>
+                <h6 class="fw-bold text-dark mb-1" id="pickerNoticeTitle" style="font-size: 13.5px;">Notice</h6>
+                <p class="text-muted small mb-3" id="pickerNoticeMsg" style="font-size: 11.5px; line-height: 1.45;"></p>
                 <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
@@ -193,7 +196,7 @@
 </div>
 
 <style>
-    /* Strict 5px Global Radius System */
+    /* Strict 5px Element Radius */
     #globalMediaPickerModal .modal-content,
     #globalMediaPickerModal .btn,
     #globalMediaPickerModal .form-control,
@@ -216,8 +219,8 @@
 
     /* Fixed Viewport Modal Canvas */
     .picker-modal-canvas {
-        height: 88vh;
-        max-height: 88vh;
+        height: 85vh;
+        max-height: 85vh;
         display: flex;
         flex-direction: column;
         background: #ffffff;
@@ -226,20 +229,22 @@
         flex: 1 1 auto;
         overflow: hidden;
         min-height: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     /* Segmented Header Tabs */
     .picker-segmented-tabs {
         display: inline-flex;
         background: #e2e8f0;
-        padding: 3px;
-        border-radius: 6px !important;
-        gap: 3px;
+        padding: 2px;
+        border-radius: 5px !important;
+        gap: 2px;
     }
     .picker-segmented-tabs .nav-link {
-        font-size: 11.5px !important;
+        font-size: 11px !important;
         font-weight: 600 !important;
-        padding: 4px 12px !important;
+        padding: 4px 10px !important;
         color: #475569 !important;
         border: none !important;
         background: transparent;
@@ -251,10 +256,8 @@
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
     }
 
-    /* Compact Buttons */
-    #globalMediaPickerModal .btn-compact,
-    #pickerNoticeModal .btn-compact {
-        font-size: 11.5px !important;
+    .btn-compact {
+        font-size: 11px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -265,12 +268,11 @@
         transition: all 0.15s ease;
     }
 
-    /* Form Controls */
     .picker-filter-input,
     .picker-filter-select {
-        font-size: 12px !important;
-        height: 32px !important;
-        padding: 4px 10px !important;
+        font-size: 11.5px !important;
+        height: 31px !important;
+        padding: 4px 8px !important;
         border: 1px solid #cbd5e1 !important;
         background-color: #ffffff !important;
         color: #0f172a !important;
@@ -283,15 +285,15 @@
         outline: none;
     }
     .picker-search-addon {
-        height: 32px !important;
+        height: 31px !important;
         border-color: #cbd5e1 !important;
     }
 
     /* Media Grid Layout */
     .picker-media-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
     }
     .picker-item {
         aspect-ratio: 1 / 1;
@@ -310,7 +312,7 @@
     }
     .picker-item.selected {
         border-color: #2563eb !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3) !important;
     }
     .picker-item img {
         width: 100%;
@@ -328,7 +330,7 @@
         width: 18px;
         height: 18px;
         border-radius: 4px !important;
-        font-size: 9.5px;
+        font-size: 9px;
         align-items: center;
         justify-content: center;
         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -339,20 +341,20 @@
 
     /* Details Column */
     .picker-details-column {
-        width: 290px;
-        min-width: 290px;
-        max-width: 290px;
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
     }
 
     /* WordPress Style Dropzone */
     .wp-dropzone-box {
         border: 2px dashed #94a3b8;
-        border-radius: 8px !important;
-        padding: 45px 20px;
+        border-radius: 6px !important;
+        padding: 40px 20px;
         text-align: center;
         background: #f8fafc;
         margin: 10px auto;
-        max-width: 580px;
+        max-width: 540px;
         transition: all 0.2s ease;
     }
     .wp-dropzone-box.dragover {
@@ -360,7 +362,6 @@
         background: #eff6ff;
     }
 
-    /* Safe Bengali Digits */
     .bn-digit,
     .font-monospace {
         font-weight: 700 !important;
@@ -369,36 +370,29 @@
         cursor: pointer;
     }
 
-    /* 100/100 Mobile Responsiveness */
+    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
     @media (max-width: 767.98px) {
         .picker-modal-canvas {
-            height: 94vh;
-            max-height: 94vh;
+            height: 92vh;
+            max-height: 92vh;
         }
         .picker-segmented-tabs {
-            width: 100%;
-        }
-        .picker-segmented-tabs .nav-item {
-            flex: 1 1 0;
-        }
-        .picker-segmented-tabs .nav-link {
-            width: 100%;
-            text-align: center;
+            margin-left: auto !important;
         }
         .picker-media-grid {
-            grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+            gap: 6px;
         }
         .picker-details-column {
             width: 100%;
             min-width: 100%;
             max-width: 100%;
-            max-height: 220px;
+            max-height: 200px;
             border-left: 0 !important;
             border-top: 1px solid #e2e8f0;
         }
         .wp-dropzone-box {
-            padding: 30px 15px;
+            padding: 24px 12px;
         }
     }
 </style>
@@ -425,7 +419,7 @@ function showPickerNotice(message, title = 'Notice', isError = false) {
         iconWrap.className = isError 
             ? 'rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mx-auto mb-2' 
             : 'rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center mx-auto mb-2';
-        icon.className = isError ? 'fas fa-circle-exclamation fs-4' : 'fas fa-check-circle fs-4';
+        icon.className = isError ? 'fas fa-circle-exclamation fs-5' : 'fas fa-check-circle fs-5';
     }
 
     const modalEl = document.getElementById('pickerNoticeModal');
@@ -452,6 +446,17 @@ window.openMediaPicker = function(options = {}) {
 
     fetchPickerMedia(1);
 };
+
+// Safe Media Payload Normalizer
+function parseMediaResponseItems(res) {
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res.data)) return res.data;
+    if (res.data && Array.isArray(res.data.data)) return res.data.data;
+    if (Array.isArray(res.media)) return res.media;
+    if (res.media && Array.isArray(res.media.data)) return res.media.data;
+    return [];
+}
 
 // Fetch Media Items via AJAX
 function fetchPickerMedia(page = 1) {
@@ -481,25 +486,25 @@ function fetchPickerMedia(page = 1) {
     .then(res => res.json())
     .then(res => {
         loader?.classList.add('d-none');
-        if (res.status === 'success') {
-            if (page === 1 && res.data.length === 0) {
-                emptyNotice?.classList.remove('d-none');
-                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                return;
-            }
+        const items = parseMediaResponseItems(res);
 
-            renderPickerGrid(res.data, page > 1);
+        if (page === 1 && items.length === 0) {
+            emptyNotice?.classList.remove('d-none');
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            return;
+        }
 
-            if (res.pagination && res.pagination.has_more) {
-                if (loadMoreBtn) loadMoreBtn.style.display = 'block';
-            } else {
-                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-            }
+        renderPickerGrid(items, page > 1);
+
+        const hasMore = (res.pagination && res.pagination.has_more) || (res.next_page_url !== null && res.next_page_url !== undefined) || (res.data && res.data.next_page_url);
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = hasMore ? 'block' : 'none';
         }
     })
     .catch(err => {
         console.error('Picker fetch error:', err);
         loader?.classList.add('d-none');
+        if (page === 1) emptyNotice?.classList.remove('d-none');
     });
 }
 
@@ -521,12 +526,15 @@ function renderPickerGrid(items, append = false) {
 
     items.forEach(item => {
         window.pickerItemsMap[item.id] = item;
-        const isImg = item.file_type && item.file_type.startsWith('image/');
+        const isImg = item.file_type ? item.file_type.startsWith('image/') : (!item.url || !item.url.endsWith('.pdf'));
+        const fileUrl = item.url || (item.file_path ? ('/' + item.file_path.replace(/^\/+/, '')) : '');
+        item.resolved_url = fileUrl;
+
         html += `
             <div class="picker-item" data-id="${item.id}" onclick="handlePickerItemClickById(${item.id}, this)">
                 ${isImg 
-                    ? `<img src="${item.url}" alt="${item.alt_text || ''}" loading="lazy">` 
-                    : `<div class="h-100 d-flex flex-column align-items-center justify-content-center p-1 text-center bg-white"><i class="fas fa-file-pdf fa-2x text-danger mb-1"></i><small class="text-truncate w-100 font-monospace bn-digit" style="font-size: 9px;">${item.file_name}</small></div>`}
+                    ? `<img src="${fileUrl}" alt="${item.alt_text || ''}" loading="lazy" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'><rect fill=\\'%23f1f5f9\\' width=\\'80\\' height=\\'80\\'/></svg>'">` 
+                    : `<div class="h-100 d-flex flex-column align-items-center justify-content-center p-1 text-center bg-white"><i class="fas fa-file-pdf fa-2x text-danger mb-1"></i><small class="text-truncate w-100 font-monospace bn-digit" style="font-size: 8.5px;">${item.file_name || 'Document'}</small></div>`}
                 <div class="check-icon"><i class="fas fa-check"></i></div>
             </div>
         `;
@@ -572,25 +580,25 @@ function renderPickerDetails(item) {
     if (panel) panel.style.display = 'block';
 
     const imgEl = document.getElementById('pickerDetailImg');
-    if (imgEl) imgEl.src = item.url;
+    if (imgEl) imgEl.src = item.resolved_url || item.url;
     
     const nameEl = document.getElementById('pickerDetailName');
-    if (nameEl) nameEl.innerText = item.file_name;
+    if (nameEl) nameEl.innerText = item.file_name || 'Selected Item';
 
     const dateEl = document.getElementById('pickerDetailDate');
-    if (dateEl) dateEl.innerText = 'Uploaded: ' + (item.formatted_date || '');
+    if (dateEl) dateEl.innerText = 'Uploaded: ' + (item.formatted_date || item.created_at || 'Recent');
 
     const dimsEl = document.getElementById('pickerDetailDims');
     if (dimsEl) dimsEl.innerText = 'Dimensions: ' + (item.dimensions || 'N/A');
 
     const sizeEl = document.getElementById('pickerDetailSize');
-    if (sizeEl) sizeEl.innerText = 'Size: ' + (item.human_size || '');
+    if (sizeEl) sizeEl.innerText = 'Size: ' + (item.human_size || item.size || 'N/A');
 
     const altEl = document.getElementById('pickerDetailAlt');
     if (altEl) altEl.value = item.alt_text || '';
 
     const titleEl = document.getElementById('pickerDetailTitle');
-    if (titleEl) titleEl.value = item.title || '';
+    if (titleEl) titleEl.value = item.title || item.file_name || '';
 
     panel?.setAttribute('data-active-id', item.id);
 }
@@ -606,8 +614,9 @@ function updatePickerFooter() {
         if (btn) btn.disabled = false;
         if (text) text.innerText = count + ' item(s) selected';
         const lastItem = pickerSelectedItems[count - 1];
-        if (lastItem && lastItem.url && thumbWrap && thumbImg) {
-            thumbImg.src = lastItem.url;
+        const lastUrl = lastItem?.resolved_url || lastItem?.url;
+        if (lastUrl && thumbWrap && thumbImg) {
+            thumbImg.src = lastUrl;
             thumbWrap.classList.remove('d-none');
         }
     } else {
@@ -703,7 +712,6 @@ function uploadPickerFiles(files) {
 document.addEventListener('DOMContentLoaded', () => {
     const modalEl = document.getElementById('globalMediaPickerModal');
     if (modalEl) {
-        // Nested Bootstrap Modal Backdrop Handler
         modalEl.addEventListener('show.bs.modal', function() {
             setTimeout(() => {
                 const backdrops = document.querySelectorAll('.modal-backdrop');

@@ -35,21 +35,21 @@
         @if($showContent)
             <div class="slide-caption-wrap">
                 @if(!empty($slide->badge_text))
-                    <span class="slide-badge" style="background: {{ $slide->badge_bg }}; color: {{ $slide->badge_color }};">
+                    <span class="slide-badge theme-slider-badge" style="background: {{ !empty($slide->badge_bg) ? $slide->badge_bg : 'var(--common-btn-bg, #2563eb)' }}; color: {{ !empty($slide->badge_color) ? $slide->badge_color : '#ffffff' }};">
                         {{ $slide->badge_text }}
                     </span>
                 @endif
 
                 @if(!empty($slide->title))
-                    <h2 class="slide-title" style="color: {{ $slide->title_color }};">{{ $slide->title }}</h2>
+                    <h2 class="slide-title theme-slider-title" style="color: {{ $slide->title_color ?? '#ffffff' }};">{{ $slide->title }}</h2>
                 @endif
 
                 @if(!empty($slide->subtitle))
-                    <p class="slide-subtitle" style="color: {{ $slide->subtitle_color }};">{{ $slide->subtitle }}</p>
+                    <p class="slide-subtitle theme-slider-subtitle" style="color: {{ $slide->subtitle_color ?? 'rgba(255,255,255,0.85)' }};">{{ $slide->subtitle }}</p>
                 @endif
 
                 @if(!empty($slide->btn_text))
-                    <a href="{{ $slide->btn_url }}" class="slide-btn" style="background: {{ $slide->btn_bg }}; color: {{ $slide->btn_color }};">
+                    <a href="{{ $slide->btn_url }}" class="slide-btn theme-slider-btn theme-btn-primary" style="background: {{ !empty($slide->btn_bg) ? $slide->btn_bg : 'var(--common-btn-bg, #2563eb)' }}; color: {{ !empty($slide->btn_color) ? $slide->btn_color : 'var(--common-btn-text, #ffffff)' }};">
                         {{ $slide->btn_text }} &rarr;
                     </a>
                 @endif

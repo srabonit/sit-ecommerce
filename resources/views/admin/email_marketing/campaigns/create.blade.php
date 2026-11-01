@@ -50,14 +50,14 @@
                         <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Campaign Name (Internal Reference) <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Flash Sale Announcement - Weekend Special" value="{{ old('name') }}" required>
+                                <input type="text" name="name" class="form-control form-control-sm" placeholder="Flash Sale Announcement - Weekend Special" value="{{ old('name') }}" required>
                                 <small class="text-muted" style="font-size: 11px;">Only visible to admins in reports and dashboard.</small>
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Email Subject Line <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
-                                    <input type="text" name="subject" id="campaignSubjectInput" class="form-control" placeholder="e.g. 🔥 Flat 30% Off Everything - Limited Time Only!" value="{{ old('subject') }}" required>
+                                    <input type="text" name="subject" id="campaignSubjectInput" class="form-control" placeholder="🔥 Flat 30% Off Everything - Limited Time Only!" value="{{ old('subject') }}" required>
                                     <button type="button" class="btn btn-outline-secondary" onclick="insertTagIntoSubject('{first_name}')" title="Insert Recipient's First Name">
                                         <i class="fas fa-user-tag me-1"></i> +{first_name}
                                     </button>
@@ -67,19 +67,19 @@
 
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Preview / Snippet Text</label>
-                                <input type="text" name="preview_text" class="form-control form-control-sm" placeholder="e.g. Grab your favorite fashion items before stock runs out..." value="{{ old('preview_text') }}">
+                                <input type="text" name="preview_text" class="form-control form-control-sm" placeholder="Grab your favorite fashion items before stock runs out..." value="{{ old('preview_text') }}">
                                 <small class="text-muted" style="font-size: 11px;">Snippet displayed right beside the subject line in customer inboxes (Gmail, Apple Mail, Outlook).</small>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Sender Display Name</label>
-                                <input type="text" name="sender_name" class="form-control form-control-sm" placeholder="e.g. Shop Now BD" value="{{ old('sender_name') }}">
+                                <input type="text" name="sender_name" class="form-control form-control-sm" placeholder="Shop Now BD" value="{{ old('sender_name') }}">
                                 <small class="text-muted" style="font-size: 11px;">Leave blank to use default store sender name.</small>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Sender Email Address</label>
-                                <input type="email" name="sender_email" class="form-control form-control-sm" placeholder="e.g. newsletter@shopnowbd.online" value="{{ old('sender_email') }}">
+                                <input type="email" name="sender_email" class="form-control form-control-sm" placeholder="newsletter@shopnowbd.online" value="{{ old('sender_email') }}">
                                 <small class="text-muted" style="font-size: 11px;">Must be a verified sender domain in your SMTP/Provider settings.</small>
                             </div>
                         </div>

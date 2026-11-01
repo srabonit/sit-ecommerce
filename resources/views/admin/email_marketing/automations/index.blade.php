@@ -2,6 +2,23 @@
 
 @section('title', 'Automation & Workflows - Email Marketing')
 
+@php
+    $automations = $automations ?? collect();
+    $totalAutomationsCount = method_exists($automations, 'total') ? $automations->total() : $automations->count();
+
+    $activeCount        = $automations->where('is_active', true)->count();
+    $cartRecoveryCount  = $automations->where('trigger_event', 'abandoned_cart')->count();
+    $customerCareCount  = $automations->whereIn('trigger_event', ['welcome_subscriber', 'first_purchase', 'order_delivered'])->count();
+
+    $logsRoute = Route::has('admin.email_marketing.automations.logs') 
+        ? route('admin.email_marketing.automations.logs') 
+        : url('admin/email-marketing/automations/logs');
+
+    $createRoute = Route::has('admin.email_marketing.automations.create') 
+        ? route('admin.email_marketing.automations.create') 
+        : url('admin/email-marketing/automations/create');
+@endphp
+
 @section('admin_content')
 <style>
     /* Strict 5px Element Radius Across All Controls */
@@ -19,7 +36,8 @@
     #email-marketing-automations-root .page-item span,
     #email-marketing-automations-root .collapse-toggle-btn,
     .workflow-modal-scope .modal-content,
-    .workflow-modal-scope .btn {
+    .workflow-modal-scope .btn,
+    .admin-automation-toast {
         border-radius: 5px !important;
     }
 
@@ -40,7 +58,7 @@
 
     /* Compact Sleek Button Styling */
     .btn-compact {
-        font-size: 11px !important;
+        font-size: 11.5px !important;
         padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
@@ -49,6 +67,30 @@
         justify-content: center;
         white-space: nowrap;
         transition: all 0.15s ease;
+    }
+
+    .workflow-filter-control {
+        font-size: 12px !important;
+        height: 32px !important;
+        padding: 4px 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .workflow-filter-control:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+        outline: none;
+    }
+
+    .workflow-addon-text {
+        height: 32px !important;
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+        color: #64748b !important;
+        font-size: 11px !important;
     }
 
     /* Collapsible Trigger Buttons & Rotating Chevron */
@@ -145,20 +187,20 @@
         margin-bottom: 0;
     }
     .custom-workflow-table thead th {
-        font-size: 10px;
+        font-size: 10.5px;
         letter-spacing: 0.03em;
         text-transform: uppercase;
         color: #475569;
         background-color: #f8fafc;
         border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
+        padding: 9px 8px;
         white-space: nowrap;
     }
     .custom-workflow-table tbody td {
         padding: 8px 8px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
@@ -198,23 +240,6 @@
         margin-bottom: 4px;
         display: block;
     }
-    #email-marketing-automations-root .form-control,
-    #email-marketing-automations-root .form-select {
-        min-height: 32px;
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #email-marketing-automations-root .form-control:focus,
-    #email-marketing-automations-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
-    }
 
     /* Bulletproof Responsive Pagination */
     .card-footer nav {
@@ -225,20 +250,10 @@
         margin: 0 !important;
     }
     .card-footer nav > div.d-sm-none,
-    .card-footer nav > .d-sm-none {
-        display: none !important;
-    }
-    .card-footer nav > div.d-none,
-    .card-footer nav > .d-none.flex-sm-fill {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
+    .card-footer nav > .d-sm-none,
     .card-footer nav p,
     .card-footer nav .small.text-muted,
-    .card-footer nav div:has(> p),
-    .card-footer nav > div.d-none > div:first-child,
-    .card-footer nav .d-none.flex-sm-fill > div:first-child {
+    .card-footer nav div:has(> p) {
         display: none !important;
     }
     .card-footer .pagination {
@@ -292,9 +307,20 @@
         border-color: #e2e8f0 !important;
         cursor: not-allowed !important;
     }
-    .card-footer nav svg {
-        width: 10px !important;
-        height: 10px !important;
+
+    /* Floating Toast Box */
+    .admin-automation-toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 108000;
+        min-width: 280px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+        animation: slideInRight 0.25s ease;
+    }
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
     /* 100/100 Mobile Responsiveness Tuning (< 768px) */
@@ -341,34 +367,42 @@
             min-width: 780px !important;
             table-layout: auto !important;
         }
+        #email-marketing-automations-root .card {
+            margin-bottom: 12px !important;
+        }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-automations-root">
 
-    <!-- 1. Header & Quick Navigation (Original Clean Light Theme) -->
+    {{-- 1. Header & Quick Navigation --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 workflow-header-wrap">
         <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-diagram-project text-primary"></i>
-                <span>Automation &amp; Workflows</span>
-            </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
+                    <i class="fas fa-diagram-project text-primary"></i>
+                    <span>Automation &amp; Workflows</span>
+                </h5>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" id="automations-total-badge" style="font-size: 10px;">
+                    {{ number_format($totalAutomationsCount) }} Workflows
+                </span>
+            </div>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
                 Automate customer journeys for abandoned cart recovery, welcome series, and post-purchase follow-ups.
             </small>
         </div>
 
-        <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ route('admin.email_marketing.automations.logs') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
+        <div class="d-flex flex-wrap align-items-center gap-2 top-action-btns">
+            <a href="{{ $logsRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold bg-white">
                 <i class="fas fa-list-check me-1"></i> <span>Execution Logs</span>
             </a>
-            <a href="{{ route('admin.email_marketing.automations.create') }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold">
+            <a href="{{ $createRoute }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold">
                 <i class="fas fa-plus-circle me-1"></i> <span>Create Workflow</span>
             </a>
         </div>
     </div>
 
-    <!-- 2. Session Feedback Messages -->
+    {{-- 2. Session Feedback Messages --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
@@ -388,9 +422,9 @@
         </div>
     @endif
 
-    <!-- 3. Overview Stats Row (Collapsible Section) -->
+    {{-- 3. Overview Stats Row (Collapsible Section) --}}
     <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-chart-pie text-primary me-1"></i> Automation Engine Status &amp; Performance Metrics
             </span>
@@ -401,7 +435,7 @@
         <div class="collapse show" id="collapseWorkflowKpis">
             <div class="p-3">
                 <div class="row g-2">
-                    <!-- Total Workflows -->
+                    {{-- Total Workflows --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-blue h-100 mb-0">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -412,14 +446,14 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
-                                    {{ $automations->total() }}
+                                    {{ number_format($totalAutomationsCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Configured journeys</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Active Engine -->
+                    {{-- Active Engine --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-green h-100 mb-0">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -430,14 +464,14 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num">
-                                    {{ $automations->where('is_active', true)->count() }}
+                                    {{ number_format($activeCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Running in background</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Cart Recovery -->
+                    {{-- Cart Recovery --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-amber h-100 mb-0">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -448,14 +482,14 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num">
-                                    {{ $automations->where('trigger_event', 'abandoned_cart')->count() }}
+                                    {{ number_format($cartRecoveryCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Cart sequences</small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Customer Care -->
+                    {{-- Customer Care --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-cyan h-100 mb-0">
                             <div class="d-flex align-items-center justify-content-between mb-1">
@@ -466,7 +500,7 @@
                             </div>
                             <div class="min-w-0">
                                 <h4 class="fw-bold my-0 text-info bn-digit font-monospace stat-val-num">
-                                    {{ $automations->whereIn('trigger_event', ['welcome_subscriber', 'first_purchase', 'order_delivered'])->count() }}
+                                    {{ number_format($customerCareCount) }}
                                 </h4>
                                 <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Lifecycle retention</small>
                             </div>
@@ -477,9 +511,9 @@
         </div>
     </div>
 
-    <!-- 4. Quick Search & Filter Toolbar (Collapsible) -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+    {{-- 4. Quick Search & Filter Toolbar (Collapsible) --}}
+    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
+        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
                 <i class="fas fa-filter text-primary me-1"></i> Filter Workflows &amp; Trigger Events
             </span>
@@ -495,8 +529,8 @@
                             <i class="fas fa-search me-1 text-primary"></i> Search Workflow Name or Note
                         </label>
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="workflowSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="e.g. Abandoned Cart, Welcome Series..." onkeyup="filterWorkflowsTable()">
+                            <span class="input-group-text workflow-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
+                            <input type="text" id="workflowSearchInput" class="form-control border-start-0 ps-0 workflow-filter-control shadow-none font-monospace" placeholder="Abandoned Cart, Welcome Series..." onkeyup="filterWorkflowsTable()">
                         </div>
                     </div>
 
@@ -504,7 +538,7 @@
                         <label class="form-label" for="workflowTriggerFilter">
                             <i class="fas fa-bolt me-1 text-warning"></i> Trigger Event
                         </label>
-                        <select id="workflowTriggerFilter" class="form-select shadow-none font-monospace" onchange="filterWorkflowsTable()">
+                        <select id="workflowTriggerFilter" class="form-select workflow-filter-control shadow-none font-monospace" onchange="filterWorkflowsTable()">
                             <option value="all" selected>All Trigger Events</option>
                             <option value="abandoned_cart">Abandoned Cart Recovery</option>
                             <option value="welcome_subscriber">Welcome Subscriber</option>
@@ -518,7 +552,7 @@
                         <label class="form-label" for="workflowStatusFilter">
                             <i class="fas fa-toggle-on me-1 text-success"></i> Engine Status
                         </label>
-                        <select id="workflowStatusFilter" class="form-select shadow-none font-monospace" onchange="filterWorkflowsTable()">
+                        <select id="workflowStatusFilter" class="form-select workflow-filter-control shadow-none font-monospace" onchange="filterWorkflowsTable()">
                             <option value="all" selected>All Statuses</option>
                             <option value="active">Active Engine</option>
                             <option value="inactive">Inactive / Paused</option>
@@ -529,20 +563,20 @@
         </div>
     </div>
 
-    <!-- 5. Workflows Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) -->
+    {{-- 5. Workflows Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
     <div class="card border-0 shadow-sm overflow-hidden mb-3">
         <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
             <div>
                 <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
                     <i class="fas fa-network-wired text-primary"></i> <span>Configured Customer Automation Journeys</span>
                 </h6>
-                <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">
-                    Showing {{ $automations->firstItem() ?? 0 }} to {{ $automations->lastItem() ?? 0 }} of {{$automations->total() }} workflows
+                <small class="text-muted font-monospace bn-digit" id="showing-entries-text" style="font-size: 10px;">
+                    Showing {{ method_exists($automations, 'firstItem') ? ($automations->firstItem() ?? 0) : 1 }} to {{ method_exists($automations, 'lastItem') ? ($automations->lastItem() ?? 0) : $automations->count() }} of {{ number_format($totalAutomationsCount) }} workflows
                 </small>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-workflow-count">
-                    {{ $automations->total() }} Total Configured
+                    {{ number_format($totalAutomationsCount) }} Total Configured
                 </span>
                 <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseWorkflowsTable" aria-expanded="true" aria-controls="collapseWorkflowsTable" title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -551,7 +585,7 @@
         </div>
 
         <div class="collapse show" id="collapseWorkflowsTable">
-            <div class="table-responsive pc-fit-container">
+            <div class="table-responsive pc-fit-container" style="min-height: 250px;">
                 <table class="table align-middle mb-0 custom-workflow-table" id="workflows-table">
                     <thead>
                         <tr>
@@ -584,6 +618,18 @@
                                     'win_back_inactivity' => 'fa-clock-rotate-left',
                                     default               => 'fa-bolt',
                                 };
+
+                                $editWorkflowUrl = Route::has('admin.email_marketing.automations.edit') 
+                                    ? route('admin.email_marketing.automations.edit', $workflow->id) 
+                                    : url('admin/email-marketing/automations/' . $workflow->id . '/edit');
+
+                                $toggleStatusUrl = Route::has('admin.email_marketing.automations.toggle_status') 
+                                    ? route('admin.email_marketing.automations.toggle_status', $workflow->id) 
+                                    : url('admin/email-marketing/automations/' . $workflow->id . '/toggle-status');
+
+                                $destroyWorkflowUrl = Route::has('admin.email_marketing.automations.destroy') 
+                                    ? route('admin.email_marketing.automations.destroy', $workflow->id) 
+                                    : url('admin/email-marketing/automations/' . $workflow->id);
                             @endphp
                             <tr class="workflow-row" data-name="{{ strtolower($workflow->name . ' ' . ($workflow->description ?? '')) }}" data-trigger="{{ strtolower($workflow->trigger_event) }}" data-status="{{ $workflow->is_active ? 'active' : 'inactive' }}">
                                 <td class="ps-3 col-wf-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
@@ -600,34 +646,34 @@
                                     </div>
                                 </td>
                                 <td class="col-wf-trigger">
-                                    <span class="badge {{ $triggerBadge }} font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 9px; max-width: 100%; border-radius: 5px !important;">
+                                    <span class="badge {{ $triggerBadge }} font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 9.5px; max-width: 100%; border-radius: 5px !important;">
                                         <i class="fas {{ $triggerIcon }} me-1"></i> {{ ucfirst(str_replace('_', ' ', $workflow->trigger_event)) }}
                                     </span>
                                 </td>
                                 <td class="text-center col-wf-steps">
                                     <span class="badge bg-light text-dark border px-2 py-1 font-monospace bn-digit" style="font-size: 10px; border-radius: 5px !important;">
-                                        {{ $workflow->steps_count }} {{ Str::plural('Step',$workflow->steps_count) }}
+                                        {{ $workflow->steps_count ?? ($workflow->steps ? $workflow->steps->count() : 0) }} {{ Str::plural('Step',$workflow->steps_count ?? ($workflow->steps ? $workflow->steps->count() : 0)) }}
                                     </span>
                                 </td>
                                 <td class="col-wf-status">
                                     @if($workflow->is_active)
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 10px;">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
                                             <i class="fas fa-circle-check me-1"></i> Active
                                         </span>
                                     @else
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 10px;">
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
                                             <i class="fas fa-pause me-1"></i> Inactive
                                         </span>
                                     @endif
                                 </td>
                                 <td class="col-wf-date font-monospace bn-digit" style="line-height: 1.3;">
                                     <span class="text-dark d-block" style="font-size: 11px;">{{ $workflow->created_at->format('M d, Y') }}</span>
-                                    <small class="text-muted" style="font-size: 9px;">{{ $workflow->created_at->format('h:i A') }}</small>
+                                    <small class="text-muted" style="font-size: 9.5px;">{{ $workflow->created_at->format('h:i A') }}</small>
                                 </td>
                                 <td class="text-end pe-3 col-wf-actions">
                                     <div class="d-inline-flex align-items-center gap-1">
                                         {{-- Toggle Active / Inactive --}}
-                                        <form action="{{ route('admin.email_marketing.automations.toggle_status', $workflow->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ $toggleStatusUrl }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-light border p-1 shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="{{ $workflow->is_active ? 'Pause Automation' : 'Activate Automation' }}">
                                                 @if($workflow->is_active)
@@ -639,12 +685,12 @@
                                         </form>
 
                                         {{-- Edit Workflow --}}
-                                        <a href="{{ route('admin.email_marketing.automations.edit', $workflow->id) }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="Edit Workflow">
+                                        <a href="{{ $editWorkflowUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="Edit Workflow">
                                             <i class="fas fa-pencil" style="font-size: 10px;"></i>
                                         </a>
 
                                         {{-- Delete Workflow via Custom Enterprise Modal --}}
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerDeleteWorkflow({{ $workflow->id }}, '{{ addslashes($workflow->name) }}', '{{ route('admin.email_marketing.automations.destroy',$workflow->id) }}')" title="Delete Workflow">
+                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerDeleteWorkflow({{ $workflow->id }}, '{{ addslashes($workflow->name) }}', '{{$destroyWorkflowUrl }}')" title="Delete Workflow">
                                             <i class="fas fa-trash-can" style="font-size: 10px;"></i>
                                         </button>
                                     </div>
@@ -654,7 +700,8 @@
                             <tr id="emptyWorkflowsRow">
                                 <td colspan="7" class="text-center py-5 text-muted small">
                                     <i class="fas fa-diagram-project fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                    <span class="fw-semibold">No automated marketing workflows configured yet. Click "Create Workflow" to automate your store emails.</span>
+                                    <span class="fw-semibold text-dark d-block mb-1">No automated marketing workflows configured yet.</span>
+                                    <span>Click "Create Workflow" to automate your store emails.</span>
                                 </td>
                             </tr>
                         @endforelse
@@ -662,8 +709,8 @@
                 </table>
             </div>
 
-            <!-- Bulletproof Responsive Pagination Footer -->
-            @if($automations->hasPages())
+            {{-- Bulletproof Responsive Pagination Footer --}}
+            @if(method_exists($automations, 'hasPages') &&$automations->hasPages())
                 <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
                     <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
                         Showing {{ $automations->firstItem() }} to {{ $automations->lastItem() }} of {{$automations->total() }} workflows
@@ -677,7 +724,7 @@
     </div>
 </div>
 
-<!-- Modal: Custom Delete Confirmation Modal (Replaces browser confirm) -->
+{{-- Modal: Custom Delete Confirmation Modal --}}
 <div class="modal fade workflow-modal-scope" id="deleteWorkflowModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
@@ -689,12 +736,12 @@
                 <p class="text-muted small mb-3" style="font-size: 11px; line-height: 1.45;">
                     Are you sure you want to permanently remove <strong id="deleteWorkflowTitle" class="text-dark">this workflow</strong>? All scheduled queue executions will be halted.
                 </p>
-                <form id="deleteWorkflowForm" method="POST" action="">
+                <form id="deleteWorkflowForm" method="POST" action="" onsubmit="lockDeleteBtn(this)">
                     @csrf
                     @method('DELETE')
                     <div class="d-flex justify-content-center gap-2">
                         <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger btn-compact shadow-xs fw-bold">Yes, Delete</button>
+                        <button type="submit" class="btn btn-danger btn-compact shadow-xs fw-bold submit-btn">Yes, Delete</button>
                     </div>
                 </form>
             </div>
@@ -709,6 +756,14 @@
         const modalEl = document.getElementById('deleteWorkflowModal');
         if (modalEl && window.bootstrap) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    function lockDeleteBtn(form) {
+        const btn = form.querySelector('.submit-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
         }
     }
 

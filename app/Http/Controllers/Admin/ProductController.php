@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 class ProductController extends Controller
 {
     /**
-     * Pivot, tag, variant image column ebong digital product-er proyojonio table o column check kora
+     * Pivot, tag, variant image column ebong digital product o VAT-er proyojonio column check kora
      */
     protected function ensurePivotTables()
     {
@@ -120,7 +120,7 @@ class ProductController extends Controller
             });
         }
 
-        // 6. Products Table Digital & Cost Columns
+        // 6. Products Table Digital, Cost & Optional VAT Columns
         if (Schema::hasTable('products')) {
             Schema::table('products', function ($table) {
                 if (!Schema::hasColumn('products', 'is_virtual')) {
@@ -132,6 +132,12 @@ class ProductController extends Controller
                 }
                 if (!Schema::hasColumn('products', 'purchase_cost')) {
                     $table->decimal('purchase_cost', 12, 2)->default(0.00)->nullable();
+                }
+                if (!Schema::hasColumn('products', 'vat_type')) {
+                    $table->string('vat_type', 20)->default('percent')->nullable()->after('regular_price');
+                }
+                if (!Schema::hasColumn('products', 'vat_amount')) {
+                    $table->decimal('vat_amount', 10, 2)->nullable()->default(null)->after('vat_type');
                 }
             });
         }
@@ -617,7 +623,32 @@ class ProductController extends Controller
             $query->where('products.regular_price', '<=', (float)$request->max_price);
         }
 
-        // ৯. সর্টিং
+        // ৯. ভ্যাট স্ট্যাটাস ফিল্টার (With VAT vs Without VAT)
+        if ($request->filled('vat_status')) {
+            if ($request->vat_status === 'with_vat') {
+                $query->whereNotNull('products.vat_amount')->where('products.vat_amount', '>', 0);
+            } elseif ($request->vat_status === 'without_vat') {
+                $query->where(function ($q) {
+                    $q->whereNull('products.vat_amount')
+                      ->orWhere('products.vat_amount', '<=', 0);
+                });
+            }
+        }
+
+        // ১০. ভ্যাট টাইপ ফিল্টার (Percentage vs Flat)
+        if ($request->filled('vat_type')) {
+            $query->where('products.vat_type', $request->vat_type);
+        }
+
+        // ১১. ভ্যাট অ্যামাউন্ট রেঞ্জ ফিল্টার (Min VAT - Max VAT)
+        if ($request->filled('min_vat')) {
+            $query->where('products.vat_amount', '>=', (float)$request->min_vat);
+        }
+        if ($request->filled('max_vat')) {
+            $query->where('products.vat_amount', '<=', (float)$request->max_vat);
+        }
+
+        // ১২. সর্টিং (প্রাইস, নাম ও ভ্যাট হাই-লো সহ)
         $sortBy = $request->get('sort_by', 'latest');
         switch ($sortBy) {
             case 'name_asc':
@@ -634,6 +665,12 @@ class ProductController extends Controller
             case 'low_mrp':
                 $query->orderBy('products.regular_price', 'asc');
                 break;
+            case 'vat_high':
+                $query->orderBy('products.vat_amount', 'desc');
+                break;
+            case 'vat_low':
+                $query->orderBy('products.vat_amount', 'asc');
+                break;
             case 'oldest':
             case 'asc':
                 $query->orderBy('products.id', 'asc');
@@ -645,31 +682,31 @@ class ProductController extends Controller
                 break;
         }
 
-        // ১০. বটম সামারি ক্যালকুলেশন (Single Source of Truth - Purchase Cost & Stock)
+        // ১৩. বটম সামারি ক্যালকুলেশন (Single Source of Truth - Purchase Cost & Stock)
         $summaryQuery       = clone $query;
         $totalProductsCount = (int) $summaryQuery->count();
         $totalStockQty      = (int) (clone $query)->sum('products.stock');
         $totalRetailValue   = (float) (clone $query)->sum(DB::raw('COALESCE(products.stock, 0) * COALESCE(products.regular_price, 0)'));
         $totalPurchaseCost  = (float) (clone $query)->sum(DB::raw('COALESCE(products.stock, 0) * COALESCE(NULLIF(products.purchase_cost, 0), products.purchase_price, 0)'));
 
-        // ১১. এক ক্লিকে EXCEL / CSV এক্সপোর্ট
+        // ১৪. এক ক্লিকে EXCEL / CSV এক্সপোর্ট
         if ($request->get('export') === 'excel' || $request->get('export') === 'csv') {
             return $this->exportProductsToExcel($query, $totalProductsCount, $totalStockQty, $totalRetailValue, $totalPurchaseCost);
         }
 
-        // ১২. এক ক্লিকে PDF এক্সপোর্ট
+        // ১৫. এক ক্লিকে PDF এক্সপোর্ট
         if ($request->get('export') === 'pdf' || $request->get('export') === 'print') {
             $exportProducts = $query->get();
             return view('admin.product.export_pdf', compact('exportProducts', 'totalProductsCount', 'totalStockQty', 'totalRetailValue', 'totalPurchaseCost', 'request'));
         }
 
-        // ১৩. পেজিনেশন
+        // ১৬. পেজিনেশন
         $perPageInput = $request->input('per_page', 20);
         $perPage = ($perPageInput === 'all') ? 100000 : max(5, (int) $perPageInput);
 
         $products = $query->paginate($perPage)->withQueryString();
 
-        // ১৪. AJAX রেসপন্স
+        // ১৭. AJAX রেসপন্স
         if ($request->ajax()) {
             $from = $products->firstItem() ?? 0;
             $to = $products->lastItem() ?? 0;
@@ -728,6 +765,7 @@ class ProductController extends Controller
             'Regular Price (MRP)',
             'Sale Price',
             'Purchase Cost',
+            'VAT (Type & Rate)',
             'Total Stock Retail Value',
             'Featured',
             'Created Date'
@@ -744,6 +782,12 @@ class ProductController extends Controller
                 $lineValue = ($prod->stock > 0) ? ($prod->stock * (float)$prod->regular_price) : 0;
                 $costVal = !empty($prod->purchase_cost) ? (float)$prod->purchase_cost : (!empty($prod->purchase_price) ? (float)$prod->purchase_price : null);
 
+                $vatDisplay = '0 (No VAT)';
+                if (isset($prod->vat_amount) && !is_null($prod->vat_amount) && (float)$prod->vat_amount > 0) {
+                    $vType = ($prod->vat_type ?? 'percent') === 'flat' ? 'Flat ৳' : '%';
+                    $vatDisplay = ($prod->vat_type ?? 'percent') === 'flat' ? ('৳' . $prod->vat_amount) : ($prod->vat_amount . '%');
+                }
+
                 fputcsv($file, [
                     '#' . $prod->id,
                     $prod->title,
@@ -758,6 +802,7 @@ class ProductController extends Controller
                     number_format((float)$prod->regular_price, 2, '.', ''),
                     !empty($prod->sale_price) ? number_format((float)$prod->sale_price, 2, '.', '') : '—',
                     !is_null($costVal) ? number_format($costVal, 2, '.', '') : '—',
+                    $vatDisplay,
                     number_format($lineValue, 2, '.', ''),
                     $prod->is_featured ? 'YES' : 'NO',
                     date('d M Y, h:i A', strtotime($prod->created_at)),
@@ -779,6 +824,7 @@ class ProductController extends Controller
                 '',
                 '',
                 "Total Cost: " . number_format($totalCost, 2, '.', '') . ' BDT',
+                '',
                 "Total Retail Value: " . number_format($totalRetail, 2, '.', '') . ' BDT',
                 '',
                 ''
@@ -809,6 +855,8 @@ class ProductController extends Controller
             'title'            => 'required|string|max:255',
             'regular_price'    => 'required|numeric',
             'stock'            => 'nullable|integer',
+            'vat_type'         => 'nullable|string|in:percent,flat',
+            'vat_amount'       => 'nullable|numeric|min:0',
             'thumbnail'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,svg|max:5120',
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,svg|max:5120',
         ]);
@@ -868,6 +916,8 @@ class ProductController extends Controller
                 'wholesale_price'          => $request->wholesale_price ?: null,
                 'purchase_cost'            => !is_null($rawPurchaseCost) ? (float)$rawPurchaseCost : 0.00,
                 'purchase_price'           => !is_null($rawPurchaseCost) ? (float)$rawPurchaseCost : null,
+                'vat_type'                 => $request->filled('vat_type') ? $request->vat_type : 'percent',
+                'vat_amount'               => ($request->filled('vat_amount') && $request->vat_amount !== '') ? (float)$request->vat_amount : null,
                 'discount_percentage'      => $request->discount_percentage ?: null,
                 'stock'                    => ($resolvedProductStruct === 'variable') ? 0 : (int)($request->stock ?? 0),
                 'allow_out_of_stock_order' => $request->has('allow_out_of_stock_order') ? 1 : 0,
@@ -1077,6 +1127,8 @@ class ProductController extends Controller
             'title'            => 'required|string|max:255',
             'regular_price'    => 'required|numeric',
             'stock'            => 'nullable|integer',
+            'vat_type'         => 'nullable|string|in:percent,flat',
+            'vat_amount'       => 'nullable|numeric|min:0',
             'thumbnail'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,svg|max:5120',
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,svg|max:5120',
         ]);
@@ -1145,6 +1197,8 @@ class ProductController extends Controller
                 'wholesale_price'          => $request->wholesale_price ?: null,
                 'purchase_cost'            => !is_null($rawPurchaseCost) ? (float)$rawPurchaseCost : 0.00,
                 'purchase_price'           => !is_null($rawPurchaseCost) ? (float)$rawPurchaseCost : null,
+                'vat_type'                 => $request->filled('vat_type') ? $request->vat_type : 'percent',
+                'vat_amount'               => ($request->filled('vat_amount') && $request->vat_amount !== '') ? (float)$request->vat_amount : null,
                 'discount_percentage'      => $request->discount_percentage ?: null,
                 'stock'                    => ($request->product_struct === 'variable') ? (int)$product->stock : (int)($request->stock ?? 0),
                 'allow_out_of_stock_order' => $request->has('allow_out_of_stock_order') ? 1 : 0,
@@ -1310,7 +1364,6 @@ class ProductController extends Controller
                                 $varData['sku'] = $variant['sku'] ?? ($variant['product_code'] ?? null);
                             }
 
-                            // যদি ফর্ম থেকে বিদ্যমান ভ্যারিয়েন্ট আইডি আসে, তবে পূর্বের রো-টি আপডেট হবে (নতুন আইডি তৈরি হবে না)
                             $existingVarId = !empty($variant['id']) ? (int)$variant['id'] : null;
                             if ($existingVarId && DB::table('product_variants')->where('id', $existingVarId)->where('product_id', $id)->exists()) {
                                 DB::table('product_variants')->where('id', $existingVarId)->update($varData);
@@ -1324,7 +1377,6 @@ class ProductController extends Controller
                     }
                 }
 
-                // শুধুমাত্র যে ভ্যারিয়েন্টগুলো ফর্ম থেকে ডিলিট করা হয়েছে সেগুলোকে রিমুভ করা
                 if (!empty($keptVariantIds)) {
                     DB::table('product_variants')
                         ->where('product_id', $id)
@@ -1334,7 +1386,6 @@ class ProductController extends Controller
                     DB::table('product_variants')->where('product_id', $id)->delete();
                 }
 
-                // প্যারেন্ট প্রোডাক্টের স্টক ভ্যারিয়েন্টগুলোর যোগফলের সমান করা
                 InventoryService::syncParentProductStock($id);
             } else {
                 DB::table('product_variants')->where('product_id', $id)->delete();

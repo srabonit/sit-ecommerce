@@ -580,7 +580,7 @@
                             <label class="form-label">
                                 Asset Name / Item Title <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Dell Core i5 Office PC, Epson Thermal Printer, Executive Chair" required>
+                            <input type="text" name="name" class="form-control" placeholder="Dell Core i5 Office PC, Epson Thermal Printer, Executive Chair" required>
                         </div>
 
                         <!-- Category / Type -->
@@ -653,7 +653,7 @@
                         <!-- Tag / Code -->
                         <div class="col-12 col-md-6">
                             <label class="form-label">Asset Code / Serial #</label>
-                            <input type="text" name="asset_code" class="form-control font-monospace" placeholder="e.g. PC-001, SN-987293">
+                            <input type="text" name="asset_code" class="form-control font-monospace" placeholder="PC-001, SN-987293">
                         </div>
 
                         <!-- Attachment -->

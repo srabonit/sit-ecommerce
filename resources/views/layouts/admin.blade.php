@@ -209,6 +209,16 @@
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
 
+.alert-dismissible .btn-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    padding: -1.75rem 1rem;
+    padding: 12px !important;
+}
+
+
         .search-input {
             border: none;
             outline: none;

@@ -342,7 +342,7 @@
                     </div>
                     <div class="collapse show" id="collapseTimingGuide">
                         <div class="p-3 small text-muted" style="font-size: 11px; line-height: 1.5;">
-                            <p class="mb-2">Enter step delays in <strong>minutes</strong> (e.g. 5, 10, 30) from the trigger event:</p>
+                            <p class="mb-2">Enter step delays in <strong>minutes</strong> (5, 10, 30) from the trigger event:</p>
                             <ul class="ps-3 mb-2 font-monospace bn-digit">
                                 <li class="mb-1"><strong>5 minutes:</strong> <code>5</code> (Immediate / Ultra-fast cart recovery)</li>
                                 <li class="mb-1"><strong>10 minutes:</strong> <code>10</code> (Quick attention reminder)</li>

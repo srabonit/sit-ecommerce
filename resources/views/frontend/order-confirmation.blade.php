@@ -1,20 +1,56 @@
 @extends('layouts.app')
 
 @php
-    // ১. Settings table theke dynamic brand title, phone ebong email read kora
-    $siteSettings = \Illuminate\Support\Facades\DB::table('settings')
-        ->whereIn('key', ['footer_brand_title', 'footer_phone', 'footer_email'])
-        ->pluck('value', 'key')
-        ->toArray();
+    // গ্লোবাল সেটিংস ক্যাশ রেজলভার
+    static $tokenSettingsCache = null;
+    if ($tokenSettingsCache === null) {
+        $tokenSettingsCache = \Illuminate\Support\Facades\Cache::remember('global_settings_cache', 86400, function() {
+            return \Illuminate\Support\Facades\DB::table('settings')->pluck('value', 'key')->toArray();
+        });
+    }
+    $globalSettings = $tokenSettingsCache ?? [];
 
-    $siteName = !empty($siteSettings['footer_brand_title']) 
-        ? $siteSettings['footer_brand_title'] 
+    $siteName = !empty($globalSettings['footer_brand_title']) 
+        ? $globalSettings['footer_brand_title'] 
         : config('app.name', 'SHOP NOW BD ONLINE');
 
-    $sitePhone = $siteSettings['footer_phone'] ?? '';
-    $siteEmail = $siteSettings['footer_email'] ?? '';
+    $sitePhone = $globalSettings['footer_phone'] ?? '';
+    $siteEmail = $globalSettings['footer_email'] ?? '';
 
-    // ২. Delivery fee & calculation fix
+    // Central & Branch BIN Resolver for NBR Mushak 6.3 Compliance
+    $companyBin = !empty($order->branch_bin) 
+        ? $order->branch_bin 
+        : ($order->bin_number ?? ($globalSettings['company_bin'] ?? ($globalSettings['bin_number'] ?? '001293847-0101')));
+
+    // Order Confirmation / Token Dynamic Color Resolvers
+    $tokenPageBg          = $globalSettings['color_token_page_bg'] ?? ($globalSettings['color_site_bg'] ?? '#f1f5f9');
+    $tokenSuccessIconBg   = $globalSettings['color_token_success_icon_bg'] ?? '#16a34a';
+    $tokenSuccessIconText = $globalSettings['color_token_success_icon_text'] ?? '#ffffff';
+    $tokenHeadingColor    = $globalSettings['color_token_heading'] ?? '#0f172a';
+    $tokenSubtextColor    = $globalSettings['color_token_subtext'] ?? '#64748b';
+
+    $tokenTotalCardBg     = $globalSettings['color_token_total_card_bg'] ?? '#ffffff';
+    $tokenTotalCardBorder = $globalSettings['color_token_total_card_border'] ?? '#cbd5e1';
+    $tokenTotalCardLabel  = $globalSettings['color_token_total_card_label'] ?? '#64748b';
+    $tokenTotalPrice      = $globalSettings['color_token_total_price'] ?? '#0f172a';
+
+    $tokenDownloadBtnBg   = $globalSettings['color_token_download_btn_bg'] ?? '#0f172a';
+    $tokenDownloadBtnText = $globalSettings['color_token_download_btn_text'] ?? '#ffffff';
+    $tokenDownloadBtnHov  = $globalSettings['color_token_download_btn_hover'] ?? '#1e293b';
+
+    $tokenContinueBtnBg   = $globalSettings['color_token_continue_btn_bg'] ?? '#ffffff';
+    $tokenContinueBtnText = $globalSettings['color_token_continue_btn_text'] ?? '#475569';
+    $tokenContinueBtnBrd  = $globalSettings['color_token_continue_btn_border'] ?? '#cbd5e1';
+    $tokenContinueBtnHov  = $globalSettings['color_token_continue_btn_hover'] ?? '#f8fafc';
+
+    $tokenReceiptBg       = $globalSettings['color_token_memo_bg'] ?? '#ffffff';
+    $tokenReceiptBorder   = $globalSettings['color_token_memo_border'] ?? '#94a3b8';
+    $tokenReceiptText     = $globalSettings['color_token_memo_text'] ?? '#0f172a';
+    $tokenReceiptDivider  = $globalSettings['color_token_memo_divider'] ?? '#475569';
+    $tokenDigitalBoxBg    = $globalSettings['color_token_digital_box_bg'] ?? '#f8fafc';
+    $tokenDigitalBoxBrd   = $globalSettings['color_token_digital_box_border'] ?? '#2563eb';
+
+    // ডেলিভারি ফি এবং গ্র্যান্ড টোটাল ক্যালকুলেশন
     $subtotalAmt   = (float)($order->subtotal ?? 0);
     $grandTotalAmt = (float)($order->grand_total ?? 0);
     $discountAmt   = (float)($order->discount_amount ?? ($order->discount ?? 0));
@@ -28,10 +64,17 @@
         $deliveryFee = max(0, $calcDiff);
     }
 
+    // NBR Tax & VAT Ledger Snapshot Data
+    $taxAmt          = (float)($order->tax_amount ?? 0);
+    $productTaxAmt   = (float)($order->product_tax_amount ?? 0);
+    $shippingTaxAmt  = (float)($order->shipping_tax_amount ?? 0);
+    $taxableBaseAmt  = (float)($order->taxable_base_amount ?? ($subtotalAmt - $discountAmt));
+    $isTaxInclusive  = (bool)($order->is_tax_inclusive ?? false);
+
     $cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $order->invoice_no ?? ('INV-' . $order->id));
     $orderBarcode   = !empty($order->barcode) ? $order->barcode : ($order->invoice_no ?? ('88' . str_pad($order->id, 10, '0', STR_PAD_LEFT)));
     
-    // ৩. Payment Success Verification (Only Paid/Completed holei true hobe)
+    // পেমেন্ট স্ট্যাটাস ভেরিফিকেশন
     $isOrderPaid = in_array(strtolower($order->payment_status ?? ''), ['paid', 'completed']) || !empty($digitalDetails['is_paid']);
 @endphp
 
@@ -40,14 +83,43 @@
 @section('content')
 <!-- JsBarcode Script -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<!-- Direct html2canvas & jsPDF Scripts for 100% Reliable Execution -->
+<!-- Direct html2canvas & jsPDF Scripts for Reliable Execution -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
+    :root {
+        --token-pg-bg: {{ $tokenPageBg }};
+        --token-succ-ico-bg: {{ $tokenSuccessIconBg }};
+        --token-succ-ico-text: {{ $tokenSuccessIconText }};
+        --token-heading: {{ $tokenHeadingColor }};
+        --token-subtext: {{ $tokenSubtextColor }};
+
+        --token-total-bg: {{ $tokenTotalCardBg }};
+        --token-total-border: {{ $tokenTotalCardBorder }};
+        --token-total-label: {{ $tokenTotalCardLabel }};
+        --token-total-price: {{ $tokenTotalPrice }};
+
+        --token-down-bg: {{ $tokenDownloadBtnBg }};
+        --token-down-text: {{ $tokenDownloadBtnText }};
+        --token-down-hov: {{ $tokenDownloadBtnHov }};
+
+        --token-cont-bg: {{ $tokenContinueBtnBg }};
+        --token-cont-text: {{ $tokenContinueBtnText }};
+        --token-cont-border: {{ $tokenContinueBtnBrd }};
+        --token-cont-hov: {{ $tokenContinueBtnHov }};
+
+        --token-memo-bg: {{ $tokenReceiptBg }};
+        --token-memo-border: {{ $tokenReceiptBorder }};
+        --token-memo-text: {{ $tokenReceiptText }};
+        --token-memo-divider: {{ $tokenReceiptDivider }};
+        --token-dig-box-bg: {{ $tokenDigitalBoxBg }};
+        --token-dig-box-border: {{ $tokenDigitalBoxBrd }};
+    }
+
     /* ================= SCREEN VIEW STYLING ================= */
     .invoice-wrapper {
-        background-color: #f1f5f9;
+        background-color: var(--token-pg-bg) !important;
         min-height: 85vh;
     }
 
@@ -63,13 +135,36 @@
         margin-bottom: 16px;
     }
 
+    .token-success-icon-badge {
+        background-color: var(--token-succ-ico-bg) !important;
+        color: var(--token-succ-ico-text) !important;
+        width: 40px;
+        height: 40px;
+    }
+
+    .token-title-text {
+        color: var(--token-heading) !important;
+    }
+
+    .token-subtitle-text {
+        color: var(--token-subtext) !important;
+    }
+
     .token-total-card {
         margin-bottom: 14px;
         padding: 10px 14px;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
+        background-color: var(--token-total-bg) !important;
+        border: 1px solid var(--token-total-border) !important;
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .token-total-label-text {
+        color: var(--token-total-label) !important;
+    }
+
+    .token-total-price-val {
+        color: var(--token-total-price) !important;
     }
 
     .token-buttons-group {
@@ -77,6 +172,26 @@
         flex-direction: column;
         gap: 10px;
         margin-bottom: 18px;
+    }
+
+    .token-btn-download {
+        background-color: var(--token-down-bg) !important;
+        color: var(--token-down-text) !important;
+        border: none !important;
+    }
+    .token-btn-download:hover {
+        background-color: var(--token-down-hov) !important;
+        color: var(--token-down-text) !important;
+    }
+
+    .token-btn-continue {
+        background-color: var(--token-cont-bg) !important;
+        color: var(--token-cont-text) !important;
+        border: 1px solid var(--token-cont-border) !important;
+    }
+    .token-btn-continue:hover {
+        background-color: var(--token-cont-hov) !important;
+        color: #0f172a !important;
     }
 
     /* Same width and height for both action buttons */
@@ -98,20 +213,33 @@
         width: 100%;
         max-width: 80mm;
         margin: 0 auto;
-        background: #ffffff;
-        border: 1px dashed #94a3b8;
+        background-color: var(--token-memo-bg) !important;
+        border: 1px dashed var(--token-memo-border) !important;
         border-radius: 8px;
         padding: 14px 12px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        color: #0f172a;
+        color: var(--token-memo-text) !important;
         font-size: 11px;
         line-height: 1.35;
     }
 
     .thermal-dashed-divider {
-        border-top: 1px dashed #475569;
+        border-top: 1px dashed var(--token-memo-divider) !important;
         margin: 8px 0;
+    }
+
+    .mushak-badge-pill {
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #000;
+        border: 1px solid #000;
+        padding: 1px 4px;
+        display: inline-block;
+        margin-top: 2px;
+        background: #f1f5f9;
     }
 
     .system-barcode-box {
@@ -143,16 +271,18 @@
         font-weight: 700;
         font-size: 10px;
         text-transform: uppercase;
+        color: var(--token-memo-text) !important;
     }
     .thermal-table td {
         padding: 4px 2px;
         vertical-align: top;
         border-bottom: 1px dotted #e2e8f0;
+        color: var(--token-memo-text) !important;
     }
 
     .digital-box-compact {
-        background: #f8fafc;
-        border: 1px dashed #2563eb;
+        background-color: var(--token-dig-box-bg) !important;
+        border: 1px dashed var(--token-dig-box-border) !important;
         border-radius: 6px;
         padding: 8px;
         margin: 8px 0;
@@ -186,6 +316,8 @@
             padding: 4px !important;
             max-width: 100% !important;
             width: 100% !important;
+            background: #ffffff !important;
+            color: #000000 !important;
         }
     }
 </style>
@@ -193,24 +325,24 @@
 <div class="invoice-wrapper py-3 py-md-4">
     <div class="container px-2">
         
-        <!-- TOKEN BORABOR (80mm) WRAPPER -->
+        <!-- TOKEN WRAPPER (80mm) -->
         <div class="token-screen-container">
 
-            <!-- 1. Top Success Heading (With clear 16px bottom margin) -->
+            <!-- 1. Top Success Heading -->
             <div class="text-center print-hide token-header-box">
-                <div class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle shadow-sm mb-2" style="width: 40px; height: 40px;">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle shadow-sm mb-2 token-success-icon-badge">
                     <i class="fas fa-check" style="font-size: 16px;"></i>
                 </div>
-                <h5 class="fw-bold text-dark mb-1" style="font-size: 15px; line-height: 1.25;">Order Confirmed! 😊</h5>
-                <p class="text-muted mb-0" style="font-size: 11.5px; line-height: 1.4;">Your order has been confirmed! We're getting your items ready for delivery.</p>
+                <h5 class="fw-bold mb-1 token-title-text" style="font-size: 15px; line-height: 1.25;">Order Confirmed! 😊</h5>
+                <p class="mb-0 token-subtitle-text" style="font-size: 11.5px; line-height: 1.4;">Your order has been confirmed! We're getting your items ready for delivery.</p>
             </div>
 
-            <!-- 2. Top Grand Total Highlight Card (With clear 14px bottom margin) -->
+            <!-- 2. Top Grand Total Highlight Card -->
             <div class="token-total-card print-hide text-center">
                 <div class="d-flex justify-content-between align-items-center px-1">
-                    <span class="text-secondary fw-semibold" style="font-size: 11.5px;">Grand Total:</span>
+                    <span class="fw-semibold token-total-label-text" style="font-size: 11.5px;">Grand Total:</span>
                     <div>
-                        <span class="fw-bold text-dark" style="font-size: 15.5px;">৳{{ number_format($grandTotalAmt, 2) }}</span>
+                        <span class="fw-bold token-total-price-val" style="font-size: 15.5px;">৳{{ number_format($grandTotalAmt, 2) }}</span>
                         <span class="badge bg-{{ $isOrderPaid ? 'success' : 'warning text-dark' }} text-uppercase ms-1" style="font-size: 8.5px; padding: 2px 6px;">
                             {{ $order->payment_status ?? 'UNPAID' }}
                         </span>
@@ -218,29 +350,35 @@
                 </div>
             </div>
 
-            <!-- 3. Action Buttons (With 10px gap between buttons & 18px margin before memo) -->
+            <!-- 3. Action Buttons -->
             <div class="token-buttons-group print-hide">
-                <button type="button" id="btn-download-memo" onclick="downloadThermalMemoPDF()" class="btn btn-dark token-action-btn shadow-sm">
+                <button type="button" id="btn-download-memo" onclick="downloadThermalMemoPDF()" class="btn token-action-btn token-btn-download shadow-sm">
                     <i class="fas fa-download me-1"></i> Download Order Token
                 </button>
-                <a href="{{ route('shop') }}" class="btn btn-outline-secondary token-action-btn">
+                <a href="{{ route('shop') }}" class="btn token-action-btn token-btn-continue">
                     <i class="fas fa-shopping-bag me-1"></i> Continue Shopping
                 </a>
             </div>
 
-            <!-- 4. THERMAL TOKEN / RECEIPT MEMO (THIS CARD IS SAVED AS PDF) -->
+            <!-- 4. THERMAL TOKEN / RECEIPT MEMO (Mushak 6.3 & NBR Compliant) -->
             <div id="printable-memo-card" class="thermal-receipt-card">
                 
                 <!-- Store Header -->
                 <div class="text-center">
-                    <h5 class="fw-bold text-dark mb-0 text-uppercase" style="font-size: 14px; letter-spacing: 0.5px;">
+                    <h5 class="fw-bold mb-0 text-uppercase" style="font-size: 14px; letter-spacing: 0.5px;">
                         {{ $siteName }}
                     </h5>
                     <div class="text-muted fw-semibold" style="font-size: 9.5px; text-transform: uppercase;">
                         Order Confirmation Slip
                     </div>
+                    <div class="mushak-badge-pill">
+                        Mushak 6.3 / Tax Receipt
+                    </div>
+                    <div style="font-size: 9px; margin-top: 1px;">
+                        BIN: <strong class="font-monospace">{{ $companyBin }}</strong>
+                    </div>
                     @if(!empty($sitePhone) || !empty($siteEmail))
-                        <div class="text-secondary" style="font-size: 9px;">
+                        <div class="text-secondary" style="font-size: 9px; margin-top: 1px;">
                             @if(!empty($sitePhone)) Hotline: {{ $sitePhone }} @endif
                             @if(!empty($sitePhone) && !empty($siteEmail)) | @endif
                             @if(!empty($siteEmail)) {{ $siteEmail }} @endif
@@ -251,6 +389,7 @@
                 <!-- Barcode At The Top -->
                 <div class="system-barcode-box">
                     <svg id="order-official-barcode"></svg>
+                    <span style="font-size: 7.5px; color: #64748b; margin-top: 1px;">NBR GO-05/VAT/2026</span>
                 </div>
 
                 <!-- Invoice & Date Info -->
@@ -312,20 +451,24 @@
                                 $vColor = $item->color ?? null;
                                 $vSize  = $item->size ?? null;
                                 $vSku   = $item->sku ?? null;
+                                $lineTaxRate = isset($item->tax_rate) ? (float)$item->tax_rate : 0.0;
                             @endphp
                             <tr>
                                 <td>
-                                    <strong class="d-block text-dark">{{ $pTitle }}</strong>
+                                    <strong class="d-block">{{ $pTitle }}</strong>
                                     @if(!empty($vColor) || !empty($vSize))
-                                        <span style="font-size: 8.5px; color: #475569;">
+                                        <span style="font-size: 8.5px; opacity: 0.8;">
                                             @if(!empty($vColor)) {{ $vColor }} @endif
                                             @if(!empty($vColor) && !empty($vSize)) / @endif
                                             @if(!empty($vSize)) {{ $vSize }} @endif
                                         </span>
                                     @endif
-                                    @if(!empty($vSku))
-                                        <span style="font-size: 8px; color: #dc2626; display: block; font-family: monospace;">SKU: {{ $vSku }}</span>
-                                    @endif
+                                    <div style="font-size: 8px; font-family: monospace;">
+                                        @if(!empty($vSku)) <span style="color: #dc2626;">SKU: {{ $vSku }}</span> @endif
+                                        @if($lineTaxRate > 0)
+                                            <span style="color: #0f172a; font-weight: bold;">(VAT: {{ number_format($lineTaxRate, 1) }}%)</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="text-center">{{ $item->quantity }}</td>
                                 <td class="text-end fw-bold">৳{{ number_format($item->subtotal, 2) }}</td>
@@ -336,15 +479,11 @@
 
                 <div class="thermal-dashed-divider"></div>
 
-                <!-- Calculation Summary -->
+                <!-- Calculation Summary (With Reconciled NBR VAT Breakdown) -->
                 <div style="font-size: 10.5px;">
                     <div class="d-flex justify-content-between py-0.5">
                         <span>Subtotal:</span>
                         <strong>৳{{ number_format($subtotalAmt, 2) }}</strong>
-                    </div>
-                    <div class="d-flex justify-content-between py-0.5">
-                        <span>Delivery Charge:</span>
-                        <strong>৳{{ number_format($deliveryFee, 2) }}</strong>
                     </div>
                     @if(!empty($discountAmt) && $discountAmt > 0)
                         <div class="d-flex justify-content-between py-0.5 text-danger">
@@ -352,28 +491,42 @@
                             <strong>-৳{{ number_format($discountAmt, 2) }}</strong>
                         </div>
                     @endif
+                    @if($taxAmt > 0)
+                        <div class="d-flex justify-content-between py-0.5">
+                            <span>Govt. VAT {{ $isTaxInclusive ? '(Inc.)' : '' }}:</span>
+                            <strong>৳{{ number_format($taxAmt, 2) }}</strong>
+                        </div>
+                    @endif
+                    <div class="d-flex justify-content-between py-0.5">
+                        <span>Delivery Charge:</span>
+                        <strong>৳{{ number_format($deliveryFee, 2) }}</strong>
+                    </div>
                     <div class="d-flex justify-content-between border-top border-dark pt-1 mt-1 fw-bold" style="font-size: 12.5px;">
                         <span>Grand Total:</span>
                         <span>৳{{ number_format($grandTotalAmt, 2) }}</span>
                     </div>
+                    @if($taxAmt > 0)
+                        <div style="font-size: 8px; color: #475569; margin-top: 3px; text-align: right;">
+                            Taxable Base: ৳{{ number_format($taxableBaseAmt, 2) }} | Mode: {{ $isTaxInclusive ? 'Inclusive' : 'Exclusive' }}
+                        </div>
+                    @endif
                 </div>
 
-                <!-- ================= DIGITAL DELIVERY ACCESS SECTION ================= -->
+                <!-- DIGITAL DELIVERY ACCESS SECTION -->
                 @if(!empty($digitalDetails['has_digital']))
                     <div class="digital-box-compact">
-                        <strong class="d-block mb-1 text-primary"><i class="fas fa-cloud-download-alt me-1"></i> Digital Delivery Access:</strong>
+                        <strong class="d-block mb-1" style="color: var(--token-dig-box-border);"><i class="fas fa-cloud-download-alt me-1"></i> Digital Delivery Access:</strong>
                         
                         @if($isOrderPaid)
-                            {{-- ১. শুধুমাত্র Payment Success / Paid hole Download Files dekhabe --}}
                             @if(!empty($digitalDetails['downloads']) && count($digitalDetails['downloads']) > 0)
                                 <div class="mb-2">
-                                    <span class="fw-bold d-block text-dark" style="font-size: 10px;">Files:</span>
+                                    <span class="fw-bold d-block" style="font-size: 10px;">Files:</span>
                                     @foreach($digitalDetails['downloads'] as $dFile)
                                         @php $fileObj = (object)$dFile; @endphp
                                         <div class="mb-1 pb-1 border-bottom border-light">
                                             <div class="text-truncate"><strong>{{ $fileObj->product_title ?? 'File' }}:</strong> {{ $fileObj->file_name ?? 'Download' }}</div>
                                             @if($fileObj->is_accessible ?? true)
-                                                <a href="{{ $fileObj->download_url }}" target="_blank" class="fw-bold text-decoration-none text-primary" style="font-size: 9.5px;">
+                                                <a href="{{ $fileObj->download_url }}" target="_blank" class="fw-bold text-decoration-none" style="font-size: 9.5px; color: var(--token-dig-box-border);">
                                                     [Click Here to Download]
                                                 </a>
                                             @else
@@ -384,17 +537,16 @@
                                 </div>
                             @endif
 
-                            {{-- ২. শুধুমাত্র Payment Success / Paid hole License Keys dekhabe (Quantity onujayi Key #1, Key #2) --}}
                             @if(!empty($digitalDetails['licenses']) && count($digitalDetails['licenses']) > 0)
                                 <div>
-                                    <span class="fw-bold d-block text-dark" style="font-size: 10px;">License Keys:</span>
+                                    <span class="fw-bold d-block" style="font-size: 10px;">License Keys:</span>
                                     @foreach($digitalDetails['licenses'] as $licIdx => $lic)
                                         @php $licObj = (object)$lic; @endphp
                                         <div class="p-1 bg-white border rounded mt-1 font-monospace text-break" style="font-size: 9.5px;">
                                             <strong>{{ $licObj->product_title ?? 'Product' }} (Key #{{ $licIdx + 1 }}):</strong><br>
                                             @if(!empty($licObj->license_key))
                                                 @if(str_starts_with($licObj->license_key, 'http://') || str_starts_with($licObj->license_key, 'https://'))
-                                                    <a href="{{ $licObj->license_key }}" target="_blank" class="text-primary fw-bold text-break text-decoration-underline">
+                                                    <a href="{{ $licObj->license_key }}" target="_blank" class="fw-bold text-break text-decoration-underline" style="color: var(--token-dig-box-border);">
                                                         {{ $licObj->license_key }}
                                                     </a>
                                                 @else
@@ -412,7 +564,6 @@
                                 </div>
                             @endif
                         @else
-                            {{-- ৩. Payment Pending / Unpaid thakle kono Key ba Link dekhabe na --}}
                             <div class="p-1.5 bg-warning-subtle text-dark border border-warning rounded text-center mt-1" style="font-size: 9px; line-height: 1.35;">
                                 <i class="fas fa-lock text-warning me-1"></i>
                                 <strong>Payment Verification Pending:</strong><br>
@@ -425,8 +576,9 @@
                 <div class="thermal-dashed-divider"></div>
 
                 <!-- Footer Note -->
-                <div class="text-center text-muted" style="font-size: 9px;">
-                    <div>Thank You for Shopping with<br>{{ $siteName }}!</div>
+                <div class="text-center text-muted" style="font-size: 8.5px; line-height: 1.3;">
+                    <div>Thank You for Shopping with <strong>{{ $siteName }}</strong>!</div>
+                    <div style="margin-top: 2px; font-size: 8px;">Compliant with NBR GO-05/VAT/2026. Keep slip for reference.</div>
                 </div>
 
             </div>
