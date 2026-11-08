@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Campaigns - Email Marketing')
@@ -11,30 +12,54 @@
     $completedCount   = $hasCampaignModel ? \App\Models\EmailCampaign::where('status', 'completed')->count() : $campaigns->where('status', 'completed')->count();
     $totalRevenueSum  = $hasCampaignModel ? (float) \App\Models\EmailCampaign::sum('total_revenue') : (float) $campaigns->sum('total_revenue');
 
-    $dashboardRoute = Route::has('admin.email_marketing.dashboard') 
-        ? route('admin.email_marketing.dashboard') 
+    $dashboardRoute = Route::has('admin.email_marketing.dashboard')
+        ? route('admin.email_marketing.dashboard')
         : url('admin/email-marketing/dashboard');
 
-    $createCampaignRoute = Route::has('admin.email_marketing.campaigns.create') 
-        ? route('admin.email_marketing.campaigns.create') 
+    $createCampaignRoute = Route::has('admin.email_marketing.campaigns.create')
+        ? route('admin.email_marketing.campaigns.create')
         : url('admin/email-marketing/campaigns/create');
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       EMAIL MARKETING CAMPAIGNS
+       Kaiadmin Lite v1.2.0 - Classic / White Classic
+       Scoped styles only
+    ========================================================= */
+
+    #email-marketing-campaigns-root {
+        --campaign-primary: #1572e8;
+        --campaign-primary-soft: #eaf2ff;
+        --campaign-success: #31ce36;
+        --campaign-warning: #ffad46;
+        --campaign-danger: #f25961;
+        --campaign-info: #48abf7;
+        --campaign-heading: #1a2035;
+        --campaign-text: #495057;
+        --campaign-muted: #8d9498;
+        --campaign-border: #e6e9ed;
+        --campaign-surface: #ffffff;
+        --campaign-background: #f7f8fa;
+        color: var(--campaign-text);
+        font-size: 13px;
+    }
+
+    #email-marketing-campaigns-root *,
+    .campaigns-modal-scope * {
+        box-sizing: border-box;
+    }
+
+    #email-marketing-campaigns-root .card,
     #email-marketing-campaigns-root .btn,
-    #email-marketing-campaigns-root .btn-sm,
-    #email-marketing-campaigns-root button,
     #email-marketing-campaigns-root .badge,
     #email-marketing-campaigns-root .alert,
     #email-marketing-campaigns-root .form-control,
     #email-marketing-campaigns-root .form-select,
     #email-marketing-campaigns-root .input-group-text,
-    #email-marketing-campaigns-root .card,
-    #email-marketing-campaigns-root .metric-card,
     #email-marketing-campaigns-root .page-link,
-    #email-marketing-campaigns-root .page-item span,
     #email-marketing-campaigns-root .collapse-toggle-btn,
     #email-marketing-campaigns-root .progress,
     .campaigns-modal-scope .modal-content,
@@ -43,201 +68,376 @@
         border-radius: 5px !important;
     }
 
-    #email-marketing-campaigns-root .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    #email-marketing-campaigns-root .input-group > .form-control,
-    #email-marketing-campaigns-root .input-group > .form-select {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-    }
-
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
-    }
-
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
-    }
-
-    .campaign-filter-control {
-        font-size: 12px !important;
-        height: 32px !important;
-        padding: 4px 8px !important;
-        border: 1px solid #cbd5e1 !important;
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: none !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .campaign-filter-control:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-        outline: none;
-    }
-
-    .campaign-addon-text {
-        height: 32px !important;
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #64748b !important;
-        font-size: 11px !important;
-    }
-
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
-    }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
-        transform: rotate(180deg);
-    }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
-
-    /* Enterprise Surface Cards */
     #email-marketing-campaigns-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        border: 1px solid var(--campaign-border);
+        background: var(--campaign-surface);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .035);
         margin-bottom: 16px;
     }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+
+    #email-marketing-campaigns-root .campaign-header-wrap {
+        margin-bottom: 20px !important;
     }
 
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
+    #email-marketing-campaigns-root .page-heading {
+        color: var(--campaign-heading);
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -.3px;
+        line-height: 1.35;
+    }
+
+    #email-marketing-campaigns-root .page-description {
+        color: var(--campaign-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    #email-marketing-campaigns-root .btn-compact {
+        min-height: 34px;
+        padding: 7px 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 11.5px;
+        line-height: 1.2;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #email-marketing-campaigns-root .btn-primary {
+        background-color: var(--campaign-primary);
+        border-color: var(--campaign-primary);
+    }
+
+    #email-marketing-campaigns-root .btn-primary:hover {
+        background-color: #1265cf;
+        border-color: #1265cf;
+    }
+
+    #email-marketing-campaigns-root .top-action-btns {
+        gap: 8px !important;
+    }
+
+    #email-marketing-campaigns-root .section-header-wrap {
+        min-height: 44px;
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: #fff;
+        border-bottom: 1px solid var(--campaign-border);
+    }
+
+    #email-marketing-campaigns-root .section-heading {
+        color: var(--campaign-heading);
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    #email-marketing-campaigns-root .section-heading i {
+        color: var(--campaign-primary);
+    }
+
+    #email-marketing-campaigns-root .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
+        padding: 0;
+        flex: 0 0 27px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 1px solid var(--campaign-border);
+        color: #6c757d;
+        transition: all .2s ease;
+    }
+
+    #email-marketing-campaigns-root .collapse-toggle-btn:hover {
+        color: var(--campaign-primary);
+        border-color: var(--campaign-primary);
+        background: var(--campaign-primary-soft);
+    }
+
+    #email-marketing-campaigns-root .collapse-icon {
+        font-size: 10px;
+        transition: transform .2s ease;
+    }
+
+    #email-marketing-campaigns-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    /* KPI cards */
+    #email-marketing-campaigns-root .metric-card {
         position: relative;
-        overflow: hidden;
+        min-height: 112px;
+        height: 100%;
+        padding: 14px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        overflow: hidden;
+        border: 1px solid var(--campaign-border);
+        border-left: 3px solid var(--campaign-primary);
+        background: #fff;
+        transition: box-shadow .18s ease, transform .18s ease;
     }
-    .metric-card:hover {
+
+    #email-marketing-campaigns-root .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 5px 14px rgba(0, 0, 0, .06);
     }
-    .stat-label-title {
+
+    #email-marketing-campaigns-root .metric-card-blue {
+        border-left-color: #1572e8;
+    }
+
+    #email-marketing-campaigns-root .metric-card-amber {
+        border-left-color: #ffad46;
+    }
+
+    #email-marketing-campaigns-root .metric-card-green {
+        border-left-color: #31ce36;
+    }
+
+    #email-marketing-campaigns-root .metric-card-emerald {
+        border-left-color: #48abf7;
+    }
+
+    #email-marketing-campaigns-root .stat-label-title {
+        color: #7d8790;
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        font-weight: 600;
+        letter-spacing: .1px;
+        line-height: 1.35;
     }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+
+    #email-marketing-campaigns-root .stat-val-num {
+        color: var(--campaign-heading);
+        font-size: 21px;
+        font-weight: 700;
+        line-height: 1.35;
+        letter-spacing: -.4px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .stat-sub-text {
+
+    #email-marketing-campaigns-root .stat-sub-text {
+        margin-top: 3px;
+        color: #a1a8ae;
         font-size: 10px;
-        margin-top: 2px;
+        line-height: 1.4;
     }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
+
+    #email-marketing-campaigns-root .metric-icon-square {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
         border-radius: 5px !important;
+        font-size: 13px;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-emerald{ background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%); border-left: 3.5px solid #059669 !important; }
+    /* Filter area */
+    #email-marketing-campaigns-root .filter-card {
+        background: #fff;
+    }
 
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
-    .custom-campaigns-table {
-        width: 100%;
-        margin-bottom: 0;
+    #email-marketing-campaigns-root .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #495057;
+        font-size: 11.5px;
+        font-weight: 600;
     }
-    .custom-campaigns-table thead th {
-        font-size: 10.5px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 9px 8px;
-        white-space: nowrap;
-    }
-    .custom-campaigns-table tbody td {
-        padding: 8px 8px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
+
+    #email-marketing-campaigns-root .form-control,
+    #email-marketing-campaigns-root .form-select {
+        min-height: 37px;
+        border: 1px solid #e0e3e7;
+        background-color: #fff;
+        color: #495057;
         font-size: 12px;
-        vertical-align: middle;
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #email-marketing-campaigns-root .form-control:focus,
+    #email-marketing-campaigns-root .form-select:focus {
+        border-color: #1572e8;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
+    }
+
+    #email-marketing-campaigns-root .campaign-filter-control {
+        height: 37px;
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+
+    #email-marketing-campaigns-root .campaign-addon-text {
+        min-width: 36px;
+        height: 37px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f8fa;
+        border: 1px solid #e0e3e7;
+        color: #8d9498;
+        font-size: 12px;
+    }
+
+    #email-marketing-campaigns-root .input-group > .input-group-text {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    #email-marketing-campaigns-root .input-group > .form-control {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+
+    /* Table */
+    #email-marketing-campaigns-root .table-card-header {
+        min-height: 58px;
+        padding: 11px 15px;
+        background: #fff;
+        border-bottom: 1px solid var(--campaign-border);
+    }
+
+    #email-marketing-campaigns-root .table-title {
+        margin: 0;
+        color: var(--campaign-heading);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    #email-marketing-campaigns-root .table-subtitle {
+        display: block;
+        margin-top: 3px;
+        color: #9ba2a8;
+        font-size: 10.5px;
+        line-height: 1.4;
+    }
+
+    #email-marketing-campaigns-root .pc-fit-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table {
+        width: 100%;
+        min-width: 1120px;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table thead th {
+        padding: 11px 9px;
+        color: #7d8790;
+        background: #f8f9fb;
+        border-bottom: 1px solid #e6e9ed;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .35px;
+        text-transform: uppercase;
         white-space: nowrap;
-    }
-    .custom-campaigns-table tbody tr:hover td {
-        background-color: #fafbfc;
+        vertical-align: middle;
     }
 
-    @media (min-width: 992px) {
-        .custom-campaigns-table {
-            table-layout: fixed !important;
-            width: 100% !important;
-        }
-        .pc-fit-container {
-            overflow-x: hidden !important;
-        }
-        .custom-campaigns-table th,
-        .custom-campaigns-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        /* 9 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-cp-id      { width: 4% !important; }
-        .col-cp-name    { width: 25% !important; }
-        .col-cp-target  { width: 13% !important; }
-        .col-cp-status  { width: 11% !important; }
-        .col-cp-recip   { width: 14% !important; }
-        .col-cp-open    { width: 7% !important; }
-        .col-cp-click   { width: 7% !important; }
-        .col-cp-rev     { width: 9% !important; }
-        .col-cp-actions { width: 10% !important; }
+    #email-marketing-campaigns-root .custom-campaigns-table tbody td {
+        padding: 11px 9px;
+        color: #495057;
+        background: #fff;
+        border-bottom: 1px solid #edf0f2;
+        font-size: 11.5px;
+        vertical-align: middle;
     }
 
-    /* Bulletproof Responsive Pagination */
+    #email-marketing-campaigns-root .custom-campaigns-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table tbody tr:hover td {
+        background: #fbfcfe;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-id {
+        width: 55px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-name {
+        min-width: 190px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-target {
+        min-width: 135px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-status {
+        min-width: 100px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-recip {
+        min-width: 155px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-open,
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-click {
+        min-width: 80px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-rev {
+        min-width: 125px;
+    }
+
+    #email-marketing-campaigns-root .custom-campaigns-table .col-cp-actions {
+        min-width: 180px;
+    }
+
+    #email-marketing-campaigns-root .campaign-entry-row .badge {
+        font-size: 9.5px;
+        font-weight: 600;
+        letter-spacing: .1px;
+    }
+
+    #email-marketing-campaigns-root .campaign-entry-row .progress {
+        height: 5px;
+        overflow: hidden;
+        background: #edf0f3;
+    }
+
+    #email-marketing-campaigns-root .campaign-entry-row .progress-bar {
+        border-radius: 5px;
+    }
+
+    #email-marketing-campaigns-root .campaign-entry-row .btn {
+        width: 28px;
+        height: 28px;
+        padding: 0 !important;
+        border: 1px solid #e6e9ed;
+        background: #fff;
+        border-radius: 5px !important;
+        transition: all .15s ease;
+    }
+
+    #email-marketing-campaigns-root .campaign-entry-row .btn:hover {
+        background: #f4f7fb;
+        border-color: #cbd5e1;
+        transform: translateY(-1px);
+    }
+
+    /* Pagination */
     #campaigns-pagination-links nav {
         display: flex !important;
         align-items: center !important;
@@ -245,6 +445,7 @@
         width: auto !important;
         margin: 0 !important;
     }
+
     #campaigns-pagination-links nav > div.d-sm-none,
     #campaigns-pagination-links nav > .d-sm-none,
     #campaigns-pagination-links nav p,
@@ -252,122 +453,246 @@
     #campaigns-pagination-links nav div:has(> p) {
         display: none !important;
     }
+
     #campaigns-pagination-links .pagination {
-        margin: 0 !important;
         display: flex !important;
         flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
+        gap: 4px !important;
+        margin: 0 !important;
         padding: 0 !important;
         list-style: none !important;
     }
+
     #campaigns-pagination-links .page-item {
         display: inline-flex !important;
     }
+
     #campaigns-pagination-links .page-item .page-link,
     #campaigns-pagination-links .page-item span {
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
+        color: #6c757d !important;
+        background: #fff !important;
+        border: 1px solid #e1e5ea !important;
+        border-radius: 5px !important;
         font-size: 11px !important;
         font-weight: 600 !important;
-        color: #475569 !important;
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 5px !important;
-        text-decoration: none !important;
         line-height: 1 !important;
-        transition: all 0.12s ease !important;
-    }
-    #campaigns-pagination-links .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    #campaigns-pagination-links .page-item.active .page-link,
-    #campaigns-pagination-links .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
-    }
-    #campaigns-pagination-links .page-item.disabled .page-link,
-    #campaigns-pagination-links .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        cursor: not-allowed !important;
+        text-decoration: none !important;
     }
 
-    /* Floating Toast Box */
+    #campaigns-pagination-links .page-item .page-link:hover {
+        color: var(--campaign-primary) !important;
+        background: #f3f7ff !important;
+        border-color: #b8d2f7 !important;
+    }
+
+    #campaigns-pagination-links .page-item.active .page-link,
+    #campaigns-pagination-links .page-item.active span {
+        color: #fff !important;
+        background: var(--campaign-primary) !important;
+        border-color: var(--campaign-primary) !important;
+    }
+
+    #campaigns-pagination-links .page-item.disabled .page-link,
+    #campaigns-pagination-links .page-item.disabled span {
+        opacity: .45;
+        cursor: not-allowed;
+    }
+
+    /* Modal */
+    .campaigns-modal-scope .modal-content {
+        overflow: hidden;
+        border: 1px solid #e6e9ed !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, .13) !important;
+    }
+
+    .campaigns-modal-scope .modal-header,
+    .campaigns-modal-scope .modal-footer {
+        background: #f8f9fb;
+        border-color: #edf0f2;
+    }
+
+    .campaigns-modal-scope .modal-title {
+        color: #1a2035;
+        font-size: 13.5px;
+        font-weight: 700;
+    }
+
+    .campaigns-modal-scope .modal-body {
+        background: #fff;
+    }
+
+    .campaigns-modal-scope .form-control {
+        min-height: 38px;
+        border: 1px solid #e0e3e7;
+        border-radius: 5px !important;
+        font-size: 12px;
+    }
+
+    .campaigns-modal-scope .form-control:focus {
+        border-color: #1572e8;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
+    }
+
+    .campaigns-modal-scope .btn-compact {
+        min-height: 33px;
+        padding: 7px 12px;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+
+    /* Toast */
     .admin-campaign-toast {
         position: fixed;
-        bottom: 20px;
         right: 20px;
+        bottom: 20px;
         z-index: 108000;
         min-width: 280px;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-        animation: slideInRight 0.25s ease;
+        max-width: min(420px, calc(100vw - 30px));
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .16);
+        animation: campaignToastIn .25s ease;
     }
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
+
+    @keyframes campaignToastIn {
+        from { transform: translateX(25px); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    .admin-campaign-toast button {
+        flex: 0 0 auto;
+    }
+
+    /* Utility typography */
+    #email-marketing-campaigns-root .bn-digit,
+    #email-marketing-campaigns-root .font-monospace {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #email-marketing-campaigns-root .metric-card {
+            min-height: 105px;
+        }
+
+        #email-marketing-campaigns-root .stat-val-num {
+            font-size: 19px;
+        }
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .campaign-header-wrap h5 {
-            font-size: 16px !important;
+        #email-marketing-campaigns-root {
+            padding-top: 14px !important;
         }
-        .top-action-btns {
+
+        #email-marketing-campaigns-root .campaign-header-wrap {
+            align-items: flex-start !important;
+            gap: 12px !important;
+        }
+
+        #email-marketing-campaigns-root .page-heading {
+            font-size: 17px;
+        }
+
+        #email-marketing-campaigns-root .page-description {
+            max-width: 100%;
+            font-size: 11px;
+        }
+
+        #email-marketing-campaigns-root .top-action-btns {
             width: 100%;
-            display: grid;
+            display: grid !important;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 7px !important;
         }
-        .top-action-btns .btn-create-main {
-            grid-column: span 2;
-        }
-        .top-action-btns .btn {
+
+        #email-marketing-campaigns-root .top-action-btns .btn {
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
+            min-height: 36px;
+            padding: 7px 6px;
+            font-size: 11px;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
+
+        #email-marketing-campaigns-root .top-action-btns .btn-create-main {
+            grid-column: 1 / -1;
         }
-        .stat-label-title {
-            font-size: 10px !important;
+
+        #email-marketing-campaigns-root .section-header-wrap {
+            padding: 10px 12px;
         }
-        .stat-val-num {
-            font-size: 14px !important;
+
+        #email-marketing-campaigns-root .metric-card {
+            min-height: 94px;
+            padding: 10px;
         }
-        .stat-sub-text {
-            font-size: 9px !important;
+
+        #email-marketing-campaigns-root .stat-label-title {
+            font-size: 10px;
         }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
+
+        #email-marketing-campaigns-root .stat-val-num {
+            font-size: 16px;
         }
-        .pc-fit-container {
-            width: 100%;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
+
+        #email-marketing-campaigns-root .stat-sub-text {
+            font-size: 9px;
         }
-        .custom-campaigns-table {
-            min-width: 880px !important;
-            table-layout: auto !important;
+
+        #email-marketing-campaigns-root .metric-icon-square {
+            width: 28px;
+            height: 28px;
+            flex-basis: 28px;
+            font-size: 11px;
         }
+
+        #email-marketing-campaigns-root .filter-card .card-body,
+        #email-marketing-campaigns-root .filter-card .p-3 {
+            padding: 12px !important;
+        }
+
+        #email-marketing-campaigns-root .table-card-header {
+            padding: 11px 12px;
+        }
+
+        #email-marketing-campaigns-root .custom-campaigns-table {
+            min-width: 1120px;
+        }
+
         #email-marketing-campaigns-root .card {
-            margin-bottom: 12px !important;
+            margin-bottom: 12px;
+        }
+
+        #campaigns-pagination-footer {
+            padding: 11px 12px !important;
+        }
+
+        #campaigns-pagination-links nav {
+            justify-content: center !important;
+        }
+
+        .admin-campaign-toast {
+            right: 12px;
+            bottom: 12px;
+            left: 12px;
+            min-width: 0;
+            max-width: none;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #email-marketing-campaigns-root .stat-val-num {
+            font-size: 14px;
+        }
+
+        #email-marketing-campaigns-root .metric-card {
+            padding: 9px;
         }
     }
 </style>
@@ -378,7 +703,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 campaign-header-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
+                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2 page-heading">
                     <i class="fas fa-paper-plane text-primary"></i>
                     <span>Marketing Campaigns</span>
                 </h5>
@@ -386,7 +711,7 @@
                     {{ number_format($totalCampaignsCount) }} Campaigns
                 </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
+            <small class="d-block mt-1 page-description">
                 Create, schedule, dispatch, and track promotional and segment-targeted email broadcasts.
             </small>
         </div>
@@ -411,6 +736,7 @@
             <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
@@ -421,33 +747,35 @@
         </div>
     @endif
 
-    {{-- 3. Overview KPI Summary Cards (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-primary me-1"></i> Campaign Portfolio &amp; Dispatch Overview
+    {{-- 3. Overview KPI Summary Cards --}}
+    <div class="card mb-3">
+        <div class="section-header-wrap">
+            <span class="section-heading">
+                <i class="fas fa-chart-pie me-1"></i> Campaign Portfolio &amp; Dispatch Overview
             </span>
             <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCampaignsKpis" aria-expanded="true" aria-controls="collapseCampaignsKpis" title="Toggle Section">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseCampaignsKpis">
             <div class="p-3">
-                <div class="row g-2">
+                <div class="row g-3">
+
                     {{-- Total Broadcasts --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Campaigns</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Total Campaigns</span>
+                                <div class="metric-icon-square bg-primary-subtle text-primary">
                                     <i class="fas fa-paper-plane"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="stat-total-campaigns">
+                                <h4 class="my-0 stat-val-num" id="stat-total-campaigns">
                                     {{ number_format($totalCampaignsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Configured broadcasts</small>
+                                <small class="d-block text-truncate stat-sub-text">Configured broadcasts</small>
                             </div>
                         </div>
                     </div>
@@ -455,17 +783,17 @@
                     {{-- Active / In-Queue --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Active Engine</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Active Engine</span>
+                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
                                     <i class="fas fa-clock"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num" id="stat-active-engine">
+                                <h4 class="my-0 text-warning-emphasis stat-val-num" id="stat-active-engine">
                                     {{ number_format($activeCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Sending or scheduled</small>
+                                <small class="d-block text-truncate stat-sub-text">Sending or scheduled</small>
                             </div>
                         </div>
                     </div>
@@ -473,17 +801,17 @@
                     {{-- Completed Broadcasts --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Completed</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Completed</span>
+                                <div class="metric-icon-square bg-success-subtle text-success">
                                     <i class="fas fa-circle-check"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-completed-campaigns">
+                                <h4 class="my-0 text-success stat-val-num" id="stat-completed-campaigns">
                                     {{ number_format($completedCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Successfully dispatched</small>
+                                <small class="d-block text-truncate stat-sub-text">Successfully dispatched</small>
                             </div>
                         </div>
                     </div>
@@ -491,51 +819,56 @@
                     {{-- Attributed Revenue --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-emerald h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Attributed Sales</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Attributed Sales</span>
+                                <div class="metric-icon-square bg-info-subtle text-info">
                                     <i class="fas fa-coins"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-attributed-sales">
+                                <h4 class="my-0 text-success stat-val-num" id="stat-attributed-sales">
                                     ৳ {{ number_format($totalRevenueSum, 2) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Direct conversions</small>
+                                <small class="d-block text-truncate stat-sub-text">Direct conversions</small>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 4. Status Filter & Live Search Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Multi-Dimensional Filter &amp; Search Toolbar
+    {{-- 4. Status Filter & Live Search Toolbar --}}
+    <div class="card filter-card mb-3">
+        <div class="section-header-wrap">
+            <span class="section-heading">
+                <i class="fas fa-filter me-1"></i> Filter &amp; Search Campaigns
             </span>
             <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCampaignFilter" aria-expanded="true" aria-controls="collapseCampaignFilter" title="Toggle Filters">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseCampaignFilter">
             <div class="p-3">
                 <form id="campaignFilterForm" onsubmit="return false;">
-                    <div class="row g-2 align-items-end">
+                    <div class="row g-3 align-items-end">
+
                         {{-- Instant Live Search Input --}}
                         <div class="col-12 col-md-5">
                             <label class="form-label" for="campaignSearchInput">
                                 <i class="fas fa-search me-1 text-primary"></i> Search Campaign Name, Subject or Audience
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text campaign-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
+                                <span class="input-group-text campaign-addon-text border-end-0">
+                                    <i class="fas fa-search"></i>
+                                </span>
                                 <input type="text" name="search" id="campaignSearchInput" class="form-control border-start-0 ps-0 campaign-filter-control shadow-none font-monospace" placeholder="Black Friday, Welcome Offer, VIP Special...">
                             </div>
                         </div>
 
-                        {{-- Status Dropdown (Live Filter) --}}
+                        {{-- Status Dropdown --}}
                         <div class="col-6 col-md-4">
                             <label class="form-label" for="campaignStatusSelect">
                                 <i class="fas fa-toggle-on me-1 text-success"></i> Campaign Status
@@ -552,31 +885,34 @@
                             </select>
                         </div>
 
-                        {{-- Action Reset Button --}}
+                        {{-- Reset Button --}}
                         <div class="col-6 col-md-3">
                             <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetCampaignFilters()">
                                 <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
                             </button>
                         </div>
+
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- 5. Campaigns Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
-    <div class="card border-0 shadow-sm overflow-hidden mb-3">
-        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
+    {{-- 5. Campaigns Table --}}
+    <div class="card mb-3 overflow-hidden">
+        <div class="table-card-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
             <div>
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
-                    <i class="fas fa-envelopes-bulk text-primary"></i> <span>Broadcast Campaigns &amp; Delivery Matrix</span>
+                <h6 class="table-title">
+                    <i class="fas fa-envelopes-bulk text-primary me-1"></i>
+                    <span>Broadcast Campaigns &amp; Delivery Matrix</span>
                 </h6>
-                <small class="text-muted font-monospace bn-digit" id="showing-entries-text" style="font-size: 10px;">
+                <small class="table-subtitle font-monospace bn-digit" id="showing-entries-text">
                     Showing {{ $campaigns->firstItem() ?? 0 }} to {{ $campaigns->lastItem() ?? 0 }} of {{ number_format($campaigns->total()) }} campaigns
                 </small>
             </div>
+
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-campaign-count">
+                <span class="badge bg-light text-secondary border font-monospace px-2 py-2" style="font-size: 10px;" id="visible-campaign-count">
                     {{ number_format($campaigns->total()) }} Total
                 </span>
                 <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCampaignsTable" aria-expanded="true" aria-controls="collapseCampaignsTable" title="Toggle Table">
@@ -601,6 +937,7 @@
                             <th class="text-end pe-3 col-cp-actions">Actions</th>
                         </tr>
                     </thead>
+
                     <tbody id="campaigns-tbody">
                         @forelse($campaigns as $camp)
                             @php
@@ -653,12 +990,15 @@
                                     ? route('admin.email_marketing.campaigns.destroy', $camp->id)
                                     : url('admin/email-marketing/campaigns/delete/' . $camp->id);
                             @endphp
+
                             <tr class="campaign-entry-row align-middle" id="campaign-row-{{ $camp->id }}" data-search="{{ $rowSearchData }}" data-status="{{ strtolower($camp->status) }}">
+
                                 <td class="ps-3 col-cp-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
                                     {{ $camp->id }}
                                 </td>
+
                                 <td class="col-cp-name">
-                                    <div class="min-w-0" style="line-height: 1.3;">
+                                    <div class="min-w-0" style="line-height: 1.4;">
                                         <a href="{{ $showCampaignUrl }}" class="fw-bold text-dark text-decoration-none d-block text-truncate" style="font-size: 12px;" title="{{ $camp->name }}">
                                             {{ $camp->name }}
                                         </a>
@@ -667,94 +1007,104 @@
                                         </small>
                                     </div>
                                 </td>
+
                                 <td class="col-cp-target">
                                     @if($camp->segment)
-                                        <span class="badge bg-light text-dark border font-monospace text-truncate d-inline-block px-2 py-0" style="font-size: 10px; max-width: 100%; border-radius: 5px !important;" title="{{ $camp->segment->name }}">
+                                        <span class="badge bg-light text-dark border font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 10px; max-width: 100%;" title="{{ $camp->segment->name }}">
                                             <i class="fas fa-filter me-1 text-primary"></i> {{ $camp->segment->name }}
                                         </span>
                                     @else
-                                        <span class="badge bg-light text-muted border font-monospace text-truncate d-inline-block px-2 py-0" style="font-size: 10px; max-width: 100%; border-radius: 5px !important;">
+                                        <span class="badge bg-light text-muted border font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 10px; max-width: 100%;">
                                             <i class="fas fa-users me-1"></i> All Consented Users
                                         </span>
                                     @endif
                                 </td>
+
                                 <td class="col-cp-status">
-                                    <span class="badge {{ $badgeClass }} font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
+                                    <span class="badge {{ $badgeClass }} font-monospace px-2 py-1" style="font-size: 9.5px;">
                                         @if(in_array($camp->status, ['sending', 'queued']))
                                             <i class="fas fa-spinner fa-spin me-1"></i>
                                         @endif
                                         {{ strtoupper($camp->status) }}
                                     </span>
                                 </td>
+
                                 <td class="col-cp-recip">
                                     <div class="d-flex justify-content-between align-items-center font-monospace bn-digit mb-1" style="font-size: 10.5px;">
                                         <span class="fw-bold text-dark">{{ number_format($camp->sent_count ?? 0) }}/{{ number_format($camp->total_recipients ?? 0) }}</span>
                                         <span class="text-muted">{{ round($progress, 1) }}%</span>
                                     </div>
-                                    <div class="progress" style="height: 5px; border-radius: 3px; background-color: #e2e8f0;">
-                                        <div class="progress-bar {{ $camp->status === 'completed' ? 'bg-success' : 'bg-primary progress-bar-striped progress-bar-animated' }}" 
-                                             role="progressbar" 
-                                             style="width: {{ $progress }}%;" 
-                                             aria-valuenow="{{ $progress }}" 
-                                             aria-valuemin="0" 
+                                    <div class="progress">
+                                        <div class="progress-bar {{ $camp->status === 'completed' ? 'bg-success' : 'bg-primary progress-bar-striped progress-bar-animated' }}"
+                                             role="progressbar"
+                                             style="width: {{ $progress }}%;"
+                                             aria-valuenow="{{ $progress }}"
+                                             aria-valuemin="0"
                                              aria-valuemax="100"></div>
                                     </div>
                                 </td>
+
                                 <td class="text-center col-cp-open font-monospace bn-digit fw-semibold text-success" style="font-size: 11.5px;">
                                     <div>{{ $camp->open_rate }}%</div>
                                     <small class="text-muted d-block" style="font-size: 9px; font-weight: normal;">{{ number_format($camp->opened_count ?? 0) }} opens</small>
                                 </td>
+
                                 <td class="text-center col-cp-click font-monospace bn-digit fw-semibold text-primary" style="font-size: 11.5px;">
                                     <div>{{ $camp->click_rate }}%</div>
                                     <small class="text-muted d-block" style="font-size: 9px; font-weight: normal;">{{ number_format($camp->clicked_count ?? 0) }} clicks</small>
                                 </td>
+
                                 <td class="col-cp-rev font-monospace bn-digit fw-bold text-dark" style="font-size: 11.5px;">
                                     ৳ {{ number_format($camp->total_revenue ?? 0, 2) }}
                                 </td>
+
                                 <td class="text-end pe-3 col-cp-actions">
                                     <div class="d-inline-flex align-items-center gap-1">
+
                                         {{-- 1. View Analytics / Overview --}}
-                                        <a href="{{ $showCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="View Full Report">
+                                        <a href="{{ $showCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" title="View Full Report">
                                             <i class="fas fa-chart-line" style="font-size: 10px;"></i>
                                         </a>
 
-                                        {{-- 2. Dispatch Now (for draft/scheduled) --}}
+                                        {{-- 2. Dispatch Now --}}
                                         @if(in_array($camp->status, ['draft', 'scheduled']))
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Dispatch Campaign', 'Queue this campaign for immediate broadcast to all target recipients?', '{{ $dispatchNowUrl }}', 'dispatch')" title="Dispatch / Send Now">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" onclick="triggerActionConfirm('Dispatch Campaign', 'Queue this campaign for immediate broadcast to all target recipients?', '{{ $dispatchNowUrl }}', 'dispatch')" title="Dispatch / Send Now">
                                                 <i class="fas fa-paper-plane" style="font-size: 10px;"></i>
                                             </button>
                                         @endif
 
                                         {{-- 3. Pause / Resume --}}
                                         @if(in_array($camp->status, ['queued', 'sending']))
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-warning shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ $pauseCampaignUrl }}', 'Pause Broadcast', 'POST')" title="Pause Dispatch">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-warning shadow-xs d-inline-flex align-items-center justify-content-center" onclick="ajaxCampaignAction('{{ $pauseCampaignUrl }}', 'Pause Broadcast', 'POST')" title="Pause Dispatch">
                                                 <i class="fas fa-pause" style="font-size: 10px;"></i>
                                             </button>
                                         @elseif($camp->status === 'paused')
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="ajaxCampaignAction('{{ $resumeCampaignUrl }}', 'Resume Broadcast', 'POST')" title="Resume Dispatch">
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-success shadow-xs d-inline-flex align-items-center justify-content-center" onclick="ajaxCampaignAction('{{ $resumeCampaignUrl }}', 'Resume Broadcast', 'POST')" title="Resume Dispatch">
                                                 <i class="fas fa-play" style="font-size: 10px;"></i>
                                             </button>
                                         @endif
 
                                         {{-- 4. Centralized Test Send Trigger --}}
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-info shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="openTestMailModal({{ $camp->id }}, '{{ addslashes($camp->name) }}', '{{$testSendUrl }}')" title="Send Test Email">
+                                        <button type="button" class="btn btn-sm btn-light border p-1 text-info shadow-xs d-inline-flex align-items-center justify-content-center" onclick="openTestMailModal({{ $camp->id }}, '{{ addslashes($camp->name) }}', '{{$testSendUrl }}')" title="Send Test Email">
                                             <i class="fas fa-vial" style="font-size: 10px;"></i>
                                         </button>
 
-                                        {{-- 5. Edit (only if editable) --}}
+                                        {{-- 5. Edit --}}
                                         @if(method_exists($camp, 'isEditable') ? $camp->isEditable() : in_array($camp->status, ['draft', 'scheduled']))
-                                            <a href="{{ $editCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-secondary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" title="Edit Campaign Settings">
+                                            <a href="{{ $editCampaignUrl }}" class="btn btn-sm btn-light border p-1 text-secondary shadow-xs d-inline-flex align-items-center justify-content-center" title="Edit Campaign Settings">
                                                 <i class="fas fa-pencil" style="font-size: 10px;"></i>
                                             </a>
                                         @endif
 
-                                        {{-- 6. Delete via Custom Modal --}}
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px; border-radius: 5px !important;" onclick="triggerActionConfirm('Delete Campaign', 'Are you sure you want to delete this campaign? All recipient delivery records will be removed.', '{{ $deleteCampaignUrl }}', 'delete')" title="Delete Campaign">
+                                        {{-- 6. Delete --}}
+                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" onclick="triggerActionConfirm('Delete Campaign', 'Are you sure you want to delete this campaign? All recipient delivery records will be removed.', '{{ $deleteCampaignUrl }}', 'delete')" title="Delete Campaign">
                                             <i class="fas fa-trash-can" style="font-size: 10px;"></i>
                                         </button>
+
                                     </div>
                                 </td>
                             </tr>
+
                         @empty
                             <tr id="emptyCampaignsRow">
                                 <td colspan="9" class="text-center py-5 text-muted small">
@@ -767,8 +1117,8 @@
                 </table>
             </div>
 
-            {{-- Bulletproof Responsive Pagination Footer --}}
-            <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print" id="campaigns-pagination-footer" style="{{ method_exists($campaigns, 'hasPages') &&$campaigns->hasPages() ? '' : 'display: none;' }}">
+            {{-- Responsive Pagination Footer --}}
+            <div class="p-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-25 card-footer no-print" id="campaigns-pagination-footer" style="{{ method_exists($campaigns, 'hasPages') &&$campaigns->hasPages() ? '' : 'display: none;' }}">
                 <small class="text-muted font-monospace bn-digit" id="pagination-info-text" style="font-size: 11px;">
                     Showing {{ method_exists($campaigns, 'firstItem') ? ($campaigns->firstItem() ?? 0) : 1 }} to {{ method_exists($campaigns, 'lastItem') ? ($campaigns->lastItem() ?? 0) : $campaigns->count() }} of {{ number_format($totalCampaignsCount) }} campaigns
                 </small>
@@ -786,21 +1136,26 @@
 <div class="modal fade campaigns-modal-scope" id="centralTestMailModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-bottom py-2 px-3 bg-light d-flex justify-content-between align-items-center">
-                <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
+            <div class="modal-header border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
+                <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-1">
                     <i class="fas fa-vial text-info"></i> <span>Send Test Email</span>
                 </h6>
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <form id="centralTestMailForm" onsubmit="submitTestEmailAjax(event)">
                 <div class="modal-body p-3">
-                    <p class="small text-muted mb-2" style="font-size: 11px; line-height: 1.45;">
+                    <p class="small text-muted mb-3" style="font-size: 11px; line-height: 1.5;">
                         Send an instant test preview of <strong id="testModalCampName" class="text-dark">Campaign</strong> to verify design, dynamic tags, and deliverability.
                     </p>
-                    <label class="form-label" for="test_email_input">Recipient Test Email <span class="text-danger">*</span></label>
+
+                    <label class="form-label" for="test_email_input">
+                        Recipient Test Email <span class="text-danger">*</span>
+                    </label>
                     <input type="email" name="test_email" id="test_email_input" class="form-control font-monospace shadow-none" placeholder="your-email@example.com" value="{{ auth()->user()->email ?? '' }}" required>
                 </div>
-                <div class="modal-footer border-top py-2 px-3 bg-light d-flex justify-content-between">
+
+                <div class="modal-footer border-top py-2 px-3 d-flex justify-content-between">
                     <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-info btn-compact text-white shadow-xs fw-bold" id="btn-submit-test-mail">
                         <i class="fas fa-paper-plane me-1"></i> Send Test
@@ -816,11 +1171,13 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
             <div class="modal-body p-1">
-                <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mx-auto mb-2" id="actionModalIconWrap" style="width: 44px; height: 44px; border-radius: 50% !important;">
+                <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mx-auto mb-3" id="actionModalIconWrap" style="width: 46px; height: 46px; border-radius: 50% !important;">
                     <i class="fas fa-circle-question fs-4" id="actionModalIcon"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" id="actionModalTitle" style="font-size: 14px;">Confirm Action</h6>
-                <p class="text-muted small mb-3" id="actionModalMsg" style="font-size: 11px; line-height: 1.45;"></p>
+                <p class="text-muted small mb-3" id="actionModalMsg" style="font-size: 11px; line-height: 1.5;"></p>
+
                 <form id="actionModalForm" onsubmit="executeActionModalAjax(event)">
                     <div id="actionModalMethodWrap"></div>
                     <div class="d-flex justify-content-center gap-2">

@@ -11,342 +11,719 @@
 
 @section('admin_content')
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       GLOBAL REVIEW SETTINGS — MODERN ADMIN UI
+    ========================================================= */
+
+    #reviewSettingsRoot {
+        --rs-primary: #2563eb;
+        --rs-primary-soft: #eff6ff;
+        --rs-success: #059669;
+        --rs-warning: #d97706;
+        --rs-purple: #9333ea;
+        --rs-text: #172033;
+        --rs-muted: #64748b;
+        --rs-border: #e2e8f0;
+        --rs-surface: #ffffff;
+        --rs-background: #f8fafc;
+        --rs-radius: 5px;
+    }
+
+    #reviewSettingsRoot,
+    #reviewSettingsRoot * {
+        box-sizing: border-box;
+    }
+
+    #reviewSettingsRoot .card,
     #reviewSettingsRoot .btn,
-    #reviewSettingsRoot .btn-sm,
     #reviewSettingsRoot button,
     #reviewSettingsRoot .badge,
     #reviewSettingsRoot .form-control,
     #reviewSettingsRoot .form-select,
-    #reviewSettingsRoot .card,
-    #reviewSettingsRoot .metric-card,
+    #reviewSettingsRoot .alert,
     #reviewSettingsRoot .settings-header-card,
+    #reviewSettingsRoot .metric-card,
     #reviewSettingsRoot .settings-panel-card,
-    #reviewSettingsRoot .alert {
-        border-radius: 5px !important;
+    #reviewSettingsRoot .metric-icon-square {
+        border-radius: var(--rs-radius) !important;
     }
 
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #reviewSettingsRoot .font-monospace,
+    #reviewSettingsRoot .bn-digit {
         font-variant-numeric: tabular-nums;
     }
 
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    #reviewSettingsRoot .btn-compact {
+        min-height: 34px;
+        padding: 7px 12px !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.3;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: all .18s ease;
     }
 
-    /* Clean White Enterprise Header Card */
-    .settings-header-card {
-        background: #ffffff;
-        color: #0f172a;
-        padding: 14px 16px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 14px;
+    #reviewSettingsRoot .btn-compact:hover {
+        transform: translateY(-1px);
     }
 
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-    }
-    .stat-label-title {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-    }
-    .stat-val-num {
-        font-size: 16px;
-        line-height: 1.25;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .stat-sub-text {
-        font-size: 10px;
-        margin-top: 2px;
-    }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
+    /* Header */
+    #reviewSettingsRoot .settings-header-card {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 17px 19px;
+        margin-bottom: 15px;
+        background: var(--rs-surface);
+        border: 1px solid var(--rs-border);
+        box-shadow: 0 2px 7px rgba(15, 23, 42, .035);
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-purple { background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%); border-left: 3.5px solid #a855f7 !important; }
-
-    .settings-panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 14px 16px;
-        margin-bottom: 14px;
-        transition: opacity 0.2s ease, border-color 0.2s ease;
+    #reviewSettingsRoot .header-title {
+        font-size: 18px;
+        line-height: 1.35;
+        font-weight: 800;
+        letter-spacing: -.35px;
+        color: var(--rs-text);
+        margin: 0;
     }
 
-    .settings-section-title {
-        font-size: 12px;
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #f1f5f9;
-        display: flex;
+    #reviewSettingsRoot .header-description {
+        margin: 5px 0 0;
+        font-size: 11.5px;
+        line-height: 1.55;
+        color: var(--rs-muted);
+        max-width: 650px;
+    }
+
+    #reviewSettingsRoot .header-eyebrow {
+        display: inline-flex;
         align-items: center;
         gap: 6px;
+        padding: 5px 8px;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: .65px;
+        border-radius: 5px;
     }
 
-    .form-check-label {
+    #reviewSettingsRoot .header-actions-group {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 7px;
+        flex-shrink: 0;
+    }
+
+    /* Metrics */
+    #reviewSettingsRoot .metric-card {
+        position: relative;
+        height: 100%;
+        min-height: 91px;
+        padding: 13px 14px;
+        background: #fff;
+        border: 1px solid var(--rs-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
+        transition: transform .18s ease, box-shadow .18s ease;
+        overflow: hidden;
+    }
+
+    #reviewSettingsRoot .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
+    }
+
+    #reviewSettingsRoot .metric-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+    }
+
+    #reviewSettingsRoot .metric-card-blue::before {
+        background: #2563eb;
+    }
+
+    #reviewSettingsRoot .metric-card-amber::before {
+        background: #f59e0b;
+    }
+
+    #reviewSettingsRoot .metric-card-green::before {
+        background: #10b981;
+    }
+
+    #reviewSettingsRoot .metric-card-purple::before {
+        background: #9333ea;
+    }
+
+    #reviewSettingsRoot .stat-label-title {
+        color: var(--rs-muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .25px;
+        line-height: 1.4;
+    }
+
+    #reviewSettingsRoot .stat-val-num {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.4;
+        font-weight: 800;
+        letter-spacing: -.25px;
+        color: var(--rs-text);
+        overflow-wrap: anywhere;
+    }
+
+    #reviewSettingsRoot .stat-sub-text {
+        display: block;
+        margin-top: 3px;
+        color: var(--rs-muted);
+        font-size: 9.5px;
+        line-height: 1.4;
+    }
+
+    #reviewSettingsRoot .metric-icon-square {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 13px;
+    }
+
+    /* Feedback alerts */
+    #reviewSettingsRoot .alert {
+        border: 1px solid transparent !important;
+        padding: 10px 13px;
+        font-size: 11.5px;
+    }
+
+    #reviewSettingsRoot .alert-success {
+        background: #f0fdf4;
+        border-color: #bbf7d0 !important;
+    }
+
+    #reviewSettingsRoot .alert-danger {
+        background: #fef2f2;
+        border-color: #fecaca !important;
+    }
+
+    /* Settings panels */
+    #reviewSettingsRoot .settings-panel-card {
+        height: auto;
+        padding: 16px;
+        margin-bottom: 13px;
+        background: var(--rs-surface);
+        border: 1px solid var(--rs-border);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
+        transition: opacity .2s ease, border-color .2s ease;
+    }
+
+    #reviewSettingsRoot .settings-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 15px;
+        padding-bottom: 11px;
+        border-bottom: 1px solid #edf1f6;
+        color: var(--rs-text);
         font-size: 12px;
-        font-weight: 600;
-        color: #1e293b;
-        cursor: pointer;
+        font-weight: 800;
+        line-height: 1.45;
     }
-    .form-check-input {
-        cursor: pointer;
-        width: 16px;
-        height: 16px;
-        border-radius: 4px !important;
+
+    #reviewSettingsRoot .section-icon {
+        width: 29px;
+        height: 29px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 5px;
+        font-size: 12px;
     }
-    .form-check-input:checked {
+
+    #reviewSettingsRoot .section-icon-blue {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    #reviewSettingsRoot .section-icon-amber {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    #reviewSettingsRoot .section-icon-green {
+        background: #ecfdf5;
+        color: #059669;
+    }
+
+    #reviewSettingsRoot .section-icon-info {
+        background: #ecfeff;
+        color: #0891b2;
+    }
+
+    #reviewSettingsRoot .section-icon-purple {
+        background: #faf5ff;
+        color: #9333ea;
+    }
+
+    /* Setting switch rows */
+    #reviewSettingsRoot .setting-switch-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 10px 11px;
+        margin-bottom: 8px;
+        background: #fafbfd;
+        border: 1px solid #edf1f6;
+        border-radius: 5px;
+        transition: background .15s ease, border-color .15s ease;
+    }
+
+    #reviewSettingsRoot .setting-switch-row:last-child {
+        margin-bottom: 0;
+    }
+
+    #reviewSettingsRoot .setting-switch-row:hover {
+        background: #f8fbff;
+        border-color: #dbeafe;
+    }
+
+    #reviewSettingsRoot .setting-switch-control {
+        flex-shrink: 0;
+        padding-top: 1px;
+    }
+
+    #reviewSettingsRoot .setting-switch-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    #reviewSettingsRoot .form-check {
+        min-height: 0;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    #reviewSettingsRoot .form-check-input {
+        width: 32px;
+        height: 18px;
+        margin: 0;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        border-radius: 20px !important;
+        background-color: #e2e8f0;
+        box-shadow: none;
+        transition: background-color .2s ease, border-color .2s ease;
+    }
+
+    #reviewSettingsRoot .form-check-input:checked {
         background-color: #2563eb;
         border-color: #2563eb;
     }
-    .settings-hint-text {
-        font-size: 10.5px;
+
+    #reviewSettingsRoot .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    }
+
+    #reviewSettingsRoot .setting-label {
+        display: block;
+        margin: 0;
+        color: #1e293b;
+        font-size: 11px;
+        font-weight: 750;
+        line-height: 1.5;
+        cursor: pointer;
+    }
+
+    #reviewSettingsRoot .settings-hint-text {
+        margin-top: 3px;
         color: #64748b;
-        margin-top: 2px;
-        line-height: 1.35;
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    /* Form controls */
+    #reviewSettingsRoot .form-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #334155;
+        font-size: 10.5px !important;
+        font-weight: 700;
+        line-height: 1.45;
     }
 
     #reviewSettingsRoot .form-control,
     #reviewSettingsRoot .form-select {
-        min-height: 32px;
-        font-size: 12px;
+        min-height: 35px;
+        padding: 6px 10px;
+        color: #172033;
+        background-color: #fff;
         border: 1px solid #cbd5e1;
-        padding: 4px 8px;
-        color: #0f172a;
-        background-color: #ffffff;
+        border-radius: 5px !important;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 11px;
+        font-weight: 600;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
+
+    #reviewSettingsRoot .form-control::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
     #reviewSettingsRoot .form-control:focus,
     #reviewSettingsRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
         outline: none;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    #reviewSettingsRoot input[type="number"] {
+        font-weight: 800;
+    }
+
+    #reviewSettingsRoot .field-hint {
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 9.5px;
+        line-height: 1.45;
+    }
+
+    #reviewSettingsRoot .number-field-wrap {
+        min-width: 0;
+    }
+
+    /* Save action */
+    #reviewSettingsRoot .bottom-save-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px 0;
+        background: rgba(248, 250, 252, .96);
+        border-top: 1px solid var(--rs-border);
+        backdrop-filter: blur(8px);
+    }
+
+    #reviewSettingsRoot .save-button {
+        min-height: 39px !important;
+        padding: 9px 19px !important;
+        background: #2563eb;
+        border: 1px solid #2563eb;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, .15);
+    }
+
+    #reviewSettingsRoot .save-button:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, .22);
+    }
+
+    /* Disabled / dependent visual state */
+    #reviewSettingsRoot .settings-disabled {
+        opacity: .72;
+    }
+
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #reviewSettingsRoot .settings-panel-card {
+            padding: 14px;
+        }
+
+        #reviewSettingsRoot .settings-header-card {
+            align-items: flex-start;
+        }
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .settings-header-card {
-            padding: 12px 14px !important;
+        #reviewSettingsRoot {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
-        .header-actions-group {
-            width: 100%;
+
+        #reviewSettingsRoot .settings-header-card {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 14px;
+            gap: 13px;
+        }
+
+        #reviewSettingsRoot .header-title {
+            font-size: 16px;
+        }
+
+        #reviewSettingsRoot .header-description {
+            font-size: 10.5px;
+        }
+
+        #reviewSettingsRoot .header-actions-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .header-actions-group .btn {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 80px !important;
-        }
-        .stat-label-title {
+
+        #reviewSettingsRoot .header-actions-group .btn {
+            width: 100%;
+            min-width: 0;
+            min-height: 36px;
+            padding: 7px 5px !important;
             font-size: 10px !important;
         }
-        .stat-val-num {
-            font-size: 14px !important;
+
+        #reviewSettingsRoot .metric-card {
+            min-height: 82px;
+            padding: 10px;
         }
-        .stat-sub-text {
-            font-size: 9px !important;
+
+        #reviewSettingsRoot .stat-label-title {
+            font-size: 9px;
         }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
+
+        #reviewSettingsRoot .stat-val-num {
+            font-size: 13px;
         }
-        .bottom-save-bar {
+
+        #reviewSettingsRoot .stat-sub-text {
+            font-size: 8.5px;
+        }
+
+        #reviewSettingsRoot .metric-icon-square {
+            width: 27px;
+            height: 27px;
+            font-size: 11px;
+        }
+
+        #reviewSettingsRoot .settings-panel-card {
+            padding: 12px;
+            margin-bottom: 11px;
+        }
+
+        #reviewSettingsRoot .settings-section-title {
+            font-size: 11px;
+            margin-bottom: 12px;
+        }
+
+        #reviewSettingsRoot .setting-switch-row {
+            padding: 9px;
+            gap: 9px;
+        }
+
+        #reviewSettingsRoot .setting-label {
+            font-size: 10.5px;
+        }
+
+        #reviewSettingsRoot .settings-hint-text {
+            font-size: 9.5px;
+        }
+
+        #reviewSettingsRoot .bottom-save-bar {
+            justify-content: stretch;
+            padding: 10px 0;
+        }
+
+        #reviewSettingsRoot .save-button {
             width: 100%;
+            min-height: 41px !important;
         }
-        .bottom-save-bar .btn {
-            width: 100% !important;
-            justify-content: center;
-            padding: 10px 14px !important;
+    }
+
+    @media (max-width: 380px) {
+        #reviewSettingsRoot .header-actions-group {
+            grid-template-columns: 1fr;
+        }
+
+        #reviewSettingsRoot .metric-card {
+            padding: 9px;
+        }
+
+        #reviewSettingsRoot .stat-val-num {
+            font-size: 12px;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3" id="reviewSettingsRoot">
 
-    <!-- 1. Header Banner Card (Clean White Light Theme) -->
-    <div class="settings-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 10px;">
-                    <i class="fas fa-gear me-1"></i> REVIEW CONFIGURATION
+    {{-- Header --}}
+    <div class="settings-header-card">
+
+        <div class="min-w-0">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                <span class="header-eyebrow">
+                    <i class="fas fa-sliders"></i>
+                    REVIEW CONFIGURATION
                 </span>
-                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 10px;">
+
+                <span class="badge bg-light text-secondary border px-2 py-1"
+                      style="font-size:9px; font-weight:700;">
                     GLOBAL POLICY ENGINE
                 </span>
             </div>
-            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-sliders text-primary"></i>
-                <span>Global Product Review Settings</span>
+
+            <h5 class="header-title">
+                <i class="fas fa-star-half-alt text-primary me-1"></i>
+                Global Product Review Settings
             </h5>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
-                Control storefront review display, approval policies, image uploads, spam protection and alert notifications.
-            </small>
+
+            <p class="header-description">
+                Manage customer reviews, approval policies, photo uploads, storefront interactions and notification settings.
+            </p>
         </div>
 
-        <div class="header-actions-group d-flex flex-wrap gap-1">
-            <a href="{{ route('admin.product.reviews.index') }}" class="btn btn-outline-secondary btn-compact shadow-xs bg-white text-dark fw-semibold">
-                <i class="fas fa-arrow-left me-1"></i> Back to Reviews
+        <div class="header-actions-group">
+            <a href="{{ route('admin.product.reviews.index') }}"
+               class="btn btn-outline-secondary btn-compact bg-white">
+                <i class="fas fa-arrow-left"></i>
+                Back to Reviews
             </a>
-            <a href="{{ route('admin.product.reviews.auto_rules') }}" class="btn btn-outline-success btn-compact shadow-xs bg-white fw-semibold">
-                <i class="fas fa-robot me-1"></i> Auto-Reply Rules
+
+            <a href="{{ route('admin.product.reviews.auto_rules') }}"
+               class="btn btn-outline-success btn-compact bg-white">
+                <i class="fas fa-robot"></i>
+                Auto-Reply Rules
             </a>
         </div>
     </div>
 
-    <!-- 2. Reviews Status Telemetry KPI Overview -->
+    {{-- System Overview --}}
     <div class="row g-2 mb-3">
-        <!-- KPI 1: Global Review System -->
+
         <div class="col-6 col-xl-3">
-            <div class="card metric-card metric-card-blue h-100 mb-0">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted stat-label-title text-truncate">Review System</span>
-                    <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+            <div class="metric-card metric-card-blue">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <span class="stat-label-title">Review System</span>
+                    <div class="metric-icon-square bg-primary-subtle text-primary">
                         <i class="fas fa-toggle-on"></i>
                     </div>
                 </div>
-                <div class="min-w-0">
-                    <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num">
-                        {{ $isReviewsEnabled ? 'Active Live' : 'Suspended' }}
-                    </h4>
-                    <small class="text-muted d-block text-truncate font-monospace stat-sub-text">
-                        {{ $isReviewsEnabled ? 'Storefront tabs enabled' : 'Completely hidden' }}
-                    </small>
-                </div>
+
+                <h4 class="stat-val-num">
+                    {{ $isReviewsEnabled ? 'Active Live' : 'Suspended' }}
+                </h4>
+
+                <small class="stat-sub-text">
+                    {{ $isReviewsEnabled ? 'Storefront reviews enabled' : 'Reviews hidden from storefront' }}
+                </small>
             </div>
         </div>
 
-        <!-- KPI 2: Default Moderation Mode -->
         <div class="col-6 col-xl-3">
-            <div class="card metric-card metric-card-amber h-100 mb-0">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted stat-label-title text-truncate">Moderation Policy</span>
-                    <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
-                        <i class="fas fa-shield-check"></i>
+            <div class="metric-card metric-card-amber">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <span class="stat-label-title">Moderation Policy</span>
+                    <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
                 </div>
-                <div class="min-w-0">
-                    <h4 class="fw-bold my-0 text-warning-emphasis font-monospace stat-val-num" style="font-size: 14px;">
-                        {{ $approvalMode === 'auto' ? 'Automatic Live' : 'Strict Manual' }}
-                    </h4>
-                    <small class="text-muted d-block text-truncate font-monospace stat-sub-text">
-                        {{ $approvalMode === 'auto' ? 'Instant publication' : 'Queue approval' }}
-                    </small>
-                </div>
+
+                <h4 class="stat-val-num" style="font-size:14px;">
+                    {{ $approvalMode === 'auto' ? 'Automatic Live' : 'Strict Manual' }}
+                </h4>
+
+                <small class="stat-sub-text">
+                    {{ $approvalMode === 'auto' ? 'Instant publication' : 'Admin approval required' }}
+                </small>
             </div>
         </div>
 
-        <!-- KPI 3: Buyer Restrictions -->
         <div class="col-6 col-xl-3">
-            <div class="card metric-card metric-card-green h-100 mb-0">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted stat-label-title text-truncate">Buyer Eligibility</span>
-                    <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+            <div class="metric-card metric-card-green">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <span class="stat-label-title">Buyer Eligibility</span>
+                    <div class="metric-icon-square bg-success-subtle text-success">
                         <i class="fas fa-user-check"></i>
                     </div>
                 </div>
-                <div class="min-w-0">
-                    <h4 class="fw-bold my-0 text-success font-monospace stat-val-num" style="font-size: 14px;">
-                        {{ $isVerifiedOnly ? 'Verified Orders' : 'Public Access' }}
-                    </h4>
-                    <small class="text-success d-block text-truncate font-monospace stat-sub-text">
-                        <i class="fas fa-circle-check me-1"></i>{{ $isVerifiedOnly ? 'Delivered orders only' : 'All registered users' }}
-                    </small>
-                </div>
+
+                <h4 class="stat-val-num" style="font-size:14px;">
+                    {{ $isVerifiedOnly ? 'Verified Orders' : 'Public Access' }}
+                </h4>
+
+                <small class="stat-sub-text">
+                    {{ $isVerifiedOnly ? 'Delivered orders only' : 'All eligible customers' }}
+                </small>
             </div>
         </div>
 
-        <!-- KPI 4: Auto-Reply Engine -->
         <div class="col-6 col-xl-3">
-            <div class="card metric-card metric-card-purple h-100 mb-0">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted stat-label-title text-truncate">Auto-Reply Relay</span>
-                    <div class="metric-icon-square bg-purple-subtle text-primary shadow-xs" style="background-color: #f3e8ff; color: #7e22ce;">
+            <div class="metric-card metric-card-purple">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <span class="stat-label-title">Auto-Reply Engine</span>
+                    <div class="metric-icon-square"
+                         style="background:#f3e8ff; color:#9333ea;">
                         <i class="fas fa-robot"></i>
                     </div>
                 </div>
-                <div class="min-w-0">
-                    <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num">
-                        {{ $isAutoReplyEnabled ? 'Active Engine' : 'Disabled' }}
-                    </h4>
-                    <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Keyword &amp; rating bots</small>
-                </div>
+
+                <h4 class="stat-val-num">
+                    {{ $isAutoReplyEnabled ? 'Active Engine' : 'Disabled' }}
+                </h4>
+
+                <small class="stat-sub-text">
+                    Keyword &amp; rating automation
+                </small>
             </div>
         </div>
+
     </div>
 
-    <!-- Feedback Alerts -->
+    {{-- Feedback Alerts --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs d-flex align-items-center justify-content-between mb-3" role="alert">
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center justify-content-between gap-2 mb-3"
+             role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+
+            <button type="button"
+                    class="btn-close shadow-none"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs d-flex align-items-center justify-content-between mb-3" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center justify-content-between gap-2 mb-3"
+             role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-exclamation-circle text-danger fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('error') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+
+            <button type="button"
+                    class="btn-close shadow-none"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     @endif
 
     @if($errors->any())
-        <div class="alert alert-danger py-2 px-3 small border-0 shadow-xs mb-3 font-monospace" style="font-size: 11px;">
+        <div class="alert alert-danger mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2 fw-bold">
+                <i class="fas fa-exclamation-triangle"></i>
+                Please check the following errors:
+            </div>
+
             <ul class="mb-0 ps-3">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
@@ -355,195 +732,484 @@
         </div>
     @endif
 
-    <!-- 3. Form Body -->
-    <form action="{{ route('admin.product.reviews.settings.update') }}" method="POST" id="globalReviewSettingsForm">
+    {{-- Settings Form --}}
+    <form action="{{ route('admin.product.reviews.settings.update') }}"
+          method="POST"
+          id="globalReviewSettingsForm">
+
         @csrf
 
         <div class="row g-2 g-md-3">
-            <!-- Left Column: Visibility, Submission & Approval Policy -->
+
+            {{-- LEFT COLUMN --}}
             <div class="col-12 col-lg-6">
-                <!-- 1. Storefront Visibility & Submission -->
+
+                {{-- 1. Storefront Visibility --}}
                 <div class="settings-panel-card">
+
                     <div class="settings-section-title">
-                        <i class="fas fa-toggle-on text-primary"></i>
+                        <span class="section-icon section-icon-blue">
+                            <i class="fas fa-store"></i>
+                        </span>
                         <span>1. Storefront Visibility &amp; Submission</span>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="reviews_enabled" id="setReviewsEnabled" value="1" {{ !empty($settings['reviews_enabled']) ? 'checked' : '' }} onchange="toggleDependentCards()">
-                        <label class="form-check-label font-monospace" for="setReviewsEnabled">Enable Review System Globally</label>
-                        <div class="settings-hint-text font-monospace">If disabled, the review tab, rating summary, and public comments will be completely hidden from all product pages.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="reviews_enabled"
+                                   id="setReviewsEnabled"
+                                   value="1"
+                                   {{ !empty($settings['reviews_enabled']) ? 'checked' : '' }}
+                                   onchange="toggleDependentCards()">
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setReviewsEnabled">
+                                Enable Review System Globally
+                            </label>
+
+                            <div class="settings-hint-text">
+                                If disabled, the review tab, rating summary and public comments will be hidden from all product pages.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="allow_new_submission" id="setAllowSubmission" value="1" {{ !empty($settings['allow_new_submission']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setAllowSubmission">Allow New Review Submissions</label>
-                        <div class="settings-hint-text font-monospace">When turned off, customers cannot write new reviews, but previously approved reviews will remain visible.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="allow_new_submission"
+                                   id="setAllowSubmission"
+                                   value="1"
+                                   {{ !empty($settings['allow_new_submission']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setAllowSubmission">
+                                Allow New Review Submissions
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Customers can submit new reviews. When disabled, previously approved reviews remain visible.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" type="checkbox" name="verified_buyer_only" id="setVerifiedOnly" value="1" {{ !empty($settings['verified_buyer_only']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setVerifiedOnly">Verified Buyers Restriction (Strict)</label>
-                        <div class="settings-hint-text font-monospace">Only logged-in customers who have an actual order with 'Delivered' or 'Completed' status can submit reviews.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="verified_buyer_only"
+                                   id="setVerifiedOnly"
+                                   value="1"
+                                   {{ !empty($settings['verified_buyer_only']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setVerifiedOnly">
+                                Verified Buyers Restriction
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Only logged-in customers with an actual Delivered or Completed order can submit reviews.
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
-                <!-- 2. Review Approval & Moderation Policy -->
+                {{-- 2. Approval Policy --}}
                 <div class="settings-panel-card">
+
                     <div class="settings-section-title">
-                        <i class="fas fa-shield-check text-warning"></i>
+                        <span class="section-icon section-icon-amber">
+                            <i class="fas fa-shield-alt"></i>
+                        </span>
                         <span>2. Approval &amp; Moderation Policy</span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" style="font-size: 11px;">Default Approval Mode:</label>
-                        <select name="approval_mode" class="form-select font-monospace">
-                            <option value="auto" {{ ($settings['approval_mode'] ?? 'auto') === 'auto' ? 'selected' : '' }}>Mode A: Automatic Approval (Instant Publish)</option>
-                            <option value="manual" {{ ($settings['approval_mode'] ?? 'auto') === 'manual' ? 'selected' : '' }}>Mode B: Manual Approval Required (Held as Pending)</option>
+                        <label class="form-label" for="approvalMode">
+                            Default Approval Mode
+                        </label>
+
+                        <select name="approval_mode"
+                                id="approvalMode"
+                                class="form-select font-monospace">
+
+                            <option value="auto"
+                                {{ ($settings['approval_mode'] ?? 'auto') === 'auto' ? 'selected' : '' }}>
+                                Mode A: Automatic Approval (Instant Publish)
+                            </option>
+
+                            <option value="manual"
+                                {{ ($settings['approval_mode'] ?? 'auto') === 'manual' ? 'selected' : '' }}>
+                                Mode B: Manual Approval Required (Held as Pending)
+                            </option>
                         </select>
-                        <div class="settings-hint-text font-monospace">Choose whether new eligible reviews go live instantly or wait for admin inspection.</div>
+
+                        <div class="field-hint">
+                            Choose whether new eligible reviews go live instantly or wait for admin inspection.
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="require_approval_image" id="setReqApprovalImage" value="1" {{ !empty($settings['require_approval_image']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setReqApprovalImage">Reviews with Photos Require Approval</label>
-                        <div class="settings-hint-text font-monospace">Reviews containing uploaded customer photos will always be held in 'Pending' queue for quality inspection.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="require_approval_image"
+                                   id="setReqApprovalImage"
+                                   value="1"
+                                   {{ !empty($settings['require_approval_image']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setReqApprovalImage">
+                                Reviews with Photos Require Approval
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Reviews containing customer photos will always be held in the Pending queue for inspection.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="require_approval_first" id="setReqApprovalFirst" value="1" {{ !empty($settings['require_approval_first']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setReqApprovalFirst">First-Time Reviewer Requires Approval</label>
-                        <div class="settings-hint-text font-monospace">A customer's very first review on the store will require manual approval to prevent spam bots.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="require_approval_first"
+                                   id="setReqApprovalFirst"
+                                   value="1"
+                                   {{ !empty($settings['require_approval_first']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setReqApprovalFirst">
+                                First-Time Reviewer Requires Approval
+                            </label>
+
+                            <div class="settings-hint-text">
+                                A customer's first review on the store will require manual approval to reduce spam.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="auto_hide_reported" id="setAutoHideReported" value="1" {{ !empty($settings['auto_hide_reported']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setAutoHideReported">Auto-Hide Reported Reviews</label>
-                        <div class="settings-hint-text font-monospace">Automatically hide reviews from storefront when they receive multiple customer abuse flags.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="auto_hide_reported"
+                                   id="setAutoHideReported"
+                                   value="1"
+                                   {{ !empty($settings['auto_hide_reported']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setAutoHideReported">
+                                Auto-Hide Reported Reviews
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Automatically hide reviews from the storefront when they receive multiple abuse reports.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="row g-2 align-items-center pt-1">
+                    <div class="row g-2 align-items-center mt-3 pt-2 border-top">
                         <div class="col-8">
-                            <span class="small text-muted font-monospace" style="font-size: 10.5px;">Report Threshold to Auto-Hide:</span>
+                            <label class="form-label mb-0">
+                                Report Threshold to Auto-Hide
+                            </label>
+                            <div class="field-hint mt-1">
+                                Minimum reports required to hide a review.
+                            </div>
                         </div>
-                        <div class="col-4">
-                            <input type="number" name="report_threshold_hide" class="form-control text-center font-monospace bn-digit" min="1" max="20" value="{{ $settings['report_threshold_hide'] ?? 3 }}">
+
+                        <div class="col-4 number-field-wrap">
+                            <input type="number"
+                                   name="report_threshold_hide"
+                                   class="form-control text-center font-monospace bn-digit"
+                                   min="1"
+                                   max="20"
+                                   value="{{ $settings['report_threshold_hide'] ?? 3 }}">
                         </div>
                     </div>
+
                 </div>
+
             </div>
 
-            <!-- Right Column: Media, Pagination, Notifications & Auto-Reply -->
+            {{-- RIGHT COLUMN --}}
             <div class="col-12 col-lg-6">
-                <!-- 3. Customer Photo Uploads Configuration -->
+
+                {{-- 3. Photo Uploads --}}
                 <div class="settings-panel-card">
+
                     <div class="settings-section-title">
-                        <i class="fas fa-camera text-success"></i>
+                        <span class="section-icon section-icon-green">
+                            <i class="fas fa-camera"></i>
+                        </span>
                         <span>3. Customer Photo Uploads Configuration</span>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="image_reviews_enabled" id="setImageReviewsEnabled" value="1" {{ !empty($settings['image_reviews_enabled']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setImageReviewsEnabled">Allow Customers to Upload Product Photos</label>
-                        <div class="settings-hint-text font-monospace">Enables photo attachment file input in the product details review form.</div>
+                    <div class="setting-switch-row mb-3">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="image_reviews_enabled"
+                                   id="setImageReviewsEnabled"
+                                   value="1"
+                                   {{ !empty($settings['image_reviews_enabled']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setImageReviewsEnabled">
+                                Allow Customers to Upload Product Photos
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Enables photo attachments in the product review submission form.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2">
                         <div class="col-6">
-                            <label class="form-label" style="font-size: 11px;">Max Photos / Review:</label>
-                            <input type="number" name="max_images_per_review" class="form-control text-center font-monospace bn-digit" min="1" max="10" value="{{ $settings['max_images_per_review'] ?? 4 }}">
+                            <label class="form-label" for="maxImagesPerReview">
+                                Max Photos / Review
+                            </label>
+
+                            <input type="number"
+                                   id="maxImagesPerReview"
+                                   name="max_images_per_review"
+                                   class="form-control text-center font-monospace bn-digit"
+                                   min="1"
+                                   max="10"
+                                   value="{{ $settings['max_images_per_review'] ?? 4 }}">
                         </div>
+
                         <div class="col-6">
-                            <label class="form-label" style="font-size: 11px;">Max Size per File (KB):</label>
-                            <input type="number" name="max_image_size_kb" class="form-control text-center font-monospace bn-digit" min="512" max="10240" step="512" value="{{ $settings['max_image_size_kb'] ?? 2048 }}">
+                            <label class="form-label" for="maxImageSize">
+                                Max Size per File (KB)
+                            </label>
+
+                            <input type="number"
+                                   id="maxImageSize"
+                                   name="max_image_size_kb"
+                                   class="form-control text-center font-monospace bn-digit"
+                                   min="512"
+                                   max="10240"
+                                   step="512"
+                                   value="{{ $settings['max_image_size_kb'] ?? 2048 }}">
                         </div>
                     </div>
-                    <div class="settings-hint-text font-monospace" style="font-size: 10px;">Supported formats: JPG, JPEG, PNG, WEBP. SVG and executable formats are automatically blocked for security.</div>
+
+                    <div class="mt-3 p-2 rounded"
+                         style="background:#f8fafc; border:1px solid #edf1f6;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-info-circle text-primary mt-1"></i>
+                            <div class="field-hint mt-0">
+                                <strong class="text-dark">Supported formats:</strong>
+                                JPG, JPEG, PNG and WEBP. SVG and executable formats are blocked for security.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- 4. Storefront Pagination & Engagement -->
+                {{-- 4. Pagination & Interaction --}}
                 <div class="settings-panel-card">
+
                     <div class="settings-section-title">
-                        <i class="fas fa-sliders text-info"></i>
+                        <span class="section-icon section-icon-info">
+                            <i class="fas fa-sliders-h"></i>
+                        </span>
                         <span>4. Storefront Pagination &amp; Customer Interaction</span>
                     </div>
 
                     <div class="row g-2 align-items-center mb-3">
                         <div class="col-8">
-                            <label class="form-label mb-0" style="font-size: 11px;">Reviews Per Page (Frontend PDP):</label>
-                            <div class="settings-hint-text font-monospace">Controls how many reviews load initially before pagination.</div>
+                            <label class="form-label mb-0" for="frontendPerPage">
+                                Reviews Per Page (Frontend PDP)
+                            </label>
+
+                            <div class="field-hint">
+                                Controls how many reviews load initially before pagination.
+                            </div>
                         </div>
+
                         <div class="col-4">
-                            <input type="number" name="frontend_per_page" class="form-control text-center font-monospace bn-digit" min="2" max="50" value="{{ $settings['frontend_per_page'] ?? 5 }}">
+                            <input type="number"
+                                   id="frontendPerPage"
+                                   name="frontend_per_page"
+                                   class="form-control text-center font-monospace bn-digit"
+                                   min="2"
+                                   max="50"
+                                   value="{{ $settings['frontend_per_page'] ?? 5 }}">
                         </div>
                     </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="allow_voting" id="setAllowVoting" value="1" {{ !empty($settings['allow_voting']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setAllowVoting">Enable 'Helpful' Voting Button</label>
-                        <div class="settings-hint-text font-monospace">Allows store visitors to upvote useful reviews (1 vote per user/IP limit).</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="allow_voting"
+                                   id="setAllowVoting"
+                                   value="1"
+                                   {{ !empty($settings['allow_voting']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setAllowVoting">
+                                Enable Helpful Voting Button
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Allows visitors to upvote useful reviews (1 vote per user/IP limit).
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" type="checkbox" name="allow_reporting" id="setAllowReporting" value="1" {{ !empty($settings['allow_reporting']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setAllowReporting">Enable 'Report Inappropriate' Button</label>
-                        <div class="settings-hint-text font-monospace">Allows customers to flag offensive comments directly to admin moderation.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="allow_reporting"
+                                   id="setAllowReporting"
+                                   value="1"
+                                   {{ !empty($settings['allow_reporting']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setAllowReporting">
+                                Enable Report Inappropriate Button
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Allows customers to flag offensive comments directly to admin moderation.
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
-                <!-- 5. Notifications & Automation Engine -->
+                {{-- 5. Automation & Notifications --}}
                 <div class="settings-panel-card mb-0">
+
                     <div class="settings-section-title">
-                        <i class="fas fa-robot text-danger"></i>
+                        <span class="section-icon section-icon-purple">
+                            <i class="fas fa-robot"></i>
+                        </span>
                         <span>5. Automation &amp; Admin Email Alerts</span>
                     </div>
 
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="auto_reply_enabled" id="setAutoReplyEnabled" value="1" {{ !empty($settings['auto_reply_enabled']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setAutoReplyEnabled">Enable Auto-Reply Engine Globally</label>
-                        <div class="settings-hint-text font-monospace">Automatically posts replies to customer reviews based on configured rating/keyword rules.</div>
+                    <div class="setting-switch-row">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="auto_reply_enabled"
+                                   id="setAutoReplyEnabled"
+                                   value="1"
+                                   {{ !empty($settings['auto_reply_enabled']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setAutoReplyEnabled">
+                                Enable Auto-Reply Engine Globally
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Automatically posts replies to customer reviews based on configured rating and keyword rules.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" name="email_notification_admin" id="setEmailNotificationAdmin" value="1" {{ !empty($settings['email_notification_admin']) ? 'checked' : '' }}>
-                        <label class="form-check-label font-monospace" for="setEmailNotificationAdmin">Send Email Alert on New Review</label>
-                        <div class="settings-hint-text font-monospace">Sends real-time email notification to store owner whenever a customer leaves feedback.</div>
+                    <div class="setting-switch-row mb-3">
+                        <div class="setting-switch-control">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="email_notification_admin"
+                                   id="setEmailNotificationAdmin"
+                                   value="1"
+                                   {{ !empty($settings['email_notification_admin']) ? 'checked' : '' }}>
+                        </div>
+
+                        <div class="setting-switch-content">
+                            <label class="setting-label" for="setEmailNotificationAdmin">
+                                Send Email Alert on New Review
+                            </label>
+
+                            <div class="settings-hint-text">
+                                Sends an email notification to the store owner whenever a customer leaves feedback.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-0">
-                        <label class="form-label" style="font-size: 11px;">Admin Notification Email Recipient:</label>
-                        <input type="email" name="admin_notification_email" class="form-control font-monospace" placeholder="admin@example.com" value="{{ $settings['admin_notification_email'] ?? '' }}">
+                    <div>
+                        <label class="form-label" for="adminNotificationEmail">
+                            Admin Notification Email Recipient
+                        </label>
+
+                        <input type="email"
+                               id="adminNotificationEmail"
+                               name="admin_notification_email"
+                               class="form-control font-monospace"
+                               placeholder="admin@example.com"
+                               value="{{ $settings['admin_notification_email'] ?? '' }}">
                     </div>
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- Sticky Save Action Button Bar -->
-        <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top bottom-save-bar">
-            <button type="submit" class="btn btn-primary btn-compact px-4 shadow-xs fw-bold" style="min-height: 34px;">
-                <i class="fas fa-save me-1"></i> Save Review Configuration
+        {{-- Save Action --}}
+        <div class="bottom-save-bar">
+            <button type="submit"
+                    class="btn btn-primary btn-compact save-button">
+                <i class="fas fa-save"></i>
+                Save Review Configuration
             </button>
         </div>
+
     </form>
 </div>
 
 <script>
     function toggleDependentCards() {
-        const isReviewsGloballyEnabled = document.getElementById('setReviewsEnabled').checked;
-        const subInputs = [
-            'setAllowSubmission', 
-            'setVerifiedOnly', 
+        const reviewsToggle = document.getElementById('setReviewsEnabled');
+
+        if (!reviewsToggle) {
+            return;
+        }
+
+        const isReviewsGloballyEnabled = reviewsToggle.checked;
+
+        const dependentInputs = [
+            'setAllowSubmission',
+            'setVerifiedOnly',
             'setImageReviewsEnabled',
             'setAutoReplyEnabled'
         ];
-        
-        subInputs.forEach(id => {
+
+        dependentInputs.forEach(id => {
             const el = document.getElementById(id);
-            if (el) {
-                const parentCard = el.closest('.settings-panel-card');
-                if (parentCard && id !== 'setReviewsEnabled') {
-                    parentCard.style.opacity = isReviewsGloballyEnabled ? '1' : '0.85';
-                }
+
+            if (!el) {
+                return;
+            }
+
+            const parentCard = el.closest('.settings-panel-card');
+
+            if (parentCard) {
+                parentCard.classList.toggle(
+                    'settings-disabled',
+                    !isReviewsGloballyEnabled
+                );
             }
         });
     }

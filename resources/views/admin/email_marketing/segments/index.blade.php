@@ -11,20 +11,20 @@
     $totalMatchingAudience = $stats['total_reach'] ?? $segments->sum(fn($s) => (int)($s->matching_subscribers_count ?? 0));
 
     // Safe route fallbacks to prevent RouteNotFoundException
-    $indexUrl = Route::has('admin.email_marketing.segments.index') 
-        ? route('admin.email_marketing.segments.index') 
+    $indexUrl = Route::has('admin.email_marketing.segments.index')
+        ? route('admin.email_marketing.segments.index')
         : url('admin/email-marketing/segments');
 
-    $createUrl = Route::has('admin.email_marketing.segments.create') 
-        ? route('admin.email_marketing.segments.create') 
+    $createUrl = Route::has('admin.email_marketing.segments.create')
+        ? route('admin.email_marketing.segments.create')
         : url('admin/email-marketing/segments/create');
 
-    $exportCsvUrl = Route::has('admin.email_marketing.segments.export_csv') 
-        ? route('admin.email_marketing.segments.export_csv') 
+    $exportCsvUrl = Route::has('admin.email_marketing.segments.export_csv')
+        ? route('admin.email_marketing.segments.export_csv')
         : url('admin/email-marketing/segments/export-csv');
 
-    $subscribersUrl = Route::has('admin.email_marketing.subscribers.index') 
-        ? route('admin.email_marketing.subscribers.index') 
+    $subscribersUrl = Route::has('admin.email_marketing.subscribers.index')
+        ? route('admin.email_marketing.subscribers.index')
         : url('admin/email-marketing/subscribers');
 
     $recalculateBaseUrl = url('admin/email-marketing/segments/recalculate');
@@ -35,9 +35,31 @@
 
 @section('admin_content')
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       AUDIENCE SEGMENTS - KAIADMIN LITE CLASSIC UI
+       Scoped styles: no global Bootstrap/plugin interference
+    ========================================================= */
+
+    #email-marketing-segments-root {
+        --segment-primary: var(--bs-primary, #6861ce);
+        --segment-border: #e5e7eb;
+        --segment-muted: #8d9498;
+        --segment-heading: #2a2f35;
+        --segment-surface: #ffffff;
+        --segment-soft: #f7f8fa;
+        --segment-radius: 5px;
+        color: var(--segment-heading);
+        font-size: 13px;
+    }
+
+    #email-marketing-segments-root *,
+    #email-marketing-segments-root *::before,
+    #email-marketing-segments-root *::after {
+        box-sizing: border-box;
+    }
+
+    /* Consistent compact radius */
     #email-marketing-segments-root .btn,
-    #email-marketing-segments-root .btn-sm,
     #email-marketing-segments-root button,
     #email-marketing-segments-root .badge,
     #email-marketing-segments-root .alert,
@@ -51,334 +73,641 @@
     #email-marketing-segments-root .collapse-toggle-btn,
     .segment-modal-scope .modal-content,
     .segment-modal-scope .btn,
-    .admin-segment-toast {
-        border-radius: 5px !important;
+    #custom-toast-holder .admin-segment-toast {
+        border-radius: var(--segment-radius) !important;
     }
 
     #email-marketing-segments-root .input-group > .input-group-text {
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #email-marketing-segments-root .input-group > .form-control,
     #email-marketing-segments-root .input-group > .form-select {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-segments-root .bn-digit,
+    #email-marketing-segments-root .font-monospace {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    /* Header */
+    #email-marketing-segments-root .segments-header-wrap {
+        min-width: 0;
+    }
+
+    #email-marketing-segments-root .segments-header-wrap h5 {
+        color: var(--segment-heading);
+        letter-spacing: -0.25px;
+    }
+
+    #email-marketing-segments-root .segments-header-wrap > div:first-child {
+        min-width: 0;
+    }
+
+    /* Compact buttons */
+    #email-marketing-segments-root .btn-compact {
+        min-height: 31px;
+        padding: 6px 11px !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
+        font-size: 11.5px !important;
+        line-height: 1.3;
+        font-weight: 600 !important;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
     }
 
-    .segment-filter-control {
-        font-size: 12px !important;
-        height: 32px !important;
-        padding: 4px 8px !important;
-        border: 1px solid #cbd5e1 !important;
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: none !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    #email-marketing-segments-root .btn-compact:focus-visible,
+    #email-marketing-segments-root .collapse-toggle-btn:focus-visible {
+        outline: 2px solid var(--segment-primary);
+        outline-offset: 2px;
     }
-    .segment-filter-control:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+
+    #email-marketing-segments-root .btn-compact:hover {
+        box-shadow: 0 2px 5px rgba(20, 30, 50, .08);
+    }
+
+    /* Filter controls */
+    #email-marketing-segments-root .segment-filter-control {
+        width: 100%;
+        height: 34px !important;
+        min-width: 0;
+        padding: 5px 9px !important;
+        border: 1px solid #dfe3e8 !important;
+        background-color: #ffffff !important;
+        color: #343a40 !important;
+        box-shadow: none !important;
+        font-size: 11.5px !important;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #email-marketing-segments-root .segment-filter-control:focus {
+        border-color: var(--segment-primary) !important;
+        box-shadow: 0 0 0 2px rgba(104, 97, 206, .10) !important;
         outline: none;
     }
 
-    .segment-addon-text {
-        height: 32px !important;
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
-        color: #64748b !important;
-        font-size: 11px !important;
+    #email-marketing-segments-root .segment-filter-control::placeholder {
+        color: #a0a6ad;
+        opacity: 1;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #email-marketing-segments-root .segment-addon-text {
+        min-height: 34px;
+        background: #f7f8fa !important;
+        border-color: #dfe3e8 !important;
+        color: #737b84 !important;
+        font-size: 10.5px !important;
+        white-space: nowrap;
+    }
+
+    /* Collapse controls */
+    #email-marketing-segments-root .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        flex: 0 0 auto;
+        background: #ffffff;
+        border: 1px solid var(--segment-border);
+        color: #737b84;
+        transition: all .18s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
+
+    #email-marketing-segments-root .collapse-toggle-btn:hover {
+        background: var(--segment-primary);
+        border-color: var(--segment-primary);
         color: #ffffff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #email-marketing-segments-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    #email-marketing-segments-root .collapse-icon {
         font-size: 10px;
+        transition: transform .2s ease;
     }
 
-    /* Enterprise Surface Cards */
+    /* Main cards and section headers */
     #email-marketing-segments-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+        border: 1px solid var(--segment-border) !important;
+        background: var(--segment-surface);
+        box-shadow: 0 1px 3px rgba(30, 40, 60, .035) !important;
+        margin-bottom: 15px;
     }
 
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
+    #email-marketing-segments-root .section-header-wrap {
+        min-height: 43px;
+        padding: 8px 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--segment-border);
+    }
+
+    #email-marketing-segments-root .section-header-wrap > span {
+        line-height: 1.4;
+    }
+
+    /* KPI cards */
+    #email-marketing-segments-root .metric-card {
         position: relative;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        min-width: 0;
+        padding: 13px;
+        overflow: hidden;
+        border: 1px solid var(--segment-border) !important;
+        border-left-width: 3px !important;
+        background: #ffffff;
+        box-shadow: none !important;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+
+    #email-marketing-segments-root .metric-card:hover {
+        box-shadow: 0 3px 10px rgba(30, 40, 60, .055) !important;
     }
-    .stat-label-title {
+
+    #email-marketing-segments-root .metric-card-blue {
+        border-left-color: #6861ce !important;
+        background: #ffffff;
+    }
+
+    #email-marketing-segments-root .metric-card-green {
+        border-left-color: #31ce77 !important;
+        background: #ffffff;
+    }
+
+    #email-marketing-segments-root .metric-card-amber {
+        border-left-color: #ffad46 !important;
+        background: #ffffff;
+    }
+
+    #email-marketing-segments-root .metric-card-cyan {
+        border-left-color: #48abf7 !important;
+        background: #ffffff;
+    }
+
+    #email-marketing-segments-root .stat-label-title {
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        font-weight: 600;
+        letter-spacing: .01em;
+        line-height: 1.3;
     }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+
+    #email-marketing-segments-root .stat-val-num {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -.35px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .stat-sub-text {
+
+    #email-marketing-segments-root .stat-sub-text {
+        margin-top: 3px;
         font-size: 10px;
-        margin-top: 2px;
+        line-height: 1.35;
     }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
+
+    #email-marketing-segments-root .metric-icon-square {
+        width: 33px;
+        height: 33px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
+        flex: 0 0 auto;
         border-radius: 5px !important;
+        font-size: 13px;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-cyan   { background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%); border-left: 3.5px solid #06b6d4 !important; }
-
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
-    .custom-segments-table {
-        width: 100%;
-        margin-bottom: 0;
+    /* Filter section */
+    #email-marketing-segments-root #collapseSegmentsFilter .border-top {
+        border-color: #edf0f2 !important;
     }
-    .custom-segments-table thead th {
+
+    #email-marketing-segments-root #segment-filter-form {
+        min-width: 0;
+    }
+
+    #email-marketing-segments-root #segment-filter-form .row > [class*="col-"] {
+        min-width: 0;
+    }
+
+    /* Bulk actions */
+    #email-marketing-segments-root #selected-segments-badge {
         font-size: 10.5px;
-        letter-spacing: 0.03em;
+        font-weight: 600;
+    }
+
+    #email-marketing-segments-root #showing-entries-text {
+        line-height: 1.5;
+    }
+
+    /* Table */
+    #email-marketing-segments-root .pc-fit-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #email-marketing-segments-root .custom-segments-table {
+        width: 100%;
+        min-width: 900px;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #email-marketing-segments-root .custom-segments-table thead th {
+        padding: 11px 9px;
+        background: #f7f8fa;
+        color: #737b84;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .035em;
         text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 9px 8px;
         white-space: nowrap;
-    }
-    .custom-segments-table tbody td {
-        padding: 8px 8px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 12px;
         vertical-align: middle;
-        white-space: nowrap;
-    }
-    .custom-segments-table tbody tr:hover td {
-        background-color: #fafbfc;
     }
 
+    #email-marketing-segments-root .custom-segments-table tbody td {
+        padding: 10px 9px;
+        color: #454b54;
+        border-bottom: 1px solid #f0f1f3;
+        font-size: 11.5px;
+        line-height: 1.45;
+        vertical-align: middle;
+    }
+
+    #email-marketing-segments-root .custom-segments-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #email-marketing-segments-root .custom-segments-table tbody tr {
+        transition: background-color .12s ease;
+    }
+
+    #email-marketing-segments-root .custom-segments-table tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    #email-marketing-segments-root .custom-segments-table tbody tr:hover td {
+        background: transparent;
+    }
+
+    #email-marketing-segments-root .custom-segments-table .form-check-input {
+        width: 15px;
+        height: 15px;
+        margin-top: 0;
+        cursor: pointer;
+        border-color: #cbd1d8;
+        box-shadow: none;
+    }
+
+    #email-marketing-segments-root .custom-segments-table .form-check-input:checked {
+        background-color: var(--segment-primary);
+        border-color: var(--segment-primary);
+    }
+
+    /* Desktop proportional table sizing */
     @media (min-width: 992px) {
-        .custom-segments-table {
-            table-layout: fixed !important;
-            width: 100% !important;
-        }
-        .pc-fit-container {
-            overflow-x: hidden !important;
-        }
-        .custom-segments-table th,
-        .custom-segments-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+        #email-marketing-segments-root .custom-segments-table {
+            min-width: 900px;
+            table-layout: fixed;
         }
 
-        /* 8 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-sg-cb     { width: 4% !important; }
-        .col-sg-id     { width: 5% !important; }
-        .col-sg-name   { width: 33% !important; }
-        .col-sg-type   { width: 12% !important; }
-        .col-sg-match  { width: 14% !important; }
-        .col-sg-camps  { width: 10% !important; }
-        .col-sg-date   { width: 12% !important; }
-        .col-sg-action { width: 10% !important; }
+        #email-marketing-segments-root .col-sg-cb     { width: 4%; }
+        #email-marketing-segments-root .col-sg-id     { width: 6%; }
+        #email-marketing-segments-root .col-sg-name   { width: 29%; }
+        #email-marketing-segments-root .col-sg-type   { width: 12%; }
+        #email-marketing-segments-root .col-sg-match  { width: 15%; }
+        #email-marketing-segments-root .col-sg-camps  { width: 12%; }
+        #email-marketing-segments-root .col-sg-date   { width: 12%; }
+        #email-marketing-segments-root .col-sg-action { width: 10%; }
+
+        #email-marketing-segments-root .custom-segments-table th,
+        #email-marketing-segments-root .custom-segments-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     }
 
-    /* Bulletproof Responsive Pagination */
-    #segments-pagination-links nav {
+    /* Pagination */
+    #email-marketing-segments-root #segments-pagination-links nav {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
         width: auto !important;
         margin: 0 !important;
     }
-    #segments-pagination-links nav > div.d-sm-none,
-    #segments-pagination-links nav > .d-sm-none,
-    #segments-pagination-links nav p,
-    #segments-pagination-links nav .small.text-muted,
-    #segments-pagination-links nav div:has(> p) {
+
+    #email-marketing-segments-root #segments-pagination-links nav > div.d-sm-none,
+    #email-marketing-segments-root #segments-pagination-links nav > .d-sm-none,
+    #email-marketing-segments-root #segments-pagination-links nav p,
+    #email-marketing-segments-root #segments-pagination-links nav .small.text-muted,
+    #email-marketing-segments-root #segments-pagination-links nav div:has(> p) {
         display: none !important;
     }
-    #segments-pagination-links .pagination {
-        margin: 0 !important;
+
+    #email-marketing-segments-root #segments-pagination-links .pagination {
         display: flex !important;
         flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
+        gap: 4px !important;
+        margin: 0 !important;
         padding: 0 !important;
         list-style: none !important;
     }
-    #segments-pagination-links .page-item {
+
+    #email-marketing-segments-root #segments-pagination-links .page-item {
         display: inline-flex !important;
     }
-    #segments-pagination-links .page-item .page-link,
-    #segments-pagination-links .page-item span {
+
+    #email-marketing-segments-root #segments-pagination-links .page-item .page-link,
+    #email-marketing-segments-root #segments-pagination-links .page-item span {
+        min-width: 27px !important;
+        height: 27px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
+        color: #68717c !important;
+        background: #ffffff !important;
+        border: 1px solid #e1e4e8 !important;
+        border-radius: 5px !important;
         font-size: 11px !important;
         font-weight: 600 !important;
-        color: #475569 !important;
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 5px !important;
-        text-decoration: none !important;
         line-height: 1 !important;
-        transition: all 0.12s ease !important;
+        text-decoration: none !important;
+        transition: all .15s ease !important;
     }
-    #segments-pagination-links .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
+
+    #email-marketing-segments-root #segments-pagination-links .page-item .page-link:hover {
+        color: var(--segment-primary) !important;
+        background: #f7f7fc !important;
+        border-color: var(--segment-primary) !important;
     }
-    #segments-pagination-links .page-item.active .page-link,
-    #segments-pagination-links .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
+
+    #email-marketing-segments-root #segments-pagination-links .page-item.active .page-link,
+    #email-marketing-segments-root #segments-pagination-links .page-item.active span {
         color: #ffffff !important;
+        background: var(--segment-primary) !important;
+        border-color: var(--segment-primary) !important;
         font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
+        box-shadow: none !important;
     }
-    #segments-pagination-links .page-item.disabled .page-link,
-    #segments-pagination-links .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
+
+    #email-marketing-segments-root #segments-pagination-links .page-item.disabled .page-link,
+    #email-marketing-segments-root #segments-pagination-links .page-item.disabled span {
+        opacity: .45 !important;
+        background: #f7f8fa !important;
+        border-color: #e5e7eb !important;
         cursor: not-allowed !important;
     }
 
-    /* Floating Toast Box */
-    .admin-segment-toast {
+    /* Confirmation modal */
+    .segment-modal-scope .modal-content {
+        border: 1px solid #e8eaed !important;
+        box-shadow: 0 12px 35px rgba(20, 30, 50, .15) !important;
+    }
+
+    .segment-modal-scope .modal-body h6 {
+        letter-spacing: -.1px;
+    }
+
+    /* Toast notifications */
+    #custom-toast-holder .admin-segment-toast {
         position: fixed;
-        bottom: 20px;
         right: 20px;
+        bottom: 20px;
         z-index: 108000;
         min-width: 280px;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-        animation: slideInRight 0.25s ease;
+        max-width: min(420px, calc(100vw - 30px));
+        box-shadow: 0 8px 25px rgba(15, 23, 42, .18);
+        animation: segmentToastSlideIn .25s ease;
     }
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
+
+    @keyframes segmentToastSlideIn {
+        from { transform: translateX(30px); opacity: 0; }
         to { transform: translateX(0); opacity: 1; }
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #email-marketing-segments-root .custom-segments-table {
+            min-width: 900px;
+            table-layout: auto;
+        }
+
+        #email-marketing-segments-root .pc-fit-container {
+            overflow-x: auto;
+        }
+
+        #email-marketing-segments-root .top-action-btns {
+            flex-wrap: wrap;
+        }
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .segments-header-wrap h5 {
+        #email-marketing-segments-root {
+            padding-top: 12px !important;
+        }
+
+        #email-marketing-segments-root .segments-header-wrap {
+            gap: 12px !important;
+        }
+
+        #email-marketing-segments-root .segments-header-wrap h5 {
             font-size: 16px !important;
         }
-        .top-action-btns {
+
+        #email-marketing-segments-root .segments-header-wrap small {
+            font-size: 11px !important;
+            max-width: 100%;
+        }
+
+        #email-marketing-segments-root .top-action-btns {
             width: 100%;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 7px;
         }
-        .top-action-btns .btn-create-main {
-            grid-column: span 2;
+
+        #email-marketing-segments-root .top-action-btns .btn-create-main {
+            grid-column: 1 / -1;
+            grid-row: 1;
         }
-        .top-action-btns .btn {
+
+        #email-marketing-segments-root .top-action-btns .btn {
             width: 100%;
-            padding: 8px 6px !important;
+            min-height: 35px;
+            padding: 7px 5px !important;
             font-size: 11px !important;
             justify-content: center;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
+
+        #email-marketing-segments-root .card {
+            margin-bottom: 12px !important;
         }
-        .stat-label-title {
-            font-size: 10px !important;
+
+        #email-marketing-segments-root .section-header-wrap {
+            min-height: 41px;
+            padding: 8px 10px;
         }
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
+
+        #email-marketing-segments-root .section-header-wrap > span {
             font-size: 11px !important;
         }
-        .pc-fit-container {
+
+        #email-marketing-segments-root #collapseSegmentsKpis > .p-3,
+        #email-marketing-segments-root #collapseSegmentsFilter > .p-3 {
+            padding: 10px !important;
+        }
+
+        #email-marketing-segments-root .metric-card {
+            min-height: 88px;
+            padding: 10px !important;
+        }
+
+        #email-marketing-segments-root .stat-label-title {
+            font-size: 10px !important;
+        }
+
+        #email-marketing-segments-root .stat-val-num {
+            font-size: 16px !important;
+        }
+
+        #email-marketing-segments-root .stat-sub-text {
+            font-size: 9px !important;
+        }
+
+        #email-marketing-segments-root .metric-icon-square {
+            width: 27px;
+            height: 27px;
+            font-size: 11px;
+        }
+
+        #email-marketing-segments-root .segment-filter-control {
+            height: 36px !important;
+            font-size: 11px !important;
+        }
+
+        #email-marketing-segments-root .segment-addon-text {
+            min-height: 36px;
+            font-size: 10px !important;
+        }
+
+        #email-marketing-segments-root #segment-filter-form .row {
+            --bs-gutter-x: 7px;
+            --bs-gutter-y: 7px;
+        }
+
+        #email-marketing-segments-root #segment-filter-form .btn-compact {
+            min-height: 34px;
+        }
+
+        #email-marketing-segments-root .pc-fit-container {
             width: 100%;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }
-        .custom-segments-table {
-            min-width: 820px !important;
+
+        #email-marketing-segments-root .custom-segments-table {
+            min-width: 900px !important;
             table-layout: auto !important;
         }
-        #email-marketing-segments-root .card {
-            margin-bottom: 12px !important;
+
+        #email-marketing-segments-root .custom-segments-table thead th {
+            padding: 10px 8px;
+            font-size: 9.5px;
+        }
+
+        #email-marketing-segments-root .custom-segments-table tbody td {
+            padding: 9px 8px;
+            font-size: 11px;
+        }
+
+        #email-marketing-segments-root .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-2 {
+            align-items: flex-start !important;
+        }
+
+        #email-marketing-segments-root .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-2 > div:first-child {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px !important;
+            width: 100%;
+        }
+
+        #email-marketing-segments-root .d-flex.flex-wrap.align-items-center.justify-content-between.gap-2.mb-2 > div:first-child .btn {
+            flex: 1 1 auto;
+        }
+
+        #email-marketing-segments-root #showing-entries-text {
+            font-size: 10px !important;
+        }
+
+        #email-marketing-segments-root #segments-pagination-footer {
+            justify-content: center !important;
+        }
+
+        #email-marketing-segments-root #segments-pagination-links nav {
+            justify-content: center !important;
+        }
+
+        #custom-toast-holder .admin-segment-toast {
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            min-width: 0;
+            max-width: none;
+        }
+    }
+
+    /* Small mobile */
+    @media (max-width: 380px) {
+        #email-marketing-segments-root {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+
+        #email-marketing-segments-root .metric-card {
+            padding: 8px !important;
+        }
+
+        #email-marketing-segments-root .stat-val-num {
+            font-size: 14px !important;
+        }
+
+        #email-marketing-segments-root .metric-icon-square {
+            width: 24px;
+            height: 24px;
+            font-size: 10px;
+        }
+
+        #email-marketing-segments-root .top-action-btns .btn {
+            font-size: 10px !important;
+        }
+
+        #email-marketing-segments-root .section-header-wrap > span {
+            font-size: 10px !important;
         }
     }
 </style>
@@ -693,7 +1022,7 @@
         </div>
     </div>
 
-    {{-- 6. Segments Table Container (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
+    {{-- 6. Segments Table Container --}}
     <div class="card border-0 shadow-sm overflow-hidden mb-3">
         <div class="table-responsive pc-fit-container" style="min-height: 250px;">
             <table class="table custom-segments-table align-middle mb-0" id="segments-main-table">

@@ -274,11 +274,8 @@
                     <i class="fas fa-rotate-left text-danger"></i>
                     <span>Return Orders</span>
                 </h5>
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace bn-digit px-2 py-0.5" style="font-size: 10.5px;">
-                    {{ $orders->total() }} Returns
-                </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Parcels returned by courier, damaged item inspection logs, and inventory restock reconciliation.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Courier Returns, Damage Inspection & Restock Logs</small>
         </div>
         <div>
             <a href="{{ route('admin.order.online') }}" class="btn btn-outline-secondary btn-compact shadow-xs">

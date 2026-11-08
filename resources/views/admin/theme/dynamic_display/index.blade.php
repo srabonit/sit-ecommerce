@@ -1,10 +1,11 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Display & Widget Settings')
 
 @php
-    $footerBuilderRoute = Route::has('admin.theme.setting.footer') 
-        ? route('admin.theme.setting.footer') 
+    $footerBuilderRoute = Route::has('admin.theme.setting.footer')
+        ? route('admin.theme.setting.footer')
         : (Route::has('admin.theme.footer') ? route('admin.theme.footer') : url('admin/theme-setting/footer'));
 
     $popupCreateRoute = Route::has('admin.theme.setting.display.popup.create')
@@ -15,14 +16,14 @@
         ? route('admin.theme.setting.display.widget.store')
         : (Route::has('admin.theme.display.widget.store') ? route('admin.theme.display.widget.store') : url('admin/theme-setting/display/widgets/store'));
 
-    $widgetHubUpdateRoute = Route::has('admin.theme.setting.display.widget_hub.update') 
-        ? route('admin.theme.setting.display.widget_hub.update') 
-        : (Route::has('admin.theme.setting.display.sticky_bar_rule.update') 
-            ? route('admin.theme.setting.display.sticky_bar_rule.update') 
+    $widgetHubUpdateRoute = Route::has('admin.theme.setting.display.widget_hub.update')
+        ? route('admin.theme.setting.display.widget_hub.update')
+        : (Route::has('admin.theme.setting.display.sticky_bar_rule.update')
+            ? route('admin.theme.setting.display.sticky_bar_rule.update')
             : url('admin/theme-setting/display/widget-hub-settings'));
 
-    $hubSettings = is_array($widgetHubRule->settings ?? null) 
-        ? $widgetHubRule->settings 
+    $hubSettings = is_array($widgetHubRule->settings ?? null)
+        ? $widgetHubRule->settings
         : (json_decode($widgetHubRule->settings ?? '[]', true) ?: []);
 
     $currentDisplayStyle = $hubSettings['display_style'] ?? 'speed_dial';
@@ -34,310 +35,849 @@
 
 @section('admin_content')
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
-    #dynamic-display-root,
-    #widgetManageModal,
-    #dynamicActionConfirmModal {
-        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        letter-spacing: -0.01em;
-        color: #1e293b;
+/* =========================================================
+   KAIADMIN LITE — CLASSIC WHITE DESIGN SYSTEM
+   Scoped to Display & Widget Settings
+========================================================= */
+
+#dynamic-display-root,
+#widgetManageModal,
+#dynamicActionConfirmModal {
+    --display-primary: var(--bs-primary, #1572e8);
+    --display-primary-hover: #1263c4;
+    --display-secondary: #6c757d;
+    --display-success: #31ce36;
+    --display-danger: #f25961;
+    --display-warning: #ffad46;
+    --display-info: #48abf7;
+
+    --display-body: #f7f9fc;
+    --display-card: #ffffff;
+    --display-heading: #2a2f5b;
+    --display-text: #575962;
+    --display-muted: #8d9498;
+    --display-border: #e5e7eb;
+    --display-light: #f8f9fa;
+
+    --display-radius: 7px;
+    --display-radius-sm: 5px;
+
+    font-family: 'Public Sans', 'Inter', -apple-system,
+        BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    color: var(--display-text);
+    letter-spacing: normal;
+}
+
+#dynamic-display-root *,
+#widgetManageModal *,
+#dynamicActionConfirmModal * {
+    box-sizing: border-box;
+}
+
+#dynamic-display-root {
+    width: 100%;
+    min-width: 0;
+    padding-top: 18px;
+    padding-bottom: 28px;
+}
+
+#dynamic-display-root .card,
+#widgetManageModal .modal-content,
+#dynamicActionConfirmModal .modal-content {
+    background: var(--display-card);
+    border: 1px solid var(--display-border) !important;
+    border-radius: var(--display-radius) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .035) !important;
+}
+
+#dynamic-display-root .card {
+    margin-bottom: 18px;
+}
+
+#dynamic-display-root .btn,
+#widgetManageModal .btn,
+#dynamicActionConfirmModal .btn {
+    border-radius: 5px;
+    font-weight: 600;
+    transition: background-color .2s ease,
+                border-color .2s ease,
+                box-shadow .2s ease;
+}
+
+#dynamic-display-root .btn:focus-visible,
+#widgetManageModal .btn:focus-visible,
+#dynamicActionConfirmModal .btn:focus-visible {
+    outline: 2px solid var(--display-primary);
+    outline-offset: 2px;
+}
+
+#dynamic-display-root .btn-compact {
+    min-height: 34px;
+    padding: 6px 12px !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 12px !important;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+#dynamic-display-root .btn-primary {
+    background-color: var(--display-primary);
+    border-color: var(--display-primary);
+}
+
+#dynamic-display-root .btn-primary:hover {
+    background-color: var(--display-primary-hover);
+    border-color: var(--display-primary-hover);
+}
+
+#dynamic-display-root .form-control,
+#dynamic-display-root .form-select,
+#widgetManageModal .form-control,
+#widgetManageModal .form-select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 11px;
+    border: 1px solid var(--display-border) !important;
+    border-radius: 5px !important;
+    background-color: #fff;
+    color: #2a2f5b !important;
+    font-size: 13px !important;
+    box-shadow: none !important;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+#dynamic-display-root .form-control:focus,
+#dynamic-display-root .form-select:focus,
+#widgetManageModal .form-control:focus,
+#widgetManageModal .form-select:focus {
+    border-color: var(--display-primary) !important;
+    box-shadow: 0 0 0 3px rgba(21, 114, 232, .10) !important;
+}
+
+#dynamic-display-root .form-control::placeholder,
+#widgetManageModal .form-control::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+#dynamic-display-root .form-label,
+#widgetManageModal .form-label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--display-heading);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#dynamic-display-root .form-check-input,
+#widgetManageModal .form-check-input {
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+#dynamic-display-root .form-check-input:checked,
+#widgetManageModal .form-check-input:checked {
+    background-color: var(--display-primary);
+    border-color: var(--display-primary);
+}
+
+#dynamic-display-root .form-switch .form-check-input {
+    width: 2.1em;
+    min-height: 1.1em;
+}
+
+#dynamic-display-root .input-group > .input-group-text {
+    background: var(--display-light);
+    border-color: var(--display-border);
+    color: var(--display-muted);
+    font-size: 12px;
+}
+
+#dynamic-display-root .input-group > .form-control,
+#dynamic-display-root .input-group > .form-select {
+    min-width: 0;
+}
+
+#dynamic-display-root .font-monospace,
+#widgetManageModal .font-monospace {
+    font-family: 'SFMono-Regular', Consolas, monospace !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* PAGE HEADER */
+
+#dynamic-display-root .display-header-wrap {
+    margin-bottom: 22px !important;
+}
+
+#dynamic-display-root .display-header-wrap h5 {
+    color: var(--display-heading) !important;
+    font-size: clamp(17px, 2vw, 21px) !important;
+    font-weight: 700;
+    letter-spacing: -.35px;
+}
+
+#dynamic-display-root .display-header-wrap > div > small {
+    margin-top: 5px !important;
+    color: var(--display-muted) !important;
+    font-size: 12px !important;
+}
+
+#dynamic-display-root .display-header-wrap .badge {
+    border-radius: 4px;
+    font-size: 10px !important;
+    font-weight: 600;
+}
+
+/* OVERVIEW METRICS */
+
+#dynamic-display-root .metric-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 112px;
+    padding: 16px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--display-border) !important;
+    border-radius: var(--display-radius) !important;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+#dynamic-display-root .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .055) !important;
+}
+
+#dynamic-display-root .metric-card-blue {
+    border-left: 3px solid #1572e8 !important;
+}
+
+#dynamic-display-root .metric-card-green {
+    border-left: 3px solid #31ce36 !important;
+}
+
+#dynamic-display-root .metric-card-purple {
+    border-left: 3px solid #6861ce !important;
+}
+
+#dynamic-display-root .metric-card-amber {
+    border-left: 3px solid #ffad46 !important;
+}
+
+#dynamic-display-root .stat-label-title {
+    color: var(--display-muted) !important;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+#dynamic-display-root .stat-val-num {
+    color: var(--display-heading) !important;
+    font-size: clamp(17px, 2vw, 21px);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -.4px;
+}
+
+#dynamic-display-root .stat-sub-text {
+    margin-top: 4px;
+    color: var(--display-muted) !important;
+    font-size: 10px;
+}
+
+#dynamic-display-root .metric-icon-square {
+    display: flex;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px !important;
+    font-size: 15px;
+}
+
+/* SECTION HEADERS */
+
+#dynamic-display-root .section-header-wrap {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--display-border);
+}
+
+#dynamic-display-root .section-header-wrap > span {
+    color: var(--display-heading) !important;
+    font-size: 13px !important;
+    font-weight: 700;
+}
+
+#dynamic-display-root .section-header-wrap > span i {
+    margin-right: 5px;
+}
+
+/* NAVIGATION TABS */
+
+#dynamic-display-root #displayTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0;
+}
+
+#dynamic-display-root #displayTabs .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 16px;
+    color: var(--display-text);
+    background: #fff;
+    border: 1px solid var(--display-border);
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all .2s ease;
+}
+
+#dynamic-display-root #displayTabs .nav-link:hover {
+    color: var(--display-primary);
+    border-color: var(--display-primary);
+}
+
+#dynamic-display-root #displayTabs .nav-link.active {
+    color: #fff !important;
+    background: var(--display-primary) !important;
+    border-color: var(--display-primary) !important;
+    box-shadow: 0 2px 5px rgba(21, 114, 232, .15);
+}
+
+/* DISPLAY MODE SELECTION */
+
+#dynamic-display-root .presentation-radio-card {
+    display: flex;
+    min-height: 68px;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 13px 14px;
+    background: #fff;
+    border: 1px solid var(--display-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+#dynamic-display-root .presentation-radio-card:hover {
+    background: #f8fbff;
+    border-color: #a7c8f5;
+}
+
+#dynamic-display-root .presentation-radio-card.active-mode {
+    background: #f5f9ff;
+    border-color: var(--display-primary);
+    box-shadow: 0 0 0 1px var(--display-primary);
+}
+
+#dynamic-display-root .presentation-radio-card strong {
+    color: var(--display-heading) !important;
+    font-size: 13px !important;
+}
+
+#dynamic-display-root .presentation-radio-card small {
+    color: var(--display-muted) !important;
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+#dynamic-display-root .presentation-radio-card .form-check-input {
+    margin-top: 3px;
+}
+
+/* TABLE DESIGN */
+
+#dynamic-display-root .custom-display-table {
+    width: 100%;
+    min-width: 920px;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+#dynamic-display-root .custom-display-table thead th {
+    padding: 12px 11px;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-bottom: 1px solid var(--display-border);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .35px;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+#dynamic-display-root .custom-display-table tbody td {
+    padding: 11px;
+    color: var(--display-text);
+    background: #fff;
+    border-bottom: 1px solid #f0f1f3;
+    font-size: 12px;
+    line-height: 1.5;
+    vertical-align: middle;
+}
+
+#dynamic-display-root .custom-display-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+#dynamic-display-root .custom-display-table tbody tr:hover td {
+    background: #fafcff;
+}
+
+#dynamic-display-root .custom-display-table th,
+#dynamic-display-root .custom-display-table td {
+    overflow-wrap: anywhere;
+}
+
+#dynamic-display-root .custom-display-table .text-truncate {
+    max-width: 240px;
+}
+
+#dynamic-display-root .pc-fit-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+#dynamic-display-root .pc-fit-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+#dynamic-display-root .pc-fit-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* STATUS BADGES */
+
+#dynamic-display-root .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1px;
+}
+
+/* TABLE ACTION BUTTONS */
+
+#dynamic-display-root .custom-display-table .btn {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 5px;
+}
+
+#dynamic-display-root .custom-display-table .btn i {
+    font-size: 11px !important;
+}
+
+/* SETTINGS PANEL */
+
+#dynamic-display-root #speedDialCustomizerWrap > div {
+    background: #f8f9fb !important;
+    border: 1px solid var(--display-border) !important;
+    border-radius: 6px !important;
+}
+
+#dynamic-display-root .card .p-3 {
+    min-width: 0;
+}
+
+#dynamic-display-root .form-control-color {
+    height: 39px;
+    min-height: 39px;
+    padding: 4px !important;
+    cursor: pointer;
+}
+
+/* ALERTS */
+
+#dynamic-display-root .alert {
+    border: 1px solid var(--display-border) !important;
+    border-radius: 6px !important;
+    font-size: 12px;
+}
+
+#dynamic-display-root .alert-success {
+    background: #f0fbf3;
+    border-color: #ccebd4 !important;
+}
+
+#dynamic-display-root .alert-danger {
+    background: #fff5f5;
+    border-color: #f4d2d2 !important;
+}
+
+/* MODALS */
+
+#widgetManageModal,
+#dynamicActionConfirmModal {
+    --bs-modal-border-radius: 8px;
+}
+
+#widgetManageModal .modal-dialog {
+    width: calc(100% - 24px);
+    max-width: 720px;
+    margin: 12px auto;
+}
+
+#widgetManageModal .modal-content {
+    overflow: hidden;
+}
+
+#widgetManageModal .modal-header,
+#widgetManageModal .modal-footer {
+    min-height: 54px;
+    padding: 12px 18px !important;
+    background: #fff !important;
+    border-color: var(--display-border) !important;
+}
+
+#widgetManageModal .modal-title {
+    color: var(--display-heading) !important;
+    font-size: 15px !important;
+    font-weight: 700;
+}
+
+#widgetManageModal .modal-body {
+    padding: 20px !important;
+    background: #fff;
+}
+
+#widgetManageModal .modal-body .row {
+    row-gap: 10px;
+}
+
+#widgetManageModal .modal-body .bg-light {
+    background: #f8f9fb !important;
+}
+
+#widgetManageModal .modal-body .border {
+    border-color: var(--display-border) !important;
+}
+
+#widgetManageModal textarea.form-control {
+    min-height: 105px;
+    resize: vertical;
+}
+
+#dynamicActionConfirmModal .modal-content {
+    padding: 10px;
+}
+
+#dynamicActionConfirmModal .modal-body {
+    padding: 12px !important;
+}
+
+#dynamicActionConfirmModal h6 {
+    color: var(--display-heading) !important;
+    font-size: 16px !important;
+}
+
+#dynamicActionConfirmModal p {
+    font-size: 12px !important;
+}
+
+/* PAGINATION */
+
+#dynamic-display-root .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 0;
+}
+
+#dynamic-display-root .pagination .page-link {
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 5px !important;
+    color: var(--display-primary);
+    font-size: 12px;
+}
+
+#dynamic-display-root .pagination .active > .page-link {
+    color: #fff;
+    background: var(--display-primary);
+    border-color: var(--display-primary);
+}
+
+/* TOAST */
+
+#dynamic-display-root .dynamic-display-toast,
+.dynamic-display-toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 108000;
+    display: flex;
+    min-width: 280px;
+    max-width: min(420px, calc(100vw - 32px));
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 7px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, .15);
+    animation: displayToastIn .25s ease;
+}
+
+@keyframes displayToastIn {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (min-width: 1200px) {
+    #dynamic-display-root .custom-display-table {
+        min-width: 920px;
+    }
+}
+
+@media (max-width: 991.98px) {
+    #dynamic-display-root {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
 
-    .font-monospace {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-variant-numeric: tabular-nums;
+    #dynamic-display-root .metric-card {
+        min-height: 105px;
     }
 
-    #dynamic-display-root .btn,
-    #dynamic-display-root .btn-sm,
-    #dynamic-display-root button,
-    #dynamic-display-root .badge,
-    #dynamic-display-root .alert,
-    #dynamic-display-root .form-control,
-    #dynamic-display-root .form-select,
-    #dynamic-display-root .input-group-text,
-    #dynamic-display-root .card,
-    #dynamic-display-root .metric-card,
-    #dynamic-display-root .presentation-radio-card,
-    #dynamic-display-root .nav-pills .nav-link,
-    #dynamic-display-root .collapse-toggle-btn,
-    .dynamic-modal-scope .modal-content,
-    .dynamic-modal-scope .btn,
-    .dynamic-display-toast {
-        border-radius: 5px !important;
+    #dynamic-display-root .custom-display-table {
+        min-width: 920px;
     }
 
-    #dynamic-display-root .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-        font-size: 12px;
-        background-color: #f8fafc;
-        border-color: #cbd5e1;
+    #widgetManageModal .modal-dialog {
+        max-width: 650px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    #dynamic-display-root {
+        padding-top: 12px;
+        padding-bottom: 20px;
     }
 
-    #dynamic-display-root .input-group > .form-control,
-    #dynamic-display-root .input-group > .form-select {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
+    #dynamic-display-root .display-header-wrap {
+        align-items: flex-start !important;
+        gap: 12px !important;
     }
 
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
+    #dynamic-display-root .display-header-wrap h5 {
+        font-size: 17px !important;
     }
 
-    #dynamic-display-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-    }
-
-    .stat-label-title {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-    }
-
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .stat-sub-text {
-        font-size: 10px;
-        margin-top: 2px;
-    }
-
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
-    }
-
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-purple { background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%); border-left: 3.5px solid #a855f7 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-
-    .presentation-radio-card {
-        border: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-        padding: 10px 12px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .presentation-radio-card:hover {
-        background-color: #ffffff;
-        border-color: #cbd5e1;
-    }
-
-    .presentation-radio-card.active-mode {
-        background-color: #ffffff;
-        border-color: #2563eb;
-        box-shadow: 0 0 0 1px #2563eb;
-    }
-
-    .nav-pills .nav-link {
-        font-size: 12px;
-        font-weight: 700;
-        color: #475569;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        padding: 6px 14px;
-        transition: all 0.15s ease;
-    }
-
-    .nav-pills .nav-link.active {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
-    }
-
-    .custom-display-table {
+    #dynamic-display-root .top-action-btns {
+        display: grid;
         width: 100%;
-        margin-bottom: 0;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
 
-    .custom-display-table thead th {
-        font-size: 10px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 10px;
-        white-space: nowrap;
+    #dynamic-display-root .top-action-btns .btn-popup-create {
+        grid-column: 1 / -1;
     }
 
-    .custom-display-table tbody td {
-        padding: 8px 10px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 12px;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-
-    .custom-display-table tbody tr:hover td {
-        background-color: #fafbfc;
-    }
-
-    @media (min-width: 992px) {
-        .custom-display-table {
-            table-layout: fixed !important;
-            width: 100% !important;
-        }
-
-        .pc-fit-container {
-            overflow-x: hidden !important;
-        }
-
-        .custom-display-table th,
-        .custom-display-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-    }
-
-    .form-control, .form-select {
-        min-height: 32px;
+    #dynamic-display-root .top-action-btns .btn {
+        width: 100%;
+        min-height: 38px;
+        padding: 7px 8px !important;
         font-size: 12px !important;
-        border: 1px solid #cbd5e1 !important;
-        color: #0f172a !important;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .form-control:focus, .form-select:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-        outline: none;
+    #dynamic-display-root .row.g-2 {
+        --bs-gutter-x: 10px;
+        --bs-gutter-y: 10px;
+    }
+
+    #dynamic-display-root .metric-card {
+        min-height: 98px;
+        padding: 12px !important;
+    }
+
+    #dynamic-display-root .stat-label-title {
+        font-size: 10px;
+    }
+
+    #dynamic-display-root .stat-val-num {
+        font-size: 17px;
+    }
+
+    #dynamic-display-root .stat-sub-text {
+        font-size: 10px;
+    }
+
+    #dynamic-display-root .metric-icon-square {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+
+    #dynamic-display-root #displayTabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    #dynamic-display-root #displayTabs .nav-item,
+    #dynamic-display-root #displayTabs .nav-link {
+        width: 100%;
+    }
+
+    #dynamic-display-root #displayTabs .nav-link {
+        min-height: 40px;
+        padding: 7px 5px;
+        font-size: 11px;
+    }
+
+    #dynamic-display-root .section-header-wrap {
+        padding: 11px 12px;
+    }
+
+    #dynamic-display-root .section-header-wrap > span {
+        font-size: 12px !important;
+    }
+
+    #dynamic-display-root .section-header-wrap .btn {
+        min-height: 34px;
+        font-size: 11px !important;
+    }
+
+    #dynamic-display-root .presentation-radio-card {
+        min-height: 62px;
+        padding: 11px;
+    }
+
+    #dynamic-display-root .pc-fit-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #dynamic-display-root .custom-display-table {
+        width: max-content;
+        min-width: 920px;
+        table-layout: auto;
+    }
+
+    #dynamic-display-root .custom-display-table thead th {
+        padding: 10px;
+        font-size: 10px;
+    }
+
+    #dynamic-display-root .custom-display-table tbody td {
+        padding: 10px;
+        font-size: 11px;
+    }
+
+    #widgetManageModal .modal-dialog {
+        width: calc(100% - 20px);
+        max-width: none;
+        margin: 10px auto;
+    }
+
+    #widgetManageModal .modal-body {
+        padding: 15px !important;
+    }
+
+    #dynamicActionConfirmModal .modal-dialog {
+        max-width: 340px;
+        margin: 12px auto;
+    }
+}
+
+@media (max-width: 420px) {
+    #dynamic-display-root .metric-card {
+        min-height: 90px;
+        padding: 9px !important;
+    }
+
+    #dynamic-display-root .stat-label-title {
+        font-size: 9px;
+    }
+
+    #dynamic-display-root .stat-val-num {
+        font-size: 15px;
+    }
+
+    #dynamic-display-root .stat-sub-text {
+        font-size: 9px;
+    }
+
+    #dynamic-display-root .metric-icon-square {
+        width: 27px;
+        height: 27px;
+        font-size: 11px;
+    }
+
+    #dynamic-display-root .metric-card .stat-val-num span {
+        font-size: 9px !important;
+    }
+
+    #dynamic-display-root .top-action-btns .btn {
+        font-size: 11px !important;
+    }
+
+    #widgetManageModal .modal-body .row {
+        --bs-gutter-x: 10px;
+    }
+
+    #widgetManageModal .form-label {
+        font-size: 11px;
     }
 
     .dynamic-display-toast {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 108000;
-        min-width: 280px;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-        animation: slideInRight 0.25s ease;
+        right: 10px;
+        bottom: 10px;
+        min-width: 0;
+        width: calc(100% - 20px);
     }
+}
 
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    #dynamic-display-root *,
+    #widgetManageModal *,
+    #dynamicActionConfirmModal * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
     }
-
-    @media (max-width: 767.98px) {
-        .display-header-wrap h5 {
-            font-size: 16px !important;
-        }
-
-        .top-action-btns {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .top-action-btns .btn-popup-create {
-            grid-column: span 2;
-        }
-
-        .top-action-btns .btn {
-            width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
-        }
-
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-
-        .stat-label-title {
-            font-size: 10px !important;
-        }
-
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
-        }
-
-        .pc-fit-container {
-            width: 100%;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .custom-display-table {
-            min-width: 760px !important;
-            table-layout: auto !important;
-        }
-
-        #dynamic-display-root .card {
-            margin-bottom: 12px !important;
-        }
-    }
+}
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="dynamic-display-root">
@@ -348,11 +888,8 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
                     <i class="fas fa-layer-group text-primary"></i>
-                    <span>Display &amp; Widget Settings</span>
+                    <span>Floating widgets.</span>
                 </h5>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" style="font-size: 10px;">
-                    Dynamic System
-                </span>
             </div>
             <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
                 Manage floating widgets and popup campaigns.
@@ -374,7 +911,7 @@
 
     {{-- Feedback --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
@@ -384,7 +921,7 @@
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-exclamation-circle text-danger fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('error') }}</span>
@@ -400,7 +937,7 @@
             <div class="card metric-card metric-card-blue h-100 mb-0">
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <span class="text-muted stat-label-title text-truncate">Active Widgets</span>
-                    <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+                    <div class="metric-icon-square bg-primary-subtle text-primary">
                         <i class="fas fa-comment-dots"></i>
                     </div>
                 </div>
@@ -417,7 +954,7 @@
             <div class="card metric-card metric-card-green h-100 mb-0">
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <span class="text-muted stat-label-title text-truncate">Display Mode</span>
-                    <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                    <div class="metric-icon-square bg-success-subtle text-success">
                         <i class="fas fa-sliders"></i>
                     </div>
                 </div>
@@ -434,7 +971,7 @@
             <div class="card metric-card metric-card-purple h-100 mb-0">
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <span class="text-muted stat-label-title text-truncate">Active Popups</span>
-                    <div class="metric-icon-square bg-purple-subtle text-primary shadow-xs" style="background-color: #f3e8ff; color: #7e22ce;">
+                    <div class="metric-icon-square text-primary" style="background-color: #f3e8ff; color: #7e22ce;">
                         <i class="fas fa-window-restore"></i>
                     </div>
                 </div>
@@ -451,7 +988,7 @@
             <div class="card metric-card metric-card-amber h-100 mb-0">
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <span class="text-muted stat-label-title text-truncate">Position</span>
-                    <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+                    <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
                         <i class="fas fa-compass"></i>
                     </div>
                 </div>
@@ -488,11 +1025,11 @@
 
             {{-- Display Settings --}}
             <div class="card border-0 shadow-sm mb-3">
-                <div class="section-header-wrap d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark small" style="font-size: 12px;">
+                <div class="section-header-wrap">
+                    <span class="fw-bold text-dark small">
                         <i class="fas fa-sliders text-primary me-1"></i> Display Settings
                     </span>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1" style="font-size: 10px;">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">
                         {{ $currentDisplayStyle === 'speed_dial' ? 'Speed Dial' : 'Direct Stack' }}
                     </span>
                 </div>
@@ -509,23 +1046,23 @@
 
                                 <div class="d-flex flex-column gap-2">
 
-                                    <label class="presentation-radio-card d-flex align-items-start gap-2 {{ $currentDisplayStyle === 'speed_dial' ? 'active-mode' : '' }}" for="style_speed_dial">
+                                    <label class="presentation-radio-card {{ $currentDisplayStyle === 'speed_dial' ? 'active-mode' : '' }}" for="style_speed_dial">
                                         <input class="form-check-input mt-1" type="radio" name="display_style" id="style_speed_dial" value="speed_dial" {{ $currentDisplayStyle === 'speed_dial' ? 'checked' : '' }} onchange="toggleDisplayStyleOptions(this.value)">
 
                                         <div>
-                                            <strong class="d-block text-dark" style="font-size: 12px;">Speed Dial</strong>
-                                            <small class="text-muted d-block" style="font-size: 11px; line-height: 1.4;">
+                                            <strong class="d-block text-dark">Speed Dial</strong>
+                                            <small class="text-muted d-block">
                                                 One main button expands all widgets.
                                             </small>
                                         </div>
                                     </label>
 
-                                    <label class="presentation-radio-card d-flex align-items-start gap-2 {{ $currentDisplayStyle === 'direct_stack' ? 'active-mode' : '' }}" for="style_direct_stack">
+                                    <label class="presentation-radio-card {{ $currentDisplayStyle === 'direct_stack' ? 'active-mode' : '' }}" for="style_direct_stack">
                                         <input class="form-check-input mt-1" type="radio" name="display_style" id="style_direct_stack" value="direct_stack" {{ $currentDisplayStyle === 'direct_stack' ? 'checked' : '' }} onchange="toggleDisplayStyleOptions(this.value)">
 
                                         <div>
-                                            <strong class="d-block text-dark" style="font-size: 12px;">Direct Stack</strong>
-                                            <small class="text-muted d-block" style="font-size: 11px; line-height: 1.4;">
+                                            <strong class="d-block text-dark">Direct Stack</strong>
+                                            <small class="text-muted d-block">
                                                 All widgets stay visible.
                                             </small>
                                         </div>
@@ -536,9 +1073,9 @@
 
                             {{-- Speed Dial Settings --}}
                             <div class="col-12 col-lg-7" id="speedDialCustomizerWrap" style="{{ $currentDisplayStyle === 'direct_stack' ? 'display: none;' : '' }}">
-                                <div class="p-3 border rounded bg-light bg-opacity-25" style="border-radius: 5px !important;">
+                                <div class="p-3 border rounded bg-light bg-opacity-25">
 
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                                         <label class="form-label fw-bold text-dark mb-0 small">Hub Settings</label>
 
                                         <div class="form-check form-switch mb-0">
@@ -547,35 +1084,35 @@
                                         </div>
                                     </div>
 
-                                    <div class="row g-2">
+                                    <div class="row g-3">
 
                                         <div class="col-12 col-sm-6">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Badge Text</label>
+                                            <label class="form-label fw-bold text-dark">Badge Text</label>
                                             <input type="text" name="hub_label" class="form-control font-monospace shadow-none" placeholder="Chat with Us" value="{{ $hubSettings['hub_label'] ?? 'Chat with Us' }}">
                                         </div>
 
                                         <div class="col-12 col-sm-6">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Icon Class</label>
+                                            <label class="form-label fw-bold text-dark">Icon Class</label>
                                             <input type="text" name="hub_icon" class="form-control font-monospace shadow-none" placeholder="fas fa-comment-dots" value="{{ $hubSettings['hub_icon'] ?? 'fas fa-comment-dots' }}">
                                         </div>
 
                                         <div class="col-6 col-sm-3">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Button BG</label>
+                                            <label class="form-label fw-bold text-dark">Button BG</label>
                                             <input type="color" name="hub_bg_color" class="form-control form-control-color w-100 shadow-none p-1" value="{{ $hubSettings['hub_bg_color'] ?? '#1e3a8a' }}">
                                         </div>
 
                                         <div class="col-6 col-sm-3">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Icon Color</label>
+                                            <label class="form-label fw-bold text-dark">Icon Color</label>
                                             <input type="color" name="hub_icon_color" class="form-control form-control-color w-100 shadow-none p-1" value="{{ $hubSettings['hub_icon_color'] ?? '#ffffff' }}">
                                         </div>
 
                                         <div class="col-6 col-sm-3">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Badge BG</label>
+                                            <label class="form-label fw-bold text-dark">Badge BG</label>
                                             <input type="color" name="badge_bg_color" class="form-control form-control-color w-100 shadow-none p-1" value="{{ $hubSettings['badge_bg_color'] ?? '#ffffff' }}">
                                         </div>
 
                                         <div class="col-6 col-sm-3">
-                                            <label class="form-label fw-bold text-dark" style="font-size: 11px;">Text Color</label>
+                                            <label class="form-label fw-bold text-dark">Text Color</label>
                                             <input type="color" name="badge_text_color" class="form-control form-control-color w-100 shadow-none p-1" value="{{ $hubSettings['badge_text_color'] ?? '#1e3a8a' }}">
                                         </div>
 
@@ -597,8 +1134,8 @@
             {{-- Widgets Table --}}
             <div class="card border-0 shadow-sm overflow-hidden mb-3">
 
-                <div class="section-header-wrap d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark small" style="font-size: 12px;">
+                <div class="section-header-wrap">
+                    <span class="fw-bold text-dark small">
                         <i class="fas fa-phone-volume text-success me-1"></i> Floating Widgets
                     </span>
 
@@ -642,13 +1179,13 @@
 
                                 <tr id="widget-row-{{ $widget->id }}">
 
-                                    <td class="ps-3 text-center text-muted font-monospace bn-digit" style="font-size: 11px;">
+                                    <td class="ps-3 text-center text-muted font-monospace bn-digit">
                                         {{ $widget->id }}
                                     </td>
 
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
-                                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-xs text-white flex-shrink-0" style="width: 28px; height: 28px; background-color: {{ $widget->bg_color ?? '#2563eb' }}; font-size: 11px;">
+                                            <span class="rounded-circle d-inline-flex align-items-center justify-content-center text-white flex-shrink-0" style="width: 32px; height: 32px; background-color: {{ $widget->bg_color ?? '#2563eb' }}; font-size: 12px;">
                                                 <i class="{{ $widget->icon ?? 'fas fa-link' }}"></i>
                                             </span>
 
@@ -661,11 +1198,11 @@
 
                                     <td>
                                         @if($actionType === 'modal')
-                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 font-monospace" style="font-size: 9.5px;">
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 font-monospace">
                                                 <i class="fas fa-window-maximize me-1"></i> Modal
                                             </span>
                                         @else
-                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace" style="font-size: 9.5px;">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 font-monospace">
                                                 <i class="fas fa-link me-1"></i> Link
                                             </span>
                                         @endif
@@ -687,12 +1224,12 @@
                                     </td>
 
                                     <td>
-                                        <span class="badge bg-light text-secondary border px-2 py-1 font-monospace" style="font-size: 9.5px;">
+                                        <span class="badge bg-light text-secondary border px-2 py-1 font-monospace">
                                             {{ str_replace('_', ' ', strtoupper($widget->position)) }}
                                         </span>
                                     </td>
 
-                                    <td class="text-center font-monospace bn-digit" style="font-size: 11.5px;">
+                                    <td class="text-center font-monospace bn-digit">
                                         {{ $widget->order_index }}
                                     </td>
 
@@ -705,12 +1242,12 @@
                                     <td class="text-end pe-3">
                                         <div class="d-inline-flex align-items-center gap-1">
 
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" onclick="openEditWidgetModal({{ json_encode($widget) }})" title="Edit">
-                                                <i class="fas fa-pencil" style="font-size: 10px;"></i>
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" onclick="openEditWidgetModal({{ json_encode($widget) }})" title="Edit">
+                                                <i class="fas fa-pencil"></i>
                                             </button>
 
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" onclick="confirmDelete('{{ $widgetDestroyUrl }}', 'Delete this widget?')" title="Delete">
-                                                <i class="fas fa-trash-can" style="font-size: 10px;"></i>
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" onclick="confirmDelete('{{ $widgetDestroyUrl }}', 'Delete this widget?')" title="Delete">
+                                                <i class="fas fa-trash-can"></i>
                                             </button>
 
                                         </div>
@@ -739,8 +1276,8 @@
 
             <div class="card border-0 shadow-sm overflow-hidden mb-3">
 
-                <div class="section-header-wrap d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark small" style="font-size: 12px;">
+                <div class="section-header-wrap">
+                    <span class="fw-bold text-dark small">
                         <i class="fas fa-list text-primary me-1"></i> Popup Campaigns
                     </span>
 
@@ -783,7 +1320,7 @@
 
                                 <tr id="popup-row-{{ $popup->id }}">
 
-                                    <td class="ps-3 text-center text-muted font-monospace bn-digit" style="font-size: 11px;">
+                                    <td class="ps-3 text-center text-muted font-monospace bn-digit">
                                         {{ $popup->id }}
                                     </td>
 
@@ -798,13 +1335,13 @@
                                     </td>
 
                                     <td>
-                                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace" style="font-size: 9.5px;">
+                                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
                                             {{ strtoupper(str_replace('_', ' ', $popup->popup_type)) }}
                                         </span>
                                     </td>
 
                                     <td>
-                                        <span class="text-muted small font-monospace" style="font-size: 11px;">
+                                        <span class="text-muted small font-monospace">
                                             @if($popup->trigger_type === 'delay')
                                                 <i class="fas fa-clock text-warning me-1"></i> {{ $popup->trigger_value }}s Delay
                                             @elseif($popup->trigger_type === 'scroll')
@@ -815,7 +1352,7 @@
                                         </span>
                                     </td>
 
-                                    <td class="text-center font-monospace" style="font-size: 11px;">
+                                    <td class="text-center font-monospace">
                                         {{ $popup->frequency_days == 0 ? 'Every Reload' : 'Every ' . $popup->frequency_days . ' Days' }}
                                     </td>
 
@@ -828,12 +1365,12 @@
                                     <td class="text-end pe-3">
                                         <div class="d-inline-flex align-items-center gap-1">
 
-                                            <a href="{{ $popupEditUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" title="Edit">
-                                                <i class="fas fa-pencil" style="font-size: 10px;"></i>
+                                            <a href="{{ $popupEditUrl }}" class="btn btn-sm btn-light border p-1 text-primary shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" title="Edit">
+                                                <i class="fas fa-pencil"></i>
                                             </a>
 
-                                            <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 26px; height: 26px;" onclick="confirmDelete('{{ $popupDestroyUrl }}', 'Delete this popup?')" title="Delete">
-                                                <i class="fas fa-trash-can" style="font-size: 10px;"></i>
+                                            <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" onclick="confirmDelete('{{ $popupDestroyUrl }}', 'Delete this popup?')" title="Delete">
+                                                <i class="fas fa-trash-can"></i>
                                             </button>
 
                                         </div>
@@ -872,7 +1409,7 @@
         <div class="modal-content border-0 shadow-lg">
 
             <div class="modal-header border-bottom py-2 px-3 bg-light d-flex justify-content-between align-items-center">
-                <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="widgetModalTitle" style="font-size: 13.5px;">
+                <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="widgetModalTitle">
                     <i class="fas fa-plus-circle text-success"></i> <span>Widget Settings</span>
                 </h6>
 
@@ -887,8 +1424,8 @@
                     <div class="row g-2">
 
                         {{-- Action Type --}}
-                        <div class="col-12 mb-2 p-2 bg-light border rounded" style="border-radius: 5px !important;">
-                            <label class="form-label fw-bold text-dark small d-block mb-1">
+                        <div class="col-12 mb-2 p-3 bg-light border rounded">
+                            <label class="form-label fw-bold text-dark small d-block mb-2">
                                 <i class="fas fa-sliders text-primary me-1"></i> Action Type
                             </label>
 
@@ -941,13 +1478,13 @@
 
                         {{-- Modal Settings --}}
                         <div class="col-12 d-none" id="customModalSettingsWrap">
-                            <div class="p-2 border border-warning bg-warning bg-opacity-10 rounded mb-2" style="border-radius: 5px !important;">
+                            <div class="p-3 border border-warning bg-warning bg-opacity-10 rounded mb-2">
 
-                                <h6 class="fw-bold text-dark small mb-2 d-flex align-items-center gap-1">
+                                <h6 class="fw-bold text-dark small mb-3 d-flex align-items-center gap-1">
                                     <i class="fas fa-window-maximize text-warning"></i> Modal Settings
                                 </h6>
 
-                                <div class="row g-2">
+                                <div class="row g-3">
 
                                     <div class="col-12">
                                         <label class="form-label fw-bold small text-dark">Modal Title</label>
@@ -959,7 +1496,7 @@
 
                                         <textarea name="modal_content" id="widget_modal_content" rows="4" class="form-control font-monospace shadow-none" placeholder="Paste HTML, text or shortcode..."></textarea>
 
-                                        <small class="text-muted font-monospace d-block mt-1" style="font-size: 10.5px;">
+                                        <small class="text-muted font-monospace d-block mt-2" style="font-size: 11px;">
                                             Only your custom content will be displayed.
                                         </small>
                                     </div>
@@ -1020,11 +1557,11 @@
 
             <div class="modal-body p-1">
 
-                <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 44px; height: 44px; border-radius: 50% !important;">
+                <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mx-auto mb-3" style="width: 48px; height: 48px; border-radius: 50% !important;">
                     <i class="fas fa-trash-can fs-4"></i>
                 </div>
 
-                <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Confirm Delete</h6>
+                <h6 class="fw-bold text-dark mb-2" style="font-size: 14px;">Confirm Delete</h6>
 
                 <p class="text-muted small mb-3" id="confirmModalText" style="font-size: 11px; line-height: 1.45;">
                     Are you sure?

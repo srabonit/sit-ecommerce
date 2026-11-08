@@ -53,7 +53,7 @@ class ProductVariant extends Model
     ];
 
     // =========================================================================
-    // RELATIONSHIPS
+    // 1. EXISTING ORIGINAL RELATIONSHIPS (PRESERVED 100%)
     // =========================================================================
 
     /**
@@ -81,7 +81,65 @@ class ProductVariant extends Model
     }
 
     // =========================================================================
-    // ACCESSORS & BUSINESS LOGIC HELPERS
+    // 2. ADVANCED MULTI-BRANCH INVENTORY & PRICING RELATIONSHIPS
+    // =========================================================================
+
+    /**
+     * Variant specific stock in each individual branch.
+     */
+    public function branchStocks(): HasMany
+    {
+        return $this->hasMany(ProductStock::class, 'variant_id');
+    }
+
+    /**
+     * Branch-specific price overrides for this variant.
+     */
+    public function branchPrices(): HasMany
+    {
+        return $this->hasMany(BranchProductPrice::class, 'variant_id');
+    }
+
+    // =========================================================================
+    // 3. MULTI-BRANCH HELPER METHODS
+    // =========================================================================
+
+    /**
+     * Get available stock of this variant in a specific branch.
+     */
+    public function getBranchStock(int $branchId): int
+    {
+        $stockRecord = $this->branchStocks()->where('branch_id', $branchId)->first();
+
+        if ($stockRecord) {
+            $avail = (int) $stockRecord->quantity - (int) ($stockRecord->reserved_quantity ?? 0);
+            return max(0, $avail);
+        }
+
+        return 0;
+    }
+
+    /**
+     * Resolve effective selling price of this variant for a specific branch.
+     */
+    public function getBranchPrice(int $branchId): float
+    {
+        $priceOverride = $this->branchPrices()->where('branch_id', $branchId)->first();
+
+        if ($priceOverride) {
+            if (!empty($priceOverride->sale_price) && (float) $priceOverride->sale_price > 0) {
+                return (float) $priceOverride->sale_price;
+            }
+            if (!empty($priceOverride->price) && (float) $priceOverride->price > 0) {
+                return (float) $priceOverride->price;
+            }
+        }
+
+        return $this->effective_price;
+    }
+
+    // =========================================================================
+    // 4. ACCESSORS & BUSINESS LOGIC HELPERS (PRESERVED 100%)
     // =========================================================================
 
     /**
@@ -154,7 +212,7 @@ class ProductVariant extends Model
     }
 
     /**
-     * Human readable variant title (, "Red / XL" or custom title).
+     * Human readable variant title (e.g. "Red / XL" or custom title).
      */
     public function getVariantTitleAttribute(): string
     {

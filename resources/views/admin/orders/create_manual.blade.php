@@ -206,7 +206,7 @@
                 <i class="fas fa-cart-plus text-primary"></i>
                 <span>Create Manual Order</span>
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">Book orders from Facebook Page, WhatsApp, Phone Calls, or Offline Showroom Walk-ins.</small>
+            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">Book Manual Orders from Facebook Page, WhatsApp, Phone Calls.</small>
         </div>
         <div>
             <a href="{{ route('admin.order.online') }}" class="btn btn-outline-secondary btn-compact shadow-xs">

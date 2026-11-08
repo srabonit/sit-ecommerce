@@ -631,10 +631,7 @@
                 <a href="{{ route('admin.forms.index') }}" class="btn btn-outline-secondary btn-compact shadow-xs bg-white text-dark fw-semibold">
                     <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Directory
                 </a>
-                <span class="badge bg-light text-secondary border bn-digit font-tabular px-2 py-0.5" style="font-size: 10.5px;">Form #{{ $form->id }}</span>
-                <span class="badge {{ $form->is_active ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} text-uppercase" style="font-size: 9.5px; font-weight: 700;">
-                    {{ $form->is_active ? 'Active' : 'Inactive' }}
-                </span>
+                
             </div>
             <h5 class="fw-bold text-dark my-1 d-flex align-items-center gap-2" style="font-size: 18px;">
                 <i class="fa-solid fa-pen-to-square text-primary"></i>
@@ -710,36 +707,61 @@
         </div>
     </div>
 
-    <!-- 3. Studio Navigation Tabs Strip -->
-    <div class="studio-nav-strip mb-3 nav nav-pills" id="studioMainTabNav" role="tablist">
-        <button type="button" class="studio-nav-pill active shadow-xs" id="btn-tab-fields" data-bs-target="#tab-fields" role="tab" aria-selected="true">
-            <i class="fa-solid fa-layer-group text-primary"></i>
-            <span>Form Builder</span>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle bn-digit font-tabular px-1.5 py-0.5" style="font-size: 10px;" id="badgeFieldsCount">
-                {{ $form->fields->count() }}
-            </span>
-        </button>
-        <button type="button" class="studio-nav-pill shadow-xs" id="btn-tab-settings" data-bs-target="#tab-settings" role="tab" aria-selected="false">
-            <i class="fa-solid fa-gear text-secondary"></i>
-            <span>General Settings</span>
-        </button>
-        <button type="button" class="studio-nav-pill shadow-xs" id="btn-tab-notifications" data-bs-target="#tab-notifications" role="tab" aria-selected="false">
-            <i class="fa-solid fa-envelope-open-text text-info"></i>
-            <span>Emails &amp; Autoresponder</span>
-        </button>
-        <button type="button" class="studio-nav-pill shadow-xs" id="btn-tab-appearance" data-bs-target="#tab-appearance" role="tab" aria-selected="false">
-            <i class="fa-solid fa-palette text-warning"></i>
-            <span>Form Style</span>
-        </button>
-        <button type="button" class="studio-nav-pill shadow-xs" id="btn-tab-security" data-bs-target="#tab-security" role="tab" aria-selected="false">
-            <i class="fa-solid fa-shield-halved text-danger"></i>
-            <span>Spam Protection & Rate Limits</span>
-        </button>
-        <button type="button" class="studio-nav-pill shadow-xs" id="btn-tab-integrations" data-bs-target="#tab-integrations" role="tab" aria-selected="false">
-            <i class="fa-solid fa-network-wired text-success"></i>
-            <span>Webhooks &amp; Integrations</span>
-        </button>
+   <!-- 3. Studio Navigation Tabs Strip -->
+<!-- 3. Studio Navigation Tabs Strip -->
+<div class="studio-nav-strip mb-3">
+    <!-- Desktop: 1 row flex, Mobile: 3 rows 2 columns grid -->
+    <style>
+        @media (max-width: 767.98px) {
+            #studioMainTabNav {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+            #studioMainTabNav .studio-nav-pill {
+                width: 100% !important;
+                min-width: 0 !important;
+                font-size: 11px !important;
+                padding: 8px 6px !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+        }
+    </style>
+    
+    <div class="status-tabs-scroll-wrap overflow-hidden">
+        <div class="d-flex flex-nowrap align-items-center gap-2 w-100 nav nav-pills" id="studioMainTabNav" role="tablist">
+            <button type="button" class="studio-nav-pill active shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-fields" data-bs-target="#tab-fields" role="tab" aria-selected="true">
+                <i class="fa-solid fa-layer-group text-primary"></i>
+                <span>Form Builder</span>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle bn-digit font-tabular px-1.5 py-0.5" style="font-size: 10px;" id="badgeFieldsCount">
+                    {{ $form->fields->count() }}
+                </span>
+            </button>
+            <button type="button" class="studio-nav-pill shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-settings" data-bs-target="#tab-settings" role="tab" aria-selected="false">
+                <i class="fa-solid fa-gear text-secondary"></i>
+                <span>General Settings</span>
+            </button>
+            <button type="button" class="studio-nav-pill shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-notifications" data-bs-target="#tab-notifications" role="tab" aria-selected="false">
+                <i class="fa-solid fa-envelope-open-text text-info"></i>
+                <span>Emails &amp; Autoresponder</span>
+            </button>
+            <button type="button" class="studio-nav-pill shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-appearance" data-bs-target="#tab-appearance" role="tab" aria-selected="false">
+                <i class="fa-solid fa-palette text-warning"></i>
+                <span>Form Style</span>
+            </button>
+            <button type="button" class="studio-nav-pill shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-security" data-bs-target="#tab-security" role="tab" aria-selected="false">
+                <i class="fa-solid fa-shield-halved text-danger"></i>
+                <span>Spam Protection & Limits</span>
+            </button>
+            <button type="button" class="studio-nav-pill shadow-xs flex-fill text-center d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 text-nowrap" id="btn-tab-integrations" data-bs-target="#tab-integrations" role="tab" aria-selected="false">
+                <i class="fa-solid fa-network-wired text-success"></i>
+                <span>Integrations</span>
+            </button>
+        </div>
     </div>
+</div>
+
 
     <!-- 4. Studio Tab Content Panes -->
     <div class="tab-content" id="studioMainTabContent">

@@ -1,5 +1,7 @@
 @php
-    // 1. Settings theke dynamic brand title, phone, email, address, BIN ebong VAT settings read kora
+    $branch = $branch ?? ($order->branch ?? null);
+
+    // ১. সেটিংস থেকে ডাইনামিক ব্র্যান্ড, ফোন, ইমেইল, ঠিকানা ও মূসক/ট্যাক্স সেটিংস রিড
     $footerKeys = [
         'footer_brand_title',
         'footer_brand_tagline',
@@ -17,7 +19,9 @@
         'pos_vat_display_mode',
         'enable_pos_vat',
         'vat_enabled',
-        'enable_vat'
+        'enable_vat',
+        'header_logo',
+        'site_icon'
     ];
 
     $footerSettings = \Illuminate\Support\Facades\DB::table('settings')
@@ -29,19 +33,21 @@
         ? $footerSettings['footer_brand_title'] 
         : ($siteTitle ?? config('app.name', 'Shop Now BD'));
 
-    $siteTagline = $footerSettings['footer_brand_tagline'] ?? '';
+    $siteLogo = !empty($footerSettings['header_logo']) 
+        ? asset(ltrim($footerSettings['header_logo'], '/')) 
+        : null;
 
-    $sitePhone = !empty($footerSettings['footer_phone']) 
-        ? $footerSettings['footer_phone'] 
-        : ($order->branch_phone ?? '');
+    $sitePhone = !empty($order->branch_phone) 
+        ? $order->branch_phone 
+        : (!empty($footerSettings['footer_phone']) ? $footerSettings['footer_phone'] : ($branch->phone ?? ''));
 
-    $siteEmail = !empty($footerSettings['footer_email']) 
-        ? $footerSettings['footer_email'] 
-        : '';
+    $siteEmail = !empty($branch->email) 
+        ? $branch->email 
+        : (!empty($footerSettings['footer_email']) ? $footerSettings['footer_email'] : '');
 
     $branchAddress = !empty($order->branch_address) 
         ? $order->branch_address 
-        : ($footerSettings['company_address'] ?? ($footerSettings['contact_address'] ?? ($footerSettings['address'] ?? '')));
+        : ($branch->address ?? ($footerSettings['company_address'] ?? ($footerSettings['contact_address'] ?? ($footerSettings['address'] ?? ''))));
 
     $siteWebsite = !empty($footerSettings['website_url']) 
         ? $footerSettings['website_url'] 
@@ -52,7 +58,7 @@
         ? $companyBin
         : (!empty($order->branch_bin) 
             ? $order->branch_bin 
-            : ($order->bin_number ?? ($footerSettings['company_bin'] ?? ($footerSettings['bin_number'] ?? '001293847-0101'))));
+            : ($order->bin_number ?? ($branch->bin_number ?? ($footerSettings['company_bin'] ?? ($footerSettings['bin_number'] ?? '001293847-0101')))));
 
     $vatLabelText = !empty($vatLabel) 
         ? $vatLabel 
@@ -60,13 +66,13 @@
 
     $posVatDisplayMode = $footerSettings['pos_vat_display_mode'] ?? 'item_breakdown';
 
-    // 2. Subtotal, Discount & Grand Total
+    // ২. সাবটোটাল, ডিসকাউন্ট এবং মোট এমাউন্ট
     $subtotalAmt   = (float)($order->subtotal ?? ($order->sub_total ?? 0));
     $grandTotalAmt = (float)($order->grand_total ?? ($order->total_amount ?? ($order->total ?? 0)));
     $discountAmt   = (float)($order->discount_amount ?? ($order->discount ?? 0));
-    $itemsList     = !empty($items) ? $items : (!empty($orderItems) ? $orderItems : []);
+    $itemsList     = !empty($items) ? $items : (!empty($orderItems) ? $orderItems : ($order->items ?? []));
 
-    // 3. DELIVERY CHARGE CALCULATION (STRICT: Explicit input thaklei delivery fee hobe, noyto 0)
+    // ৩. ডেলিভারি চার্জ
     $deliveryFee = 0.0;
     if (isset($order->shipping_charge) && is_numeric($order->shipping_charge) && (float)$order->shipping_charge > 0) {
         $deliveryFee = (float)$order->shipping_charge;
@@ -77,7 +83,7 @@
     }
     $deliveryFee = round($deliveryFee, 2);
 
-    // 4. STRICT VAT RESOLUTION (0% ba 0 hole kono fake VAT inject hobe na)
+    // ৪. ভ্যাট রেজল্যুশন
     $taxAmt = 0.0;
     if (isset($order->tax_amount) && !is_null($order->tax_amount)) {
         $taxAmt = (float)$order->tax_amount;
@@ -88,7 +94,7 @@
 
     $isTaxInclusive = (bool)($order->is_tax_inclusive ?? false);
 
-    // 5. Total & Paid Amount 100% Sync (Order Paid hole Due kokhono asbe na)
+    // ৫. পেইড ও বকেয়া হিসাব (Sync)
     $paymentStatus = strtolower($order->payment_status ?? '');
     if (in_array($paymentStatus, ['paid', 'completed'])) {
         $paidAmt = $grandTotalAmt;
@@ -102,13 +108,14 @@
         }
     }
 
-    // 6. Customer Details
-    $customerName    = $order->customer_name ?? ($order->name ?? ($order->shipping_name ?? 'Walk-in Customer'));
-    $customerPhone   = $order->customer_phone ?? ($order->phone ?? ($order->shipping_phone ?? 'N/A'));
-    $customerEmail   = $order->customer_email ?? ($order->email ?? ($order->shipping_email ?? 'N/A'));
-    $customerAddress = $order->customer_address ?? ($order->address ?? ($order->shipping_address ?? ($order->bio ?? 'N/A')));
+    // ৬. কাস্টমার তথ্য
+    $customerName    = $order->customer_name ?? ($order->user?->name ?? ($order->name ?? ($order->shipping_name ?? 'Guest Customer')));
+    $customerPhone   = $order->customer_phone ?? ($order->user?->phone ?? ($order->phone ?? ($order->shipping_phone ?? 'N/A')));
+    $customerEmail   = $order->customer_email ?? ($order->user?->email ?? ($order->email ?? ($order->shipping_email ?? 'N/A')));
+    $customerAddress = $order->customer_address ?? ($order->user?->address ?? ($order->address ?? ($order->shipping_address ?? ($order->bio ?? 'N/A'))));
 
-    $cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $order->invoice_no ?? ('POS-' . $order->id));
+    $salesPersonName = $order->salesPerson?->name ?? ($order->creator?->name ?? null);
+    $cleanInvoiceNo  = preg_replace('/[^A-Za-z0-9_-]/', '', $order->invoice_no ?? ('POS-' . $order->id));
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -123,7 +130,7 @@
     <style>
         @page {
             size: a5 portrait;
-            margin: 5mm 6mm;
+            margin: 6mm 8mm 6mm 8mm;
         }
 
         * {
@@ -133,130 +140,234 @@
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            font-size: 10px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9.5px;
             line-height: 1.35;
             color: #000;
             background: #f1f5f9;
             margin: 0;
-            padding: 15px 0;
+            padding: 12px 0;
         }
 
         .invoice-wrapper {
             width: 100%;
             max-width: 148mm;
+            min-height: 204mm;
             margin: 0 auto;
-            padding: 10px 12px;
+            padding: 8mm 9mm 6mm 9mm;
             background: #fff;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .top-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 1.5px solid #000;
-            padding-bottom: 6px;
             margin-bottom: 8px;
+        }
+
+        .brand-logo-area {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-logo-img {
+            max-height: 36px;
+            max-width: 140px;
+            object-fit: contain;
         }
 
         .brand-title {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 2px 0;
+            margin: 0;
             color: #000;
+            letter-spacing: -0.3px;
         }
 
         .barcode-container svg {
-            max-height: 36px;
-            max-width: 150px;
+            max-height: 32px;
+            max-width: 155px;
+        }
+
+        .mushak-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .invoice-badge-box {
+            display: inline-block;
+            border: 1.3px solid #000;
+            padding: 2px 6px;
+            font-weight: 800;
+            font-size: 10px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .mushak-meta-text {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #000;
+            margin: 1.5px 0;
+            font-family: monospace;
+        }
+
+        .nbr-ref-text {
+            font-size: 9px;
+            font-family: monospace;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .divider-solid {
+            border-bottom: 1.3px solid #000;
+            margin: 5px 0 8px 0;
         }
 
         .info-grid {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 9.5px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
+            margin-bottom: 9px;
         }
 
         .info-box {
-            width: 48%;
-            min-width: 190px;
-            flex-grow: 1;
-            border: 1px solid #000;
+            border: 1.1px solid #000;
             padding: 6px 8px;
-            border-radius: 3px;
-            background: #fafafa;
+            background: #fff;
+            min-height: 78px;
         }
 
-        .info-box-title {
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1px dashed #666;
-            padding-bottom: 3px;
-            margin-bottom: 4px;
+        .info-box-header {
+            font-weight: 800;
             font-size: 9.5px;
-            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 3px;
+        }
+
+        .info-box-divider {
+            border-bottom: 1px dashed #777;
+            margin-bottom: 4px;
+        }
+
+        .info-box-body {
+            font-size: 9px;
+            line-height: 1.45;
+        }
+
+        .info-customer-name {
+            font-size: 11.5px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 2px;
         }
 
         table.items-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 8px;
-            font-size: 9.5px;
         }
 
         table.items-table th, 
         table.items-table td {
-            border: 1px solid #000;
-            padding: 4px 5px;
+            border: 1.1px solid #000;
+            padding: 4px 6px;
             text-align: left;
         }
 
         table.items-table th {
-            background-color: #eee;
-            font-weight: bold;
+            background-color: #ffffff;
+            font-weight: 800;
             text-transform: uppercase;
             font-size: 9px;
+            letter-spacing: 0.2px;
+        }
+
+        table.items-table td {
+            font-size: 9px;
+            vertical-align: middle;
         }
 
         .text-center { text-align: center; }
         .text-end { text-align: right; }
         .fw-bold { font-weight: bold; }
         .font-monospace { font-family: monospace, Courier, monospace; }
-        
-        .totals-area {
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-start;
-            margin-top: 6px;
+
+        .item-sku-tag {
+            color: #dc2626;
+            font-size: 8px;
+            font-weight: 700;
+            font-family: monospace;
+            display: block;
+            margin-top: 1px;
+        }
+
+        .bottom-calc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .notes-box {
+            border: 1.1px solid #000;
+            padding: 6px 8px;
+            min-height: 68px;
         }
 
         .totals-table {
-            width: 52%;
-            min-width: 180px;
+            width: 100%;
             border-collapse: collapse;
-            font-size: 9.5px;
-            margin-left: auto;
         }
 
         .totals-table td {
-            padding: 3px 6px;
-            border: 1px solid #000;
+            border: 1.1px solid #000;
+            padding: 3.5px 6px;
+            font-size: 9px;
         }
 
-        .footer-terms {
+        .signatures-area {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 8px;
+        }
+
+        .sign-box {
+            text-align: center;
+            width: 135px;
+        }
+
+        .sign-line {
+            border-top: 1px dashed #000;
+            margin-bottom: 4px;
+        }
+
+        .sign-title {
+            font-size: 8.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .footer-note-line {
             margin-top: 14px;
             border-top: 1px dashed #666;
-            padding-top: 5px;
+            padding-top: 4px;
             text-align: center;
-            font-size: 8.5px;
-            color: #444;
+            font-size: 8px;
+            color: #000;
+            font-family: monospace;
         }
 
         .print-btn-bar {
@@ -279,28 +390,18 @@
             font-weight: bold;
             cursor: pointer;
             border-radius: 4px;
-            font-size: 11.5px;
+            font-size: 11px;
             display: inline-flex;
             align-items: center;
             gap: 5px;
             transition: all 0.2s ease;
         }
 
-        .btn-print { background: #3b82f6; color: #fff; }
-        .btn-print:hover { background: #2563eb; }
+        .btn-print { background: #2563eb; color: #fff; }
+        .btn-print:hover { background: #1d4ed8; }
 
         .btn-download-pdf { background: #10b981; color: #fff; }
         .btn-download-pdf:hover { background: #059669; }
-
-        @media screen and (max-width: 575.98px) {
-            body { padding: 5px 0; }
-            .invoice-wrapper { padding: 6px; }
-            .top-row { flex-direction: column; gap: 6px; }
-            .top-row .text-end { text-align: left !important; }
-            .info-box { width: 100%; }
-            .totals-table { width: 100%; }
-            .print-btn-bar { flex-direction: column; gap: 6px; }
-        }
 
         @media print {
             @page {
@@ -310,14 +411,16 @@
             body {
                 background: #fff !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             .print-btn-bar {
                 display: none !important;
             }
             .invoice-wrapper {
-                width: 148mm !important;
+                width: 100% !important;
                 max-width: 148mm !important;
-                margin: 0 auto !important;
+                min-height: auto !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
                 page-break-inside: avoid !important;
@@ -328,223 +431,229 @@
 </head>
 <body>
 
-    <!-- Top Action Toolbar -->
+    <!-- প্রিন্ট ও ডাউনলোড টুলবার (প্রিন্টের সময় হাইড থাকবে) -->
     <div class="print-btn-bar">
-        <span style="font-size: 11.5px; opacity: 0.9;">A5 Memo:</span>
+        <span style="font-size: 11px; font-weight: 600;">A5 Mushak 6.3 Invoice:</span>
         <button type="button" class="btn-action btn-print" onclick="executePrint()">
             🖨️ Print Memo
         </button>
         <button type="button" class="btn-action btn-download-pdf" id="btn-download-pdf" onclick="executeDownloadPDF()">
-            💾 Save / Download PDF
+            💾 Save as PDF
         </button>
     </div>
 
-    <!-- Main Printable Invoice Content -->
+    <!-- মূল A5 ইনভয়েস কন্টেইনার -->
     <div class="invoice-wrapper" id="printable-invoice-content">
-        
-        <!-- Top Header with Dynamic Footer Brand & Contact Info -->
-        <div class="top-row">
-            <div>
-                <h1 class="brand-title">{{ $siteName }}</h1>
-                @if(!empty($siteTagline))
-                    <div style="font-size: 8.5px; color: #64748b; font-weight: 500;">{{ $siteTagline }}</div>
-                @endif
+        <div>
+            <!-- টপ লোগো এবং বারকোড সেকশন -->
+            <div class="top-row">
+                <div class="brand-logo-area">
+                    @if(!empty($siteLogo))
+                        <img src="{{ $siteLogo }}" alt="{{ $siteName }}" class="brand-logo-img">
+                    @else
+                        <h1 class="brand-title">{{ $siteName }}</h1>
+                    @endif
+                </div>
 
-                <p style="margin: 3px 0 0 0; font-size: 9px; color: #111;">
-                    {{ !empty($order->branch_name) ? $order->branch_name : 'Main Outlet' }}
-                    @if(!empty($branchAddress)) | {{ $branchAddress }} @endif
-                </p>
+                <div class="text-end">
+                    <div class="barcode-container">
+                        <svg id="barcode"></svg>
+                    </div>
+                </div>
+            </div>
 
-                @if(!empty($companyBin))
-                    <p style="margin: 1px 0 0 0; font-size: 8.5px; color: #1e293b; font-family: monospace;">
+            <!-- মূসক ৬.৩ হেডার এবং বিআইএন -->
+            <div class="mushak-header-row">
+                <div>
+                    <div class="invoice-badge-box">
+                        MUSHAK 6.3 / TAX INVOICE
+                    </div>
+                    <div class="mushak-meta-text">
                         BIN: <strong>{{ $companyBin }}</strong>
-                    </p>
-                @endif
+                    </div>
+                    <div class="mushak-meta-text" style="font-family: inherit; font-size: 9px;">
+                        Date: <strong>{{ date('d M, Y h:i A', strtotime($order->created_at)) }}</strong>
+                    </div>
+                </div>
 
-                @if(!empty($sitePhone) || !empty($siteEmail))
-                    <p style="margin: 2px 0 0 0; font-size: 8.5px; color: #475569;">
-                        @if(!empty($sitePhone)) Hotline: <strong>{{ $sitePhone }}</strong> @endif
-                        @if(!empty($sitePhone) && !empty($siteEmail)) &bull; @endif
-                        @if(!empty($siteEmail)) Email: <strong>{{ $siteEmail }}</strong> @endif
-                    </p>
-                @endif
-
-                <p style="margin: 2px 0 0 0; font-size: 9px;">
-                    Date: <strong>{{ date('d M, Y h:i A', strtotime($order->created_at)) }}</strong>
-                </p>
-            </div>
-            <div class="text-end">
-                <div class="barcode-container">
-                    <svg id="barcode"></svg>
+                <div class="text-end">
+                    <div class="nbr-ref-text">
+                        NBR GO-05/VAT/2026
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Customer & Order Information Boxes -->
-        <div class="info-grid">
-            <div class="info-box">
-                <div class="info-box-title">Customer Information:</div>
-                <div style="font-size: 10.5px; font-weight: bold;">
-                    {{ $customerName }}
+            <div class="divider-solid"></div>
+
+            <!-- বিলিং ও অর্ডার পার্টিকুলার্স বক্স -->
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-box-header">BILL &amp; SHIP TO:</div>
+                    <div class="info-box-divider"></div>
+                    <div class="info-box-body">
+                        <div class="info-customer-name">{{ $customerName }}</div>
+                        <div>Phone: <strong>{{ $customerPhone }}</strong></div>
+                        <div>Address: {{ $customerAddress }}</div>
+                    </div>
                 </div>
-                <div>Phone: <strong>{{ $customerPhone }}</strong></div>
-                @if(!empty($customerEmail) && $customerEmail !== 'N/A')
-                    <div>Email: {{ $customerEmail }}</div>
-                @endif
-                @if(!empty($customerAddress) && $customerAddress !== 'N/A' && $customerAddress !== 'Digital Delivery')
-                    <div>Address: {{ $customerAddress }}</div>
-                @endif
+
+                <div class="info-box">
+                    <div class="info-box-header">ORDER PARTICULARS:</div>
+                    <div class="info-box-divider"></div>
+                    <div class="info-box-body">
+                        <div>Invoice No: <strong>#{{ $cleanInvoiceNo }}</strong></div>
+                        <div>Order Status: <strong>{{ strtoupper(str_replace('_', ' ', $order->order_status ?? 'DELIVERED')) }}</strong></div>
+                        <div>Payment Method: <strong>{{ strtoupper($order->payment_method ?? 'CASH') }}</strong></div>
+                        <div>
+                            Payment Status: 
+                            <strong style="color: {{ in_array(strtolower($order->payment_status ?? ''), ['paid', 'completed']) ? '#16a34a' : '#ea580c' }};">
+                                {{ strtoupper($order->payment_status ?? 'PAID') }}
+                            </strong>
+                        </div>
+                        @if(!empty($salesPersonName))
+                            <div>Served By: <strong>{{ $salesPersonName }}</strong></div>
+                        @endif
+                    </div>
+                </div>
             </div>
 
-            <div class="info-box">
-                <div class="info-box-title">Memo Particulars:</div>
-                <div>Invoice No: <strong>#{{ $cleanInvoiceNo }}</strong></div>
-                <div>Order Status: <strong>{{ strtoupper(str_replace('_', ' ', $order->order_status ?? 'DELIVERED')) }}</strong></div>
-                <div>Payment Method: <strong>{{ strtoupper($order->payment_method ?? 'CASH') }}</strong></div>
-                <div>Payment Status: <strong style="color: {{ in_array(strtolower($order->payment_status ?? ''), ['paid', 'completed']) ? '#16a34a' : '#ea580c' }};">{{ strtoupper($order->payment_status ?? 'PAID') }}</strong></div>
-                @if(!empty($order->transaction_id))
-                    <div>Trx ID: <strong>{{ $order->transaction_id }}</strong></div>
-                @endif
-                @if(!empty($order->sender_number))
-                    <div>Sender No: <strong>{{ $order->sender_number }}</strong></div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Products Table (Variant & VAT Support) -->
-        <div style="width: 100%; overflow-x: auto;">
+            <!-- প্রোডাক্ট আইটেম টেবিল -->
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 20px;" class="text-center">#</th>
-                        <th>Product Description</th>
-                        <th style="width: 65px;" class="text-center">SKU / Code</th>
-                        <th style="width: 30px;" class="text-center">Qty</th>
-                        <th style="width: 50px;" class="text-end">Rate</th>
-                        @if($taxAmt > 0 && $posVatDisplayMode !== 'hidden')
-                            <th style="width: 40px;" class="text-center">{{ $vatLabelText }}</th>
-                        @endif
-                        <th style="width: 60px;" class="text-end">Total</th>
+                        <th style="width: 25px;" class="text-center">#</th>
+                        <th>ITEM DESCRIPTION / SPECIFICATION</th>
+                        <th style="width: 75px;" class="text-end">RATE</th>
+                        <th style="width: 35px;" class="text-center">QTY</th>
+                        <th style="width: 45px;" class="text-center">VAT</th>
+                        <th style="width: 85px;" class="text-end">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($itemsList as $idx => $it)
                         @php
-                            $title = $it->product_title ?? ($it->title ?? ($it->main_title ?? ($it->product_name ?? 'Product')));
-                            $sku = $it->pv_sku ?? ($it->sku ?? ($it->product_code ?? ($it->main_sku ?? 'N/A')));
+                            $title = $it->product_title ?? ($it->title ?? ($it->main_title ?? ($it->product_name ?? ($it->product->name ?? ($it->product->title ?? 'Product')))));
+                            $sku = $it->pv_sku ?? ($it->sku ?? ($it->product_code ?? ($it->main_sku ?? ($it->variant?->sku ?? ($it->product?->sku ?? 'N/A')))));
                             $qty = (int)($it->quantity ?? ($it->qty ?? 1));
                             $unitPrice = (float)($it->unit_price ?? ($it->price ?? 0));
                             $subtotal = (float)($it->subtotal ?? ($it->total ?? ($unitPrice * $qty)));
 
                             $varParts = array_filter([
-                                $it->color ?? ($it->pv_color ?? null),
-                                $it->size ?? ($it->pv_size ?? null)
+                                $it->color ?? ($it->pv_color ?? ($it->variant?->color ?? null)),
+                                $it->size ?? ($it->pv_size ?? ($it->variant?->size ?? null))
                             ]);
                             $varText = !empty($it->variant_title) ? $it->variant_title : (count($varParts) > 0 ? implode(' / ', $varParts) : null);
                             $lineTaxRate = isset($it->tax_rate) ? (float)$it->tax_rate : 0.0;
                             $lineTaxAmt  = isset($it->tax_amount) ? (float)$it->tax_amount : 0.0;
                         @endphp
                         <tr>
-                            <td class="text-center">{{ $idx + 1 }}</td>
+                            <td class="text-center font-monospace">{{ $idx + 1 }}</td>
                             <td>
-                                <strong style="font-size: 10px;">{{ $title }}</strong>
+                                <strong style="font-size: 9.5px; color: #000;">{{ $title }}</strong>
+                                <span class="item-sku-tag">SKU: {{ $sku }}</span>
                                 @if(!empty($varText))
-                                    <span style="font-size: 8.5px; display: block; color: #334155; font-weight: 600;">
+                                    <span style="font-size: 8.5px; color: #334155; display: block;">
                                         Variant: {{ $varText }}
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center font-monospace" style="font-size: 8.5px; color: #555;">{{ $sku }}</td>
-                            <td class="text-center fw-bold">{{ $qty }}</td>
-                            <td class="text-end">{{ number_format($unitPrice, 2) }}</td>
-                            @if($taxAmt > 0 && $posVatDisplayMode !== 'hidden')
-                                <td class="text-center font-monospace" style="font-size: 8.5px;">
-                                    @if($posVatDisplayMode === 'item_breakdown')
-                                        @if($lineTaxRate > 0)
-                                            {{ number_format($lineTaxRate, ($lineTaxRate == (int)$lineTaxRate ? 0 : 1)) }}%
-                                        @elseif($lineTaxAmt > 0)
-                                            ৳{{ number_format($lineTaxAmt, 2) }}
-                                        @else
-                                            0%
-                                        @endif
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            @endif
-                            <td class="text-end fw-bold">{{ number_format($subtotal, 2) }} ৳</td>
+                            <td class="text-end font-monospace">৳{{ number_format($unitPrice, 2) }}</td>
+                            <td class="text-center font-monospace fw-bold">{{ $qty }}</td>
+                            <td class="text-center font-monospace">
+                                @if($lineTaxRate > 0)
+                                    {{ number_format($lineTaxRate, ($lineTaxRate == (int)$lineTaxRate ? 0 : 1)) }}%
+                                @elseif($lineTaxAmt > 0)
+                                    ৳{{ number_format($lineTaxAmt, 2) }}
+                                @else
+                                    0%
+                                @endif
+                            </td>
+                            <td class="text-end font-monospace fw-bold">৳{{ number_format($subtotal, 2) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ ($taxAmt > 0 && $posVatDisplayMode !== 'hidden') ? 7 : 6 }}" class="text-center py-2">No item records found.</td>
+                            <td colspan="6" class="text-center py-2">No items found in this order.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+
+            <!-- নোটস ও ক্যালকুলেশন সামারি -->
+            <div class="bottom-calc-grid">
+                <div class="notes-box">
+                    <strong style="font-size: 9.5px; display: block; margin-bottom: 3px;">Order Instructions / Notes:</strong>
+                    <span style="font-size: 8.5px; color: #334155;">
+                        {{ $order->notes ?? ($order->note ?? 'POS In-Store Sale') }}
+                    </span>
+                </div>
+
+                <div>
+                    <table class="totals-table font-monospace">
+                        <tr>
+                            <td style="width: 50%;">Subtotal:</td>
+                            <td class="text-end fw-bold">৳{{ number_format($subtotalAmt, 2) }}</td>
+                        </tr>
+
+                        @if($discountAmt > 0)
+                            <tr>
+                                <td>Discount:</td>
+                                <td class="text-end" style="color: #dc2626;">-৳{{ number_format($discountAmt, 2) }}</td>
+                            </tr>
+                        @endif
+
+                        @if($taxAmt > 0 && $posVatDisplayMode !== 'hidden')
+                            <tr>
+                                <td>{{ $vatLabelText }} {{ $isTaxInclusive ? '(Inc.)' : '' }}:</td>
+                                <td class="text-end fw-bold" style="color: #0284c7;">৳{{ number_format($taxAmt, 2) }}</td>
+                            </tr>
+                        @endif
+
+                        @if($deliveryFee > 0)
+                            <tr>
+                                <td>Delivery Charge:</td>
+                                <td class="text-end fw-bold">৳{{ number_format($deliveryFee, 2) }}</td>
+                            </tr>
+                        @endif
+
+                        <tr style="font-weight: 800; background: #fafafa;">
+                            <td>Grand Total:</td>
+                            <td class="text-end">৳{{ number_format($grandTotalAmt, 2) }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Paid Amount:</td>
+                            <td class="text-end fw-bold" style="color: #16a34a;">৳{{ number_format($paidAmt, 2) }}</td>
+                        </tr>
+
+                        @if($dueAmt > 0)
+                            <tr style="color: #dc2626; font-weight: 800;">
+                                <td>Due Amount:</td>
+                                <td class="text-end">৳{{ number_format($dueAmt, 2) }}</td>
+                            </tr>
+                        @endif
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <!-- Calculations & Totals (Strictly Separated VAT & Delivery Charge) -->
-        <div class="totals-area">
-            <table class="totals-table font-monospace">
-                <tr>
-                    <td>Subtotal:</td>
-                    <td class="text-end fw-bold">{{ number_format($subtotalAmt, 2) }} ৳</td>
-                </tr>
+        <!-- সিগনেচার এরিয়া এবং ফুটার নোট -->
+        <div>
+            <div class="signatures-area">
+                <div class="sign-box">
+                    <div class="sign-line"></div>
+                    <div class="sign-title">CUSTOMER COPY</div>
+                </div>
 
-                @if($discountAmt > 0)
-                    <tr>
-                        <td>Discount:</td>
-                        <td class="text-end" style="color: #dc2626;">-{{ number_format($discountAmt, 2) }} ৳</td>
-                    </tr>
-                @endif
+                <div class="sign-box">
+                    <div class="sign-line"></div>
+                    <div class="sign-title">AUTHORIZED SEAL</div>
+                </div>
+            </div>
 
-                {{-- VAT LINE: Shudhu tokhon-i ashbe jodi taxAmt > 0 ebong pos_vat_display_mode !== 'hidden' hoy --}}
-                @if($taxAmt > 0 && $posVatDisplayMode !== 'hidden')
-                    <tr>
-                        <td>{{ $vatLabelText }} {{ $isTaxInclusive ? '(Inc.)' : '' }}:</td>
-                        <td class="text-end fw-bold" style="color: #0284c7;">{{ number_format($taxAmt, 2) }} ৳</td>
-                    </tr>
-                @endif
-
-                {{-- DELIVERY CHARGE: Shudhu tokhon-i ashbe jodi input > 0 thake --}}
-                @if($deliveryFee > 0)
-                    <tr>
-                        <td>Delivery Charge:</td>
-                        <td class="text-end fw-bold">{{ number_format($deliveryFee, 2) }} ৳</td>
-                    </tr>
-                @endif
-
-                <tr style="font-weight: bold; background: #eee;">
-                    <td>Grand Total:</td>
-                    <td class="text-end">{{ number_format($grandTotalAmt, 2) }} ৳</td>
-                </tr>
-
-                <tr>
-                    <td>Paid Amount:</td>
-                    <td class="text-end fw-bold" style="color: #16a34a;">{{ number_format($paidAmt, 2) }} ৳</td>
-                </tr>
-
-                @if($dueAmt > 0)
-                    <tr style="color: #dc2626; font-weight: bold;">
-                        <td>Due Amount:</td>
-                        <td class="text-end">{{ number_format($dueAmt, 2) }} ৳</td>
-                    </tr>
-                @endif
-            </table>
+            <div class="footer-note-line">
+                For support: @if(!empty($sitePhone)) • Hotline: <strong>{{ $sitePhone }}</strong> @endif • BIN: <strong>{{ $companyBin }}</strong> • Computer Generated Tax Invoice (Mushak 6.3)
+            </div>
         </div>
-
-        <!-- Dynamic Footer Contact & Terms -->
-        <div class="footer-terms">
-            For support:
-            @if(!empty($sitePhone)) Hotline: <strong>{{ $sitePhone }}</strong> @endif
-            @if(!empty($sitePhone) && !empty($siteEmail)) &bull; @endif
-            @if(!empty($siteEmail)) Email: <strong>{{ $siteEmail }}</strong> @endif
-            @if(!empty($siteWebsite)) &bull; Web: <strong>{{ preg_replace('#^https?://#', '', rtrim($siteWebsite, '/')) }}</strong> @endif
-            @if(!empty($companyBin)) &bull; BIN: <strong>{{ $companyBin }}</strong> @endif
-            <br>
-            Thank you for shopping with <strong>{{ $siteName }}</strong>
-        </div>
-
     </div>
 
     <script>
@@ -556,9 +665,9 @@
             JsBarcode("#barcode", String(invBarcodeVal), {
                 format: "CODE128",
                 width: 1.15,
-                height: 32,
+                height: 28,
                 displayValue: true,
-                fontSize: 9,
+                fontSize: 8.5,
                 margin: 0
             });
         }
@@ -572,7 +681,7 @@
             const element = document.getElementById('printable-invoice-content');
             const opt = {
                 margin:       [4, 4, 4, 4],
-                filename:     cleanInvName + '.pdf',
+                filename:     cleanInvName + '-A5.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2.5, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
@@ -582,7 +691,7 @@
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }).catch(function(err) {
-                console.error(err);
+                console.error('PDF error:', err);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });

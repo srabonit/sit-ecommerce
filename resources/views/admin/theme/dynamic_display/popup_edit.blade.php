@@ -28,206 +28,670 @@
     $showTitle = !empty($settings['show_title']);
     $showButton = !empty($settings['show_button']);
     $freqScope = $settings['frequency_scope'] ?? 'per_page';
+
+    // ফ্রিকোয়েন্সি ইউনিট এবং মান রেজল্যুশন
+    $savedUnit = $settings['frequency_unit'] ?? 'hours';
+    if (isset($settings['frequency_value'])) {
+        $savedVal = (float)$settings['frequency_value'];
+    } elseif (isset($settings['frequency_hours'])) {
+        $savedVal = ($savedUnit === 'days') ? ((float)$settings['frequency_hours'] / 24) : (float)$settings['frequency_hours'];
+    } else {
+        $savedVal = (float)($popup->frequency_days ?? 0);
+        if ($savedVal > 0 && !isset($settings['frequency_unit'])) {
+            $savedUnit = 'days';
+        }
+    }
 @endphp
 
 @section('admin_content')
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
+    /* =========================================================
+       POPUP EDIT — KAIADMIN CLASSIC DESIGN SYSTEM
+    ========================================================= */
+
     #popup-edit-root {
-        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        letter-spacing: -0.01em;
-        color: #1e293b;
+        --popup-primary: var(--bs-primary, #1572e8);
+        --popup-primary-rgb: var(--bs-primary-rgb, 21, 114, 232);
+        --popup-body-bg: #f8f9fa;
+        --popup-card-bg: #ffffff;
+        --popup-heading: #2a2f5b;
+        --popup-text: #495057;
+        --popup-muted: #8d9498;
+        --popup-border: #e6e9ed;
+        --popup-soft: #f8f9fc;
+        --popup-success: #31ce36;
+        --popup-danger: #f25961;
+        --popup-warning: #ffad46;
+        --popup-info: #48abf7;
+
+        width: 100%;
+        min-width: 0;
+        color: var(--popup-text);
+        font-family: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+        letter-spacing: normal;
     }
 
-    .font-monospace {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-        font-weight: 700 !important;
+    #popup-edit-root *,
+    #popup-edit-root *::before,
+    #popup-edit-root *::after {
+        box-sizing: border-box;
+    }
+
+    /* Page Header */
+
+    #popup-edit-root .popup-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    #popup-edit-root .popup-page-title {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        color: var(--popup-heading);
+        font-size: clamp(17px, 1.5vw, 20px);
+        font-weight: 700;
+        line-height: 1.35;
+        margin: 0;
+    }
+
+    #popup-edit-root .popup-page-title > i {
+        color: var(--popup-primary);
+        font-size: 17px;
+    }
+
+    #popup-edit-root .popup-page-description {
+        color: var(--popup-muted);
+        font-size: 12px;
+        margin: 5px 0 0;
+        line-height: 1.5;
+    }
+
+    #popup-edit-root .popup-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 9px;
+        letter-spacing: 0;
+    }
+
+    /* Cards */
+
+    #popup-edit-root .card {
+        min-width: 0;
+        background: var(--popup-card-bg);
+        border: 1px solid var(--popup-border) !important;
+        border-radius: 6px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035) !important;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    #popup-edit-root .section-header-wrap {
+        display: flex;
+        align-items: center;
+        min-height: 45px;
+        padding: 11px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--popup-border);
+    }
+
+    #popup-edit-root .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--popup-heading);
+        font-size: 13px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    #popup-edit-root .section-title i {
+        font-size: 14px;
+        color: var(--popup-primary);
+    }
+
+    #popup-edit-root .section-body {
+        padding: 17px;
+        min-width: 0;
+    }
+
+    /* Form Elements */
+
+    #popup-edit-root .field-label {
+        display: block;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    #popup-edit-root .field-hint {
+        display: block;
+        color: var(--popup-muted);
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        margin-top: 5px;
+    }
+
+    #popup-edit-root .form-control,
+    #popup-edit-root .form-select {
+        width: 100%;
+        min-width: 0;
+        min-height: 38px;
+        padding: 8px 11px;
+        border: 1px solid #ebedf2 !important;
+        border-radius: 5px !important;
+        background-color: #fff;
+        color: #495057 !important;
+        font-family: inherit;
+        font-size: 13px !important;
+        font-weight: 400;
+        line-height: 1.5;
+        box-shadow: none !important;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #popup-edit-root textarea.form-control {
+        min-height: 90px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    #popup-edit-root .form-control::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+    }
+
+    #popup-edit-root .form-control:focus,
+    #popup-edit-root .form-select:focus {
+        border-color: var(--popup-primary) !important;
+        box-shadow: 0 0 0 3px rgba(var(--popup-primary-rgb), .10) !important;
+        outline: none;
+    }
+
+    #popup-edit-root .form-control:disabled,
+    #popup-edit-root .form-select:disabled {
+        background-color: #f8f9fa;
+        opacity: .75;
+    }
+
+    #popup-edit-root .font-monospace {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        font-size: 12px !important;
         font-variant-numeric: tabular-nums;
     }
 
-    #popup-edit-root .btn,
-    #popup-edit-root .btn-sm,
-    #popup-edit-root button,
-    #popup-edit-root .badge,
-    #popup-edit-root .alert,
-    #popup-edit-root .form-control,
-    #popup-edit-root .form-select,
-    #popup-edit-root .input-group-text,
-    #popup-edit-root .card,
-    #popup-edit-root .device-check-card,
-    #popup-edit-root .popup-preview-box {
-        border-radius: 5px !important;
+    #popup-edit-root .input-group {
+        flex-wrap: nowrap;
+        min-width: 0;
     }
 
-    #popup-edit-root .input-group > .input-group-text {
+    #popup-edit-root .input-group > :first-child {
+        border-top-left-radius: 5px !important;
+        border-bottom-left-radius: 5px !important;
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
-        font-size: 12px;
-        background-color: #f8fafc;
-        border-color: #cbd5e1;
     }
 
-    #popup-edit-root .input-group > .form-control,
-    #popup-edit-root .input-group > .form-select {
+    #popup-edit-root .input-group > :last-child {
+        border-top-right-radius: 5px !important;
+        border-bottom-right-radius: 5px !important;
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    /* Switches and Checkboxes */
+
+    #popup-edit-root .form-check {
+        min-height: auto;
+    }
+
+    #popup-edit-root .form-check-input {
+        cursor: pointer;
+        border-color: #ced4da;
+    }
+
+    #popup-edit-root .form-check-input:checked {
+        background-color: var(--popup-primary);
+        border-color: var(--popup-primary);
+    }
+
+    #popup-edit-root .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(var(--popup-primary-rgb), .12);
+    }
+
+    #popup-edit-root .form-switch .form-check-input {
+        width: 2.1em;
+        height: 1.1em;
+        margin-top: .15em;
+    }
+
+    #popup-edit-root .form-check-label {
+        color: var(--popup-text);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Buttons */
+
+    #popup-edit-root .btn,
+    #popup-edit-root .btn-sm {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
+        min-height: 36px;
+        padding: 7px 13px;
+        border-radius: 5px !important;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.4;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
 
-    #popup-edit-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .field-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
-    }
-
-    .field-hint {
-        font-size: 10px;
-        color: #64748b;
-        margin-top: 3px;
-        display: block;
-        line-height: 1.35;
-    }
-
-    .form-control,
-    .form-select {
-        min-height: 32px;
-        font-size: 12px !important;
-        border: 1px solid #cbd5e1 !important;
-        color: #0f172a !important;
-        background-color: #ffffff;
+    #popup-edit-root .btn:focus-visible {
+        outline: 2px solid var(--popup-primary);
+        outline-offset: 2px;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-        outline: none;
+    #popup-edit-root .btn-primary {
+        background-color: var(--popup-primary);
+        border-color: var(--popup-primary);
     }
 
-    .popup-preview-box {
-        background: #f8fafc;
-        border: 1.5px dashed #cbd5e1;
-        padding: 8px 10px;
+    #popup-edit-root .btn-primary:hover {
+        filter: brightness(.94);
+    }
+
+    #popup-edit-root .btn-outline-primary {
+        color: var(--popup-primary);
+        border-color: var(--popup-primary);
+        background: #fff;
+    }
+
+    #popup-edit-root .btn-outline-primary:hover {
+        color: #fff;
+        background: var(--popup-primary);
+        border-color: var(--popup-primary);
+    }
+
+    #popup-edit-root .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #dce0e5;
+        background: #fff;
+    }
+
+    #popup-edit-root .btn-outline-secondary:hover {
+        background: #f1f3f5;
+        border-color: #c9ced4;
+        color: #495057;
+    }
+
+    #popup-edit-root .btn-light {
+        background: #fff;
+    }
+
+    #popup-edit-root .btn-compact {
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    #popup-edit-root .btn-submit-action {
+        min-height: 42px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    /* Preview */
+
+    #popup-edit-root .popup-preview-box {
         display: inline-flex;
         align-items: center;
+        gap: 12px;
+        max-width: 100%;
+        padding: 10px 12px;
+        border: 1px dashed #d9dee5;
+        border-radius: 5px;
+        background: var(--popup-soft);
+    }
+
+    #popup-edit-root .popup-preview-box img {
+        display: block;
+        max-width: 120px;
+        max-height: 65px;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+
+    #popup-edit-root .popup-preview-box .preview-status {
+        color: var(--popup-success);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* CTA Section */
+
+    #popup-edit-root .popup-cta-box {
+        padding: 14px;
+        border: 1px solid var(--popup-border) !important;
+        border-radius: 6px !important;
+        background: #fafbfc;
+    }
+
+    #popup-edit-root .popup-cta-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
         gap: 10px;
     }
 
-    .device-check-card {
-        border: 1px solid #e2e8f0;
-        background-color: #f8fafc;
-        padding: 8px 10px;
-        transition: all 0.15s ease;
+    /* Device Selection */
+
+    #popup-edit-root .device-check-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border: 1px solid var(--popup-border);
+        border-radius: 5px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .15s ease, background-color .15s ease;
     }
 
-    .device-check-card:hover {
-        background-color: #ffffff;
-        border-color: #cbd5e1;
+    #popup-edit-root .device-check-card:hover {
+        background: #f8faff;
+        border-color: var(--popup-primary);
+    }
+
+    #popup-edit-root .device-check-card .form-check-input {
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    #popup-edit-root .device-check-card span {
+        color: var(--popup-text);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Color Inputs */
+
+    #popup-edit-root input[type="color"].form-control-color {
+        height: 40px;
+        min-height: 40px;
+        padding: 5px;
+        cursor: pointer;
+    }
+
+    /* Validation */
+
+    #popup-edit-root .alert {
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+
+    #popup-edit-root .alert ul {
+        line-height: 1.7;
+    }
+
+    /* Utilities */
+
+    #popup-edit-root .text-muted {
+        color: var(--popup-muted) !important;
+    }
+
+    #popup-edit-root .border-top {
+        border-color: var(--popup-border) !important;
+    }
+
+    #popup-edit-root .popup-form-column,
+    #popup-edit-root .popup-settings-column {
+        min-width: 0;
+    }
+
+    #popup-edit-root .popup-actions {
+        position: sticky;
+        bottom: 12px;
+        z-index: 5;
+        padding: 12px;
+        border: 1px solid var(--popup-border);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, .97);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+    }
+
+    /* Large Desktop */
+
+    @media (min-width: 1400px) {
+        #popup-edit-root .section-body {
+            padding: 19px;
+        }
+    }
+
+    /* Tablet and Mobile */
+
+    @media (max-width: 991.98px) {
+        #popup-edit-root .popup-settings-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 14px;
+            align-items: start;
+        }
+
+        #popup-edit-root .popup-settings-column > .card {
+            width: 100%;
+        }
+
+        #popup-edit-root .popup-settings-column > .popup-actions {
+            grid-column: 1 / -1;
+        }
     }
 
     @media (max-width: 767.98px) {
-        .popup-edit-header-wrap h5 {
-            font-size: 16px !important;
+        #popup-edit-root {
+            padding-top: 12px !important;
+            padding-bottom: 16px !important;
         }
 
-        .top-action-btns {
+        #popup-edit-root .popup-page-header {
+            align-items: stretch !important;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        #popup-edit-root .popup-page-title {
+            font-size: 17px;
+        }
+
+        #popup-edit-root .popup-page-description {
+            font-size: 11px;
+        }
+
+        #popup-edit-root .top-action-btns {
             width: 100%;
         }
 
-        .top-action-btns .btn {
+        #popup-edit-root .top-action-btns .btn {
             width: 100%;
-            padding: 8px 12px !important;
-            font-size: 11px !important;
-            justify-content: center;
+            min-height: 40px;
+        }
+
+        #popup-edit-root .section-header-wrap {
+            min-height: 43px;
+            padding: 10px 13px;
+        }
+
+        #popup-edit-root .section-body {
+            padding: 13px;
         }
 
         #popup-edit-root .card {
-            margin-bottom: 12px !important;
+            margin-bottom: 13px;
         }
 
-        .btn-submit-action {
-            width: 100% !important;
-            padding: 10px 14px !important;
-            font-size: 12px !important;
+        #popup-edit-root .popup-settings-column {
+            display: block;
+        }
+
+        #popup-edit-root .popup-cta-box {
+            padding: 11px;
+        }
+
+        #popup-edit-root .btn-submit-action {
+            width: 100%;
+            min-height: 43px;
+        }
+
+        #popup-edit-root .popup-actions {
+            position: static;
+            padding: 0;
+            border: 0;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        #popup-edit-root .popup-actions .btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #popup-edit-root .row {
+            --bs-gutter-x: 12px;
+        }
+
+        #popup-edit-root .section-body {
+            padding: 12px;
+        }
+
+        #popup-edit-root .form-control,
+        #popup-edit-root .form-select {
+            min-height: 40px;
+            font-size: 13px !important;
+        }
+
+        #popup-edit-root textarea.form-control {
+            min-height: 85px;
+        }
+
+        #popup-edit-root .input-group {
+            flex-wrap: wrap;
+        }
+
+        #popup-edit-root .input-group > .form-control {
+            flex: 1 1 0%;
+            width: 1%;
+        }
+
+        #popup-edit-root .input-group > .btn {
+            flex-shrink: 0;
+        }
+
+        #popup-edit-root .popup-preview-box {
+            width: 100%;
+        }
+
+        #popup-edit-root .popup-preview-box img {
+            max-width: 100px;
+        }
+
+        #popup-edit-root .popup-page-title {
+            font-size: 16px;
+        }
+
+        #popup-edit-root .popup-status-badge {
+            font-size: 10px;
+        }
+
+        #popup-edit-root .field-label {
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 359.98px) {
+        #popup-edit-root .section-body {
+            padding: 10px;
+        }
+
+        #popup-edit-root .popup-page-title {
+            font-size: 15px;
+        }
+
+        #popup-edit-root .btn {
+            white-space: normal;
         }
     }
 </style>
 
-<div class="container-fluid py-3 px-2 px-md-4 position-relative" id="popup-edit-root">
+<div class="container-fluid py-3 px-2 px-md-3 px-xl-4 position-relative" id="popup-edit-root">
 
     {{-- Header --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 popup-edit-header-wrap">
+    <div class="popup-page-header popup-edit-header-wrap">
         <div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
-                    <i class="fas fa-pen-to-square text-primary"></i>
+                <h5 class="popup-page-title">
+                    <i class="fas fa-pen-to-square"></i>
                     <span>Edit Popup #{{ $popup->id }}</span>
                 </h5>
 
-                <span class="badge {{ $popup->is_active ? 'bg-success text-white' : 'bg-secondary text-white' }} px-2 py-1 font-monospace" style="font-size: 10px;">
+                <span class="popup-status-badge {{ $popup->is_active ? 'bg-success text-white' : 'bg-secondary text-white' }}">
+                    <i class="fas {{ $popup->is_active ? 'fa-check-circle' : 'fa-pause-circle' }}"></i>
                     {{ $popup->is_active ? 'Active' : 'Paused' }}
                 </span>
             </div>
 
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
+            <p class="popup-page-description">
                 Edit popup content, images, triggers and display rules.
-            </small>
+            </p>
         </div>
 
         <div class="top-action-btns d-flex gap-2">
-            <a href="{{ $indexUrl }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold bg-white text-dark">
-                <i class="fas fa-arrow-left me-1"></i> Back to Display Hub
+            <a href="{{ $indexUrl }}" class="btn btn-outline-secondary btn-compact">
+                <i class="fas fa-arrow-left"></i>
+                Back to Display Hub
             </a>
         </div>
     </div>
 
     {{-- Validation Errors --}}
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-3 border" role="alert">
             <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-exclamation-circle text-danger fs-5"></i>
-                <span class="fw-semibold text-dark">Please fix these errors:</span>
+                <i class="fas fa-exclamation-circle fs-5"></i>
+                <span class="fw-semibold">Please fix these errors:</span>
             </div>
 
-            <ul class="mb-0 mt-1 ps-4 text-danger small font-monospace" style="font-size: 11px;">
+            <ul class="mb-0 mt-2 ps-4 small">
                 @foreach($errors->all() as $err)
                     <li>{{ $err }}</li>
                 @endforeach
             </ul>
 
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
@@ -238,23 +702,23 @@
         <div class="row g-3">
 
             {{-- Left Column --}}
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-lg-8 popup-form-column">
 
                 {{-- Campaign Details --}}
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card">
                     <div class="section-header-wrap">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-pen-to-square text-primary me-1"></i>
+                        <h6 class="section-title">
+                            <i class="fas fa-pen-to-square"></i>
                             Campaign Details
-                        </span>
+                        </h6>
                     </div>
 
-                    <div class="p-3">
-                        <div class="row g-2">
+                    <div class="section-body">
+                        <div class="row g-3">
 
                             {{-- Campaign Title --}}
                             <div class="col-12 col-md-8">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
                                     <label class="field-label mb-0" for="popup-title">
                                         Campaign Title
                                     </label>
@@ -270,7 +734,7 @@
                                             onchange="toggleTitleControl(this.checked)"
                                         >
 
-                                        <label class="form-check-label text-dark fw-bold font-monospace" for="show_title" style="font-size: 10px;">
+                                        <label class="form-check-label" for="show_title">
                                             Show Title
                                         </label>
                                     </div>
@@ -281,7 +745,7 @@
                                         type="text"
                                         name="title"
                                         id="popup-title"
-                                        class="form-control shadow-none"
+                                        class="form-control"
                                         placeholder="Special Weekend Offer"
                                         value="{{ old('title', $popup->title) }}"
                                     >
@@ -301,7 +765,7 @@
                                 <select
                                     name="popup_type"
                                     id="popup-type"
-                                    class="form-select font-monospace shadow-none"
+                                    class="form-select"
                                     onchange="handlePopupTypeChange(this.value)"
                                     required
                                 >
@@ -314,7 +778,7 @@
                             </div>
 
                             {{-- Banner Image --}}
-                            <div class="col-12 mt-2">
+                            <div class="col-12">
                                 <label class="field-label" for="popup-image">
                                     Banner Image
                                 </label>
@@ -324,7 +788,7 @@
                                         type="text"
                                         name="image"
                                         id="popup-image"
-                                        class="form-control font-monospace shadow-none"
+                                        class="form-control font-monospace"
                                         placeholder="Image URL"
                                         value="{{ old('image', $popup->image) }}"
                                         oninput="updateImagePreview(this.value)"
@@ -332,10 +796,11 @@
 
                                     <button
                                         type="button"
-                                        class="btn btn-outline-primary btn-compact fw-bold"
+                                        class="btn btn-outline-primary btn-compact"
                                         onclick="choosePopupImageMedia('popup-image')"
                                     >
-                                        <i class="fas fa-images me-1"></i> Choose Image
+                                        <i class="fas fa-images"></i>
+                                        Choose Image
                                     </button>
 
                                     <button
@@ -353,21 +818,21 @@
                                 </small>
 
                                 {{-- Image Preview --}}
-                                <div id="popup-image-preview-wrap" class="mt-2 {{ old('image', $popup->image) ? '' : 'd-none' }}">
+                                <div id="popup-image-preview-wrap" class="mt-3 {{ old('image', $popup->image) ? '' : 'd-none' }}">
                                     <div class="popup-preview-box">
                                         <img
                                             id="popup-image-preview"
                                             src="{{ old('image', $popup->image) }}"
                                             alt="Preview"
-                                            style="max-height: 60px; max-width: 120px; object-fit: cover; border-radius: 4px;"
                                         >
 
                                         <div>
-                                            <span class="text-success fw-bold small d-block">
-                                                <i class="fas fa-check-circle me-1"></i> Image Selected
+                                            <span class="preview-status d-block">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                Image Selected
                                             </span>
 
-                                            <small class="text-muted" style="font-size: 10px;">
+                                            <small class="text-muted">
                                                 Ready to display.
                                             </small>
                                         </div>
@@ -376,7 +841,7 @@
                             </div>
 
                             {{-- Content --}}
-                            <div class="col-12 mt-2">
+                            <div class="col-12">
                                 <label class="field-label" for="popup-content">
                                     Content / HTML / Shortcode
                                 </label>
@@ -385,7 +850,7 @@
                                     name="content"
                                     id="popup-content"
                                     rows="4"
-                                    class="form-control font-monospace shadow-none"
+                                    class="form-control font-monospace"
                                     placeholder="Enter text, HTML or shortcode. Leave blank for image-only."
                                 >{{ old('content', $popup->content) }}</textarea>
 
@@ -395,10 +860,10 @@
                             </div>
 
                             {{-- CTA Button --}}
-                            <div class="col-12 mt-2">
-                                <div class="p-2 border rounded bg-light bg-opacity-50" style="border-radius: 5px !important;">
+                            <div class="col-12">
+                                <div class="popup-cta-box">
 
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="popup-cta-header">
                                         <span class="field-label mb-0">CTA Button</span>
 
                                         <div class="form-check form-switch mb-0">
@@ -412,16 +877,16 @@
                                                 onchange="toggleButtonControl(this.checked)"
                                             >
 
-                                            <label class="form-check-label text-dark fw-bold font-monospace" for="show_button" style="font-size: 10px;">
+                                            <label class="form-check-label" for="show_button">
                                                 Show Button
                                             </label>
                                         </div>
                                     </div>
 
-                                    <div class="row g-2 mt-1" id="buttonInputsContainer" style="{{ $showButton ? 'display: flex;' : 'display: none;' }}">
+                                    <div class="row g-3 mt-1" id="buttonInputsContainer" style="{{ $showButton ? 'display: flex;' : 'display: none;' }}">
 
                                         <div class="col-12 col-md-6">
-                                            <label class="field-label mb-1" for="popup-btn-text">
+                                            <label class="field-label" for="popup-btn-text">
                                                 Button Text
                                             </label>
 
@@ -429,14 +894,14 @@
                                                 type="text"
                                                 name="button_text"
                                                 id="popup-btn-text"
-                                                class="form-control shadow-none"
+                                                class="form-control"
                                                 placeholder="Shop Now"
                                                 value="{{ old('button_text', $popup->button_text) }}"
                                             >
                                         </div>
 
                                         <div class="col-12 col-md-6">
-                                            <label class="field-label mb-1" for="popup-btn-url">
+                                            <label class="field-label" for="popup-btn-url">
                                                 Button URL
                                             </label>
 
@@ -444,7 +909,7 @@
                                                 type="text"
                                                 name="button_url"
                                                 id="popup-btn-url"
-                                                class="form-control font-monospace shadow-none"
+                                                class="form-control font-monospace"
                                                 placeholder="/shop or https://..."
                                                 value="{{ old('button_url', $popup->button_url) }}"
                                             >
@@ -459,21 +924,21 @@
                 </div>
 
                 {{-- Page Targeting --}}
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card">
                     <div class="section-header-wrap">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-filter text-primary me-1"></i>
+                        <h6 class="section-title">
+                            <i class="fas fa-filter"></i>
                             Page Targeting
-                        </span>
+                        </h6>
                     </div>
 
-                    <div class="p-3">
-                        <div class="row g-2">
+                    <div class="section-body">
+                        <div class="row g-3">
 
                             <div class="col-12 col-md-4">
                                 <label class="field-label">Target Pages</label>
 
-                                <select name="page_target_type" class="form-select font-monospace shadow-none mb-1">
+                                <select name="page_target_type" class="form-select">
                                     <option value="all" {{ old('page_target_type', $rule->page_target_type ?? 'all') == 'all' ? 'selected' : '' }}>All Pages</option>
                                     <option value="home_only" {{ old('page_target_type', $rule->page_target_type ?? '') == 'home_only' ? 'selected' : '' }}>Homepage Only</option>
                                     <option value="products_only" {{ old('page_target_type', $rule->page_target_type ?? '') == 'products_only' ? 'selected' : '' }}>Product Pages</option>
@@ -484,40 +949,40 @@
                             <div class="col-12 col-md-4">
                                 <label class="field-label">Frequency Scope</label>
 
-                                <select name="frequency_scope" class="form-select font-monospace shadow-none mb-1">
-                                    <option value="per_page" {{ $freqScope === 'per_page' ? 'selected' : '' }}>Per Page</option>
-                                    <option value="global" {{ $freqScope === 'global' ? 'selected' : '' }}>Global</option>
+                                <select name="frequency_scope" class="form-select">
+                                    <option value="per_page" {{ $freqScope === 'per_page' ? 'selected' : '' }}>Per Page (প্রতিটি পেজের জন্য আলাদা)</option>
+                                    <option value="global" {{ $freqScope === 'global' ? 'selected' : '' }}>Global (পুরো সাইটের জন্য একবার)</option>
                                 </select>
                             </div>
 
                             <div class="col-12 col-md-4">
                                 <label class="field-label">Visitors</label>
 
-                                <select name="user_type" class="form-select font-monospace shadow-none mb-1">
+                                <select name="user_type" class="form-select">
                                     <option value="all" {{ old('user_type', $rule->user_type ?? 'all') == 'all' ? 'selected' : '' }}>All Visitors</option>
                                     <option value="guest" {{ old('user_type', $rule->user_type ?? '') == 'guest' ? 'selected' : '' }}>Guests</option>
                                     <option value="logged_in" {{ old('user_type', $rule->user_type ?? '') == 'logged_in' ? 'selected' : '' }}>Logged-in Users</option>
                                 </select>
                             </div>
 
-                            <div class="col-12 col-md-6 mt-2">
+                            <div class="col-12 col-md-6">
                                 <label class="field-label">Target Routes</label>
 
                                 <textarea
                                     name="target_pages"
                                     rows="3"
-                                    class="form-control font-monospace shadow-none"
+                                    class="form-control font-monospace"
                                     placeholder="One route per line&#10;shop&#10;category/*"
                                 >{{ !empty($rule->target_pages) ? implode("\n", $rule->target_pages) : '' }}</textarea>
                             </div>
 
-                            <div class="col-12 col-md-6 mt-2">
+                            <div class="col-12 col-md-6">
                                 <label class="field-label">Excluded Routes</label>
 
                                 <textarea
                                     name="excluded_pages"
                                     rows="3"
-                                    class="form-control font-monospace shadow-none"
+                                    class="form-control font-monospace"
                                     placeholder="Never show on&#10;cart&#10;checkout"
                                 >{{ !empty($rule->excluded_pages) ? implode("\n", $rule->excluded_pages) : '' }}</textarea>
                             </div>
@@ -529,18 +994,18 @@
             </div>
 
             {{-- Right Column --}}
-            <div class="col-12 col-lg-4">
+            <div class="col-12 col-lg-4 popup-settings-column">
 
                 {{-- Trigger & Frequency --}}
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card">
                     <div class="section-header-wrap">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-stopwatch text-warning me-1"></i>
+                        <h6 class="section-title">
+                            <i class="fas fa-stopwatch text-warning"></i>
                             Trigger & Frequency
-                        </span>
+                        </h6>
                     </div>
 
-                    <div class="p-3">
+                    <div class="section-body">
 
                         <div class="mb-3">
                             <label class="field-label">
@@ -550,7 +1015,7 @@
                             <select
                                 name="trigger_type"
                                 id="trigger-type"
-                                class="form-select font-monospace shadow-none mb-2"
+                                class="form-select mb-2"
                                 onchange="handleTriggerChange(this.value)"
                             >
                                 <option value="delay" {{ old('trigger_type', $popup->trigger_type) == 'delay' ? 'selected' : '' }}>Time Delay</option>
@@ -567,14 +1032,15 @@
                                     type="number"
                                     name="trigger_value"
                                     id="trigger-value"
-                                    class="form-control font-monospace bn-digit shadow-none"
+                                    class="form-control font-monospace bn-digit"
                                     value="{{ old('trigger_value', $popup->trigger_value) }}"
                                     min="0"
                                 >
                             </div>
                         </div>
 
-                        <div class="mb-3 border-top pt-2">
+                        {{-- Repeat Frequency with Hours & Days Dropdown --}}
+                        <div class="mb-3 border-top pt-3">
                             <label class="field-label">
                                 Repeat Frequency <span class="text-danger">*</span>
                             </label>
@@ -582,23 +1048,29 @@
                             <div class="input-group">
                                 <input
                                     type="number"
-                                    name="frequency_days"
+                                    name="frequency_value"
+                                    id="frequency-value"
                                     class="form-control font-monospace bn-digit shadow-none"
-                                    value="{{ old('frequency_days', $popup->frequency_days) }}"
+                                    value="{{ old('frequency_value', $savedVal) }}"
                                     min="0"
+                                    step="any"
+                                    placeholder="e.g. 2, 6"
+                                    oninput="updateFrequencyHint()"
+                                    required
                                 >
 
-                                <span class="input-group-text font-monospace small" style="font-size: 11px;">
-                                    Days
-                                </span>
+                                <select name="frequency_unit" id="frequency-unit" class="form-select font-monospace shadow-none" style="max-width: 105px;" onchange="updateFrequencyHint()">
+                                    <option value="hours" {{ old('frequency_unit', $savedUnit) == 'hours' ? 'selected' : '' }}>Hours</option>
+                                    <option value="days" {{ old('frequency_unit', $savedUnit) == 'days' ? 'selected' : '' }}>Days</option>
+                                </select>
                             </div>
 
-                            <small class="field-hint">
-                                0 = Every page load. 1 = Once every 24 hours.
+                            <small class="field-hint" id="frequency-hint">
+                                একবার দেখলে আগামী {{ $savedVal }} {{ $savedUnit === 'hours' ? 'ঘণ্টা' : 'দিন' }} এই পেজে আর পপআপ আসবে না। (0 = প্রতি রিলোডে আসবে)
                             </small>
                         </div>
 
-                        <div class="form-check form-switch border-top pt-2 mb-0">
+                        <div class="form-check form-switch border-top pt-3 mb-0">
                             <input
                                 class="form-check-input"
                                 type="checkbox"
@@ -608,7 +1080,7 @@
                                 {{ old('is_active', $popup->is_active) ? 'checked' : '' }}
                             >
 
-                            <label class="form-check-label fw-bold text-dark small font-monospace" for="popup-is-active">
+                            <label class="form-check-label" for="popup-is-active">
                                 Active Campaign
                             </label>
                         </div>
@@ -617,65 +1089,65 @@
                 </div>
 
                 {{-- Device & Schedule --}}
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card">
                     <div class="section-header-wrap">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-calendar-alt text-info me-1"></i>
+                        <h6 class="section-title">
+                            <i class="fas fa-calendar-alt text-info"></i>
                             Devices & Schedule
-                        </span>
+                        </h6>
                     </div>
 
-                    <div class="p-3">
+                    <div class="section-body">
 
                         <label class="field-label">Show On Devices</label>
 
-                        <div class="d-flex flex-column gap-1 mb-3">
+                        <div class="d-flex flex-column gap-2 mb-4">
 
-                            <label class="device-check-card d-flex align-items-center gap-2 mb-0" for="p_desktop">
+                            <label class="device-check-card mb-0" for="p_desktop">
                                 <input
-                                    class="form-check-input mt-0"
+                                    class="form-check-input"
                                     type="checkbox"
                                     name="device_desktop"
                                     id="p_desktop"
                                     value="1"
                                     {{ ($rule->device_visibility['desktop'] ?? true) ? 'checked' : '' }}
                                 >
-                                <span class="small font-monospace" style="font-size: 11px;">Desktop</span>
+                                <span>Desktop</span>
                             </label>
 
-                            <label class="device-check-card d-flex align-items-center gap-2 mb-0" for="p_tablet">
+                            <label class="device-check-card mb-0" for="p_tablet">
                                 <input
-                                    class="form-check-input mt-0"
+                                    class="form-check-input"
                                     type="checkbox"
                                     name="device_tablet"
                                     id="p_tablet"
                                     value="1"
                                     {{ ($rule->device_visibility['tablet'] ?? true) ? 'checked' : '' }}
                                 >
-                                <span class="small font-monospace" style="font-size: 11px;">Tablet</span>
+                                <span>Tablet</span>
                             </label>
 
-                            <label class="device-check-card d-flex align-items-center gap-2 mb-0" for="p_mobile">
+                            <label class="device-check-card mb-0" for="p_mobile">
                                 <input
-                                    class="form-check-input mt-0"
+                                    class="form-check-input"
                                     type="checkbox"
                                     name="device_mobile"
                                     id="p_mobile"
                                     value="1"
                                     {{ ($rule->device_visibility['mobile'] ?? true) ? 'checked' : '' }}
                                 >
-                                <span class="small font-monospace" style="font-size: 11px;">Mobile</span>
+                                <span>Mobile</span>
                             </label>
 
                         </div>
 
-                        <div class="mb-2">
+                        <div class="mb-3">
                             <label class="field-label">Start Date</label>
 
                             <input
                                 type="datetime-local"
                                 name="start_at"
-                                class="form-control font-monospace shadow-none"
+                                class="form-control font-monospace"
                                 value="{{ $rule && $rule->start_at ? $rule->start_at->format('Y-m-d\TH:i') : '' }}"
                             >
                         </div>
@@ -686,7 +1158,7 @@
                             <input
                                 type="datetime-local"
                                 name="end_at"
-                                class="form-control font-monospace shadow-none"
+                                class="form-control font-monospace"
                                 value="{{ $rule && $rule->end_at ? $rule->end_at->format('Y-m-d\TH:i') : '' }}"
                             >
                         </div>
@@ -695,16 +1167,16 @@
                 </div>
 
                 {{-- Appearance --}}
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card">
                     <div class="section-header-wrap">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-palette text-secondary me-1"></i>
+                        <h6 class="section-title">
+                            <i class="fas fa-palette text-secondary"></i>
                             Appearance
-                        </span>
+                        </h6>
                     </div>
 
-                    <div class="p-3">
-                        <div class="row g-2">
+                    <div class="section-body">
+                        <div class="row g-3">
 
                             <div class="col-6">
                                 <label class="field-label">Background</label>
@@ -745,7 +1217,7 @@
                                 <input
                                     type="text"
                                     name="max_width"
-                                    class="form-control font-monospace shadow-none"
+                                    class="form-control font-monospace"
                                     value="{{ $settings['max_width'] ?? '480px' }}"
                                 >
                             </div>
@@ -755,12 +1227,14 @@
                 </div>
 
                 {{-- Actions --}}
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold py-2 btn-submit-action">
-                        <i class="fas fa-save me-1"></i> Save Changes
+                <div class="popup-actions d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-submit-action">
+                        <i class="fas fa-save"></i>
+                        Save Changes
                     </button>
 
-                    <a href="{{ $indexUrl }}" class="btn btn-light border btn-compact shadow-xs text-secondary py-2">
+                    <a href="{{ $indexUrl }}" class="btn btn-light border text-secondary">
+                        <i class="fas fa-times"></i>
                         Cancel
                     </a>
                 </div>
@@ -918,6 +1392,22 @@
         }
     }
 
+    // Live update frequency hint text
+    function updateFrequencyHint() {
+        const valInput = document.getElementById('frequency-value');
+        const unitSelect = document.getElementById('frequency-unit');
+        const hint = document.getElementById('frequency-hint');
+        if (!valInput || !unitSelect || !hint) return;
+
+        const val = parseFloat(valInput.value) || 0;
+        const unit = unitSelect.value;
+        if (val === 0) {
+            hint.textContent = '0 = প্রতিবার পেজ রিলোডে পপআপটি আসবে।';
+        } else {
+            hint.textContent = `একবার দেখলে আগামী ${val} ${unit === 'hours' ? 'ঘণ্টা' : 'দিন'} এই পেজে আর পপআপ আসবে না।`;
+        }
+    }
+
     // Popup type presets
     function handlePopupTypeChange(val) {
         const btnText = document.getElementById('popup-btn-text');
@@ -986,6 +1476,8 @@
         if (popupType) {
             handlePopupTypeChange(popupType.value);
         }
+
+        updateFrequencyHint();
     });
 </script>
 @endsection

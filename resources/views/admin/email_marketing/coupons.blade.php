@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Marketing Promo Coupons - Email Marketing')
@@ -10,551 +11,1193 @@
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
-    #email-marketing-coupons-root .btn,
-    #email-marketing-coupons-root .btn-sm,
-    #email-marketing-coupons-root button,
-    #email-marketing-coupons-root .badge,
-    #email-marketing-coupons-root .alert,
-    #email-marketing-coupons-root .form-control,
-    #email-marketing-coupons-root .form-select,
-    #email-marketing-coupons-root .input-group-text,
-    #email-marketing-coupons-root .card,
-    #email-marketing-coupons-root .metric-card,
-    #email-marketing-coupons-root .page-link,
-    #email-marketing-coupons-root .page-item span,
-    #email-marketing-coupons-root .collapse-toggle-btn,
-    .coupon-modal-scope .modal-content,
-    .coupon-modal-scope .btn {
-        border-radius: 5px !important;
+/* =========================================================
+   EMAIL MARKETING COUPONS
+   Kaiadmin Lite v1.2.0 - Classic White Design
+========================================================= */
+
+#email-marketing-coupons-root {
+    --coupon-primary: var(--bs-primary, #1572e8);
+    --coupon-secondary: #6c757d;
+    --coupon-success: #31ce36;
+    --coupon-warning: #ffad46;
+    --coupon-danger: #f25961;
+    --coupon-info: #48abf7;
+
+    --coupon-bg: #f8f9fa;
+    --coupon-card: #ffffff;
+    --coupon-heading: #1a2035;
+    --coupon-text: #495057;
+    --coupon-muted: #8d9498;
+    --coupon-border: #ebecec;
+
+    --coupon-radius: 5px;
+    --coupon-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+
+    width: 100%;
+    min-width: 0;
+    color: var(--coupon-text);
+    font-size: 13px;
+}
+
+#email-marketing-coupons-root *,
+#email-marketing-coupons-root *::before,
+#email-marketing-coupons-root *::after,
+.coupon-modal-scope *,
+.coupon-modal-scope *::before,
+.coupon-modal-scope *::after {
+    box-sizing: border-box;
+}
+
+/* Page Layout */
+
+#email-marketing-coupons-root .coupons-page-header {
+    margin-bottom: 20px;
+}
+
+#email-marketing-coupons-root .coupons-page-title {
+    color: var(--coupon-heading);
+    font-size: clamp(17px, 2vw, 21px);
+    font-weight: 700;
+    letter-spacing: -.35px;
+    line-height: 1.35;
+}
+
+#email-marketing-coupons-root .coupons-page-description {
+    color: var(--coupon-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+#email-marketing-coupons-root .coupons-header-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 5px;
+    background: rgba(21, 114, 232, .09);
+    color: var(--coupon-primary);
+    font-size: 15px;
+}
+
+/* Global Component Radius */
+
+#email-marketing-coupons-root .btn,
+#email-marketing-coupons-root .badge,
+#email-marketing-coupons-root .alert,
+#email-marketing-coupons-root .form-control,
+#email-marketing-coupons-root .form-select,
+#email-marketing-coupons-root .input-group-text,
+#email-marketing-coupons-root .card,
+#email-marketing-coupons-root .page-link,
+#email-marketing-coupons-root .collapse-toggle-btn,
+.coupon-modal-scope .modal-content,
+.coupon-modal-scope .btn {
+    border-radius: var(--coupon-radius);
+}
+
+/* Cards */
+
+#email-marketing-coupons-root .card {
+    min-width: 0;
+    background: var(--coupon-card);
+    border: 1px solid var(--coupon-border);
+    box-shadow: var(--coupon-shadow);
+    margin-bottom: 16px;
+}
+
+#email-marketing-coupons-root .section-header-wrap {
+    min-height: 45px;
+    padding: 10px 15px;
+    background: #fff;
+    border-bottom: 1px solid var(--coupon-border);
+}
+
+#email-marketing-coupons-root .section-title {
+    color: var(--coupon-heading);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0;
+}
+
+#email-marketing-coupons-root .section-title i {
+    color: var(--coupon-primary);
+}
+
+/* Compact Buttons */
+
+#email-marketing-coupons-root .btn-compact {
+    min-height: 33px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    transition: all .18s ease;
+}
+
+#email-marketing-coupons-root .btn {
+    font-weight: 600;
+}
+
+#email-marketing-coupons-root .btn:focus-visible {
+    box-shadow: 0 0 0 3px rgba(21, 114, 232, .15);
+}
+
+#email-marketing-coupons-root .btn-primary {
+    background-color: var(--coupon-primary);
+    border-color: var(--coupon-primary);
+}
+
+#email-marketing-coupons-root .btn-primary:hover {
+    filter: brightness(.94);
+}
+
+#email-marketing-coupons-root .top-action-btns {
+    flex-shrink: 0;
+}
+
+/* Collapse Toggle */
+
+#email-marketing-coupons-root .collapse-toggle-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #6c757d;
+    background: #fff;
+    border: 1px solid var(--coupon-border);
+    transition: all .2s ease;
+}
+
+#email-marketing-coupons-root .collapse-toggle-btn:hover {
+    color: var(--coupon-primary);
+    background: #f4f8ff;
+    border-color: rgba(21, 114, 232, .3);
+}
+
+#email-marketing-coupons-root .collapse-icon {
+    font-size: 10px;
+    transition: transform .25s ease;
+}
+
+#email-marketing-coupons-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+/* Alerts */
+
+#email-marketing-coupons-root .alert {
+    padding: 11px 14px;
+    font-size: 12px;
+    border: 1px solid transparent;
+}
+
+#email-marketing-coupons-root .alert-success {
+    background: #f0faf2;
+    border-color: #d5f0da;
+}
+
+#email-marketing-coupons-root .alert-danger {
+    background: #fff3f3;
+    border-color: #f8d7da;
+}
+
+/* =========================================================
+   KPI METRIC CARDS
+========================================================= */
+
+#email-marketing-coupons-root .metric-card {
+    position: relative;
+    height: 100%;
+    min-height: 105px;
+    padding: 13px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--coupon-border);
+    border-left: 3px solid var(--coupon-primary);
+    box-shadow: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+#email-marketing-coupons-root .metric-card:hover {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .055);
+}
+
+#email-marketing-coupons-root .metric-card-amber {
+    border-left-color: #ffad46;
+}
+
+#email-marketing-coupons-root .metric-card-green {
+    border-left-color: #31ce36;
+}
+
+#email-marketing-coupons-root .metric-card-blue {
+    border-left-color: #1572e8;
+}
+
+#email-marketing-coupons-root .metric-card-purple {
+    border-left-color: #6861ce;
+}
+
+#email-marketing-coupons-root .stat-label-title {
+    color: #8d9498;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+#email-marketing-coupons-root .stat-val-num {
+    color: var(--coupon-heading);
+    font-size: clamp(19px, 2vw, 23px);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -.5px;
+    overflow-wrap: anywhere;
+}
+
+#email-marketing-coupons-root .stat-sub-text {
+    margin-top: 3px;
+    color: var(--coupon-muted);
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+#email-marketing-coupons-root .metric-icon-square {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+#email-marketing-coupons-root .metric-card-amber .metric-icon-square {
+    color: #e69b2c;
+    background: #fff5e5;
+}
+
+#email-marketing-coupons-root .metric-card-green .metric-icon-square {
+    color: #31a94a;
+    background: #eaf8ed;
+}
+
+#email-marketing-coupons-root .metric-card-blue .metric-icon-square {
+    color: #1572e8;
+    background: #edf4ff;
+}
+
+#email-marketing-coupons-root .metric-card-purple .metric-icon-square {
+    color: #6861ce;
+    background: #f0efff;
+}
+
+/* =========================================================
+   FORM & FILTER PANEL
+========================================================= */
+
+#email-marketing-coupons-root .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #495057;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+#email-marketing-coupons-root .form-control,
+#email-marketing-coupons-root .form-select {
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 11px;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ebedf2;
+    box-shadow: none;
+    font-size: 12px;
+    line-height: 1.4;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+#email-marketing-coupons-root .form-control::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+#email-marketing-coupons-root .form-control:focus,
+#email-marketing-coupons-root .form-select:focus {
+    border-color: var(--coupon-primary);
+    box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
+    outline: none;
+}
+
+#email-marketing-coupons-root .input-group-text {
+    min-width: 37px;
+    justify-content: center;
+    color: #8d9498;
+    background: #f8f9fa;
+    border-color: #ebedf2;
+    font-size: 12px;
+}
+
+#email-marketing-coupons-root .input-group > .input-group-text {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#email-marketing-coupons-root .input-group > .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#email-marketing-coupons-root .filter-reset-btn {
+    min-height: 36px;
+    background: #fff;
+    border-color: #ebedf2;
+    color: #6c757d;
+}
+
+#email-marketing-coupons-root .filter-reset-btn:hover {
+    color: var(--coupon-primary);
+    background: #f4f8ff;
+    border-color: var(--coupon-primary);
+}
+
+/* =========================================================
+   TABLE DESIGN
+========================================================= */
+
+#email-marketing-coupons-root .coupons-table-card {
+    overflow: hidden;
+}
+
+#email-marketing-coupons-root .table-heading {
+    color: var(--coupon-heading);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+#email-marketing-coupons-root .table-subtitle {
+    color: var(--coupon-muted);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+#email-marketing-coupons-root .pc-fit-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#email-marketing-coupons-root .custom-coupons-table {
+    width: 100%;
+    min-width: 690px;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+#email-marketing-coupons-root .custom-coupons-table thead th {
+    padding: 11px 10px;
+    color: #6c757d;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ebecec;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .45px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#email-marketing-coupons-root .custom-coupons-table tbody td {
+    padding: 11px 10px;
+    color: #495057;
+    background: #fff;
+    border-bottom: 1px solid #f0f1f3;
+    font-size: 11.5px;
+    line-height: 1.5;
+    vertical-align: middle;
+}
+
+#email-marketing-coupons-root .custom-coupons-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+#email-marketing-coupons-root .custom-coupons-table tbody tr:hover td {
+    background: #fafbfd;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .col-vn-id {
+    width: 65px;
+    min-width: 55px;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .col-vn-code {
+    min-width: 165px;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .col-vn-val {
+    min-width: 145px;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .col-vn-status {
+    min-width: 110px;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .col-vn-action {
+    min-width: 180px;
+}
+
+#email-marketing-coupons-root .custom-coupons-table .font-monospace {
+    font-weight: 600;
+}
+
+#email-marketing-coupons-root .coupon-code-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 6px 9px;
+    color: #495057;
+    background: #f8f9fa;
+    border: 1px solid #ebedf2;
+    border-radius: 5px;
+    font-size: 11px;
+    letter-spacing: .4px;
+    overflow-wrap: anywhere;
+}
+
+#email-marketing-coupons-root .coupon-copy-btn {
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid #ebedf2;
+    color: #8d9498;
+    border-radius: 5px;
+    transition: all .15s ease;
+}
+
+#email-marketing-coupons-root .coupon-copy-btn:hover {
+    color: var(--coupon-primary);
+    background: #edf4ff;
+    border-color: rgba(21, 114, 232, .3);
+}
+
+#email-marketing-coupons-root .coupon-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 9px;
+    border-radius: 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    white-space: nowrap;
+}
+
+#email-marketing-coupons-root .coupon-status-active {
+    color: #28a745;
+    background: #eaf8ed;
+    border: 1px solid #d6f0dc;
+}
+
+#email-marketing-coupons-root .coupon-status-inactive {
+    color: #6c757d;
+    background: #f1f2f4;
+    border: 1px solid #e4e6e9;
+}
+
+#email-marketing-coupons-root .coupon-standard-badge {
+    color: #6c757d;
+    background: #f8f9fa;
+    border: 1px solid #ebedf2;
+    font-size: 10px;
+}
+
+#email-marketing-coupons-root .coupon-action-btn {
+    min-height: 30px;
+    padding: 6px 10px;
+    font-size: 10.5px;
+}
+
+/* Empty State */
+
+#email-marketing-coupons-root #emptyCouponsRow td {
+    padding: 45px 15px;
+    color: #8d9498;
+    white-space: normal;
+}
+
+#email-marketing-coupons-root #emptyCouponsRow i {
+    color: #c5c9d0;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+#email-marketing-coupons-root .card-footer {
+    padding: 12px 15px;
+    background: #fff;
+    border-top: 1px solid #ebecec;
+}
+
+#email-marketing-coupons-root .card-footer nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    margin: 0;
+}
+
+#email-marketing-coupons-root .card-footer nav > div.d-sm-none,
+#email-marketing-coupons-root .card-footer nav > .d-sm-none {
+    display: none !important;
+}
+
+#email-marketing-coupons-root .card-footer nav > div.d-none,
+#email-marketing-coupons-root .card-footer nav > .d-none.flex-sm-fill {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+#email-marketing-coupons-root .card-footer nav p,
+#email-marketing-coupons-root .card-footer nav .small.text-muted,
+#email-marketing-coupons-root .card-footer nav div:has(> p),
+#email-marketing-coupons-root .card-footer nav > div.d-none > div:first-child,
+#email-marketing-coupons-root .card-footer nav .d-none.flex-sm-fill > div:first-child {
+    display: none !important;
+}
+
+#email-marketing-coupons-root .card-footer .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+#email-marketing-coupons-root .card-footer .page-item {
+    display: inline-flex;
+}
+
+#email-marketing-coupons-root .card-footer .page-item .page-link,
+#email-marketing-coupons-root .card-footer .page-item span {
+    min-width: 29px;
+    height: 29px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    background: #fff;
+    border: 1px solid #ebecec;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition: all .15s ease;
+}
+
+#email-marketing-coupons-root .card-footer .page-item .page-link:hover {
+    color: var(--coupon-primary);
+    background: #f4f8ff;
+    border-color: rgba(21, 114, 232, .3);
+}
+
+#email-marketing-coupons-root .card-footer .page-item.active .page-link,
+#email-marketing-coupons-root .card-footer .page-item.active span {
+    color: #fff;
+    background: var(--coupon-primary);
+    border-color: var(--coupon-primary);
+}
+
+#email-marketing-coupons-root .card-footer .page-item.disabled .page-link,
+#email-marketing-coupons-root .card-footer .page-item.disabled span {
+    opacity: .45;
+    background: #f8f9fa;
+    cursor: not-allowed;
+}
+
+#email-marketing-coupons-root .card-footer nav svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* =========================================================
+   COPY NOTIFICATION MODAL
+========================================================= */
+
+.coupon-modal-scope .modal-content {
+    background: #fff;
+    border: 1px solid #ebecec;
+    border-radius: 8px;
+}
+
+.coupon-modal-scope .modal-body {
+    padding: 14px 8px;
+}
+
+.coupon-modal-scope .copy-success-icon {
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #31a94a;
+    background: #eaf8ed;
+    border-radius: 50%;
+    font-size: 21px;
+}
+
+.coupon-modal-scope .copy-modal-title {
+    color: #1a2035;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.coupon-modal-scope .copy-modal-description {
+    color: #8d9498;
+    font-size: 11.5px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN
+========================================================= */
+
+/* Large Desktop */
+
+@media (min-width: 1200px) {
+    #email-marketing-coupons-root .metric-card {
+        min-height: 110px;
+        padding: 14px 16px;
     }
 
-    #email-marketing-coupons-root .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    #email-marketing-coupons-root .input-group > .form-control {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
+    #email-marketing-coupons-root .custom-coupons-table {
+        min-width: 0;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-coupons-root .custom-coupons-table thead th,
+    #email-marketing-coupons-root .custom-coupons-table tbody td {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+}
+
+/* Tablet & Smaller Desktop */
+
+@media (max-width: 991.98px) {
+    #email-marketing-coupons-root .custom-coupons-table {
+        min-width: 690px;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
+    #email-marketing-coupons-root .metric-card {
+        min-height: 100px;
+    }
+}
+
+/* Mobile Landscape & Portrait */
+
+@media (max-width: 767.98px) {
+    #email-marketing-coupons-root {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
-    }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
-        transform: rotate(180deg);
-    }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
+    #email-marketing-coupons-root .coupons-page-header {
+        gap: 12px;
+        margin-bottom: 15px;
     }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-coupons-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+    #email-marketing-coupons-root .coupons-page-title {
+        font-size: 17px;
     }
 
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-    }
-    .stat-label-title {
+    #email-marketing-coupons-root .coupons-page-description {
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
-    }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .stat-sub-text {
-        font-size: 10px;
-        margin-top: 2px;
-    }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
     }
 
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-purple { background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%); border-left: 3.5px solid #a855f7 !important; }
-
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
-    .custom-coupons-table {
+    #email-marketing-coupons-root .top-action-btns {
         width: 100%;
-        margin-bottom: 0;
     }
-    .custom-coupons-table thead th {
+
+    #email-marketing-coupons-root .top-action-btns .btn {
+        width: 100%;
+        min-height: 38px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    #email-marketing-coupons-root .metric-card {
+        min-height: 91px;
+        padding: 10px;
+    }
+
+    #email-marketing-coupons-root .stat-label-title {
         font-size: 10px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
-        white-space: nowrap;
-    }
-    .custom-coupons-table tbody td {
-        padding: 8px 8px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
-        vertical-align: middle;
-        white-space: nowrap;
-    }
-    .custom-coupons-table tbody tr:hover td {
-        background-color: #fafbfc;
     }
 
-    @media (min-width: 992px) {
-        .custom-coupons-table {
-            table-layout: fixed !important;
-            width: 100% !important;
-        }
-        .pc-fit-container {
-            overflow-x: hidden !important;
-        }
-        .custom-coupons-table th,
-        .custom-coupons-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        /* 5 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-vn-id     { width: 6% !important; }
-        .col-vn-code   { width: 26% !important; }
-        .col-vn-val    { width: 24% !important; }
-        .col-vn-status { width: 18% !important; }
-        .col-vn-action { width: 26% !important; }
+    #email-marketing-coupons-root .stat-val-num {
+        font-size: 18px;
     }
 
-    /* Form Controls */
-    #email-marketing-coupons-root .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
+    #email-marketing-coupons-root .stat-sub-text {
+        font-size: 9px;
     }
-    #email-marketing-coupons-root .form-control,
-    #email-marketing-coupons-root .form-select {
-        min-height: 32px;
+
+    #email-marketing-coupons-root .metric-icon-square {
+        width: 29px;
+        height: 29px;
         font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #email-marketing-coupons-root .form-control:focus,
-    #email-marketing-coupons-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
     }
 
-    /* Bulletproof Responsive Pagination */
-    .card-footer nav {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        width: auto !important;
-        margin: 0 !important;
-    }
-    .card-footer nav > div.d-sm-none,
-    .card-footer nav > .d-sm-none {
-        display: none !important;
-    }
-    .card-footer nav > div.d-none,
-    .card-footer nav > .d-none.flex-sm-fill {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .card-footer nav p,
-    .card-footer nav .small.text-muted,
-    .card-footer nav div:has(> p),
-    .card-footer nav > div.d-none > div:first-child,
-    .card-footer nav .d-none.flex-sm-fill > div:first-child {
-        display: none !important;
-    }
-    .card-footer .pagination {
-        margin: 0 !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 3px !important;
-        padding: 0 !important;
-        list-style: none !important;
-    }
-    .card-footer .page-item {
-        display: inline-flex !important;
-    }
-    .card-footer .page-item .page-link,
-    .card-footer .page-item span {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        color: #475569 !important;
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 5px !important;
-        text-decoration: none !important;
-        line-height: 1 !important;
-        transition: all 0.12s ease !important;
-    }
-    .card-footer .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    .card-footer .page-item.active .page-link,
-    .card-footer .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
-    }
-    .card-footer .page-item.disabled .page-link,
-    .card-footer .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        cursor: not-allowed !important;
-    }
-    .card-footer nav svg {
-        width: 10px !important;
-        height: 10px !important;
+    #email-marketing-coupons-root .section-header-wrap {
+        padding: 10px 12px;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
-    @media (max-width: 767.98px) {
-        .coupons-header-wrap h5 {
-            font-size: 16px !important;
-        }
-        .top-action-btns {
-            width: 100%;
-        }
-        .top-action-btns .btn {
-            width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
-        }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-        .stat-label-title {
-            font-size: 10px !important;
-        }
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
-        }
-        .pc-fit-container {
-            width: 100%;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-        }
-        .custom-coupons-table {
-            min-width: 680px !important;
-            table-layout: auto !important;
-        }
+    #email-marketing-coupons-root .section-title {
+        font-size: 11px;
     }
+
+    #email-marketing-coupons-root .filter-reset-btn {
+        min-height: 36px;
+    }
+
+    #email-marketing-coupons-root .pc-fit-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #email-marketing-coupons-root .custom-coupons-table {
+        min-width: 690px;
+    }
+
+    #email-marketing-coupons-root .card-footer {
+        padding: 12px 10px;
+    }
+
+    #email-marketing-coupons-root .card-footer nav {
+        justify-content: center;
+        max-width: 100%;
+    }
+
+    #email-marketing-coupons-root .card-footer .pagination {
+        gap: 3px;
+    }
+
+    #email-marketing-coupons-root .card-footer .page-item .page-link,
+    #email-marketing-coupons-root .card-footer .page-item span {
+        min-width: 27px;
+        height: 27px;
+        padding: 0 6px;
+    }
+}
+
+/* Small Mobile */
+
+@media (max-width: 380px) {
+    #email-marketing-coupons-root .coupons-page-title {
+        font-size: 15px;
+    }
+
+    #email-marketing-coupons-root .metric-card {
+        min-height: 85px;
+        padding: 8px;
+    }
+
+    #email-marketing-coupons-root .stat-label-title {
+        font-size: 9px;
+    }
+
+    #email-marketing-coupons-root .stat-val-num {
+        font-size: 16px;
+    }
+
+    #email-marketing-coupons-root .metric-icon-square {
+        width: 25px;
+        height: 25px;
+        font-size: 10px;
+    }
+
+    #email-marketing-coupons-root .section-title {
+        font-size: 10px;
+    }
+}
+
+/* Reduced Motion */
+
+@media (prefers-reduced-motion: reduce) {
+    #email-marketing-coupons-root *,
+    .coupon-modal-scope * {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
 </style>
+
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-coupons-root">
 
-    {{-- 1. Header & Navigation (Original Clean Light Theme) --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 coupons-header-wrap">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-tags text-primary"></i>
-                <span>Marketing Promo Coupons</span>
-            </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Select store promo vouchers to embed directly into broadcasts or cart recovery drip sequences.
-            </small>
+    {{-- 1. Page Header --}}
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 coupons-page-header">
+
+        <div class="d-flex align-items-center gap-2">
+            <div class="coupons-header-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+
+            <div>
+                <h5 class="coupons-page-title mb-1">
+                    Marketing Promo Coupons
+                </h5>
+
+                <p class="coupons-page-description">
+                    Manage store vouchers for email campaigns and automated cart recovery.
+                </p>
+            </div>
         </div>
 
         <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ route('admin.email_marketing.campaigns.create') }}" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold">
-                <i class="fas fa-plus-circle me-1"></i> <span>Create Campaign With Coupon</span>
+            <a href="{{ route('admin.email_marketing.campaigns.create') }}" class="btn btn-sm btn-primary btn-compact shadow-sm">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create Campaign With Coupon</span>
             </a>
         </div>
+
     </div>
 
+
     {{-- 2. Feedback Messages --}}
+
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center justify-content-between gap-2" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-3 d-flex align-items-center justify-content-between gap-2" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-exclamation-circle text-danger fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('error') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- 3. Voucher Telemetry KPI Overview (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-primary me-1"></i> Promo Vouchers &amp; Campaign Readiness Overview
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsKpis" aria-expanded="true" aria-controls="collapseCouponsKpis" title="Toggle Section">
+
+    {{-- 3. Coupon Statistics --}}
+
+    <div class="card mb-3">
+
+        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+
+            <h6 class="section-title">
+                <i class="fas fa-chart-pie me-1"></i>
+                Coupon Overview
+            </h6>
+
+            <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsKpis" aria-expanded="true" aria-controls="collapseCouponsKpis" title="Toggle Section">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
+
         </div>
+
         <div class="collapse show" id="collapseCouponsKpis">
+
             <div class="p-3">
+
                 <div class="row g-2">
+
                     {{-- Total Vouchers --}}
+
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Vouchers</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+                                <span class="stat-label-title text-truncate">Total Vouchers</span>
+
+                                <div class="metric-icon-square">
                                     <i class="fas fa-ticket"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
+                                <h4 class="stat-val-num my-0 font-monospace bn-digit">
                                     {{ number_format($totalCouponsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">In store database</small>
+
+                                <small class="stat-sub-text d-block text-truncate">
+                                    Total store coupons
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
-                    {{-- Active Store Coupons --}}
+
+                    {{-- Active Vouchers --}}
+
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Active Vouchers</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+                                <span class="stat-label-title text-truncate">Active Vouchers</span>
+
+                                <div class="metric-icon-square">
                                     <i class="fas fa-circle-check"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num">
+                                <h4 class="stat-val-num my-0 font-monospace bn-digit text-success">
                                     {{ number_format($activeCouponsCount) }}
                                 </h4>
-                                <small class="text-success d-block text-truncate font-monospace stat-sub-text">Ready to broadcast</small>
+
+                                <small class="stat-sub-text d-block text-truncate">
+                                    Ready for campaigns
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
-                    {{-- Inactive / Expired --}}
+
+                    {{-- Inactive Vouchers --}}
+
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Inactive Vouchers</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+                                <span class="stat-label-title text-truncate">Inactive Vouchers</span>
+
+                                <div class="metric-icon-square">
                                     <i class="fas fa-pause"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-primary bn-digit font-monospace stat-val-num">
+                                <h4 class="stat-val-num my-0 font-monospace bn-digit text-primary">
                                     {{ number_format($inactiveCouponsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Disabled vouchers</small>
+
+                                <small class="stat-sub-text d-block text-truncate">
+                                    Disabled vouchers
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
-                    {{-- Marketing Readiness --}}
+
+                    {{-- Automation Readiness --}}
+
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-purple h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Automation Ready</span>
-                                <div class="metric-icon-square bg-purple-subtle text-primary shadow-xs" style="background-color: #f3e8ff; color: #7e22ce;">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+                                <span class="stat-label-title text-truncate">Automation Ready</span>
+
+                                <div class="metric-icon-square">
                                     <i class="fas fa-bolt"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
+                                <h4 class="stat-val-num my-0 font-monospace bn-digit">
                                     100%
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Token {coupon_code} ready</small>
+
+                                <small class="stat-sub-text d-block text-truncate">
+                                    Token {coupon_code} ready
+                                </small>
                             </div>
+
                         </div>
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    {{-- 4. Instant Live Search & Status Filter Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Search Vouchers &amp; Filter by Status
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsFilter" aria-expanded="true" aria-controls="collapseCouponsFilter" title="Toggle Filters">
+
+    {{-- 4. Search & Filters --}}
+
+    <div class="card mb-3">
+
+        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+
+            <h6 class="section-title">
+                <i class="fas fa-filter me-1"></i>
+                Search &amp; Filter Coupons
+            </h6>
+
+            <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsFilter" aria-expanded="true" aria-controls="collapseCouponsFilter" title="Toggle Filters">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
+
         </div>
+
         <div class="collapse show" id="collapseCouponsFilter">
+
             <div class="p-3">
-                <div class="row g-2 align-items-end">
+
+                <div class="row g-3 align-items-end">
+
                     <div class="col-12 col-md-5">
+
                         <label class="form-label" for="couponSearchInput">
-                            <i class="fas fa-search me-1 text-primary"></i> Search Voucher Code or Discount
+                            <i class="fas fa-search me-1 text-primary"></i>
+                            Search Coupon
                         </label>
+
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="couponSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="WELCOME10, EID2026, 100..." onkeyup="filterCouponsTable()">
+
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+
+                            <input type="text" id="couponSearchInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="Search code or discount..." onkeyup="filterCouponsTable()">
+
                         </div>
+
                     </div>
 
+
                     <div class="col-6 col-md-4">
+
                         <label class="form-label" for="couponStatusFilter">
-                            <i class="fas fa-toggle-on me-1 text-success"></i> Voucher Status
+                            <i class="fas fa-toggle-on me-1 text-success"></i>
+                            Coupon Status
                         </label>
+
                         <select id="couponStatusFilter" class="form-select shadow-none font-monospace" onchange="filterCouponsTable()">
+
                             <option value="all" selected>All Statuses</option>
                             <option value="active">Active Only</option>
                             <option value="inactive">Inactive Only</option>
+
                         </select>
+
                     </div>
+
 
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetCouponFilters()">
-                            <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
+
+                        <button type="button" class="btn btn-light border btn-compact filter-reset-btn w-100 shadow-none" onclick="resetCouponFilters()">
+                            <i class="fas fa-rotate-left"></i>
+                            <span>Reset Filters</span>
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    {{-- 5. Coupons Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
-    <div class="card border-0 shadow-sm overflow-hidden mb-3">
-        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
+
+    {{-- 5. Coupons Table --}}
+
+    <div class="card coupons-table-card mb-3">
+
+        {{-- Table Header --}}
+
+        <div class="p-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-white">
+
             <div>
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
-                    <i class="fas fa-ticket-simple text-warning"></i> <span>Available Store Promo Vouchers</span>
+
+                <h6 class="table-heading mb-1 d-flex align-items-center gap-2">
+                    <i class="fas fa-ticket-simple text-warning"></i>
+                    Available Store Coupons
                 </h6>
-                <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">
+
+                <small class="table-subtitle font-monospace bn-digit">
                     Showing {{ $coupons->firstItem() ?? 0 }} to {{ $coupons->lastItem() ?? 0 }} of {{$coupons->total() }} coupons
                 </small>
+
             </div>
+
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-coupons-count">
+
+                <span class="badge bg-light text-secondary border font-monospace px-2 py-2" style="font-size: 10px;" id="visible-coupons-count">
                     {{ $coupons->total() }} Total
                 </span>
-                <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsTable" aria-expanded="true" aria-controls="collapseCouponsTable" title="Toggle Table">
+
+                <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseCouponsTable" aria-expanded="true" aria-controls="collapseCouponsTable" title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </button>
+
             </div>
+
         </div>
 
+
         <div class="collapse show" id="collapseCouponsTable">
+
             <div class="table-responsive pc-fit-container">
+
                 <table class="table align-middle mb-0 custom-coupons-table" id="coupons-table">
+
                     <thead>
                         <tr>
                             <th class="ps-3 col-vn-id text-center">#ID</th>
-                            <th class="col-vn-code">Voucher Code</th>
+                            <th class="col-vn-code">Coupon Code</th>
                             <th class="col-vn-val">Discount Value</th>
                             <th class="col-vn-status">Status</th>
                             <th class="text-end pe-3 col-vn-action">Marketing Action</th>
                         </tr>
                     </thead>
+
                     <tbody id="coupons-tbody">
+
                         @forelse($coupons as $coupon)
+
                             @php
                                 $discount = $coupon->discount_amount ?? ($coupon->discount ?? ($coupon->amount ?? ($coupon->value ?? null)));
                                 $isActive = !isset($coupon->status) || $coupon->status == 1 || $coupon->status === 'active';
@@ -566,92 +1209,183 @@
                                     $statusSlug
                                 );
                             @endphp
+
                             <tr class="coupon-entry-row" data-search="{{ $rowSearchData }}" data-status="{{ $statusSlug }}">
+
+                                {{-- Coupon ID --}}
+
                                 <td class="ps-3 col-vn-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
                                     {{ $coupon->id }}
                                 </td>
+
+
+                                {{-- Coupon Code --}}
+
                                 <td class="col-vn-code">
-                                    <div class="d-inline-flex align-items-center gap-1">
-                                        <span class="badge bg-light text-dark border font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 11.5px; letter-spacing: 0.5px;">
+
+                                    <div class="d-inline-flex align-items-center gap-2">
+
+                                        <span class="coupon-code-badge font-monospace">
                                             {{ $coupon->code }}
                                         </span>
-                                        <button type="button" class="btn btn-sm btn-light border p-0 d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 22px; height: 22px; border-radius: 4px !important;" onclick="copyCouponCode('{{ addslashes($coupon->code) }}')" title="Copy Coupon Code">
-                                            <i class="fas fa-copy text-secondary" style="font-size: 9.5px;"></i>
+
+                                        <button type="button" class="btn btn-sm coupon-copy-btn shadow-none" onclick="copyCouponCode('{{ addslashes($coupon->code) }}')" title="Copy Coupon Code">
+                                            <i class="fas fa-copy" style="font-size: 10px;"></i>
                                         </button>
+
                                     </div>
+
                                 </td>
+
+
+                                {{-- Discount Value --}}
+
                                 <td class="col-vn-val font-monospace bn-digit">
+
                                     @if($discount)
-                                        <span class="fw-bold text-success" style="font-size: 12.5px;">৳ {{ number_format($discount, 2) }}</span>
-                                    @else
-                                        <span class="badge bg-light text-secondary border font-monospace px-2 py-0" style="font-size: 10px;">Standard Discount</span>
-                                    @endif
-                                </td>
-                                <td class="col-vn-status">
-                                    @if($isActive)
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            <i class="fas fa-circle-check me-1"></i> ACTIVE
+
+                                        <span class="fw-bold text-success" style="font-size: 12px;">
+                                            ৳ {{ number_format($discount, 2) }}
                                         </span>
+
                                     @else
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
+
+                                        <span class="badge coupon-standard-badge font-monospace px-2 py-1">
+                                            Standard Discount
+                                        </span>
+
+                                    @endif
+
+                                </td>
+
+
+                                {{-- Coupon Status --}}
+
+                                <td class="col-vn-status">
+
+                                    @if($isActive)
+
+                                        <span class="coupon-status-badge coupon-status-active font-monospace">
+                                            <i class="fas fa-circle-check me-1"></i>
+                                            ACTIVE
+                                        </span>
+
+                                    @else
+
+                                        <span class="coupon-status-badge coupon-status-inactive font-monospace">
                                             INACTIVE
                                         </span>
+
                                     @endif
+
                                 </td>
+
+
+                                {{-- Marketing Action --}}
+
                                 <td class="text-end pe-3 col-vn-action">
+
                                     <form action="{{ route('admin.email_marketing.coupons.create_campaign') }}" method="POST" class="d-inline">
+
                                         @csrf
+
                                         <input type="hidden" name="coupon_id" value="{{ $coupon->id }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold bg-white" title="Attach to Campaign">
-                                            <i class="fas fa-paper-plane me-1"></i> <span>Attach To Campaign</span>
+
+                                        <button type="submit" class="btn btn-sm btn-outline-primary btn-compact coupon-action-btn shadow-none bg-white" title="Attach to Campaign">
+                                            <i class="fas fa-paper-plane"></i>
+                                            <span>Attach To Campaign</span>
                                         </button>
+
                                     </form>
+
                                 </td>
+
                             </tr>
+
                         @empty
+
                             <tr id="emptyCouponsRow">
+
                                 <td colspan="5" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-ticket fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                    <span class="fw-semibold">No promotional coupons found in your store database.</span>
+
+                                    <i class="fas fa-ticket fa-2x mb-2 d-block opacity-25"></i>
+
+                                    <span class="fw-semibold">
+                                        No promotional coupons found.
+                                    </span>
+
                                 </td>
+
                             </tr>
+
                         @endforelse
+
                     </tbody>
+
                 </table>
+
             </div>
 
-            {{-- Bulletproof Responsive Pagination Footer --}}
+
+            {{-- Pagination --}}
+
             @if($coupons->hasPages())
-                <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
+
+                <div class="p-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-white card-footer no-print">
+
                     <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
                         Showing {{ $coupons->firstItem() }} to {{ $coupons->lastItem() }} of {{$coupons->total() }} coupons
                     </small>
+
                     <div>
                         {{ $coupons->links('pagination::bootstrap-5') }}
                     </div>
+
                 </div>
+
             @endif
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Modal: Copy Notification Lightbox (Replaces browser alert) -->
+
+<!-- Modal: Copy Notification -->
+
 <div class="modal fade coupon-modal-scope" id="couponCopyNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
+
         <div class="modal-content border-0 shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
-                <div class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 44px; height: 44px; border-radius: 50% !important;">
-                    <i class="fas fa-circle-check fs-4"></i>
+
+                <div class="copy-success-icon mx-auto mb-3">
+                    <i class="fas fa-circle-check"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Voucher Code Copied!</h6>
-                <p class="text-muted small mb-3" style="font-size: 11.5px; line-height: 1.45;">
-                    Code <strong id="copiedVoucherCode" class="text-dark font-monospace">CODE</strong> is copied to clipboard. You can paste it into email subject or template.
+
+                <h6 class="copy-modal-title mb-2">
+                    Coupon Copied!
+                </h6>
+
+                <p class="copy-modal-description mb-3">
+                    Code <strong id="copiedVoucherCode" class="text-dark font-monospace">CODE</strong> has been copied. Paste it into your email subject or template.
                 </p>
-                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">OK</button>
+
+                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">
+                    OK
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
 
 <script>
     function copyCouponCode(code) {
@@ -710,4 +1444,5 @@
         filterCouponsTable();
     }
 </script>
+
 @endsection

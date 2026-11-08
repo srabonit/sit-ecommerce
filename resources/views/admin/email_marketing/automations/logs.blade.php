@@ -1,496 +1,671 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Automation Execution Logs - Email Marketing')
 
 @php
-    $totalLogsCount   = $logs->total();$sentCount        = \App\Models\EmailAutomationLog::whereIn('status', ['sent', 'delivered'])->count();
-    $queuedCount      = \App\Models\EmailAutomationLog::whereIn('status', ['queued', 'pending'])->count();$failedCount      = \App\Models\EmailAutomationLog::where('status', 'failed')->count();
+    $totalLogsCount = $logs->total();
+
+    $sentCount = \App\Models\EmailAutomationLog::whereIn('status', ['sent', 'delivered'])->count();
+    $queuedCount = \App\Models\EmailAutomationLog::whereIn('status', ['queued', 'pending'])->count();
+    $failedCount = \App\Models\EmailAutomationLog::where('status', 'failed')->count();
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
-    #email-marketing-automation-logs-root .btn,
-    #email-marketing-automation-logs-root .btn-sm,
-    #email-marketing-automation-logs-root button,
-    #email-marketing-automation-logs-root .badge,
-    #email-marketing-automation-logs-root .alert,
-    #email-marketing-automation-logs-root .form-control,
-    #email-marketing-automation-logs-root .form-select,
-    #email-marketing-automation-logs-root .input-group-text,
-    #email-marketing-automation-logs-root .card,
-    #email-marketing-automation-logs-root .metric-card,
-    #email-marketing-automation-logs-root .page-link,
-    #email-marketing-automation-logs-root .page-item span,
-    #email-marketing-automation-logs-root .collapse-toggle-btn,
-    .log-modal-scope .modal-content,
-    .log-modal-scope .btn {
-        border-radius: 5px !important;
+    #email-marketing-automation-logs-root {
+        --logs-primary: #2563eb;
+        --logs-border: #e2e8f0;
+        --logs-muted: #64748b;
+        --logs-dark: #0f172a;
+        --logs-radius: 5px;
+    }
+
+    /* Global radius */
+    #email-marketing-automation-logs-root *,
+    #logDetailModal * {
+        border-radius: var(--logs-radius);
     }
 
     #email-marketing-automation-logs-root .input-group > .input-group-text {
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #email-marketing-automation-logs-root .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-automation-logs-root .card,
+    #email-marketing-automation-logs-root .btn,
+    #email-marketing-automation-logs-root .badge,
+    #email-marketing-automation-logs-root .form-control,
+    #email-marketing-automation-logs-root .form-select,
+    #email-marketing-automation-logs-root .page-link,
+    #logDetailModal .modal-content,
+    #logDetailModal .btn {
+        border-radius: 5px !important;
     }
 
-    /* Compact Sleek Button Styling */
+    #email-marketing-automation-logs-root .card {
+        border: 1px solid var(--logs-border);
+        box-shadow: 0 2px 7px rgba(15, 23, 42, .035);
+        background: #fff;
+    }
+
+    /* Header */
+    .logs-header-wrap h5 {
+        font-size: 18px;
+        letter-spacing: -.35px;
+    }
+
+    .logs-header-wrap p {
+        font-size: 12px;
+        color: var(--logs-muted);
+    }
+
     .btn-compact {
+        min-height: 32px;
+        padding: 6px 12px !important;
         font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+        font-weight: 650 !important;
+        line-height: 1.3;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: all .18s ease;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
+    .btn-compact:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Section headers */
+    .logs-section-header {
+        padding: 11px 15px;
+        min-height: 43px;
+        border-bottom: 1px solid var(--logs-border);
+        background: #fff;
+    }
+
+    .logs-section-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
     .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+        width: 25px;
+        height: 25px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
+        background: #fff;
         border: 1px solid #cbd5e1;
         color: #475569;
-        transition: all 0.2s ease;
+        transition: all .2s ease;
     }
+
     .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+        background: var(--logs-primary);
+        border-color: var(--logs-primary);
+        color: #fff;
     }
+
     .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
+
     .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         font-size: 10px;
+        transition: transform .2s ease;
     }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-automation-logs-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    /* Metric Cards - Zero Overflow Architecture */
+    /* KPI cards */
     .metric-card {
-        padding: 12px 14px;
+        height: 100%;
+        padding: 13px;
         position: relative;
         overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        border: 1px solid var(--logs-border);
+        border-left: 3px solid transparent !important;
+        transition: transform .18s ease, box-shadow .18s ease;
     }
+
     .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
     }
+
+    .metric-card-blue {
+        background: linear-gradient(145deg, #fff, #f0f7ff);
+        border-left-color: #2563eb !important;
+    }
+
+    .metric-card-green {
+        background: linear-gradient(145deg, #fff, #effcf5);
+        border-left-color: #10b981 !important;
+    }
+
+    .metric-card-amber {
+        background: linear-gradient(145deg, #fff, #fffbeb);
+        border-left-color: #f59e0b !important;
+    }
+
+    .metric-card-red {
+        background: linear-gradient(145deg, #fff, #fff1f2);
+        border-left-color: #ef4444 !important;
+    }
+
     .stat-label-title {
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        color: #64748b;
+        line-height: 1.3;
     }
+
     .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+        font-size: 21px;
+        font-weight: 800;
+        line-height: 1.3;
+        letter-spacing: -.6px;
+        margin: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
     .stat-sub-text {
+        display: block;
+        margin-top: 3px;
         font-size: 10px;
-        margin-top: 2px;
+        color: #94a3b8;
     }
+
     .metric-icon-square {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
+        font-size: 14px;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-red    { background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%); border-left: 3.5px solid #ef4444 !important; }
+    /* Filters */
+    #email-marketing-automation-logs-root .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #334155;
+    }
 
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
+    #email-marketing-automation-logs-root .form-control,
+    #email-marketing-automation-logs-root .form-select {
+        min-height: 35px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: #0f172a;
+        border: 1px solid #cbd5e1;
+        background-color: #fff;
+        box-shadow: none;
+    }
+
+    #email-marketing-automation-logs-root .form-control:focus,
+    #email-marketing-automation-logs-root .form-select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+    }
+
+    #email-marketing-automation-logs-root .input-group-text {
+        border-color: #cbd5e1;
+        font-size: 11px;
+    }
+
+    /* Table heading */
+    .logs-table-heading {
+        padding: 12px 15px;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--logs-border);
+    }
+
+    .logs-table-heading h6 {
+        font-size: 13px;
+        font-weight: 750;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .logs-table-heading small {
+        font-size: 10px;
+        color: #64748b;
+    }
+
+    /* Logs table */
     .custom-logs-table {
         width: 100%;
-        margin-bottom: 0;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
     }
+
     .custom-logs-table thead th {
+        padding: 10px 8px;
+        background: #f8fafc;
+        color: #64748b;
         font-size: 10px;
-        letter-spacing: 0.03em;
+        font-weight: 750;
+        letter-spacing: .035em;
         text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
         white-space: nowrap;
+        border-bottom: 1px solid #e2e8f0;
     }
+
     .custom-logs-table tbody td {
-        padding: 8px 8px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 10px 8px;
+        color: #334155;
         font-size: 11px;
         vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
         white-space: nowrap;
     }
+
+    .custom-logs-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
     .custom-logs-table tbody tr:hover td {
-        background-color: #fafbfc;
+        background: #f8fafc;
+    }
+
+    .custom-logs-table .text-truncate {
+        max-width: 100%;
     }
 
     @media (min-width: 992px) {
         .custom-logs-table {
-            table-layout: fixed !important;
-            width: 100% !important;
+            table-layout: fixed;
         }
+
         .pc-fit-container {
-            overflow-x: hidden !important;
+            overflow-x: hidden;
         }
+
         .custom-logs-table th,
         .custom-logs-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* 7 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-lg-id     { width: 4% !important; }
-        .col-lg-user   { width: 22% !important; }
-        .col-lg-wf     { width: 22% !important; }
-        .col-lg-entity { width: 14% !important; }
-        .col-lg-status { width: 10% !important; }
-        .col-lg-date   { width: 13% !important; }
-        .col-lg-note   { width: 15% !important; }
+        .col-lg-id     { width: 4%; }
+        .col-lg-user   { width: 22%; }
+        .col-lg-wf     { width: 22%; }
+        .col-lg-entity { width: 14%; }
+        .col-lg-status { width: 10%; }
+        .col-lg-date   { width: 13%; }
+        .col-lg-note   { width: 15%; }
     }
 
-    /* Form Controls */
-    #email-marketing-automation-logs-root .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
-    }
-    #email-marketing-automation-logs-root .form-control,
-    #email-marketing-automation-logs-root .form-select {
-        min-height: 32px;
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #email-marketing-automation-logs-root .form-control:focus,
-    #email-marketing-automation-logs-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
+    /* Error button */
+    .log-error-btn {
+        max-width: 100%;
+        min-height: 27px;
+        padding: 4px 7px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 10px !important;
+        overflow: hidden;
     }
 
-    /* Bulletproof Responsive Pagination */
-    .card-footer nav {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-        width: auto !important;
-        margin: 0 !important;
+    /* Pagination */
+    .logs-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
     }
-    .card-footer nav > div.d-sm-none,
-    .card-footer nav > .d-sm-none {
+
+    .logs-pagination nav {
+        margin: 0;
+    }
+
+    .logs-pagination nav > div.d-sm-none,
+    .logs-pagination nav > .d-sm-none {
         display: none !important;
     }
-    .card-footer nav > div.d-none,
-    .card-footer nav > .d-none.flex-sm-fill {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .card-footer nav p,
-    .card-footer nav .small.text-muted,
-    .card-footer nav div:has(> p),
-    .card-footer nav > div.d-none > div:first-child,
-    .card-footer nav .d-none.flex-sm-fill > div:first-child {
+
+    .logs-pagination nav p,
+    .logs-pagination nav .small.text-muted,
+    .logs-pagination nav div:has(> p),
+    .logs-pagination nav > div.d-none > div:first-child,
+    .logs-pagination nav .d-none.flex-sm-fill > div:first-child {
         display: none !important;
     }
-    .card-footer .pagination {
-        margin: 0 !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 3px !important;
-        padding: 0 !important;
-        list-style: none !important;
+
+    .logs-pagination .pagination {
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
     }
-    .card-footer .page-item {
+
+    .logs-pagination .page-link,
+    .logs-pagination .page-item span {
+        min-width: 27px !important;
+        height: 27px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
-    }
-    .card-footer .page-item .page-link,
-    .card-footer .page-item span {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
+        align-items: center;
+        justify-content: center;
         font-size: 11px !important;
-        font-weight: 600 !important;
+        font-weight: 650;
         color: #475569 !important;
-        background-color: #ffffff !important;
+        background: #fff !important;
         border: 1px solid #cbd5e1 !important;
-        border-radius: 5px !important;
-        text-decoration: none !important;
-        line-height: 1 !important;
-        transition: all 0.12s ease !important;
-    }
-    .card-footer .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    .card-footer .page-item.active .page-link,
-    .card-footer .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
-    }
-    .card-footer .page-item.disabled .page-link,
-    .card-footer .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        cursor: not-allowed !important;
-    }
-    .card-footer nav svg {
-        width: 10px !important;
-        height: 10px !important;
+        text-decoration: none;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    .logs-pagination .page-item.active .page-link,
+    .logs-pagination .page-item.active span {
+        color: #fff !important;
+        background: #2563eb !important;
+        border-color: #2563eb !important;
+    }
+
+    .logs-pagination .page-item.disabled {
+        opacity: .45;
+    }
+
+    .logs-pagination svg {
+        width: 11px;
+        height: 11px;
+    }
+
+    /* Modal */
+    #logDetailModal {
+        z-index: 106500;
+    }
+
+    #logDetailModal .modal-content {
+        border: 1px solid #e2e8f0;
+        border-radius: 5px !important;
+    }
+
+    #modalLogErrorMessage {
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 250px;
+        overflow-y: auto;
+        font-size: 11px;
+        line-height: 1.6;
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
         .logs-header-wrap h5 {
             font-size: 16px !important;
         }
-        .top-action-btns {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
+
+        .logs-header-wrap p {
+            font-size: 11px;
         }
+
+        .top-action-btns {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            gap: 7px !important;
+        }
+
         .top-action-btns .btn {
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
-        }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-        .stat-label-title {
+            min-height: 35px;
+            padding: 7px 5px !important;
             font-size: 10px !important;
         }
+
+        .metric-card {
+            min-height: 88px;
+            padding: 10px;
+        }
+
+        .stat-label-title {
+            font-size: 10px;
+        }
+
         .stat-val-num {
-            font-size: 14px !important;
+            font-size: 17px;
         }
+
         .stat-sub-text {
-            font-size: 9px !important;
+            font-size: 9px;
         }
+
         .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
         }
+
+        .logs-section-header {
+            padding: 10px 12px;
+        }
+
+        .logs-section-title {
+            font-size: 11px;
+        }
+
         .pc-fit-container {
             width: 100%;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }
+
         .custom-logs-table {
-            min-width: 820px !important;
+            min-width: 820px;
+            table-layout: auto;
+        }
+
+        .logs-table-heading {
+            padding: 10px 12px;
+        }
+
+        .logs-pagination {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media print {
+        .no-print,
+        .top-action-btns,
+        .logs-filter-card,
+        .collapse-toggle-btn {
+            display: none !important;
+        }
+
+        .pc-fit-container {
+            overflow: visible !important;
+        }
+
+        .custom-logs-table {
             table-layout: auto !important;
         }
     }
 </style>
 
-<div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-automation-logs-root">
+<div class="container-fluid py-3 px-2 px-md-4" id="email-marketing-automation-logs-root">
 
-    <!-- 1. Header & Navigation (Original Clean Light Theme) -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 logs-header-wrap">
+    {{-- Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 logs-header-wrap">
         <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
+            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
                 <i class="fas fa-list-check text-primary"></i>
-                <span>Automation Execution Logs</span>
+                Automation Execution Logs
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
+            <p class="mb-0">
                 Audit history of automated lifecycle triggers, drip steps, and delivery status.
-            </small>
+            </p>
         </div>
 
         <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ url('admin/email-marketing/automations') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
-                <i class="fas fa-arrow-left me-1"></i> <span>Back to Workflows</span>
+            <a href="{{ url('admin/email-marketing/automations') }}"
+               class="btn btn-outline-secondary btn-compact">
+                <i class="fas fa-arrow-left"></i>
+                Back to Workflows
             </a>
-            <a href="{{ url('admin/email-marketing/automations/logs') }}" class="btn btn-sm btn-dark btn-compact shadow-xs fw-bold">
-                <i class="fas fa-sync-alt me-1"></i> <span>Refresh Logs</span>
+
+            <a href="{{ url('admin/email-marketing/automations/logs') }}"
+               class="btn btn-dark btn-compact">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Logs
             </a>
         </div>
     </div>
 
-    <!-- 2. Execution KPI Summary Cards (Collapsible Section) -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-primary me-1"></i> Automation Execution Engine Audit Overview
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseLogsKpis" aria-expanded="true" aria-controls="collapseLogsKpis" title="Toggle Section">
+    {{-- KPI Overview --}}
+    <div class="card mb-3">
+        <div class="logs-section-header d-flex justify-content-between align-items-center">
+            <h6 class="logs-section-title">
+                <i class="fas fa-chart-pie text-primary me-1"></i>
+                Automation Execution Overview
+            </h6>
+
+            <button type="button"
+                    class="collapse-toggle-btn no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseLogsKpis"
+                    aria-expanded="true">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseLogsKpis">
             <div class="p-3">
                 <div class="row g-2">
-                    <!-- Total Execution Records -->
+
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Executions</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+                        <div class="metric-card metric-card-blue">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="stat-label-title">Total Executions</span>
+                                <div class="metric-icon-square bg-primary-subtle text-primary">
                                     <i class="fas fa-list-check"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
-                                    {{ number_format($totalLogsCount) }}
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Lifecycle audit history</small>
-                            </div>
+                            <h4 class="stat-val-num text-dark font-monospace">
+                                {{ number_format($totalLogsCount) }}
+                            </h4>
+                            <small class="stat-sub-text">Lifecycle audit history</small>
                         </div>
                     </div>
 
-                    <!-- Successfully Dispatched -->
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Dispatched / Sent</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                        <div class="metric-card metric-card-green">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="stat-label-title">Dispatched / Sent</span>
+                                <div class="metric-icon-square bg-success-subtle text-success">
                                     <i class="fas fa-circle-check"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num">
-                                    {{ number_format($sentCount) }}
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Current batch delivered</small>
-                            </div>
+                            <h4 class="stat-val-num text-success font-monospace">
+                                {{ number_format($sentCount) }}
+                            </h4>
+                            <small class="stat-sub-text">Sent and delivered records</small>
                         </div>
                     </div>
 
-                    <!-- Queued / Pending Delivery -->
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Queued / Drip</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+                        <div class="metric-card metric-card-amber">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="stat-label-title">Queued / Pending</span>
+                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
                                     <i class="fas fa-clock"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num">
-                                    {{ number_format($queuedCount) }}
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Awaiting delay execution</small>
-                            </div>
+                            <h4 class="stat-val-num text-warning-emphasis font-monospace">
+                                {{ number_format($queuedCount) }}
+                            </h4>
+                            <small class="stat-sub-text">Awaiting execution</small>
                         </div>
                     </div>
 
-                    <!-- Failed Deliveries -->
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-red h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Bounced / Failed</span>
-                                <div class="metric-icon-square bg-danger-subtle text-danger shadow-xs">
+                        <div class="metric-card metric-card-red">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="stat-label-title">Failed / Bounced</span>
+                                <div class="metric-icon-square bg-danger-subtle text-danger">
                                     <i class="fas fa-triangle-exclamation"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-danger bn-digit font-monospace stat-val-num">
-                                    {{ number_format($failedCount) }}
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Check error logs</small>
-                            </div>
+                            <h4 class="stat-val-num text-danger font-monospace">
+                                {{ number_format($failedCount) }}
+                            </h4>
+                            <small class="stat-sub-text">Requires attention</small>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. Real-time Search & Filter Toolbar (Collapsible) -->
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Filter Logs by Recipient, Workflow &amp; Status
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseLogsFilter" aria-expanded="true" aria-controls="collapseLogsFilter" title="Toggle Filters">
+    {{-- Search & Filters --}}
+    <div class="card mb-3 logs-filter-card">
+        <div class="logs-section-header d-flex justify-content-between align-items-center">
+            <h6 class="logs-section-title">
+                <i class="fas fa-filter text-primary me-1"></i>
+                Search & Filter Execution Logs
+            </h6>
+
+            <button type="button"
+                    class="collapse-toggle-btn no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseLogsFilter"
+                    aria-expanded="true">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseLogsFilter">
             <div class="p-3">
                 <div class="row g-2 align-items-end">
+
                     <div class="col-12 col-md-5">
                         <label class="form-label" for="logsSearchInput">
-                            <i class="fas fa-search me-1 text-primary"></i> Search Email, Workflow, or Order/Cart #
+                            <i class="fas fa-search text-primary me-1"></i>
+                            Search Recipient, Workflow or Order/Cart
                         </label>
+
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="logsSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="user@example.com, Order #104, Cart #22..." onkeyup="filterLogsTable()">
+                            <span class="input-group-text bg-light text-muted">
+                                <i class="fas fa-search"></i>
+                            </span>
+
+                            <input type="text"
+                                   id="logsSearchInput"
+                                   class="form-control"
+                                   placeholder="Search email, workflow, order..."
+                                   autocomplete="off">
                         </div>
                     </div>
 
                     <div class="col-6 col-md-4">
                         <label class="form-label" for="logsStatusFilter">
-                            <i class="fas fa-toggle-on me-1 text-success"></i> Delivery Status
+                            <i class="fas fa-toggle-on text-success me-1"></i>
+                            Delivery Status
                         </label>
-                        <select id="logsStatusFilter" class="form-select shadow-none font-monospace" onchange="filterLogsTable()">
-                            <option value="all" selected>All Statuses</option>
+
+                        <select id="logsStatusFilter" class="form-select">
+                            <option value="all">All Statuses</option>
                             <option value="sent">Sent / Delivered</option>
                             <option value="queued">Queued / Pending</option>
                             <option value="failed">Failed / Bounced</option>
@@ -499,32 +674,47 @@
                     </div>
 
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetLogsFilter()">
-                            <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
+                        <button type="button"
+                                class="btn btn-light border btn-compact w-100"
+                                onclick="resetLogsFilter()">
+                            <i class="fas fa-rotate-left"></i>
+                            Reset Filters
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. Execution Logs Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) -->
-    <div class="card border-0 shadow-sm overflow-hidden mb-3">
-        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
+    {{-- Execution Log Table --}}
+    <div class="card overflow-hidden mb-3">
+
+        <div class="logs-table-heading d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
             <div>
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
-                    <i class="fas fa-clock-rotate-left text-primary"></i>
-                    <span>Triggered Workflow Execution Log Entries</span>
+                <h6>
+                    <i class="fas fa-clock-rotate-left text-primary me-1"></i>
+                    Workflow Execution Records
                 </h6>
-                <small class="text-muted font-monospace bn-digit" id="showing-logs-text" style="font-size: 10px;">
-                    Showing {{ $logs->firstItem() ?? 0 }} to {{ $logs->lastItem() ?? 0 }} of {{$logs->total() }} total records
+
+                <small class="font-monospace" id="showing-logs-text">
+                    Showing {{ $logs->firstItem() ?? 0 }}
+                    to {{ $logs->lastItem() ?? 0 }}
+                    of {{ $logs->total() }} total records
                 </small>
             </div>
+
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-logs-count">
+                <span class="badge bg-white text-secondary border px-2 py-2 font-monospace"
+                      id="visible-logs-count">
                     {{ $logs->total() }} Logged Entries
                 </span>
-                <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseLogsTable" aria-expanded="true" aria-controls="collapseLogsTable" title="Toggle Table">
+
+                <button type="button"
+                        class="collapse-toggle-btn no-print"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseLogsTable"
+                        aria-expanded="true">
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </button>
             </div>
@@ -532,7 +722,7 @@
 
         <div class="collapse show" id="collapseLogsTable">
             <div class="table-responsive pc-fit-container">
-                <table class="table align-middle mb-0 custom-logs-table" id="logs-table">
+                <table class="table custom-logs-table" id="logs-table">
                     <thead>
                         <tr>
                             <th class="ps-3 col-lg-id text-center">#</th>
@@ -544,15 +734,26 @@
                             <th class="pe-3 col-lg-note">Error / Note</th>
                         </tr>
                     </thead>
+
                     <tbody id="logs-tbody">
+
                         @forelse($logs as $log)
+
                             @php
-                                $statusClass = match(strtolower($log->status ?? '')) {
+                                $rawStatus = strtolower($log->status ?? '');
+
+                                $statusClass = match($rawStatus) {
                                     'sent', 'delivered' => 'bg-success-subtle text-success border border-success-subtle',
                                     'queued', 'pending' => 'bg-primary-subtle text-primary border border-primary-subtle',
-                                    'failed'            => 'bg-danger-subtle text-danger border border-danger-subtle',
-                                    'skipped'           => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                    default             => 'bg-light text-dark border',
+                                    'failed' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                    'skipped' => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
+                                    default => 'bg-light text-dark border',
+                                };
+
+                                $normalizedStatus = match($rawStatus) {
+                                    'delivered' => 'sent',
+                                    'pending' => 'queued',
+                                    default => $rawStatus ?: 'sent',
                                 };
 
                                 $rowSearchData = strtolower(
@@ -562,193 +763,342 @@
                                     ($log->abandoned_cart_id ? 'cart #' . $log->abandoned_cart_id : '') . ' ' .
                                     ($log->error_message ?? '')
                                 );
-
-                                $normalizedStatus = match(strtolower($log->status ?? '')) {
-                                    'delivered' => 'sent',
-                                    'pending'   => 'queued',
-                                    default     => strtolower($log->status ?? 'sent'),
-                                };
                             @endphp
-                            <tr class="log-entry-row align-middle" data-search="{{ $rowSearchData }}" data-status="{{ $normalizedStatus }}">
-                                <td class="ps-3 col-lg-id text-center font-monospace bn-digit text-muted" style="font-size: 11px;">
+
+                            <tr class="log-entry-row"
+                                data-search="{{ $rowSearchData }}"
+                                data-status="{{ $normalizedStatus }}">
+
+                                <td class="ps-3 col-lg-id text-center text-muted font-monospace">
                                     {{ $log->id }}
                                 </td>
+
                                 <td class="col-lg-user">
-                                    <div class="min-w-0" style="line-height: 1.3;">
-                                        <strong class="text-dark d-block text-truncate" style="font-size: 12px;" title="{{ $log->email }}">
+                                    <div class="text-truncate" style="line-height:1.4;">
+                                        <strong class="d-block text-dark text-truncate"
+                                                style="font-size:12px;"
+                                                title="{{ $log->email }}">
                                             {{ $log->email }}
                                         </strong>
-                                        <small class="text-muted font-monospace bn-digit d-block text-truncate" style="font-size: 10px;">
+
+                                        <small class="d-block text-muted font-monospace text-truncate"
+                                               style="font-size:10px;">
                                             Subscriber ID: #{{ $log->subscriber_id ?? 'N/A' }}
                                         </small>
                                     </div>
                                 </td>
+
                                 <td class="col-lg-wf">
-                                    <div class="min-w-0" style="line-height: 1.3;">
-                                        <span class="fw-semibold text-dark d-block text-truncate" style="font-size: 11.5px;" title="{{ $log->automation->name ?? 'Deleted Workflow' }}">
+                                    <div class="text-truncate" style="line-height:1.4;">
+                                        <span class="d-block fw-semibold text-dark text-truncate"
+                                              title="{{ $log->automation->name ?? 'Deleted Workflow' }}">
                                             {{ $log->automation->name ?? 'Deleted Workflow' }}
                                         </span>
-                                        <small class="text-muted d-block text-truncate font-monospace" style="font-size: 10px;">
-                                            Step: <strong class="text-dark">{{ $log->step->step_order ?? '1' }}</strong> &bull; 
+
+                                        <small class="d-block text-muted font-monospace text-truncate"
+                                               style="font-size:10px;">
+                                            Step:
+                                            <strong class="text-dark">{{ $log->step->step_order ?? '1' }}</strong>
+                                            &bull;
                                             Delay: +{{ $log->step->delay_minutes ?? 0 }} mins
                                         </small>
                                     </div>
                                 </td>
+
                                 <td class="col-lg-entity">
                                     @if($log->order_id)
-                                        <span class="badge bg-light text-primary border font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 10px; max-width: 100%; border-radius: 5px !important;" title="Order #{{ $log->order_id }}">
-                                            <i class="fas fa-bag-shopping me-1"></i> Order #{{ $log->order_id }}
+                                        <span class="badge bg-primary-subtle text-primary border px-2 py-1 text-truncate d-inline-block"
+                                              style="font-size:10px; max-width:100%;"
+                                              title="Order #{{ $log->order_id }}">
+                                            <i class="fas fa-bag-shopping me-1"></i>
+                                            Order #{{ $log->order_id }}
                                         </span>
+
                                     @elseif($log->abandoned_cart_id)
-                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace text-truncate d-inline-block px-2 py-1" style="font-size: 10px; max-width: 100%; border-radius: 5px !important;" title="Cart #{{ $log->abandoned_cart_id }}">
-                                            <i class="fas fa-cart-shopping me-1"></i> Cart #{{ $log->abandoned_cart_id }}
+                                        <span class="badge bg-warning-subtle text-dark border px-2 py-1 text-truncate d-inline-block"
+                                              style="font-size:10px; max-width:100%;"
+                                              title="Cart #{{ $log->abandoned_cart_id }}">
+                                            <i class="fas fa-cart-shopping me-1"></i>
+                                            Cart #{{ $log->abandoned_cart_id }}
                                         </span>
+
                                     @else
-                                        <span class="text-muted font-monospace" style="font-size: 10px;">—</span>
+                                        <span class="text-muted">—</span>
                                     @endif
                                 </td>
+
                                 <td class="col-lg-status">
-                                    <span class="badge {{ $statusClass }} font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 10px;">
-                                        @if(in_array(strtolower($log->status ?? ''), ['sent', 'delivered']))
+                                    <span class="badge {{ $statusClass }} px-2 py-1"
+                                          style="font-size:10px;">
+                                        @if(in_array($rawStatus, ['sent', 'delivered']))
                                             <i class="fas fa-check-circle me-1"></i>
-                                        @elseif(strtolower($log->status ?? '') === 'failed')
+                                        @elseif($rawStatus === 'failed')
                                             <i class="fas fa-times-circle me-1"></i>
-                                        @elseif(in_array(strtolower($log->status ?? ''), ['queued', 'pending']))
+                                        @elseif(in_array($rawStatus, ['queued', 'pending']))
                                             <i class="fas fa-clock me-1"></i>
                                         @endif
+
                                         {{ strtoupper($log->status ?? 'SENT') }}
                                     </span>
                                 </td>
-                                <td class="col-lg-date font-monospace bn-digit" style="line-height: 1.3;">
-                                    <span class="text-dark d-block" style="font-size: 11px;">{{ $log->created_at->format('M d, Y') }}</span>
-                                    <small class="text-muted" style="font-size: 9.5px;">{{ $log->created_at->format('h:i:s A') }}</small>
+
+                                <td class="col-lg-date font-monospace">
+                                    <span class="d-block text-dark">
+                                        {{ optional($log->created_at)->format('M d, Y') ?? 'N/A' }}
+                                    </span>
+
+                                    <small class="d-block text-muted" style="font-size:10px;">
+                                        {{ optional($log->created_at)->format('h:i:s A') ?? '' }}
+                                    </small>
                                 </td>
+
                                 <td class="col-lg-note pe-3">
                                     @if(!empty($log->error_message))
-                                        <button type="button" class="btn btn-sm btn-light border p-1 text-danger shadow-xs d-inline-flex align-items-center gap-1 text-truncate" style="max-width: 100%; font-size: 10px; border-radius: 5px !important;" onclick="showLogDetailModal('{{ addslashes($log->email) }}', '{{ addslashes($log->automation->name ?? 'Workflow') }}', '{{ addslashes($log->error_message) }}')" title="Click to view full error message">
+
+                                        <button type="button"
+                                                class="btn btn-light border text-danger log-error-btn js-log-error"
+                                                data-email="{{ $log->email }}"
+                                                data-workflow="{{ $log->automation->name ?? 'Workflow' }}"
+                                                data-error="{{ $log->error_message }}"
+                                                title="View full error message">
+
                                             <i class="fas fa-triangle-exclamation flex-shrink-0"></i>
-                                            <span class="text-truncate">{{ $log->error_message }}</span>
+
+                                            <span class="text-truncate">
+                                                {{ $log->error_message }}
+                                            </span>
                                         </button>
+
                                     @else
-                                        <span class="text-success small d-flex align-items-center gap-1 font-monospace" style="font-size: 10px;">
-                                            <i class="fas fa-check-circle"></i> <span>Successfully dispatched</span>
+
+                                        <span class="text-success d-inline-flex align-items-center gap-1"
+                                              style="font-size:10px;">
+                                            <i class="fas fa-check-circle"></i>
+                                            Successfully dispatched
                                         </span>
+
                                     @endif
                                 </td>
+
                             </tr>
+
                         @empty
+
                             <tr id="emptyLogsRow">
-                                <td colspan="7" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-list-check fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                    <span class="fw-semibold">No automation logs recorded yet. Automated triggers will log their execution here.</span>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="fas fa-list-check fa-2x mb-2 d-block opacity-25"></i>
+                                    <strong class="d-block">No automation logs recorded yet.</strong>
+                                    <small>Automated triggers will appear here after execution.</small>
                                 </td>
                             </tr>
+
                         @endforelse
-                        <tr id="noMatchLogsRow" style="display: none;">
-                            <td colspan="7" class="text-center py-5 text-muted small">
-                                <i class="fas fa-filter-circle-xmark fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                <span class="fw-semibold">No execution logs matched your filter criteria.</span>
+
+                        <tr id="noMatchLogsRow" style="display:none;">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fas fa-filter-circle-xmark fa-2x mb-2 d-block opacity-25"></i>
+                                <strong class="d-block">No matching execution logs found.</strong>
+                                <small>Try changing your search or status filter.</small>
                             </td>
                         </tr>
+
                     </tbody>
                 </table>
             </div>
 
-            <!-- Bulletproof Responsive Pagination Footer -->
+            {{-- Pagination --}}
             @if($logs->hasPages())
-                <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
-                    <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
-                        Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{$logs->total() }} execution logs
+                <div class="p-3 border-top bg-light bg-opacity-50 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 no-print">
+
+                    <small class="text-muted font-monospace">
+                        Showing {{ $logs->firstItem() }}
+                        to {{ $logs->lastItem() }}
+                        of {{ $logs->total() }} execution logs
                     </small>
-                    <div>
+
+                    <div class="logs-pagination">
                         {{ $logs->links('pagination::bootstrap-5') }}
                     </div>
+
                 </div>
             @endif
+
         </div>
     </div>
+
 </div>
 
-<!-- Modal: Error / Execution Log Detail Modal -->
-<div class="modal fade log-modal-scope" id="logDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+{{-- Error Detail Modal --}}
+<div class="modal fade" id="logDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content border-0 shadow-lg p-3">
-            <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 14px;">
-                    <i class="fas fa-circle-exclamation text-danger"></i> <span>Execution Detail &amp; Error Note</span>
+        <div class="modal-content shadow-lg p-3">
+
+            <div class="modal-header border-0 pb-2">
+                <h6 class="fw-bold text-dark mb-0" style="font-size:14px;">
+                    <i class="fas fa-circle-exclamation text-danger me-2"></i>
+                    Execution Detail &amp; Error Note
                 </h6>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
             </div>
-            <div class="modal-body p-2 pt-3">
-                <div class="mb-2 p-2 bg-light border" style="border-radius: 5px;">
-                    <small class="text-muted d-block font-monospace" style="font-size: 10px;">RECIPIENT &amp; WORKFLOW</small>
-                    <strong class="text-dark d-block" id="modalLogRecipient" style="font-size: 12.5px;">user@example.com</strong>
-                    <span class="text-secondary small font-monospace" id="modalLogWorkflow">Workflow Name</span>
+
+            <div class="modal-body p-2">
+
+                <div class="mb-3 p-3 bg-light border">
+                    <small class="text-muted d-block font-monospace mb-1"
+                           style="font-size:10px;">
+                        RECIPIENT &amp; WORKFLOW
+                    </small>
+
+                    <strong class="d-block text-dark"
+                            id="modalLogRecipient"
+                            style="font-size:12px;">
+                        user@example.com
+                    </strong>
+
+                    <span class="text-secondary font-monospace"
+                          id="modalLogWorkflow"
+                          style="font-size:11px;">
+                        Workflow Name
+                    </span>
                 </div>
+
                 <div>
-                    <small class="text-muted d-block font-monospace mb-1" style="font-size: 10px;">SYSTEM RESPONSE / EXCEPTION</small>
-                    <div class="p-2 bg-danger-subtle text-danger border border-danger-subtle font-monospace small" style="border-radius: 5px; font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 220px; overflow-y: auto;" id="modalLogErrorMessage">
+                    <small class="text-muted d-block font-monospace mb-2"
+                           style="font-size:10px;">
+                        SYSTEM RESPONSE / EXCEPTION
+                    </small>
+
+                    <div class="p-3 bg-danger-subtle text-danger border border-danger-subtle font-monospace"
+                         id="modalLogErrorMessage">
                         Error message will be rendered here.
                     </div>
                 </div>
+
             </div>
-            <div class="modal-footer border-0 pt-0 d-flex justify-content-end">
-                <button type="button" class="btn btn-dark btn-compact px-3" data-bs-dismiss="modal">Close</button>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button"
+                        class="btn btn-dark btn-compact px-4"
+                        data-bs-dismiss="modal">
+                    Close
+                </button>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
+    /**
+     * Show execution error details.
+     * Text is inserted through innerText to prevent HTML injection.
+     */
     function showLogDetailModal(email, workflow, errorMessage) {
-        document.getElementById('modalLogRecipient').innerText = email;
-        document.getElementById('modalLogWorkflow').innerText = workflow;
-        document.getElementById('modalLogErrorMessage').innerText = errorMessage || 'No error details recorded.';
+        document.getElementById('modalLogRecipient').innerText = email || 'N/A';
+        document.getElementById('modalLogWorkflow').innerText = workflow || 'Workflow';
+        document.getElementById('modalLogErrorMessage').innerText =
+            errorMessage || 'No error details recorded.';
+
         const modalEl = document.getElementById('logDetailModal');
+
         if (modalEl && window.bootstrap) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
         }
     }
 
+    /**
+     * Filter currently loaded table rows.
+     */
     function filterLogsTable() {
-        const query  = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
-        const status = (document.getElementById('logsStatusFilter')?.value || 'all').toLowerCase();
+        const query = (
+            document.getElementById('logsSearchInput')?.value || ''
+        ).toLowerCase().trim();
 
-        const rows = document.querySelectorAll('.log-entry-row');
+        const status = (
+            document.getElementById('logsStatusFilter')?.value || 'all'
+        ).toLowerCase();
+
+        const rows = document.querySelectorAll(
+            '#logs-tbody .log-entry-row'
+        );
+
         let visibleCount = 0;
 
         rows.forEach(row => {
-            const searchData = row.getAttribute('data-search') || '';
-            const rowStatus  = row.getAttribute('data-status') || '';
+            const searchData = (row.dataset.search || '').toLowerCase();
+            const rowStatus = (row.dataset.status || '').toLowerCase();
 
-            const matchesQuery  = !query || searchData.includes(query);
+            const matchesQuery = !query || searchData.includes(query);
             const matchesStatus = status === 'all' || rowStatus === status;
 
-            if (matchesQuery && matchesStatus) {
-                row.style.display = '';
+            const isVisible = matchesQuery && matchesStatus;
+
+            row.style.display = isVisible ? '' : 'none';
+
+            if (isVisible) {
                 visibleCount++;
-            } else {
-                row.style.display = 'none';
             }
         });
 
         const countBadge = document.getElementById('visible-logs-count');
+
         if (countBadge) {
             countBadge.innerText = `${visibleCount} Showing`;
         }
 
         const noMatchRow = document.getElementById('noMatchLogsRow');
+
         if (noMatchRow) {
-            noMatchRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+            noMatchRow.style.display =
+                visibleCount === 0 && rows.length > 0 ? '' : 'none';
         }
     }
 
+    /**
+     * Reset search and status filters.
+     */
     function resetLogsFilter() {
         const searchInput = document.getElementById('logsSearchInput');
         const statusFilter = document.getElementById('logsStatusFilter');
+
         if (searchInput) searchInput.value = '';
         if (statusFilter) statusFilter.value = 'all';
+
         filterLogsTable();
     }
+
+    /**
+     * Search event listeners.
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const searchInput = document.getElementById('logsSearchInput');
+        const statusFilter = document.getElementById('logsStatusFilter');
+
+        searchInput?.addEventListener('input', filterLogsTable);
+        statusFilter?.addEventListener('change', filterLogsTable);
+
+        /*
+         * Delegated click handler for error details.
+         * Dataset values are read safely without inline JavaScript interpolation.
+         */
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.js-log-error');
+
+            if (!button) return;
+
+            showLogDetailModal(
+                button.dataset.email || '',
+                button.dataset.workflow || '',
+                button.dataset.error || ''
+            );
+        });
+    });
 </script>
+
 @endsection

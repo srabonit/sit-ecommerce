@@ -1,225 +1,519 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Staff & User Management - ' . config('app.name'))
 
 @section('admin_content')
-<!-- Pure Text Data Table PDF Generator (jsPDF + AutoTable) -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       STAFF & USER MANAGEMENT — KAIADMIN CLASSIC / WHITE
+       All styles are scoped to #usersIndexRoot
+    ========================================================= */
+    #usersIndexRoot {
+        --users-primary: #1572e8;
+        --users-primary-soft: #eaf2ff;
+        --users-success: #31ce36;
+        --users-danger: #f25961;
+        --users-warning: #ffad46;
+        --users-info: #48abf7;
+        --users-text: #2a2f5b;
+        --users-muted: #8d9498;
+        --users-border: #ebecec;
+        --users-surface: #ffffff;
+        --users-page: #f5f7fd;
+        --users-radius: 8px;
+        color: #495057;
+        padding: 20px;
+        font-size: 13px;
+    }
+
+    #usersIndexRoot *,
+    #usersIndexRoot *::before,
+    #usersIndexRoot *::after {
+        box-sizing: border-box;
+    }
+
+    #usersIndexRoot .users-page-heading {
+        color: var(--users-text);
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -.25px;
+        line-height: 1.35;
+    }
+
+    #usersIndexRoot .users-page-subtitle {
+        color: var(--users-muted);
+        font-size: 12px;
+        line-height: 1.5;
+        margin-top: 4px;
+    }
+
+    #usersIndexRoot .users-top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+    }
+
     #usersIndexRoot .btn,
-    #usersIndexRoot .btn-sm,
     #usersIndexRoot button,
     #usersIndexRoot .form-control,
     #usersIndexRoot .form-select,
     #usersIndexRoot .badge,
     #usersIndexRoot .input-group-text,
-    #usersIndexRoot .page-link,
-    #usersIndexRoot .page-item span {
-        border-radius: 5px !important;
+    #usersIndexRoot .page-link {
+        border-radius: 5px;
     }
 
-    #usersIndexRoot .card,
-    #usersIndexRoot .users-card-table,
-    #usersIndexRoot .bulk-action-bar,
-    #usersIndexRoot .filter-card-box,
-    #usersIndexRoot .modal-content {
-        border-radius: 8px !important;
+    #usersIndexRoot .btn {
+        font-size: 12px;
+        font-weight: 600;
+        transition: all .18s ease;
     }
 
-    /* Page Canvas */
-    .users-page-container {
-        padding: 18px 20px;
+    #usersIndexRoot .btn-sm {
+        min-height: 31px;
+        padding: 6px 11px;
     }
 
-    .filter-card-box {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 16px 18px;
-        margin-bottom: 20px;
+    #usersIndexRoot .btn-primary {
+        background: var(--users-primary);
+        border-color: var(--users-primary);
     }
 
-    .users-card-table {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #usersIndexRoot .btn-primary:hover {
+        background: #1265cf;
+        border-color: #1265cf;
+    }
+
+    #usersIndexRoot .users-filter-card,
+    #usersIndexRoot .users-table-card {
+        background: var(--users-surface);
+        border: 1px solid var(--users-border);
+        border-radius: var(--users-radius);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .025);
+    }
+
+    #usersIndexRoot .users-filter-card {
+        padding: 17px;
+        margin-bottom: 17px;
+    }
+
+    #usersIndexRoot .users-table-card {
         position: relative;
         margin-bottom: 20px;
     }
 
-    /* Table Styling */
-    .custom-users-table th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 11px 14px;
-        white-space: nowrap;
-    }
-    .custom-users-table td {
-        padding: 11px 14px;
-        vertical-align: middle;
-        font-size: 12.5px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    /* Soft Color Badges */
-    .badge-soft-primary   { background: #e0f2fe !important; color: #0284c7 !important; border: 1px solid #bae6fd !important; }
-    .badge-soft-success   { background: #dcfce7 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
-    .badge-soft-danger    { background: #fee2e2 !important; color: #b91c1c !important; border: 1px solid #fecaca !important; }
-    .badge-soft-warning   { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fef08a !important; }
-    .badge-soft-info      { background: #e0f2fe !important; color: #0284c7 !important; border: 1px solid #bae6fd !important; }
-    .badge-soft-secondary { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
-
-    /* Dropdown Menus */
-    .table-responsive {
-        min-height: 280px;
-    }
-    @media (min-width: 992px) {
-        .table-responsive,
-        .users-card-table {
-            overflow: visible !important;
-        }
-    }
-
-    .custom-users-table .dropdown-menu {
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12) !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 6px !important;
-        padding: 6px 0;
-    }
-
-    .custom-users-table .dropdown-item {
+    #usersIndexRoot .users-filter-card .form-control,
+    #usersIndexRoot .users-filter-card .form-select {
+        min-height: 34px;
+        border-color: #e6e8eb;
+        background-color: #fff;
+        color: #495057;
         font-size: 12px;
-        padding: 7px 14px;
-        color: #334155;
-        transition: background-color 0.15s ease;
-    }
-    .custom-users-table .dropdown-item:hover {
-        background-color: #f8fafc;
-        color: #0f172a;
     }
 
-    /* Bulk Action Toolbar */
-    .bulk-action-bar {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        color: #ffffff;
-        padding: 10px 16px;
+    #usersIndexRoot .users-filter-card .form-control:focus,
+    #usersIndexRoot .users-filter-card .form-select:focus,
+    #usersIndexRoot .modal-content .form-control:focus,
+    #usersIndexRoot .modal-content .form-select:focus {
+        border-color: #9dc3f7;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .09);
+    }
+
+    #usersIndexRoot .users-filter-label {
+        display: block;
+        color: #7d858c;
+        font-size: 10.5px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    #usersIndexRoot .users-filter-secondary {
+        border-top: 1px solid #f0f1f2;
+        margin-top: 14px;
+        padding-top: 13px;
+    }
+
+    #usersIndexRoot .users-filter-search .input-group-text {
+        border: 1px solid #e6e8eb;
+        border-right: 0;
+        background: #fff;
+        color: #9aa0a6;
+    }
+
+    #usersIndexRoot .users-filter-search .form-control {
+        border-left: 0;
+    }
+
+    #usersIndexRoot .users-table-card {
+        overflow: hidden;
+    }
+
+    #usersIndexRoot .users-table-card .table-responsive {
+        min-height: 280px;
+        overflow-x: auto;
+    }
+
+    #usersIndexRoot .custom-users-table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #usersIndexRoot .custom-users-table thead th {
+        background: #f8f9fa;
+        color: #6c757d;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .35px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        padding: 13px 12px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    #usersIndexRoot .custom-users-table tbody td {
+        padding: 12px;
+        color: #495057;
+        font-size: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f2;
+    }
+
+    #usersIndexRoot .custom-users-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #usersIndexRoot .custom-users-table tbody tr:hover {
+        background: #fafcff;
+    }
+
+    #usersIndexRoot .custom-users-table .form-check-input {
+        width: 15px;
+        height: 15px;
+        border-color: #cbd0d6;
+        cursor: pointer;
+    }
+
+    #usersIndexRoot .custom-users-table .dropdown-menu {
+        min-width: 175px;
+        padding: 5px;
+        border: 1px solid #e9ecef;
+        border-radius: 7px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .10);
+    }
+
+    #usersIndexRoot .custom-users-table .dropdown-item {
+        border-radius: 4px;
+        color: #495057;
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    #usersIndexRoot .custom-users-table .dropdown-item:hover {
+        background: #f1f5fb;
+        color: var(--users-primary);
+    }
+
+    #usersIndexRoot .badge-soft-primary {
+        background: #eaf2ff;
+        color: #1572e8;
+        border: 1px solid #d6e6ff;
+    }
+
+    #usersIndexRoot .badge-soft-success {
+        background: #e8f8ed;
+        color: #31a852;
+        border: 1px solid #d0f0d9;
+    }
+
+    #usersIndexRoot .badge-soft-danger {
+        background: #fff0f0;
+        color: #e14b55;
+        border: 1px solid #ffdddd;
+    }
+
+    #usersIndexRoot .badge-soft-warning {
+        background: #fff7e8;
+        color: #c98a25;
+        border: 1px solid #ffebc8;
+    }
+
+    #usersIndexRoot .badge-soft-info {
+        background: #eaf7ff;
+        color: #2695d6;
+        border: 1px solid #d5efff;
+    }
+
+    #usersIndexRoot .badge-soft-secondary {
+        background: #f1f3f5;
+        color: #687078;
+        border: 1px solid #e3e6e8;
+    }
+
+    #usersIndexRoot .bulk-action-bar {
         display: none;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
-        animation: fadeInToolbar 0.25s ease-in-out;
+        gap: 12px;
+        padding: 11px 15px;
+        margin-bottom: 15px;
+        color: #fff;
+        background: linear-gradient(120deg, #2a2f5b, #35416d);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 8px;
+        box-shadow: 0 3px 12px rgba(42, 47, 91, .12);
+        animation: usersToolbarIn .2s ease;
     }
-    @keyframes fadeInToolbar {
-        from { opacity: 0; transform: translateY(-6px); }
+
+    @keyframes usersToolbarIn {
+        from { opacity: 0; transform: translateY(-5px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #usersIndexRoot .bulk-action-tools {
+        display: flex;
+        align-items: center;
+        gap: 7px;
     }
 
-    /* AJAX Overlay */
-    #usersLoadingOverlay {
+    #usersIndexRoot .bulk-action-tools .form-select {
+        min-width: 190px;
+        font-size: 12px;
+    }
+
+    #usersIndexRoot .users-pagination {
+        padding: 13px 16px;
+        background: #fbfbfc;
+        border-top: 1px solid #eceef0;
+    }
+
+    #usersIndexRoot .users-pagination .pagination {
+        margin-bottom: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 3px;
+    }
+
+    #usersIndexRoot .users-pagination .page-link {
+        min-width: 29px;
+        padding: 5px 9px;
+        border-color: #e8eaed;
+        color: #6c757d;
+        font-size: 11px;
+    }
+
+    #usersIndexRoot .users-pagination .page-item.active .page-link {
+        background: var(--users-primary);
+        border-color: var(--users-primary);
+        color: #fff;
+    }
+
+    #usersIndexRoot .bn-digit,
+    #usersIndexRoot .font-monospace {
+        font-weight: 700;
+    }
+
+    #usersIndexRoot #usersLoadingOverlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(2px);
+        inset: 0;
         z-index: 25;
         display: none;
         align-items: center;
         justify-content: center;
+        background: rgba(255, 255, 255, .82);
+        backdrop-filter: blur(2px);
         border-radius: 8px;
     }
 
-    /* Mobile Responsive Optimizations */
-    @media (max-width: 767.98px) {
-        .users-page-container {
-            padding: 12px 10px;
+    #usersIndexRoot .users-alert {
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    #usersIndexRoot .modal-content {
+        border: 1px solid #edf0f2;
+        border-radius: 9px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, .15);
+    }
+
+    #usersIndexRoot .modal-header {
+        border-bottom-color: #edf0f2;
+    }
+
+    #usersIndexRoot .modal-title {
+        color: var(--users-text);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    #usersIndexRoot .modal-content .form-control,
+    #usersIndexRoot .modal-content .form-select {
+        border-color: #e5e8eb;
+        font-size: 12px;
+    }
+
+    #usersIndexRoot .modal-content label {
+        color: #59636d;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+
+    @media (min-width: 992px) {
+        #usersIndexRoot .users-table-card .table-responsive {
+            overflow: visible;
         }
-        .users-top-actions {
+    }
+
+    @media (max-width: 991.98px) {
+        #usersIndexRoot {
+            padding: 15px;
+        }
+
+        #usersIndexRoot .users-top-actions {
+            justify-content: flex-start;
+        }
+
+        #usersIndexRoot .users-filter-card {
+            padding: 14px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #usersIndexRoot {
+            padding: 11px 9px;
+        }
+
+        #usersIndexRoot .users-page-heading {
+            font-size: 17px;
+        }
+
+        #usersIndexRoot .users-page-subtitle {
+            font-size: 11px;
+        }
+
+        #usersIndexRoot .users-top-actions {
             width: 100%;
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 6px;
         }
-        .users-top-actions .btn {
-            flex: 1 1 calc(50% - 6px);
+
+        #usersIndexRoot .users-top-actions .btn {
+            width: 100%;
             justify-content: center;
-            font-size: 11.5px;
-            padding: 7px 8px;
+            padding: 7px 5px;
+            font-size: 11px;
         }
-        .users-top-actions .btn-add-staff {
-            flex: 1 1 100%;
+
+        #usersIndexRoot .users-top-actions .btn-add-staff {
+            grid-column: 1 / -1;
         }
-        .bulk-action-bar {
-            flex-direction: column;
-            gap: 10px;
+
+        #usersIndexRoot .users-filter-card {
+            padding: 12px;
+            margin-bottom: 13px;
+        }
+
+        #usersIndexRoot .bulk-action-bar {
             align-items: stretch;
+            flex-direction: column;
             padding: 12px;
         }
-        .bulk-action-tools {
+
+        #usersIndexRoot .bulk-action-tools {
             width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+            flex-wrap: wrap;
         }
-        .filter-card-box {
-            padding: 12px 14px !important;
-            margin-bottom: 16px !important;
+
+        #usersIndexRoot .bulk-action-tools .form-select {
+            width: 100%;
+            min-width: 0;
         }
-        .custom-users-table th, .custom-users-table td {
+
+        #usersIndexRoot .bulk-action-tools button {
+            flex: 1;
+        }
+
+        #usersIndexRoot .custom-users-table th,
+        #usersIndexRoot .custom-users-table td {
             padding: 9px 10px;
-            font-size: 12px;
+            font-size: 11.5px;
+        }
+
+        #usersIndexRoot .users-pagination {
+            padding: 12px;
+        }
+
+        #usersIndexRoot .users-pagination .pagination {
+            justify-content: center;
+        }
+
+        #usersIndexRoot #usersStatsText {
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #usersIndexRoot .users-top-actions .btn {
+            font-size: 10.5px;
+            padding: 6px 4px;
         }
     }
 </style>
 
 <div class="container-fluid users-page-container position-relative" id="usersIndexRoot">
-    <!-- Header & Action Bar -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
         <div>
-            <h5 class="fw-bold text-dark mb-0.5 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-users-gear text-primary"></i> <span>Staff & User Directory</span>
+            <h5 class="users-page-heading mb-0 d-flex align-items-center gap-2">
+                <i class="fas fa-users-gear text-primary"></i>
+                <span>Staff & User Directory</span>
             </h5>
-            <small class="text-muted" style="font-size: 11.5px; line-height: 1.35; display: block;">Manage system staff accounts, security restrictions, status controls, and credentials</small>
+            <div class="users-page-subtitle">
+                Manage staff accounts, access, status & security.
+            </div>
         </div>
-        <div class="users-top-actions d-flex flex-wrap gap-2 no-pdf">
-            <button type="button" class="btn btn-outline-success btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" onclick="exportUsersReport('excel')">
-                <i class="fas fa-file-excel text-success me-1"></i> <span>Export Excel</span>
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" id="btn-export-users-pdf" onclick="downloadUsersPdf()">
-                <i class="fas fa-file-pdf text-danger me-1"></i> <span id="users-pdf-text">Report PDF</span>
+
+        <div class="users-top-actions no-pdf">
+            <button type="button" class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1" onclick="exportUsersReport('excel')">
+                <i class="fas fa-file-excel"></i>
+                <span>Export Excel</span>
             </button>
 
-            <a href="{{ route('admin.roles.trash') }}" class="btn btn-outline-secondary btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5">
-                <i class="fas fa-trash-can text-danger me-1"></i> <span>Trash</span>
+            <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1" id="btn-export-users-pdf" onclick="downloadUsersPdf()">
+                <i class="fas fa-file-pdf"></i>
+                <span id="users-pdf-text">Report PDF</span>
+            </button>
+
+            <a href="{{ route('admin.roles.trash') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+                <i class="fas fa-trash-can text-danger"></i>
+                <span>Trash</span>
             </a>
-            <a href="{{ route('admin.roles.users.create_customer') }}" class="btn btn-outline-primary btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5">
-                <i class="fas fa-user-plus me-1"></i> <span>Add Customer</span>
+
+            <a href="{{ route('admin.roles.users.create_customer') }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
+                <i class="fas fa-user-plus"></i>
+                <span>Add Customer</span>
             </a>
-            <a href="{{ route('admin.roles.users.create_staff') }}" class="btn btn-primary btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5 btn-add-staff">
-                <i class="fas fa-user-shield me-1"></i> <span>Add Staff</span>
+
+            <a href="{{ route('admin.roles.users.create_staff') }}" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1 btn-add-staff">
+                <i class="fas fa-user-shield"></i>
+                <span>Add Staff</span>
             </a>
         </div>
     </div>
 
-    <!-- Alert Box (Dynamic AJAX Messages) -->
-    <div id="usersAjaxAlertBox" class="alert d-none alert-dismissible fade show mb-3 small align-items-center gap-2 shadow-xs border-0 py-2 px-3" role="alert" style="border-radius: 5px;">
+    <!-- AJAX Alert -->
+    <div id="usersAjaxAlertBox" class="alert d-none alert-dismissible fade show mb-3 small align-items-center gap-2 shadow-sm border-0 py-2 px-3 users-alert" role="alert">
         <i id="usersAjaxAlertIcon" class="fas fa-circle-check fs-6 flex-shrink-0"></i>
         <div id="usersAjaxAlertMsg" class="fw-semibold"></div>
         <button type="button" class="btn-close btn-sm shadow-none ms-auto py-2" onclick="document.getElementById('usersAjaxAlertBox').classList.add('d-none')"></button>
@@ -234,8 +528,9 @@
                 <span class="small text-light ms-1">user(s) selected</span>
             </div>
         </div>
-        <div class="d-flex align-items-center gap-2 bulk-action-tools flex-wrap">
-            <select id="bulkActionSelect" class="form-select form-select-sm bg-light text-dark fw-semibold shadow-none border-0 py-1.5" style="min-width: 180px; font-size: 12px;">
+
+        <div class="bulk-action-tools">
+            <select id="bulkActionSelect" class="form-select form-select-sm bg-light text-dark fw-semibold shadow-none border-0 py-1">
                 <option value="" disabled selected>-- Select Bulk Action --</option>
                 <optgroup label="Account Status">
                     <option value="active">Change Status: Active</option>
@@ -252,40 +547,48 @@
                     <option value="trash">Move Selected to Trash</option>
                 </optgroup>
             </select>
-            <button type="button" class="btn btn-warning btn-sm px-3 py-1.5 fw-bold shadow-xs text-dark" id="btnExecuteBulkAction" style="font-size: 12px;" onclick="executeBulkAction()">
+
+            <button type="button" class="btn btn-warning btn-sm px-3 fw-bold text-dark" id="btnExecuteBulkAction" onclick="executeBulkAction()">
                 Apply to Selected
             </button>
-            <button type="button" class="btn btn-outline-light btn-sm px-2.5 py-1.5" onclick="clearAllSelections()" title="Cancel Selection">
+
+            <button type="button" class="btn btn-outline-light btn-sm px-3" onclick="clearAllSelections()" title="Cancel Selection">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     </div>
 
-    <!-- Multi-Filter Toolbar Card -->
-    <div class="filter-card-box no-pdf">
+    <!-- Filters -->
+    <div class="users-filter-card no-pdf">
         <form id="userFilterForm" onsubmit="event.preventDefault(); triggerUsersFilterAjax();">
-            <div class="row g-2 align-items-center">
-                <!-- Search Box -->
+
+            <div class="row g-2 align-items-end">
+
                 <div class="col-12 col-md-3">
-                    <div class="input-group input-group-sm overflow-hidden border shadow-xs" style="border-radius: 5px;">
-                        <span class="input-group-text bg-white border-0 text-muted ps-2.5"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                        <input type="text" name="search" id="userFilterSearch" class="form-control border-0 py-1.5 shadow-none" 
-                               value="{{ request('search') }}" placeholder="Search name, email, phone, role..." autocomplete="off" style="font-size: 12px;">
+                    <label class="users-filter-label">Search Users</label>
+                    <div class="input-group input-group-sm users-filter-search">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" name="search" id="userFilterSearch" class="form-control shadow-none"
+                               value="{{ request('search') }}"
+                               placeholder="Search name, email, phone, role..."
+                               autocomplete="off">
                     </div>
                 </div>
 
-                <!-- User Type -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <select name="user_type" id="userFilterType" class="form-select form-select-sm py-1.5 shadow-none" style="font-size: 12px;">
+                    <label class="users-filter-label">User Type</label>
+                    <select name="user_type" id="userFilterType" class="form-select form-select-sm shadow-none">
                         <option value="all">All User Types</option>
                         <option value="staff" {{ request('user_type') === 'staff' ? 'selected' : '' }}>Staff & Admins</option>
                         <option value="customer" {{ request('user_type') === 'customer' ? 'selected' : '' }}>Customers Only</option>
                     </select>
                 </div>
 
-                <!-- Role Selector -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <select name="role" id="userFilterRole" class="form-select form-select-sm py-1.5 shadow-none" style="font-size: 12px;">
+                    <label class="users-filter-label">Role</label>
+                    <select name="role" id="userFilterRole" class="form-select form-select-sm shadow-none">
                         <option value="all">All Roles</option>
                         @foreach($allRoles as $rName)
                             <option value="{{ $rName }}" {{ request('role') == $rName ? 'selected' : '' }}>
@@ -295,9 +598,9 @@
                     </select>
                 </div>
 
-                <!-- Status Selector -->
                 <div class="col-6 col-sm-3 col-md-1">
-                    <select name="status" id="userFilterStatus" class="form-select form-select-sm py-1.5 shadow-none" style="font-size: 12px;">
+                    <label class="users-filter-label">Status</label>
+                    <select name="status" id="userFilterStatus" class="form-select form-select-sm shadow-none">
                         <option value="all">All Status</option>
                         <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
                         <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -307,9 +610,9 @@
                     </select>
                 </div>
 
-                <!-- Branch Selector -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <select name="branch_id" id="userFilterBranch" class="form-select form-select-sm py-1.5 shadow-none" style="font-size: 12px;">
+                    <label class="users-filter-label">Branch</label>
+                    <select name="branch_id" id="userFilterBranch" class="form-select form-select-sm shadow-none">
                         <option value="all">All Branches</option>
                         <option value="hq" {{ request('branch_id') === 'hq' ? 'selected' : '' }}>Head Office / Online</option>
                         @foreach($branches as $b)
@@ -320,9 +623,9 @@
                     </select>
                 </div>
 
-                <!-- Per-Page Display Selector -->
                 <div class="col-6 col-sm-3 col-md-1">
-                    <select name="per_page" id="userFilterPerPage" class="form-select form-select-sm py-1.5 shadow-none fw-semibold" style="font-size: 12px;">
+                    <label class="users-filter-label">Per Page</label>
+                    <select name="per_page" id="userFilterPerPage" class="form-select form-select-sm shadow-none fw-semibold">
                         <option value="20" {{ request('per_page', '20') == '20' ? 'selected' : '' }}>20 / page</option>
                         <option value="30" {{ request('per_page', '30') == '30' ? 'selected' : '' }}>30 / page</option>
                         <option value="50" {{ request('per_page', '50') == '50' ? 'selected' : '' }}>50 / page</option>
@@ -333,36 +636,37 @@
                     </select>
                 </div>
 
-                <!-- Filter Actions -->
-                <div class="col-12 col-md-1 d-flex gap-1.5 justify-content-end">
-                    <button type="submit" class="btn btn-primary btn-sm px-2.5 py-1.5 w-100 fw-semibold shadow-xs" style="font-size: 12px;">
+                <div class="col-12 col-md-1 d-flex gap-1">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                         Filter
                     </button>
-                    <button type="button" class="btn btn-light btn-sm border px-2.5 py-1.5 text-muted shadow-xs ms-2" onclick="resetUserFilters()" title="Reset All Filters">
+                    <button type="button" class="btn btn-light btn-sm border text-muted" onclick="resetUserFilters()" title="Reset All Filters">
                         <i class="fas fa-rotate-left"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Secondary Criteria: Dates & Activity -->
-            <div class="row g-2 align-items-center mt-2 pt-2 border-top">
+            <!-- Date and Activity Filters -->
+            <div class="row g-2 align-items-end users-filter-secondary">
+
                 <div class="col-6 col-md-2">
-                    <label class="form-label text-muted small mb-0.5 fw-semibold" style="font-size: 10.5px;">Created Exact Date</label>
-                    <input type="date" name="created_date" id="filter_created_date" class="form-control form-control-sm py-1 shadow-none" value="{{ request('created_date') }}" style="font-size: 11.5px;">
+                    <label class="users-filter-label">Created Exact Date</label>
+                    <input type="date" name="created_date" id="filter_created_date" class="form-control form-control-sm shadow-none" value="{{ request('created_date') }}">
                 </div>
 
                 <div class="col-6 col-md-2">
-                    <label class="form-label text-muted small mb-0.5 fw-semibold" style="font-size: 10.5px;">Created Range: From</label>
-                    <input type="date" name="created_from" id="filter_created_from" class="form-control form-control-sm py-1 shadow-none" value="{{ request('created_from') }}" style="font-size: 11.5px;">
+                    <label class="users-filter-label">Created Range: From</label>
+                    <input type="date" name="created_from" id="filter_created_from" class="form-control form-control-sm shadow-none" value="{{ request('created_from') }}">
                 </div>
+
                 <div class="col-6 col-md-2">
-                    <label class="form-label text-muted small mb-0.5 fw-semibold" style="font-size: 10.5px;">Created Range: To</label>
-                    <input type="date" name="created_to" id="filter_created_to" class="form-control form-control-sm py-1 shadow-none" value="{{ request('created_to') }}" style="font-size: 11.5px;">
+                    <label class="users-filter-label">Created Range: To</label>
+                    <input type="date" name="created_to" id="filter_created_to" class="form-control form-control-sm shadow-none" value="{{ request('created_to') }}">
                 </div>
 
                 <div class="col-6 col-md-3">
-                    <label class="form-label text-muted small mb-0.5 fw-semibold" style="font-size: 10.5px;">Login Activity Status</label>
-                    <select name="inactivity" id="filter_inactivity" class="form-select form-select-sm py-1 shadow-none" onchange="toggleInactiveDateInput(this.value)" style="font-size: 11.5px;">
+                    <label class="users-filter-label">Login Activity Status</label>
+                    <select name="inactivity" id="filter_inactivity" class="form-select form-select-sm shadow-none" onchange="toggleInactiveDateInput(this.value)">
                         <option value="all">Any Activity (All)</option>
                         <option value="never_logged_in">Never Logged In</option>
                         <option value="inactive_30">No Login for 30+ Days</option>
@@ -373,16 +677,16 @@
                 </div>
 
                 <div class="col-12 col-md-3 d-none" id="inactiveBeforeDateWrap">
-                    <label class="form-label text-muted small mb-0.5 fw-semibold" style="font-size: 10.5px;">Inactive Since Date</label>
-                    <input type="date" name="inactive_before_date" id="filter_inactive_date" class="form-control form-control-sm py-1 shadow-none" style="font-size: 11.5px;">
+                    <label class="users-filter-label">Inactive Since Date</label>
+                    <input type="date" name="inactive_before_date" id="filter_inactive_date" class="form-control form-control-sm shadow-none">
                 </div>
             </div>
         </form>
     </div>
 
-    <!-- Users Table Card with Loading Overlay -->
-    <div class="users-card-table overflow-hidden" id="users-render-area">
-        <!-- AJAX Overlay -->
+    <!-- Users Table -->
+    <div class="users-table-card" id="users-render-area">
+
         <div id="usersLoadingOverlay">
             <div class="spinner-border text-primary" role="status" style="width: 2.2rem; height: 2.2rem;">
                 <span class="visually-hidden">Loading...</span>
@@ -390,11 +694,11 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table custom-users-table align-middle mb-0" id="users-table">
+            <table class="table custom-users-table align-middle" id="users-table">
                 <thead>
                     <tr>
                         <th style="width: 40px;" class="text-center">
-                            <input type="checkbox" id="selectAllUsers" class="form-check-input mt-0 shadow-none" onchange="toggleSelectAllUsers(this.checked)" title="Select / Deselect All" style="border-radius: 4px; cursor: pointer;">
+                            <input type="checkbox" id="selectAllUsers" class="form-check-input mt-0 shadow-none" onchange="toggleSelectAllUsers(this.checked)" title="Select / Deselect All">
                         </th>
                         <th style="width: 45px;">#</th>
                         <th style="min-width: 210px;">Staff / User</th>
@@ -405,17 +709,19 @@
                         <th class="text-end" style="width: 130px;">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody id="usersTableTbody">
                     @include('admin.users.partials.user_rows', ['users' => $users])
                 </tbody>
             </table>
         </div>
 
-        <!-- Pagination with Per-Page Stats -->
-        <div class="p-2.5 p-md-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50" id="usersPaginationWrapper">
+        <!-- Pagination -->
+        <div class="users-pagination d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2" id="usersPaginationWrapper">
             <small class="text-muted bn-digit" id="usersStatsText" style="font-size: 11.5px;">
                 Showing {{ $users->firstItem() ?? 0 }} to {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} user(s)
             </small>
+
             <div id="usersPaginationLinks">
                 {{ $users->links('pagination::bootstrap-5') }}
             </div>
@@ -423,23 +729,28 @@
     </div>
 </div>
 
-<!-- Modal 1: Account Status Change Modal -->
+<!-- Modal 1: Account Status Change -->
 <div class="modal fade" id="statusChangeModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow p-3" style="border-radius: 8px;">
+        <div class="modal-content border-0 shadow p-3">
             <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1.5" style="font-size: 13.5px;">
-                    <i class="fas fa-shield-halved text-primary"></i> <span>Account Status Control</span>
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 13.5px;">
+                    <i class="fas fa-shield-halved text-primary"></i>
+                    <span>Account Status Control</span>
                 </h6>
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <input type="hidden" id="modal_status_user_id">
-            <p class="small text-muted mb-2" style="font-size: 11.5px;">Changing access level for: <strong class="text-dark" id="modal_status_user_name"></strong></p>
+
+            <p class="small text-muted mb-2" style="font-size: 11.5px;">
+                Changing access level for:
+                <strong class="text-dark" id="modal_status_user_name"></strong>
+            </p>
 
             <div class="mb-2">
-                <label class="form-label small fw-semibold text-dark mb-1" style="font-size: 11.5px;">Select Status *</label>
-                <select id="modal_status_select" class="form-select form-select-sm fw-semibold shadow-none py-1.5" style="font-size: 12px;">
+                <label class="form-label mb-1">Select Status *</label>
+                <select id="modal_status_select" class="form-select form-select-sm fw-semibold shadow-none">
                     <option value="active">Active (Normal Access)</option>
                     <option value="inactive">Inactive (Access Suspended)</option>
                     <option value="suspended">Suspended (Under Review)</option>
@@ -449,13 +760,13 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label small fw-semibold text-dark mb-1" style="font-size: 11.5px;">Reason / Admin Note</label>
-                <textarea id="modal_status_reason" class="form-control form-control-sm shadow-none" rows="2" style="font-size: 12px;" placeholder=" Policy violation, staff leave..."></textarea>
+                <label class="form-label mb-1">Reason / Admin Note</label>
+                <textarea id="modal_status_reason" class="form-control form-control-sm shadow-none" rows="2" placeholder="Policy violation, staff leave..."></textarea>
             </div>
 
-            <div class="d-flex justify-content-end gap-1.5">
-                <button type="button" class="btn btn-sm btn-light py-1 px-3 border shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Cancel</button>
-                <button type="button" class="btn btn-sm btn-primary fw-bold py-1 px-3 shadow-xs" id="btnSubmitStatusChange" onclick="executeStatusChange()" style="font-size: 12px;">
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold px-3" id="btnSubmitStatusChange" onclick="executeStatusChange()">
                     Update Status
                 </button>
             </div>
@@ -463,33 +774,38 @@
     </div>
 </div>
 
-<!-- Modal 2: Reset Password Modal -->
+<!-- Modal 2: Reset Password -->
 <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow p-3" style="border-radius: 8px;">
+        <div class="modal-content border-0 shadow p-3">
             <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1.5" style="font-size: 13.5px;">
-                    <i class="fas fa-key text-warning"></i> <span>Reset Password</span>
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 13.5px;">
+                    <i class="fas fa-key text-warning"></i>
+                    <span>Reset Password</span>
                 </h6>
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <input type="hidden" id="modal_reset_user_id">
-            <p class="small text-muted mb-2" style="font-size: 11.5px;">Resetting credentials for: <strong class="text-dark" id="modal_reset_user_name"></strong></p>
+
+            <p class="small text-muted mb-2" style="font-size: 11.5px;">
+                Resetting credentials for:
+                <strong class="text-dark" id="modal_reset_user_name"></strong>
+            </p>
 
             <div class="mb-2">
-                <label class="form-label small fw-semibold text-dark mb-1" style="font-size: 11.5px;">New Password (Min 6 chars) *</label>
-                <input type="password" id="modal_reset_password" class="form-control form-control-sm py-1.5 shadow-none" style="font-size: 12px;" placeholder="••••••••">
+                <label class="form-label mb-1">New Password (Min 6 chars) *</label>
+                <input type="password" id="modal_reset_password" class="form-control form-control-sm py-1 shadow-none" placeholder="••••••••">
             </div>
 
             <div class="mb-3">
-                <label class="form-label small fw-semibold text-dark mb-1" style="font-size: 11.5px;">Confirm Password *</label>
-                <input type="password" id="modal_reset_password_confirm" class="form-control form-control-sm py-1.5 shadow-none" style="font-size: 12px;" placeholder="••••••••">
+                <label class="form-label mb-1">Confirm Password *</label>
+                <input type="password" id="modal_reset_password_confirm" class="form-control form-control-sm py-1 shadow-none" placeholder="••••••••">
             </div>
 
-            <div class="d-flex justify-content-end gap-1.5">
-                <button type="button" class="btn btn-sm btn-light py-1 px-3 border shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Cancel</button>
-                <button type="button" class="btn btn-sm btn-warning text-dark fw-bold py-1 px-3 shadow-xs" id="btnSubmitPasswordReset" onclick="executePasswordReset()" style="font-size: 12px;">
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3" id="btnSubmitPasswordReset" onclick="executePasswordReset()">
                     Save Password
                 </button>
             </div>
@@ -497,36 +813,48 @@
     </div>
 </div>
 
-<!-- Modal 3: Confirmation Dialog -->
+<!-- Modal 3: Confirmation -->
 <div class="modal fade" id="userConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow text-center p-3" style="border-radius: 8px;">
+        <div class="modal-content border-0 shadow text-center p-3">
             <div class="modal-body p-1">
                 <div class="mb-2" id="confirmModalIcon">
                     <i class="fas fa-triangle-exclamation text-danger fa-2x"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" id="confirmModalTitle" style="font-size: 14px;">Confirm Action</h6>
-                <p class="text-muted small mb-3" id="confirmModalMessage" style="font-size: 12px;">Are you sure you want to proceed?</p>
+
+                <p class="text-muted small mb-3" id="confirmModalMessage" style="font-size: 12px;">
+                    Are you sure you want to proceed?
+                </p>
+
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-light btn-sm px-3 py-1 border shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-sm px-3 py-1 fw-bold shadow-xs" id="btnExecuteUserConfirm" style="font-size: 12px;">Proceed</button>
+                    <button type="button" class="btn btn-light btn-sm px-3 border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger btn-sm px-3 fw-bold" id="btnExecuteUserConfirm">Proceed</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal 4: Notice / Alert Dialog -->
+<!-- Modal 4: Notice -->
 <div class="modal fade" id="userNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow text-center p-3" style="border-radius: 8px;">
+        <div class="modal-content border-0 shadow text-center p-3">
             <div class="modal-body p-1">
                 <div class="mb-2" id="userNoticeModalIcon">
                     <i class="fas fa-circle-exclamation text-warning fa-2x"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" id="userNoticeModalTitle" style="font-size: 14px;">Notice</h6>
-                <p class="text-muted small mb-3" id="userNoticeModalMsg" style="font-size: 12px;">Notice message.</p>
-                <button type="button" class="btn btn-primary btn-sm px-4 py-1 fw-semibold shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Acknowledge</button>
+
+                <p class="text-muted small mb-3" id="userNoticeModalMsg" style="font-size: 12px;">
+                    Notice message.
+                </p>
+
+                <button type="button" class="btn btn-primary btn-sm px-4 fw-semibold" data-bs-dismiss="modal">
+                    Acknowledge
+                </button>
             </div>
         </div>
     </div>
@@ -545,6 +873,7 @@
 
         if (titleEl) titleEl.innerText = title;
         if (msgEl) msgEl.innerText = message;
+
         if (iconEl) {
             if (type === 'danger' || type === 'error') {
                 iconEl.innerHTML = '<i class="fas fa-circle-xmark text-danger fa-2x"></i>';
@@ -562,6 +891,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         const searchInput = document.getElementById('userFilterSearch');
+
         if (searchInput) {
             searchInput.addEventListener('input', function () {
                 clearTimeout(filterDebounceTimer);
@@ -572,13 +902,21 @@
         }
 
         const autoTriggerIds = [
-            'userFilterType', 'userFilterRole', 'userFilterStatus', 'userFilterBranch', 'userFilterPerPage',
-            'filter_created_date', 'filter_created_from', 'filter_created_to',
-            'filter_inactivity', 'filter_inactive_date'
+            'userFilterType',
+            'userFilterRole',
+            'userFilterStatus',
+            'userFilterBranch',
+            'userFilterPerPage',
+            'filter_created_date',
+            'filter_created_from',
+            'filter_created_to',
+            'filter_inactivity',
+            'filter_inactive_date'
         ];
 
         autoTriggerIds.forEach(id => {
             const el = document.getElementById(id);
+
             if (el) {
                 el.addEventListener('change', () => triggerUsersFilterAjax());
             }
@@ -586,9 +924,12 @@
 
         document.addEventListener('click', function (e) {
             const pageLink = e.target.closest('#usersPaginationLinks a');
+
             if (pageLink) {
                 e.preventDefault();
+
                 const url = pageLink.getAttribute('href');
+
                 if (url && url !== '#') {
                     fetchUsersByUrl(url);
                 }
@@ -598,6 +939,7 @@
 
     function toggleInactiveDateInput(val) {
         const wrap = document.getElementById('inactiveBeforeDateWrap');
+
         if (val === 'before_date') {
             wrap.classList.remove('d-none');
         } else {
@@ -619,7 +961,9 @@
 
     function fetchUsersByUrl(url) {
         currentUserAjaxUrl = url;
+
         const overlay = document.getElementById('usersLoadingOverlay');
+
         if (overlay) overlay.style.display = 'flex';
 
         fetch(url, {
@@ -633,7 +977,8 @@
             if (data.success) {
                 document.getElementById('usersTableTbody').innerHTML = data.html;
                 document.getElementById('usersPaginationLinks').innerHTML = data.pagination;
-                document.getElementById('usersStatsText').innerText = 
+
+                document.getElementById('usersStatsText').innerText =
                     `Showing ${data.firstItem} to ${data.lastItem} of ${data.total} user(s)`;
 
                 clearAllSelections();
@@ -665,16 +1010,18 @@
         triggerUsersFilterAjax();
     }
 
-    // 1. Direct Excel Download (Without Blank Tab Crash)
+    // Excel Export
     function exportUsersReport(type) {
         const form = document.getElementById('userFilterForm');
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
+
         params.append('export', type);
+
         window.location.href = "{{ route('admin.roles.users') }}?" + params.toString();
     }
 
-    // 2. Pure Text Data Table PDF Generator (No UI Screenshots, Only Structured Data Table)
+    // PDF Export
     function downloadUsersPdf() {
         const btn = document.getElementById('btn-export-users-pdf');
         const btnText = document.getElementById('users-pdf-text');
@@ -686,6 +1033,7 @@
         const form = document.getElementById('userFilterForm');
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
+
         params.append('export', 'pdf_data');
 
         fetch("{{ route('admin.roles.users') }}?" + params.toString(), {
@@ -701,13 +1049,13 @@
             }
 
             const { jsPDF } = window.jspdf;
+
             const doc = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
                 format: 'a4'
             });
 
-            // Document Header (Pure Text)
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
             doc.setTextColor(15, 23, 42);
@@ -718,7 +1066,6 @@
             doc.setTextColor(100, 116, 139);
             doc.text(`Generated At: ${data.generated_at}   |   Total Users: ${data.total}`, 14, 20);
 
-            // Prepare Pure Text Rows
             const tableBody = data.records.map(r => [
                 r.sl,
                 '#' + r.id,
@@ -734,7 +1081,6 @@
                 r.last_login
             ]);
 
-            // Render Clean Bordered Data Table
             doc.autoTable({
                 startY: 25,
                 head: [[
@@ -789,8 +1135,10 @@
                 margin: { top: 14, right: 10, bottom: 14, left: 10 },
                 didDrawPage: function (hookData) {
                     const pageCount = doc.internal.getNumberOfPages();
+
                     doc.setFontSize(8);
                     doc.setTextColor(148, 163, 184);
+
                     doc.text(
                         `Page ${hookData.pageNumber} of ${pageCount}`,
                         doc.internal.pageSize.getWidth() - 28,
@@ -800,11 +1148,17 @@
             });
 
             const fileName = 'Staff_and_Users_Report_' + (new Date().toISOString().slice(0, 10)) + '.pdf';
+
             doc.save(fileName);
         })
         .catch(err => {
             console.error('PDF Export error:', err);
-            showUsersNoticeModal('Failed to generate PDF data table. Please try again.', 'danger', 'PDF Export Error');
+
+            showUsersNoticeModal(
+                'Failed to generate PDF data table. Please try again.',
+                'danger',
+                'PDF Export Error'
+            );
         })
         .finally(() => {
             btn.disabled = false;
@@ -812,10 +1166,12 @@
         });
     }
 
+    // Selection Controls
     function toggleSelectAllUsers(isChecked) {
         document.querySelectorAll('.user-select-checkbox').forEach(cb => {
             cb.checked = isChecked;
         });
+
         handleUserSelectionChange();
     }
 
@@ -835,6 +1191,7 @@
         }
 
         const allCheckboxes = document.querySelectorAll('.user-select-checkbox');
+
         if (masterCb && allCheckboxes.length > 0) {
             masterCb.checked = (count === allCheckboxes.length);
         }
@@ -842,11 +1199,15 @@
 
     function clearAllSelections() {
         document.querySelectorAll('.user-select-checkbox').forEach(cb => cb.checked = false);
+
         const masterCb = document.getElementById('selectAllUsers');
+
         if (masterCb) masterCb.checked = false;
+
         handleUserSelectionChange();
     }
 
+    // Bulk Actions
     function executeBulkAction() {
         const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
         const ids = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
@@ -864,8 +1225,9 @@
         }
 
         const confirmTitle = action === 'trash' ? 'Move Users to Trash?' : 'Confirm Bulk Action';
-        const confirmMsg = action === 'trash' 
-            ? `Are you sure you want to move ${ids.length} selected user(s) to trash?` 
+
+        const confirmMsg = action === 'trash'
+            ? `Are you sure you want to move ${ids.length} selected user(s) to trash?`
             : `Apply [${action.toUpperCase()}] action to ${ids.length} selected user(s)?`;
 
         document.getElementById('confirmModalTitle').innerText = confirmTitle;
@@ -874,6 +1236,7 @@
         pendingConfirmAction = () => {
             const btn = document.getElementById('btnExecuteBulkAction');
             const origText = btn.innerText;
+
             btn.disabled = true;
             btn.innerText = 'Processing...';
 
@@ -910,9 +1273,11 @@
         };
 
         const modal = new bootstrap.Modal(document.getElementById('userConfirmModal'));
+
         modal.show();
     }
 
+    // Account Status
     function openStatusModal(id, currentStatus, userName) {
         document.getElementById('modal_status_user_id').value = id;
         document.getElementById('modal_status_user_name').innerText = userName;
@@ -920,6 +1285,7 @@
         document.getElementById('modal_status_reason').value = '';
 
         const modal = new bootstrap.Modal(document.getElementById('statusChangeModal'));
+
         modal.show();
     }
 
@@ -948,6 +1314,7 @@
         .then(data => {
             const modalEl = document.getElementById('statusChangeModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
+
             if (modal) modal.hide();
 
             if (data.success) {
@@ -967,6 +1334,7 @@
         });
     }
 
+    // Password Reset
     function openResetPasswordModal(id, userName) {
         document.getElementById('modal_reset_user_id').value = id;
         document.getElementById('modal_reset_user_name').innerText = userName;
@@ -974,6 +1342,7 @@
         document.getElementById('modal_reset_password_confirm').value = '';
 
         const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+
         modal.show();
     }
 
@@ -1006,12 +1375,16 @@
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ password: password, password_confirmation: passwordConfirm })
+            body: JSON.stringify({
+                password: password,
+                password_confirmation: passwordConfirm
+            })
         })
         .then(res => res.json())
         .then(data => {
             const modalEl = document.getElementById('resetPasswordModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
+
             if (modal) modal.hide();
 
             if (data.success) {
@@ -1030,12 +1403,16 @@
         });
     }
 
+    // Force Logout
     function confirmForceLogout(userId, userName) {
         document.getElementById('confirmModalTitle').innerText = 'Force Logout?';
-        document.getElementById('confirmModalMessage').innerText = `Are you sure you want to terminate all active sessions for "${userName}" immediately?`;
-        
+
+        document.getElementById('confirmModalMessage').innerText =
+            `Are you sure you want to terminate all active sessions for "${userName}" immediately?`;
+
         pendingConfirmAction = () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
             fetch("{{ url('admin/user-roles/users/force-logout') }}/" + userId, {
                 method: 'POST',
                 headers: {
@@ -1053,11 +1430,14 @@
         };
 
         const modal = new bootstrap.Modal(document.getElementById('userConfirmModal'));
+
         modal.show();
     }
 
+    // Unlock Account
     function unlockUser(userId) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
         fetch("{{ url('admin/user-roles/users/unlock') }}/" + userId, {
             method: 'POST',
             headers: {
@@ -1074,12 +1454,16 @@
         .catch(err => showUsersAlert('Failed to unlock account.', 'danger'));
     }
 
+    // Move User to Trash
     function confirmTrashUser(userId, userName) {
         document.getElementById('confirmModalTitle').innerText = 'Move to Trash?';
-        document.getElementById('confirmModalMessage').innerText = `Are you sure you want to move "${userName}" to trash? Associated orders and history remain safe.`;
-        
+
+        document.getElementById('confirmModalMessage').innerText =
+            `Are you sure you want to move "${userName}" to trash? Associated orders and history remain safe.`;
+
         pendingConfirmAction = () => {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
             fetch("{{ url('admin/user-roles/users/delete') }}/" + userId, {
                 method: 'POST',
                 headers: {
@@ -1097,12 +1481,15 @@
         };
 
         const modal = new bootstrap.Modal(document.getElementById('userConfirmModal'));
+
         modal.show();
     }
 
-    document.getElementById('btnExecuteUserConfirm').addEventListener('click', function() {
+    // Confirmation Modal Action
+    document.getElementById('btnExecuteUserConfirm').addEventListener('click', function () {
         const modalEl = document.getElementById('userConfirmModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
+
         if (modal) modal.hide();
 
         if (typeof pendingConfirmAction === 'function') {
@@ -1111,14 +1498,19 @@
         }
     });
 
+    // AJAX Alert
     function showUsersAlert(msg, type = 'success') {
         const box = document.getElementById('usersAjaxAlertBox');
         const msgEl = document.getElementById('usersAjaxAlertMsg');
         const icon = document.getElementById('usersAjaxAlertIcon');
 
         if (box && msgEl) {
-            box.className = `alert alert-${type} alert-dismissible fade show mb-3 small d-flex align-items-center gap-2 shadow-xs border-0 py-2 px-3`;
-            icon.className = type === 'success' ? 'fas fa-circle-check fs-6 text-success flex-shrink-0' : 'fas fa-circle-exclamation fs-6 text-danger flex-shrink-0';
+            box.className = `alert alert-${type} alert-dismissible fade show mb-3 small d-flex align-items-center gap-2 shadow-sm border-0 py-2 px-3 users-alert`;
+
+            icon.className = type === 'success'
+                ? 'fas fa-circle-check fs-6 text-success flex-shrink-0'
+                : 'fas fa-circle-exclamation fs-6 text-danger flex-shrink-0';
+
             msgEl.innerText = msg;
             box.classList.remove('d-none');
 
@@ -1128,4 +1520,5 @@
         }
     }
 </script>
+
 @endsection

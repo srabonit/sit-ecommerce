@@ -4,197 +4,423 @@
 
 @section('admin_content')
 <style>
-    /* Global Strict 5px Element Radius */
-    #liveSessionsRoot .btn,
-    #liveSessionsRoot .btn-sm,
-    #liveSessionsRoot button,
-    #liveSessionsRoot .form-control,
-    #liveSessionsRoot .form-select,
-    #liveSessionsRoot .badge,
-    #liveSessionsRoot .input-group,
-    #liveSessionsRoot .input-group-text,
-    #liveSessionsRoot .alert,
-    #sessionConfirmModal .btn {
-        border-radius: 5px !important;
+    /* Live Sessions — Kaiadmin-inspired Classic / White UI */
+    #liveSessionsRoot {
+        --ls-primary: var(--bs-primary, #1572e8);
+        --ls-success: var(--bs-success, #31ce36);
+        --ls-warning: var(--bs-warning, #ffad46);
+        --ls-danger: var(--bs-danger, #f25961);
+        --ls-info: var(--bs-info, #48abf7);
+        --ls-page: #f8f9fa;
+        --ls-surface: #ffffff;
+        --ls-heading: #2a2f5b;
+        --ls-text: #575962;
+        --ls-muted: #8d9498;
+        --ls-border: #e6e8eb;
+        --ls-soft: #f5f7fa;
+        color: var(--ls-text);
+        min-width: 0;
     }
 
-    #liveSessionsRoot .session-card-table,
+    #liveSessionsRoot *,
+    #sessionConfirmModal * {
+        box-sizing: border-box;
+    }
+
+    #liveSessionsRoot .session-page-container {
+        width: 100%;
+        max-width: 100%;
+        padding: clamp(12px, 1.5vw, 22px);
+    }
+
+    #liveSessionsRoot .session-page-container > .d-flex:first-child {
+        gap: 12px;
+    }
+
+    #liveSessionsRoot h5,
+    #liveSessionsRoot h6,
+    #sessionConfirmModal h6 {
+        color: var(--ls-heading);
+    }
+
+    #liveSessionsRoot .session-header-actions {
+        flex-shrink: 0;
+    }
+
+    #liveSessionsRoot .session-header-actions .btn,
+    #liveSessionsRoot .btn,
+    #sessionConfirmModal .btn {
+        min-height: 34px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #liveSessionsRoot .btn:focus-visible,
+    #sessionConfirmModal .btn:focus-visible {
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .16);
+    }
+
     #liveSessionsRoot .stat-pill,
     #liveSessionsRoot .filter-card-box,
-    #sessionConfirmModal .modal-content {
-        border-radius: 8px !important;
+    #liveSessionsRoot .session-card-table {
+        background: var(--ls-surface);
+        border: 1px solid var(--ls-border);
+        border-radius: 7px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .035);
     }
 
-    /* Page Container */
-    .session-page-container {
-        padding: 18px 20px;
-    }
-
-    /* Stat Cards */
-    .stat-pill {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 14px 16px;
+    #liveSessionsRoot .stat-pill {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        min-height: 82px;
         height: 100%;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 15px 16px;
+        transition: box-shadow .18s ease, transform .18s ease;
     }
-    .stat-pill:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+
+    #liveSessionsRoot .stat-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .055);
     }
-    .stat-icon-wrap {
+
+    #liveSessionsRoot .stat-pill small {
+        color: var(--ls-muted);
+        font-size: 11px !important;
+        letter-spacing: .01em;
+    }
+
+    #liveSessionsRoot .stat-pill h5 {
+        margin-top: 5px !important;
+        font-size: clamp(19px, 1.65vw, 23px);
+        line-height: 1.2;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    #liveSessionsRoot .stat-icon-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 40px;
         width: 40px;
         height: 40px;
         border-radius: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         font-size: 17px;
-        flex-shrink: 0;
     }
 
-    /* Filter Card */
-    .filter-card-box {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 16px 18px;
-        margin-bottom: 18px;
+    #liveSessionsRoot .filter-card-box {
+        padding: 16px;
+        margin-bottom: 16px;
     }
 
     #liveSessionsRoot .form-control,
     #liveSessionsRoot .form-select {
+        min-height: 36px;
+        padding: 7px 11px;
+        border: 1px solid #e6e8eb;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #575962;
         font-size: 12.5px;
-        border-color: #cbd5e1;
-        padding: 6px 11px;
-        color: #0f172a;
+        line-height: 1.4;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #liveSessionsRoot .form-control::placeholder {
+        color: #a1a8b3;
+        opacity: 1;
     }
 
     #liveSessionsRoot .form-control:focus,
     #liveSessionsRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
+        border-color: var(--ls-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .11);
+        outline: 0;
     }
 
-    /* Sessions Table Card */
-    .session-card-table {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #liveSessionsRoot .input-group {
+        min-width: 0;
+        border: 1px solid var(--ls-border) !important;
+        border-radius: 5px;
+        background: #fff;
+    }
+
+    #liveSessionsRoot .input-group:focus-within {
+        border-color: var(--ls-primary) !important;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
+    }
+
+    #liveSessionsRoot .input-group .form-control,
+    #liveSessionsRoot .input-group .input-group-text {
+        min-height: 34px;
+        border: 0;
+        background: transparent;
+    }
+
+    #liveSessionsRoot .session-card-table {
         position: relative;
         margin-bottom: 20px;
+        overflow: hidden;
     }
 
-    .custom-session-table th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 11px;
+    #liveSessionsRoot .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    #liveSessionsRoot .custom-session-table {
+        width: 100%;
+        min-width: 1050px;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #liveSessionsRoot .custom-session-table thead th {
+        padding: 12px 13px;
+        border-bottom: 1px solid var(--ls-border);
+        background: #f8f9fa;
+        color: #8d9498;
+        font-size: 10.5px;
         font-weight: 700;
+        line-height: 1.35;
+        letter-spacing: .045em;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 11px 14px;
         white-space: nowrap;
-    }
-
-    .custom-session-table td {
-        padding: 11px 14px;
         vertical-align: middle;
-        font-size: 12.5px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
     }
 
-    .custom-session-table tbody tr:hover {
-        background-color: #fafbfc;
+    #liveSessionsRoot .custom-session-table tbody td {
+        padding: 11px 13px;
+        border-bottom: 1px solid #f0f1f3;
+        color: #575962;
+        font-size: 12px;
+        line-height: 1.45;
+        vertical-align: middle;
     }
 
-    .badge-soft-primary {
-        background: #e0f2fe;
-        color: #0284c7;
-        border: 1px solid #bae6fd;
+    #liveSessionsRoot .custom-session-table tbody tr:last-child td {
+        border-bottom: 0;
     }
 
-    /* Live Pulse Indicator */
-    .pulse-dot {
+    #liveSessionsRoot .custom-session-table tbody tr:hover {
+        background: #fafbfd;
+    }
+
+    #liveSessionsRoot .custom-session-table td,
+    #liveSessionsRoot .custom-session-table th {
+        overflow-wrap: anywhere;
+    }
+
+    #liveSessionsRoot .badge {
+        padding: .35em .6em;
+        border-radius: 4px;
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    #liveSessionsRoot .badge-soft-primary {
+        border: 1px solid #cfe2ff;
+        background: #eaf2ff;
+        color: #1572e8;
+    }
+
+    #liveSessionsRoot .pulse-dot {
+        display: inline-block;
         width: 8px;
         height: 8px;
-        background-color: #22c55e;
+        flex: 0 0 8px;
         border-radius: 50%;
-        display: inline-block;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-        animation: pulseAnimation 1.6s infinite;
-    }
-    @keyframes pulseAnimation {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        background: var(--ls-success);
+        box-shadow: 0 0 0 0 rgba(49, 206, 54, .55);
+        animation: lsPulse 1.7s infinite;
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    @keyframes lsPulse {
+        0% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(49, 206, 54, .5); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(49, 206, 54, 0); }
+        100% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(49, 206, 54, 0); }
     }
 
-    /* AJAX Loading Spinner Overlay */
-    #sessionLoadingOverlay {
+    #liveSessionsRoot .bn-digit,
+    #liveSessionsRoot .font-monospace {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #liveSessionsRoot #sessionPaginationWrapper {
+        gap: 10px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--ls-border) !important;
+        background: #fbfbfc;
+    }
+
+    #liveSessionsRoot #sessionStatsText {
+        color: var(--ls-muted);
+        font-size: 11.5px;
+    }
+
+    #liveSessionsRoot #sessionPaginationLinks {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    #liveSessionsRoot #sessionPaginationLinks .pagination {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-bottom: 0;
+        gap: 3px;
+    }
+
+    #liveSessionsRoot #sessionPaginationLinks .page-link {
+        min-width: 30px;
+        min-height: 30px;
+        padding: 5px 9px;
+        border-radius: 4px;
+        color: var(--ls-primary);
+        font-size: 11.5px;
+    }
+
+    #liveSessionsRoot #sessionLoadingOverlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(2px);
+        inset: 0;
         z-index: 20;
         display: none;
         align-items: center;
         justify-content: center;
-        border-radius: 8px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, .82);
+        backdrop-filter: blur(2px);
     }
 
-    /* Mobile Responsive Optimizations */
+    #liveSessionsRoot .alert {
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    #sessionConfirmModal .modal-content {
+        border: 1px solid var(--ls-border);
+        border-radius: 8px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .12);
+    }
+
+    #sessionConfirmModal .modal-body {
+        padding: 8px 6px;
+    }
+
+    #sessionConfirmModal #sessionConfirmTitle {
+        font-size: 15px;
+    }
+
+    #sessionConfirmModal #sessionConfirmMsg {
+        font-size: 12px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 991.98px) {
+        #liveSessionsRoot .filter-card-box {
+            padding: 14px;
+        }
+
+        #liveSessionsRoot .custom-session-table {
+            min-width: 1020px;
+        }
+    }
+
     @media (max-width: 767.98px) {
-        .session-page-container {
+        #liveSessionsRoot .session-page-container {
             padding: 12px 10px;
         }
-        .session-header-actions {
+
+        #liveSessionsRoot .session-header-actions {
             width: 100%;
         }
-        .session-header-actions .btn {
+
+        #liveSessionsRoot .session-header-actions .btn {
             width: 100%;
             justify-content: center;
-            text-align: center;
-            padding: 7px 12px;
-            font-size: 12px;
+            min-height: 38px;
         }
-        .stat-pill {
-            padding: 12px 14px;
+
+        #liveSessionsRoot .stat-pill {
+            min-height: 76px;
+            padding: 12px;
         }
-        .stat-pill h5 {
-            font-size: 1.2rem;
+
+        #liveSessionsRoot .stat-pill h5 {
+            font-size: 19px;
         }
-        .stat-icon-wrap {
+
+        #liveSessionsRoot .stat-icon-wrap {
+            flex-basis: 36px;
             width: 36px;
             height: 36px;
             font-size: 15px;
         }
-        .filter-card-box {
-            padding: 12px 14px !important;
+
+        #liveSessionsRoot .filter-card-box {
+            padding: 12px;
             margin-bottom: 14px;
         }
-        .custom-session-table th,
-        .custom-session-table td {
-            padding: 9px 10px;
-            font-size: 12px;
+
+        #liveSessionsRoot .filter-card-box .row > [class*="col-"] {
+            min-width: 0;
+        }
+
+        #liveSessionsRoot .filter-card-box .btn {
+            min-height: 36px;
+        }
+
+        #liveSessionsRoot .custom-session-table {
+            min-width: 1000px;
+        }
+
+        #liveSessionsRoot #sessionPaginationWrapper {
+            align-items: flex-start !important;
+        }
+
+        #liveSessionsRoot #sessionPaginationLinks {
+            width: 100%;
+        }
+
+        #liveSessionsRoot #sessionPaginationLinks .pagination {
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 399.98px) {
+        #liveSessionsRoot .session-page-container {
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+
+        #liveSessionsRoot .filter-card-box {
+            padding: 10px;
+        }
+
+        #liveSessionsRoot .stat-pill {
+            padding: 10px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #liveSessionsRoot .pulse-dot {
+            animation: none;
+        }
+
+        #liveSessionsRoot .stat-pill,
+        #liveSessionsRoot .btn {
+            transition: none;
         }
     }
 </style>

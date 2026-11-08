@@ -3,340 +3,11 @@
 @section('title', 'Product Card Settings - ' . config('app.name'))
 
 @section('admin_content')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-<style>
-    #productCardSettingsRoot,
-    .pc-modal-scope {
-        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        letter-spacing: -0.01em;
-        color: #1e293b;
-    }
-
-    #productCardSettingsRoot i,
-    #productCardSettingsRoot .fa,
-    #productCardSettingsRoot .fas,
-    #productCardSettingsRoot .far,
-    #productCardSettingsRoot .fab,
-    #productCardSettingsRoot .fa-solid,
-    #productCardSettingsRoot .fa-regular,
-    .pc-modal-scope i,
-    .pc-modal-scope .fa,
-    .pc-modal-scope .fa-solid,
-    .pc-modal-scope .fa-regular {
-        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
-        font-style: normal;
-        font-weight: 900;
-        line-height: 1;
-        letter-spacing: normal !important;
-        display: inline-block;
-    }
-
-    #productCardSettingsRoot .far,
-    .pc-modal-scope .far {
-        font-weight: 400 !important;
-    }
-
-    #productCardSettingsRoot .btn,
-    #productCardSettingsRoot .btn-sm,
-    #productCardSettingsRoot button,
-    #productCardSettingsRoot .form-control,
-    #productCardSettingsRoot .form-select,
-    #productCardSettingsRoot .badge,
-    #productCardSettingsRoot .alert,
-    #productCardSettingsRoot .card,
-    #productCardSettingsRoot .settings-header-card,
-    #productCardSettingsRoot .settings-panel-card,
-    #productCardSettingsRoot .status-kpi-pill,
-    #productCardSettingsRoot .feature-switch-card,
-    #productCardSettingsRoot .collapse-toggle-btn {
-        border-radius: 5px !important;
-    }
-
-    #productCardSettingsRoot .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-
-    #productCardSettingsRoot .input-group > .form-control {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-    }
-
-    .bn-digit,
-    .font-tabular {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 6px 14px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
-    }
-
-    .btn-primary {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-    }
-
-    .btn-primary:hover {
-        background-color: #1d4ed8 !important;
-        border-color: #1d4ed8 !important;
-        color: #ffffff !important;
-    }
-
-    .btn-outline-secondary {
-        background-color: #ffffff !important;
-        border-color: #cbd5e1 !important;
-        color: #334155 !important;
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-
-    .settings-header-card {
-        background: #ffffff;
-        color: #0f172a;
-        padding: 14px 18px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 14px;
-    }
-
-    .settings-panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 14px;
-        overflow: hidden;
-        border-radius: 6px !important;
-    }
-
-    .settings-panel-header {
-        padding: 11px 16px;
-        background: #ffffff;
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    .section-title-text {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .status-kpi-pill {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 10px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-        border-radius: 6px !important;
-    }
-
-    .feature-switch-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 12px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        transition: all 0.15s ease;
-        height: 100%;
-        border-radius: 6px !important;
-    }
-
-    .feature-switch-card:hover {
-        border-color: #cbd5e1;
-        background: #f8fafc;
-    }
-
-    .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
-    }
-
-    #productCardSettingsRoot .form-control,
-    #productCardSettingsRoot .form-select {
-        min-height: 34px;
-        font-size: 12px;
-        font-weight: 500;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        color: #0f172a;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    #productCardSettingsRoot .form-control:focus,
-    #productCardSettingsRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
-    }
-
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
-        cursor: pointer;
-    }
-
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
-        transform: rotate(180deg);
-    }
-
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
-
-    .form-switch .form-check-input {
-        width: 36px;
-        height: 18px;
-        cursor: pointer;
-        border-color: #cbd5e1;
-        border-radius: 20px !important;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
-    }
-
-    .form-switch .form-check-input:checked {
-        background-color: #2563eb;
-        border-color: #2563eb;
-    }
-
-    .form-check-label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #1e293b;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .minimal-modal-card {
-        background: #ffffff !important;
-        border: 1px solid #f1f5f9 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(15, 23, 42, 0.04) !important;
-        padding: 24px 26px !important;
-        text-align: left !important;
-    }
-
-    .minimal-modal-title {
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        margin-bottom: 6px !important;
-        letter-spacing: -0.02em !important;
-    }
-
-    .minimal-modal-subtext {
-        font-size: 13px !important;
-        color: #64748b !important;
-        margin-bottom: 20px !important;
-        line-height: 1.45 !important;
-    }
-
-    .btn-minimal-action {
-        background-color: #2563eb !important;
-        border: none !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        padding: 7px 22px !important;
-        border-radius: 7px !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
-        transition: all 0.15s ease !important;
-        cursor: pointer !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    .btn-minimal-action:hover {
-        background-color: #1d4ed8 !important;
-        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.38) !important;
-        color: #ffffff !important;
-    }
-
-    @media (max-width: 767.98px) {
-        .settings-header-card {
-            padding: 12px 14px !important;
-        }
-
-        .header-top-wrap {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 8px !important;
-        }
-
-        .top-action-btns {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .top-action-btns .btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .settings-panel-header {
-            padding: 10px 12px;
-        }
-
-        .minimal-modal-card {
-            padding: 20px !important;
-        }
-    }
-</style>
 
 @php
     $settings = is_array($settings ?? null)
         ? $settings
         : (json_decode($settings ?? '[]', true) ?: []);
-
-    $cardActiveCount = 0;
 
     $cardCheckKeys = [
         'card_show_price_decimal',
@@ -346,6 +17,8 @@
         'card_enable_quick_view',
         'card_show_stockout_btn'
     ];
+
+    $cardActiveCount = 0;
 
     foreach ($cardCheckKeys as $ck) {
         if (($settings[$ck] ?? '1') == '1') {
@@ -365,241 +38,799 @@
     $detailReviewsOn = ($settings['detail_show_reviews'] ?? '1') == '1';
 @endphp
 
+<style>
+    /* =========================================
+       PRODUCT CARD SETTINGS — DESIGN SYSTEM
+    ========================================= */
+
+    #productCardSettingsRoot,
+    #productCardNoticeModal {
+        --pc-primary: var(--bs-primary, #2563eb);
+        --pc-primary-rgb: var(--bs-primary-rgb, 37, 99, 235);
+        --pc-text: var(--bs-body-color, #1e293b);
+        --pc-muted: var(--bs-secondary-color, #64748b);
+        --pc-border: var(--bs-border-color, #e2e8f0);
+        --pc-surface: var(--bs-body-bg, #ffffff);
+        --pc-soft: var(--bs-tertiary-bg, #f8fafc);
+
+        color: var(--pc-text);
+        font-family: inherit;
+        letter-spacing: -0.01em;
+    }
+
+    #productCardSettingsRoot *,
+    #productCardNoticeModal * {
+        box-sizing: border-box;
+    }
+
+    #productCardSettingsRoot .btn,
+    #productCardSettingsRoot button,
+    #productCardSettingsRoot .form-control,
+    #productCardSettingsRoot .form-select,
+    #productCardSettingsRoot .badge,
+    #productCardSettingsRoot .alert,
+    #productCardSettingsRoot .settings-header-card,
+    #productCardSettingsRoot .settings-panel-card,
+    #productCardSettingsRoot .status-kpi-pill,
+    #productCardSettingsRoot .feature-switch-card,
+    #productCardSettingsRoot .collapse-toggle-btn,
+    #productCardNoticeModal .modal-content,
+    #productCardNoticeModal .btn-minimal-action {
+        border-radius: 5px !important;
+    }
+
+    /* Header */
+
+    #productCardSettingsRoot .settings-header-card {
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        padding: 14px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.035);
+    }
+
+    #productCardSettingsRoot .page-heading {
+        font-size: 17px;
+        font-weight: 750;
+        line-height: 1.35;
+        color: var(--pc-text);
+        letter-spacing: -0.45px;
+    }
+
+    #productCardSettingsRoot .page-description {
+        font-size: 11.5px;
+        line-height: 1.5;
+        color: var(--pc-muted);
+    }
+
+    /* Buttons */
+
+    #productCardSettingsRoot .btn-compact {
+        min-height: 34px;
+        padding: 6px 13px;
+        font-size: 11px;
+        line-height: 1.35;
+        font-weight: 650;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #productCardSettingsRoot .btn-primary {
+        background: var(--pc-primary);
+        border-color: var(--pc-primary);
+        color: #fff;
+    }
+
+    #productCardSettingsRoot .btn-primary:hover {
+        background: var(--bs-primary-text-emphasis, #1d4ed8);
+        border-color: var(--bs-primary-text-emphasis, #1d4ed8);
+        color: #fff;
+    }
+
+    #productCardSettingsRoot .btn-outline-secondary {
+        background: var(--pc-surface);
+        border-color: var(--pc-border);
+        color: var(--pc-text);
+    }
+
+    #productCardSettingsRoot .btn-outline-secondary:hover {
+        background: var(--pc-soft);
+        border-color: var(--pc-muted);
+        color: var(--pc-text);
+    }
+
+    /* Summary Cards */
+
+    #productCardSettingsRoot .status-kpi-pill {
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        padding: 11px 14px;
+        min-height: 68px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #productCardSettingsRoot .status-kpi-pill:hover {
+        border-color: rgba(var(--pc-primary-rgb), .35);
+        box-shadow: 0 2px 7px rgba(15, 23, 42, .045);
+    }
+
+    #productCardSettingsRoot .kpi-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--pc-muted);
+        margin-bottom: 4px;
+    }
+
+    #productCardSettingsRoot .kpi-value {
+        font-size: 13px;
+        font-weight: 750;
+        color: var(--pc-text);
+        line-height: 1.35;
+    }
+
+    #productCardSettingsRoot .kpi-icon {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        background: rgba(var(--pc-primary-rgb), .09);
+        color: var(--pc-primary);
+        font-size: 15px;
+    }
+
+    #productCardSettingsRoot .kpi-icon.warning {
+        background: rgba(245, 158, 11, .10);
+        color: #d97706;
+    }
+
+    #productCardSettingsRoot .kpi-icon.success {
+        background: rgba(16, 185, 129, .10);
+        color: #059669;
+    }
+
+    /* Section Panels */
+
+    #productCardSettingsRoot .settings-panel-card {
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        margin-bottom: 13px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
+    }
+
+    #productCardSettingsRoot .settings-panel-header {
+        min-height: 48px;
+        padding: 10px 15px;
+        background: var(--pc-surface);
+        border-bottom: 1px solid var(--pc-border);
+    }
+
+    #productCardSettingsRoot .section-title-text {
+        font-size: 12px;
+        font-weight: 750;
+        color: var(--pc-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #productCardSettingsRoot .section-title-icon {
+        width: 27px;
+        height: 27px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--pc-primary-rgb), .09);
+        color: var(--pc-primary);
+        border-radius: 5px;
+        font-size: 12px;
+    }
+
+    #productCardSettingsRoot .section-title-icon.warning {
+        background: rgba(245, 158, 11, .10);
+        color: #d97706;
+    }
+
+    #productCardSettingsRoot .section-title-icon.success {
+        background: rgba(16, 185, 129, .10);
+        color: #059669;
+    }
+
+    #productCardSettingsRoot .section-badge {
+        font-size: 9px;
+        font-weight: 750;
+        padding: 4px 7px;
+        letter-spacing: .35px;
+    }
+
+    #productCardSettingsRoot .section-body {
+        padding: 14px;
+        background: var(--pc-soft);
+        background: color-mix(in srgb, var(--pc-soft) 55%, var(--pc-surface));
+    }
+
+    /* Feature Switch Cards */
+
+    #productCardSettingsRoot .feature-switch-card {
+        height: 100%;
+        min-height: 68px;
+        padding: 12px 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+
+    #productCardSettingsRoot .feature-switch-card:hover {
+        border-color: rgba(var(--pc-primary-rgb), .4);
+        background: var(--pc-surface);
+    }
+
+    #productCardSettingsRoot .feature-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: var(--pc-text);
+        margin-bottom: 3px;
+        cursor: pointer;
+    }
+
+    #productCardSettingsRoot .feature-description {
+        font-size: 10.5px;
+        color: var(--pc-muted);
+        line-height: 1.45;
+        margin: 0;
+    }
+
+    /* Form Controls */
+
+    #productCardSettingsRoot .form-label {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--pc-text);
+        margin-bottom: 5px;
+    }
+
+    #productCardSettingsRoot .form-control,
+    #productCardSettingsRoot .form-select {
+        min-height: 35px;
+        padding: 7px 10px;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--pc-text);
+        background-color: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #productCardSettingsRoot .form-control:focus,
+    #productCardSettingsRoot .form-select:focus {
+        border-color: var(--pc-primary);
+        box-shadow: 0 0 0 3px rgba(var(--pc-primary-rgb), .12);
+        outline: none;
+    }
+
+    #productCardSettingsRoot .form-check-label {
+        font-size: 11.5px;
+        font-weight: 650;
+        color: var(--pc-text);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #productCardSettingsRoot .form-switch .form-check-input {
+        width: 35px;
+        height: 18px;
+        margin: 0;
+        cursor: pointer;
+        border: 1px solid var(--pc-border);
+        border-radius: 20px !important;
+        box-shadow: none;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+
+    #productCardSettingsRoot .form-switch .form-check-input:checked {
+        background-color: var(--pc-primary);
+        border-color: var(--pc-primary);
+    }
+
+    #productCardSettingsRoot .form-switch .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(var(--pc-primary-rgb), .12);
+    }
+
+    /* Collapse Toggle */
+
+    #productCardSettingsRoot .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        color: var(--pc-muted);
+        cursor: pointer;
+        transition: all .15s ease;
+    }
+
+    #productCardSettingsRoot .collapse-toggle-btn:hover {
+        background: var(--pc-primary);
+        border-color: var(--pc-primary);
+        color: #fff;
+    }
+
+    #productCardSettingsRoot .collapse-toggle-btn .collapse-icon {
+        font-size: 10px;
+        transition: transform .2s ease;
+    }
+
+    #productCardSettingsRoot .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    /* Sale Badge Field */
+
+    #productCardSettingsRoot .sale-badge-feature {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+    }
+
+    #productCardSettingsRoot .sale-badge-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 11px;
+    }
+
+    /* Save Footer */
+
+    #productCardSettingsRoot .settings-save-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 3px 0 14px;
+    }
+
+    #productCardSettingsRoot .settings-save-footer .btn {
+        min-height: 37px;
+        min-width: 145px;
+        font-size: 11.5px;
+    }
+
+    /* Notice Modal */
+
+    #productCardNoticeModal {
+        z-index: 108500;
+    }
+
+    #productCardNoticeModal .modal-dialog {
+        max-width: 380px;
+    }
+
+    #productCardNoticeModal .minimal-modal-card {
+        padding: 22px 24px;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, .15);
+    }
+
+    #productCardNoticeModal .minimal-modal-title {
+        font-size: 15px;
+        font-weight: 750;
+        color: var(--pc-text);
+        margin-bottom: 7px;
+    }
+
+    #productCardNoticeModal .minimal-modal-subtext {
+        font-size: 12px;
+        color: var(--pc-muted);
+        line-height: 1.55;
+        margin-bottom: 17px;
+    }
+
+    #productCardNoticeModal .btn-minimal-action {
+        min-height: 33px;
+        padding: 7px 22px;
+        background: var(--pc-primary);
+        border: 1px solid var(--pc-primary);
+        color: #fff;
+        font-size: 11.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color .15s ease;
+    }
+
+    #productCardNoticeModal .btn-minimal-action:hover {
+        filter: brightness(.92);
+    }
+
+    /* Responsive */
+
+    @media (max-width: 767.98px) {
+        #productCardSettingsRoot {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        #productCardSettingsRoot .settings-header-card {
+            padding: 12px;
+        }
+
+        #productCardSettingsRoot .header-top-wrap {
+            align-items: stretch !important;
+        }
+
+        #productCardSettingsRoot .page-heading {
+            font-size: 16px;
+        }
+
+        #productCardSettingsRoot .top-action-btns {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px !important;
+        }
+
+        #productCardSettingsRoot .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            padding-left: 7px;
+            padding-right: 7px;
+        }
+
+        #productCardSettingsRoot .settings-panel-header {
+            padding: 9px 11px;
+        }
+
+        #productCardSettingsRoot .section-body {
+            padding: 10px;
+        }
+
+        #productCardSettingsRoot .feature-switch-card {
+            padding: 11px;
+        }
+
+        #productCardSettingsRoot .settings-save-footer .btn {
+            width: 100%;
+        }
+
+        #productCardNoticeModal .minimal-modal-card {
+            padding: 19px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #productCardSettingsRoot .section-title-text {
+            font-size: 11px;
+            gap: 5px;
+        }
+
+        #productCardSettingsRoot .section-badge {
+            display: none;
+        }
+
+        #productCardSettingsRoot .status-kpi-pill {
+            padding: 9px 11px;
+        }
+    }
+</style>
+
 <div class="container-fluid px-2 px-md-4 py-2" id="productCardSettingsRoot">
 
-    {{-- Header --}}
-    <div class="settings-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
-        <div>
-             <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-dark" style="font-size: 18px;">
+    {{-- Page Header --}}
+    <div class="settings-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 header-top-wrap">
+
+        <div class="min-w-0">
+            <h5 class="page-heading mb-0 d-flex align-items-center gap-2">
                 <i class="fas fa-th-large text-primary"></i>
                 <span>Product Card Settings</span>
             </h5>
 
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
+            <small class="page-description d-block mt-1">
                 Manage product cards, badges, hover effects, and reviews.
             </small>
         </div>
 
-        <div class="top-action-btns d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-compact shadow-xs" onclick="toggleAllCardSections()">
-                <i class="fas fa-arrows-up-down me-1"></i>
+        <div class="top-action-btns d-flex align-items-center gap-2 flex-shrink-0">
+
+            <button type="button"
+                    class="btn btn-outline-secondary btn-compact"
+                    onclick="toggleAllCardSections()">
+                <i class="fas fa-arrows-up-down"></i>
                 <span id="expandAllCardBtnText">Collapse All</span>
             </button>
 
-            <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" onclick="document.getElementById('productCardSettingsForm').submit()">
-                <i class="fas fa-check-circle me-1"></i>
+            <button type="button"
+                    class="btn btn-primary btn-compact fw-bold"
+                    onclick="document.getElementById('productCardSettingsForm').requestSubmit()">
+                <i class="fas fa-check-circle"></i>
                 <span>Save Settings</span>
             </button>
+
         </div>
     </div>
 
     {{-- Summary --}}
     <div class="row g-2 mb-3">
+
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Active Card Features</small>
-                    <strong class="text-primary d-block bn-digit font-tabular" style="font-size: 13.5px;">
+                    <div class="kpi-label">Active Card Features</div>
+                    <div class="kpi-value text-primary">
                         {{ $cardActiveCount }} / 6 Enabled
-                    </strong>
+                    </div>
                 </div>
-                <div class="text-primary fs-5"><i class="fas fa-tags"></i></div>
+
+                <div class="kpi-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
             </div>
         </div>
 
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Hover Effect</small>
-                    <strong class="text-dark d-block text-truncate" style="font-size: 13.5px;">
+                    <div class="kpi-label">Hover Effect</div>
+                    <div class="kpi-value text-truncate">
                         {{ $hoverLabel }}
-                    </strong>
+                    </div>
                 </div>
-                <div class="text-warning fs-5"><i class="fas fa-wand-magic-sparkles"></i></div>
+
+                <div class="kpi-icon warning">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                </div>
             </div>
         </div>
 
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Product Reviews</small>
-                    <strong class="text-{{ $detailReviewsOn ? 'success' : 'secondary' }} d-block" style="font-size: 13.5px;">
+                    <div class="kpi-label">Product Reviews</div>
+
+                    <div class="kpi-value text-{{ $detailReviewsOn ? 'success' : 'secondary' }}">
                         {{ $detailReviewsOn ? 'Enabled' : 'Hidden' }}
-                    </strong>
+                    </div>
                 </div>
-                <div class="text-{{ $detailReviewsOn ? 'success' : 'secondary' }} fs-5">
+
+                <div class="kpi-icon {{ $detailReviewsOn ? 'success' : '' }}">
                     <i class="fas fa-star"></i>
                 </div>
             </div>
         </div>
+
     </div>
 
+    {{-- Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success border-0 shadow-xs py-2 px-3 mb-2 small d-flex align-items-center justify-content-between" style="border-radius: 5px;">
+        <div class="alert alert-success border-0 shadow-sm py-2 px-3 mb-3 d-flex align-items-center justify-content-between gap-2"
+             role="alert">
+
             <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-check-circle text-success"></i>
-                <span class="fw-semibold text-dark">{{ session('success') }}</span>
+                <i class="fas fa-check-circle"></i>
+                <span class="fw-semibold small">{{ session('success') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+
+            <button type="button"
+                    class="btn-close shadow-none"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     @endif
 
-    <form action="{{ route('admin.theme.setting.product_card.update') }}" method="POST" id="productCardSettingsForm">
+    <form action="{{ route('admin.theme.setting.product_card.update') }}"
+          method="POST"
+          id="productCardSettingsForm">
+
         @csrf
 
-        {{-- Section 1: Product Cards --}}
+        {{-- =========================================
+             SECTION 1: PRODUCT CARD CONTROLS
+        ========================================== --}}
         <div class="settings-panel-card">
-            <div class="settings-panel-header d-flex justify-content-between align-items-center">
+
+            <div class="settings-panel-header d-flex justify-content-between align-items-center gap-2">
+
                 <div class="section-title-text">
-                    <i class="fas fa-th-large text-primary"></i>
+                    <span class="section-title-icon">
+                        <i class="fas fa-th-large"></i>
+                    </span>
                     <span>Product Card Controls</span>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">
+
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle section-badge text-uppercase">
                         Card Features
                     </span>
 
-                    <button type="button" class="collapse-toggle-btn shadow-xs"
+                    <button type="button"
+                            class="collapse-toggle-btn"
                             data-bs-toggle="collapse"
                             data-bs-target="#collapseCardControls"
                             aria-expanded="true"
                             aria-controls="collapseCardControls"
-                            title="Toggle Section">
+                            title="Toggle Section"
+                            aria-label="Toggle Product Card Controls">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
+
                 </div>
             </div>
 
             <div class="collapse show" id="collapseCardControls">
-                <div class="p-3 bg-light bg-opacity-25">
+                <div class="section-body">
                     <div class="row g-2">
 
                         {{-- Price Decimal --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_price_decimal" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_price_decimal">
                                         Show Price Decimals
                                     </label>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+
+                                    <p class="feature-description">
                                         Example: ৳500.00 instead of ৳500.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="card_show_price_decimal"
                                            id="sw_price_decimal"
                                            value="1"
                                            {{ ($settings['card_show_price_decimal'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Card Reviews --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_card_review" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_card_review">
                                         Show Star Ratings
                                     </label>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+
+                                    <p class="feature-description">
                                         Display ratings and review counts.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="card_show_review"
                                            id="sw_card_review"
                                            value="1"
                                            {{ ($settings['card_show_review'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Wishlist --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_card_wishlist" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_card_wishlist">
                                         Wishlist Button
                                     </label>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+
+                                    <p class="feature-description">
                                         Let shoppers save products.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="card_show_wishlist"
                                            id="sw_card_wishlist"
                                            value="1"
                                            {{ ($settings['card_show_wishlist'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Quick View --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_quick_view" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_quick_view">
                                         Quick View
                                     </label>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+
+                                    <p class="feature-description">
                                         Preview products without reloading.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="card_enable_quick_view"
                                            id="sw_quick_view"
                                            value="1"
                                            {{ ($settings['card_enable_quick_view'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Stock Out Button --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_stockout_btn" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_stockout_btn">
                                         Show Stock Out Label
                                     </label>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+
+                                    <p class="feature-description">
                                         Replace purchase buttons when unavailable.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="card_show_stockout_btn"
                                            id="sw_stockout_btn"
                                            value="1"
                                            {{ ($settings['card_show_stockout_btn'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Sale Badge --}}
                         <div class="col-12 col-md-6">
-                            <div class="feature-switch-card flex-column align-items-stretch justify-content-between">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div>
-                                        <label class="form-check-label d-block text-dark" for="sw_sale_badge" style="font-size: 12px;">
+                            <div class="feature-switch-card sale-badge-feature">
+
+                                <div class="sale-badge-top">
+                                    <div class="min-w-0">
+                                        <label class="feature-title d-block" for="sw_sale_badge">
                                             Discount Badge
                                         </label>
-                                        <small class="text-muted" style="font-size: 11px;">
+
+                                        <p class="feature-description">
                                             Highlight sale products.
-                                        </small>
+                                        </p>
                                     </div>
 
                                     <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                        <input class="form-check-input ms-0" type="checkbox"
+                                        <input class="form-check-input"
+                                               type="checkbox"
                                                name="card_show_sale_badge"
                                                id="sw_sale_badge"
                                                value="1"
@@ -608,52 +839,75 @@
                                 </div>
 
                                 <div>
-                                    <label class="form-label mb-1" style="font-size: 11px;">Badge Text</label>
+                                    <label class="form-label" for="card_sale_badge_text">
+                                        Badge Text
+                                    </label>
+
                                     <input type="text"
                                            name="card_sale_badge_text"
+                                           id="card_sale_badge_text"
                                            class="form-control"
                                            value="{{ $settings['card_sale_badge_text'] ?? 'Sale!' }}"
                                            placeholder="Sale!">
                                 </div>
+
                             </div>
                         </div>
 
                     </div>
                 </div>
             </div>
+
         </div>
 
-        {{-- Section 2: Hover Effects --}}
+        {{-- =========================================
+             SECTION 2: HOVER EFFECTS
+        ========================================== --}}
         <div class="settings-panel-card">
-            <div class="settings-panel-header d-flex justify-content-between align-items-center">
+
+            <div class="settings-panel-header d-flex justify-content-between align-items-center gap-2">
+
                 <div class="section-title-text">
-                    <i class="fas fa-wand-magic-sparkles text-warning"></i>
+                    <span class="section-title-icon warning">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </span>
                     <span>Hover Effects</span>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">
+
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle section-badge text-uppercase">
                         Animation
                     </span>
 
-                    <button type="button" class="collapse-toggle-btn shadow-xs"
+                    <button type="button"
+                            class="collapse-toggle-btn"
                             data-bs-toggle="collapse"
                             data-bs-target="#collapseHoverAnimation"
                             aria-expanded="true"
                             aria-controls="collapseHoverAnimation"
-                            title="Toggle Section">
+                            title="Toggle Section"
+                            aria-label="Toggle Hover Effects">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
+
                 </div>
             </div>
 
             <div class="collapse show" id="collapseHoverAnimation">
-                <div class="p-3 bg-light bg-opacity-25">
-                    <div class="row g-2 align-items-center">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label">Hover Animation</label>
+                <div class="section-body">
 
-                            <select name="card_hover_style" class="form-select">
+                    <div class="row g-3 align-items-center">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="card_hover_style">
+                                Hover Animation
+                            </label>
+
+                            <select name="card_hover_style"
+                                    id="card_hover_style"
+                                    class="form-select">
+
                                 <option value="none" {{ ($settings['card_hover_style'] ?? '') == 'none' ? 'selected' : '' }}>
                                     None
                                 </option>
@@ -669,106 +923,136 @@
                                 <option value="slide_up" {{ ($settings['card_hover_style'] ?? '') == 'slide_up' ? 'selected' : '' }}>
                                     Slide Up
                                 </option>
+
                             </select>
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label text-muted">How It Works</label>
+                            <div class="d-flex align-items-start gap-2">
+                                <span class="text-primary mt-1">
+                                    <i class="fas fa-circle-info"></i>
+                                </span>
 
-                            <p class="text-muted small mb-0" style="font-size: 11.5px; line-height: 1.45;">
-                                Gallery effects use the second product image on hover.
-                            </p>
+                                <div>
+                                    <div class="form-label mb-1">How It Works</div>
+
+                                    <p class="text-muted small mb-0" style="font-size: 11px; line-height: 1.55;">
+                                        Gallery effects use the second product image on hover.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
+
                 </div>
             </div>
+
         </div>
 
-        {{-- Section 3: Reviews --}}
+        {{-- =========================================
+             SECTION 3: PRODUCT REVIEWS
+        ========================================== --}}
         <div class="settings-panel-card">
-            <div class="settings-panel-header d-flex justify-content-between align-items-center">
+
+            <div class="settings-panel-header d-flex justify-content-between align-items-center gap-2">
+
                 <div class="section-title-text">
-                    <i class="fas fa-star text-warning"></i>
+                    <span class="section-title-icon success">
+                        <i class="fas fa-star"></i>
+                    </span>
                     <span>Product Review Settings</span>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">
+
+                    <span class="badge bg-success-subtle text-success border border-success-subtle section-badge text-uppercase">
                         Reviews
                     </span>
 
-                    <button type="button" class="collapse-toggle-btn shadow-xs"
+                    <button type="button"
+                            class="collapse-toggle-btn"
                             data-bs-toggle="collapse"
                             data-bs-target="#collapseDetailReviews"
                             aria-expanded="true"
                             aria-controls="collapseDetailReviews"
-                            title="Toggle Section">
+                            title="Toggle Section"
+                            aria-label="Toggle Product Review Settings">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
+
                 </div>
             </div>
 
             <div class="collapse show" id="collapseDetailReviews">
-                <div class="p-3 bg-light bg-opacity-25">
+                <div class="section-body">
+
                     <div class="row g-2">
 
                         {{-- Detail Reviews --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_detail_reviews" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_detail_reviews">
                                         Show Product Reviews
                                     </label>
 
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+                                    <p class="feature-description">
                                         Display ratings and reviews on product pages.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="detail_show_reviews"
                                            id="sw_detail_reviews"
                                            value="1"
                                            {{ ($settings['detail_show_reviews'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                         {{-- Verified Buyers --}}
                         <div class="col-12 col-md-6">
                             <div class="feature-switch-card">
-                                <div class="pe-2">
-                                    <label class="form-check-label d-block text-dark" for="sw_allow_review" style="font-size: 12px;">
+
+                                <div class="pe-2 min-w-0">
+                                    <label class="feature-title d-block" for="sw_allow_review">
                                         Verified Buyers Only
                                     </label>
 
-                                    <small class="text-muted d-block" style="font-size: 11px;">
+                                    <p class="feature-description">
                                         Only delivered customers can submit reviews.
-                                    </small>
+                                    </p>
                                 </div>
 
                                 <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                    <input class="form-check-input ms-0" type="checkbox"
+                                    <input class="form-check-input"
+                                           type="checkbox"
                                            name="detail_allow_review"
                                            id="sw_allow_review"
                                            value="1"
                                            {{ ($settings['detail_allow_review'] ?? '1') == '1' ? 'checked' : '' }}>
                                 </div>
+
                             </div>
                         </div>
 
                     </div>
+
                 </div>
             </div>
+
         </div>
 
-        {{-- Save --}}
-        <div class="d-flex justify-content-end pt-2 pb-3">
+        {{-- Save Changes --}}
+        <div class="settings-save-footer">
             <button type="submit"
-                    class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto"
-                    style="min-height: 36px; font-size: 12px;">
-                <i class="fas fa-check-circle me-1"></i>
+                    class="btn btn-primary btn-compact fw-bold px-4">
+                <i class="fas fa-check-circle"></i>
                 Save Changes
             </button>
         </div>
@@ -776,88 +1060,158 @@
     </form>
 </div>
 
-{{-- Notice Modal --}}
-<div class="modal fade pc-modal-scope"
+{{-- =========================================
+     NOTICE MODAL
+========================================== --}}
+<div class="modal fade"
      id="productCardNoticeModal"
      tabindex="-1"
      aria-hidden="true"
+     aria-labelledby="productCardNoticeTitle"
      style="z-index: 108500;">
 
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content minimal-modal-card">
-            <h6 class="minimal-modal-title" id="productCardNoticeTitle">Notification</h6>
+
+            <h6 class="minimal-modal-title" id="productCardNoticeTitle">
+                Notification
+            </h6>
 
             <p class="minimal-modal-subtext"
-               id="productCardNoticeMessage"
-               style="margin-bottom: 16px !important;"></p>
+               id="productCardNoticeMessage"></p>
 
             <div class="d-flex align-items-center">
-                <button type="button" class="btn-minimal-action" data-bs-dismiss="modal">
+                <button type="button"
+                        class="btn-minimal-action"
+                        data-bs-dismiss="modal">
                     OK
                 </button>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-// Notice Modal
-function showProductCardModalNotice(message, title = 'Notice') {
-    const titleEl = document.getElementById('productCardNoticeTitle');
-    const msgEl = document.getElementById('productCardNoticeMessage');
+    /**
+     * Product Card Notice Modal
+     */
+    function showProductCardModalNotice(message, title = 'Notice') {
+        const titleEl = document.getElementById('productCardNoticeTitle');
+        const msgEl = document.getElementById('productCardNoticeMessage');
+        const modalEl = document.getElementById('productCardNoticeModal');
 
-    if (titleEl) titleEl.innerText = title;
-    if (msgEl) msgEl.innerText = message;
+        if (titleEl) {
+            titleEl.textContent = title;
+        }
 
-    const modalEl = document.getElementById('productCardNoticeModal');
+        if (msgEl) {
+            msgEl.textContent = message;
+        }
 
-    if (modalEl && window.bootstrap) {
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
-}
 
-// Expand / Collapse All Sections
-let allCardSectionsExpanded = true;
 
-function toggleAllCardSections() {
-    const collapses = document.querySelectorAll(
-        '#productCardSettingsRoot .settings-panel-card .collapse'
-    );
+    /**
+     * Expand / Collapse All Sections
+     */
+    let allCardSectionsExpanded = true;
 
-    const toggleBtns = document.querySelectorAll(
-        '#productCardSettingsRoot .settings-panel-card .collapse-toggle-btn'
-    );
+    function toggleAllCardSections() {
+        const root = document.getElementById('productCardSettingsRoot');
 
-    const btnText = document.getElementById('expandAllCardBtnText');
+        if (!root) {
+            return;
+        }
 
-    allCardSectionsExpanded = !allCardSectionsExpanded;
+        const collapses = root.querySelectorAll(
+            '.settings-panel-card .collapse'
+        );
 
-    if (!window.bootstrap) return;
+        const toggleBtns = root.querySelectorAll(
+            '.settings-panel-card .collapse-toggle-btn'
+        );
 
-    collapses.forEach(col => {
-        if (allCardSectionsExpanded) {
-            bootstrap.Collapse.getOrCreateInstance(col, {
-                toggle: false
-            }).show();
-        } else {
-            bootstrap.Collapse.getOrCreateInstance(col, {
-                toggle: false
-            }).hide();
+        const btnText = document.getElementById('expandAllCardBtnText');
+
+        if (!window.bootstrap) {
+            return;
+        }
+
+        allCardSectionsExpanded = !allCardSectionsExpanded;
+
+        collapses.forEach(col => {
+            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(
+                col,
+                { toggle: false }
+            );
+
+            if (allCardSectionsExpanded) {
+                collapseInstance.show();
+            } else {
+                collapseInstance.hide();
+            }
+        });
+
+        toggleBtns.forEach(btn => {
+            btn.setAttribute(
+                'aria-expanded',
+                allCardSectionsExpanded ? 'true' : 'false'
+            );
+        });
+
+        if (btnText) {
+            btn.textContent = allCardSectionsExpanded
+                ? 'Collapse All'
+                : 'Expand All';
+        }
+    }
+
+
+    /**
+     * Keep Expand / Collapse All Button
+     * Synchronized With Individual Sections
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+        const root = document.getElementById('productCardSettingsRoot');
+
+        if (!root) {
+            return;
+        }
+
+        const collapses = root.querySelectorAll(
+            '.settings-panel-card .collapse'
+        );
+
+        collapses.forEach(collapseEl => {
+            collapseEl.addEventListener('shown.bs.collapse', function () {
+                updateCardSectionState();
+            });
+
+            collapseEl.addEventListener('hidden.bs.collapse', function () {
+                updateCardSectionState();
+            });
+        });
+
+        function updateCardSectionState() {
+            const expandedCount = Array.from(collapses).filter(
+                item => item.classList.contains('show')
+            ).length;
+
+            allCardSectionsExpanded = expandedCount === collapses.length;
+
+            const btnText = document.getElementById('expandAllCardBtnText');
+
+            if (btnText) {
+                btnText.textContent = allCardSectionsExpanded
+                    ? 'Collapse All'
+                    : 'Expand All';
+            }
         }
     });
-
-    toggleBtns.forEach(btn => {
-        btn.setAttribute(
-            'aria-expanded',
-            allCardSectionsExpanded ? 'true' : 'false'
-        );
-    });
-
-    if (btnText) {
-        btnText.innerText = allCardSectionsExpanded
-            ? 'Collapse All'
-            : 'Expand All';
-    }
-}
 </script>
+
 @endsection

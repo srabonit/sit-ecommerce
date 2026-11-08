@@ -821,17 +821,47 @@ class OrderController extends Controller
 
         if ($isValidEmail && !$digitalMailSent && $isGlobalEmailEnabled && $isOrderEmailEnabled && ($targetOrderStatus !== $currentOrderStatus)) {
             try {
+                $statusTitles = [
+                    'pending'            => 'Pending Review',
+                    'received'           => 'Received',
+                    'confirmed'          => 'Confirmed',
+                    'processing'         => 'Processing (Packed)',
+                    'packed'             => 'Processing (Packed)',
+                    'shipped'            => 'Shipped',
+                    'attempt_to_deliver' => 'Out for Delivery / Attempt to Deliver',
+                    'delivered'          => 'Delivered',
+                    'exchange'           => 'Exchange Processed',
+                    'returned'           => 'Returned',
+                    'cancelled'          => 'Cancelled',
+                ];
+
+                $currentStatusTitle = $statusTitles[$targetOrderStatus] ?? strtoupper(str_replace('_', ' ', $targetOrderStatus));
+
                 $mailData = [
                     'invoice_no'   => $updatedOrder->invoice_no ?? $updatedOrder->id,
-                    'status_title' => strtoupper(str_replace('_', ' ', $targetOrderStatus)),
+                    'status_title' => $currentStatusTitle,
                     'customer'     => $updatedOrder->shipping_name ?? ($updatedOrder->customer_name ?? ($updatedOrder->name ?? 'Valued Customer')),
                     'grand_total'  => number_format($updatedOrder->grand_total ?? 0, 2),
                     'admin_note'   => $request->admin_note ?? null,
                 ];
 
-                Mail::send([], [], function ($message) use ($mailData, $userEmail) {
+                $emailSubject = match ($targetOrderStatus) {
+                    'pending'            => "⏳ Order Pending: [#{$mailData['invoice_no']}]",
+                    'received'           => "📥 Order Received: [#{$mailData['invoice_no']}]",
+                    'confirmed'          => "✅ Order Confirmed: [#{$mailData['invoice_no']}]",
+                    'processing', 'packed' => "📦 Order Processing: [#{$mailData['invoice_no']}]",
+                    'shipped'            => "🚚 Order Shipped: [#{$mailData['invoice_no']}]",
+                    'attempt_to_deliver' => "🚴 Delivery Attempted: [#{$mailData['invoice_no']}]",
+                    'delivered'          => "🎉 Order Delivered: [#{$mailData['invoice_no']}]",
+                    'exchange'           => "🔄 Order Exchange: [#{$mailData['invoice_no']}]",
+                    'returned'           => "↩️ Order Returned: [#{$mailData['invoice_no']}]",
+                    'cancelled'          => "❌ Order Cancelled: [#{$mailData['invoice_no']}]",
+                    default              => "📦 Order Update: [#{$mailData['invoice_no']}] - {$mailData['status_title']}",
+                };
+
+                Mail::send([], [], function ($message) use ($mailData, $userEmail, $emailSubject) {
                     $message->to($userEmail)
-                        ->subject("📦 Order Update: [#{$mailData['invoice_no']}] - {$mailData['status_title']}")
+                        ->subject($emailSubject)
                         ->html("
                             <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;'>
                                 <h2 style='color: #0f172a; margin-top: 0;'>Order Status Update</h2>
@@ -977,7 +1007,7 @@ class OrderController extends Controller
 
             // Map all 10 order lifecycle statuses to exact template keys
             $templateKeyMap = [
-                'pending'            => 'order_placed',
+                'pending'            => 'order_pending',
                 'received'           => 'order_received',
                 'confirmed'          => 'order_confirmed',
                 'processing'         => 'order_processing',
@@ -1006,6 +1036,7 @@ class OrderController extends Controller
 
             // Map template key to direct database switch in sms_settings
             $settingKeyMap = [
+                'order_pending'            => 'auto_sms_order_pending',
                 'order_placed'             => 'auto_sms_order_placed_customer',
                 'order_received'           => 'auto_sms_order_received',
                 'order_confirmed'          => 'auto_sms_order_confirmed',
@@ -1027,6 +1058,14 @@ class OrderController extends Controller
                     $val = DB::table('sms_settings')->where('key', $settingKey)->value('value');
                     if ($val !== null) {
                         $isAllowed = !in_array(strtolower(trim((string)$val)), ['0', 'false', 'off', 'no'], true);
+                    } else {
+                        // Safe fallback for pending setting key
+                        if ($settingKey === 'auto_sms_order_pending') {
+                            $valFallback = DB::table('sms_settings')->where('key', 'auto_sms_order_placed_customer')->value('value');
+                            if ($valFallback !== null) {
+                                $isAllowed = !in_array(strtolower(trim((string)$valFallback)), ['0', 'false', 'off', 'no'], true);
+                            }
+                        }
                     }
                 }
 
@@ -1081,7 +1120,7 @@ class OrderController extends Controller
                 'bypass_setting' => $isManual,
             ];
 
-            // Send via dynamic template engine (SmsService handles fallbacks internally)
+            // Send via dynamic template engine (SmsService handles fallbacks internally without leaking templates)
             $res = $smsService->sendTemplate($templateKey, $phone, $variables, $options);
 
             return [

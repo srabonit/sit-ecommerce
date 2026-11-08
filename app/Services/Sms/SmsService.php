@@ -117,7 +117,7 @@ class SmsService
     }
 
     /**
-     * Core method to dispatch single SMS with full safety checks and logging
+     * Core method to dispatch single SMS with instant real-time balance sync and logging
      */
     public function send(string $number, string $message, string $type = 'transactional', array $options = []): array
     {
@@ -175,7 +175,7 @@ class SmsService
         $costPerSms = $this->provider ? (float) $this->provider->price_per_sms : 0.3500;
         $totalCost = $metrics['sms_parts'] * $costPerSms;
 
-        // Clean sender ID (v3: omit if empty or 'default')
+        // Clean sender ID
         $rawSenderId = trim((string) ($options['sender_id'] ?? $this->provider?->sender_id ?? ''));
         $senderId = (!empty($rawSenderId) && strtolower($rawSenderId) !== 'default') ? $rawSenderId : null;
 
@@ -183,15 +183,43 @@ class SmsService
         $response = $this->driver->sendSingle($recipient, $message, $senderId);
         $isSuccess = (bool) ($response['status'] ?? false);
 
-        // 7. Instant balance update if returned by gateway
-        if ($isSuccess && isset($response['data']['data']['balance']) && $this->provider) {
-            $newBal = (float) $response['data']['data']['balance'];
-            $unitPrice = $this->provider->price_per_sms > 0 ? (float) $this->provider->price_per_sms : 0.35;
-            $this->provider->update([
-                'balance'                => $newBal,
-                'estimated_sms'          => (int) floor($newBal / $unitPrice),
-                'last_balance_synced_at' => Carbon::now(),
-            ]);
+        // 7. REAL-TIME AUTOMATIC BALANCE UPDATE
+        if ($isSuccess && $this->provider) {
+            $rawGatewayBal = $response['data']['data']['balance']
+                ?? $response['data']['balance']
+                ?? $response['balance']
+                ?? null;
+
+            if ($rawGatewayBal !== null) {
+                // If API returned live balance in response
+                $newBal = (float) $rawGatewayBal;
+                $unitPrice = $this->provider->price_per_sms > 0 ? (float) $this->provider->price_per_sms : 0.35;
+                $this->provider->update([
+                    'balance'                => $newBal,
+                    'estimated_sms'          => (int) floor($newBal / $unitPrice),
+                    'last_balance_synced_at' => Carbon::now(),
+                ]);
+            } else {
+                // Deduct cost locally in real-time so DB balance decrements immediately
+                $unitPrice = $this->provider->price_per_sms > 0 ? (float) $this->provider->price_per_sms : 0.35;
+                $currentBal = (float) $this->provider->balance;
+                $newBal = max(0.00, round($currentBal - $totalCost, 4));
+
+                $this->provider->update([
+                    'balance'                => $newBal,
+                    'estimated_sms'          => (int) floor($newBal / $unitPrice),
+                    'last_balance_synced_at' => Carbon::now(),
+                ]);
+
+                // Query live gateway balance to reconcile without throwing errors
+                if (empty($options['skip_live_sync'])) {
+                    try {
+                        $this->syncBalance();
+                    } catch (Throwable $syncEx) {
+                        // Keep instant locally deducted balance
+                    }
+                }
+            }
         }
 
         // 8. Record SMS Log safely
@@ -240,22 +268,31 @@ class SmsService
     }
 
     /**
-     * Send bulk personalized messages via gateway driver
+     * Send bulk personalized messages via gateway driver with auto balance sync
      */
     public function sendBulk(array $messageParameters, ?string $senderId = null): array
     {
         $cleanSenderId = (!empty($senderId) && strtolower(trim($senderId)) !== 'default') ? trim($senderId) : null;
-        return $this->driver->sendBulk($messageParameters, $cleanSenderId);
+        $response = $this->driver->sendBulk($messageParameters, $cleanSenderId);
+
+        // Auto sync live balance immediately after bulk dispatch
+        if ($this->provider) {
+            try {
+                $this->syncBalance();
+            } catch (Throwable $e) {}
+        }
+
+        return $response;
     }
 
     /**
-     * Dispatch SMS by dynamic template key with automatic variable binding, alias detection & complete fallback templates for all 10 order statuses
+     * Dispatch SMS by dynamic template key with automatic variable binding
      */
     public function sendTemplate(string $templateKey, string $number, array $variables = [], array $options = []): array
     {
         $normalizedKey = strtolower(trim($templateKey));
 
-        // 1. Bypass switch check if explicitly requested (e.g. manual status trigger)
+        // 1. Bypass switch check if explicitly requested (manual status trigger)
         $bypassSetting = !empty($options['bypass_setting']) || !empty($options['bypass_global']);
 
         // 2. Strict switch check: If turned OFF in settings, STOP immediately!
@@ -269,6 +306,7 @@ class SmsService
 
         // 3. Multi-alias database template lookup for exact event ONLY
         $templateAliasMap = [
+            'order_pending'            => ['order_pending', 'order_placed_customer', 'order_placed', 'pending'],
             'order_placed'             => ['order_placed_customer', 'order_placed', 'order_confirmation', 'order_created'],
             'order_received'           => ['order_received', 'received'],
             'order_confirmed'          => ['order_confirmed', 'confirmed'],
@@ -285,35 +323,20 @@ class SmsService
         $candidateKeys = $templateAliasMap[$normalizedKey] ?? [$normalizedKey];
 
         $template = null;
-        if (class_exists(SmsTemplate::class)) {
-            if (Schema::hasTable('sms_templates')) {
-                $hasKeyCol  = Schema::hasColumn('sms_templates', 'key');
-                $hasSlugCol = Schema::hasColumn('sms_templates', 'slug');
+        if (class_exists(SmsTemplate::class) && Schema::hasTable('sms_templates')) {
+            $hasKeyCol  = Schema::hasColumn('sms_templates', 'key');
+            $hasSlugCol = Schema::hasColumn('sms_templates', 'slug');
 
-                $template = SmsTemplate::where('is_active', true)
-                    ->where(function ($sub) use ($candidateKeys, $hasKeyCol, $hasSlugCol) {
-                        if ($hasKeyCol) {
-                            $sub->whereIn('key', $candidateKeys);
-                        }
-                        if ($hasSlugCol) {
-                            $sub->orWhereIn('slug', $candidateKeys);
-                        }
-                    })
-                    ->first();
-            }
-
-            if (!$template && method_exists(SmsTemplate::class, 'getActive')) {
-                foreach ($candidateKeys as $cKey) {
-                    $candidate = SmsTemplate::getActive($cKey);
-                    if ($candidate) {
-                        $foundKey = strtolower((string) ($candidate->key ?? ($candidate->slug ?? '')));
-                        if (in_array($foundKey, $candidateKeys, true)) {
-                            $template = $candidate;
-                            break;
-                        }
+            $template = SmsTemplate::where('is_active', true)
+                ->where(function ($sub) use ($candidateKeys, $hasKeyCol, $hasSlugCol) {
+                    if ($hasKeyCol) {
+                        $sub->whereIn('key', $candidateKeys);
                     }
-                }
-            }
+                    if ($hasSlugCol) {
+                        $sub->orWhereIn('slug', $candidateKeys);
+                    }
+                })
+                ->first();
         }
 
         // Global fallback tags
@@ -342,8 +365,9 @@ class SmsService
                 }
             }
         } else {
-            // Intelligent Built-in Fallbacks for all 10 Statuses (Eliminates 'confirm' leakage)
+            // Intelligent Built-in Fallbacks for all 10 Statuses
             $fallbackBodies = [
+                'order_pending'            => "Dear {customer_name}, your order #{invoice_no} is currently pending review. Thank you for shopping with {store_name}!",
                 'order_placed'             => "Dear {customer_name}, your order #{invoice_no} of ৳{order_total} has been placed successfully. Thank you for shopping with {store_name}!",
                 'order_received'           => "Dear {customer_name}, your order #{invoice_no} has been received by {store_name} and is queued for verification.",
                 'order_confirmed'          => "Dear {customer_name}, your order #{invoice_no} has been confirmed and is being processed. - {store_name}",
@@ -382,6 +406,7 @@ class SmsService
     protected function isTemplateNotificationEnabled(string $templateKey): bool
     {
         $statusKeyMap = [
+            'order_pending'            => ['auto_sms_order_pending', 'auto_sms_order_placed_customer'],
             'order_placed'             => ['auto_sms_order_placed_customer', 'auto_sms_order_placed'],
             'order_received'           => ['auto_sms_order_received'],
             'order_confirmed'          => ['auto_sms_order_confirmed'],
@@ -397,7 +422,6 @@ class SmsService
 
         $keysToCheck = $statusKeyMap[$templateKey] ?? ["auto_sms_{$templateKey}"];
 
-        // Check if any explicit key exists in the database. If it exists as '0', it is strictly OFF!
         foreach ($keysToCheck as $k) {
             if (Schema::hasTable('sms_settings')) {
                 $row = SmsSetting::where('key', $k)->first();
@@ -408,7 +432,6 @@ class SmsService
             }
         }
 
-        // If not found in DB at all, check via model helper or default
         foreach ($keysToCheck as $k) {
             if ($this->isSettingActive($k, true)) {
                 return true;
@@ -483,11 +506,24 @@ class SmsService
     }
 
     /**
-     * Query gateway balance and sync provider state
+     * Query gateway balance, sync to database provider record, and refresh
      */
     public function syncBalance(): array
     {
-        return $this->driver->checkBalance();
+        $result = $this->driver->checkBalance();
+
+        if (!empty($result['status']) && isset($result['balance']) && $this->provider) {
+            $bal = (float) $result['balance'];
+            $unitPrice = $this->provider->price_per_sms > 0 ? (float) $this->provider->price_per_sms : 0.35;
+            $this->provider->update([
+                'balance'                => $bal,
+                'estimated_sms'          => (int) floor($bal / $unitPrice),
+                'last_balance_synced_at' => Carbon::now(),
+            ]);
+            $this->provider->refresh();
+        }
+
+        return $result;
     }
 
     /**

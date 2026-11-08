@@ -61,18 +61,54 @@ class ProductController extends Controller
         return $product;
     }
 
+    /**
+     * Schema-safe Online Storefront Scope:
+     * Hides branch-restricted and POS-only products from public website.
+     */
+    protected function applyOnlineScope($query)
+    {
+        if (Schema::hasColumn('products', 'is_active')) {
+            $query->where('products.is_active', true);
+        } elseif (Schema::hasColumn('products', 'status')) {
+            $query->where(function ($sq) {
+                $sq->where('products.status', 'active')
+                   ->orWhere('products.status', 1)
+                   ->orWhere('products.status', '1');
+            });
+        }
+
+        if (Schema::hasColumn('products', 'is_sellable_online')) {
+            $query->where('products.is_sellable_online', true);
+        }
+
+        if (Schema::hasColumn('products', 'branch_availability_mode')) {
+            $query->where(function ($bQ) {
+                $bQ->whereNull('products.branch_availability_mode')
+                   ->orWhereNotIn('products.branch_availability_mode', ['pos_only', 'branch_only']);
+            });
+        }
+
+        return $query;
+    }
+
     public function index(Request $request)
     {
-        $hasCatPivot = Schema::hasTable('product_category');
+        $hasCatPivot   = Schema::hasTable('product_category');
         $hasBrandPivot = Schema::hasTable('product_brand');
-        $hasTagPivot = Schema::hasTable('product_tag');
+        $hasTagPivot   = Schema::hasTable('product_tag') && Schema::hasTable('tags');
 
         $categories = Category::withCount('products')->get();
         if (!$hasCatPivot || $categories->sum('products_count') == 0) {
             $categories = Category::withCount('directProducts as products_count')->get();
         }
 
-        $query = Product::with(['category', 'categories', 'brand', 'brands', 'tags'])->select('products.*')->distinct();
+        $withRelations = ['category', 'categories', 'brand', 'brands'];
+        if ($hasTagPivot) {
+            $withRelations[] = 'tags';
+        }
+
+        $query = Product::with($withRelations)->select('products.*')->distinct();
+        $this->applyOnlineScope($query);
 
         // সার্চ কিওয়ার্ড ফিল্টারিং
         if ($request->filled('q') || $request->filled('search')) {
@@ -248,9 +284,21 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with(['category', 'categories', 'brand', 'brands', 'tags', 'galleries', 'variants'])
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $hasTagsTable = Schema::hasTable('tags') && Schema::hasTable('product_tag');
+        
+        $withRelations = ['category', 'categories', 'brand', 'brands', 'galleries', 'variants'];
+        if ($hasTagsTable) {
+            $withRelations[] = 'tags';
+        }
+
+        $productQuery = Product::with($withRelations)->where('slug', $slug);
+        $this->applyOnlineScope($productQuery);
+        $product = $productQuery->firstOrFail();
+
+        // Tags টেবিল ডেটাবেজে না থাকলেও ভিউ পেজ যাতে কখনো ক্র্যাশ না করে
+        if (!$hasTagsTable) {
+            $product->setRelation('tags', collect([]));
+        }
 
         $this->hydrateProductMediaUrls($product);
 
@@ -270,7 +318,7 @@ class ProductController extends Controller
         session()->put('recently_viewed', $recentIds);
 
         // Related products query (Category + Multiple Brands matching)
-        $relatedProducts = Product::where('id', '!=', $product->id)
+        $relatedProductsQuery = Product::where('id', '!=', $product->id)
             ->where(function ($q) use ($product) {
                 if ($product->category_id) {
                     $q->where('category_id', $product->category_id);
@@ -290,13 +338,13 @@ class ProductController extends Controller
                         $subB->whereIn('brands.id', $brandIds);
                     });
                 }
-            })
-            ->take(10)
-            ->get();
+            });
+        $this->applyOnlineScope($relatedProductsQuery);
+        $relatedProducts = $relatedProductsQuery->take(10)->get();
 
-        $recentProducts = Product::whereIn('id', array_diff($recentIds, [$product->id]))
-            ->take(10)
-            ->get();
+        $recentProductsQuery = Product::whereIn('id', array_diff($recentIds, [$product->id]));
+        $this->applyOnlineScope($recentProductsQuery);
+        $recentProducts = $recentProductsQuery->take(10)->get();
 
         $uiSettings = [
             'show_breadcrumb'        => true,
@@ -340,7 +388,21 @@ class ProductController extends Controller
 
     public function quickViewModal($id)
     {
-        $product = Product::with(['galleries', 'variants', 'category', 'categories', 'brand', 'brands', 'tags'])->findOrFail($id);
+        $hasTagsTable = Schema::hasTable('tags') && Schema::hasTable('product_tag');
+        
+        $withRelations = ['galleries', 'variants', 'category', 'categories', 'brand', 'brands'];
+        if ($hasTagsTable) {
+            $withRelations[] = 'tags';
+        }
+
+        $productQuery = Product::with($withRelations)->where('id', $id);
+        $this->applyOnlineScope($productQuery);
+        $product = $productQuery->firstOrFail();
+        
+        if (!$hasTagsTable) {
+            $product->setRelation('tags', collect([]));
+        }
+
         $this->hydrateProductMediaUrls($product);
 
         return view('frontend.partials.quick_view_modal_body', compact('product'));
@@ -356,10 +418,7 @@ class ProductController extends Controller
         }
 
         $productsQuery = Product::query()->select('products.*')->distinct();
-
-        if (Schema::hasColumn('products', 'is_active')) {
-            $productsQuery->where('is_active', true);
-        }
+        $this->applyOnlineScope($productsQuery);
 
         $productsQuery->where(function ($q) use ($query) {
             $q->where('title', 'LIKE', "%{$query}%")

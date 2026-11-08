@@ -4,6 +4,7 @@
 
 @php
     $totalProductsCount = $products->total();
+
     $inStockCount = $products->filter(fn($p) => (int)($p->stock ?? ($p->qty ?? 0)) > 5)->count();
     $lowStockCount = $products->filter(fn($p) => (int)($p->stock ?? ($p->qty ?? 0)) > 0 && (int)($p->stock ?? ($p->qty ?? 0)) <= 5)->count();
     $outOfStockCount = $products->filter(fn($p) => (int)($p->stock ?? ($p->qty ?? 0)) <= 0)->count();
@@ -11,40 +12,62 @@
     // Fail-safe thumbnail resolver
     $resolveThumb = function($path, $fallback = 'https://placehold.co/60x60?text=Product') {
         if (empty($path)) return $fallback;
+
         if (class_exists(\App\Services\ImagePathService::class)) {
             return \App\Services\ImagePathService::resolveUrl($path, $fallback);
         }
+
         if (function_exists('show_image')) return show_image($path, $fallback);
         if (filter_var($path, FILTER_VALIDATE_URL)) return $path;
+
         return asset(ltrim(str_replace(['public_html/', 'public/'], '', $path), '/'));
     };
 
-    $targetActionRoute = Route::has('admin.email_marketing.product_campaign.create') 
-        ? route('admin.email_marketing.product_campaign.create') 
-        : (Route::has('admin.email_marketing.campaigns.create_product_targeted') 
-            ? route('admin.email_marketing.campaigns.create_product_targeted') 
+    $targetActionRoute = Route::has('admin.email_marketing.product_campaign.create')
+        ? route('admin.email_marketing.product_campaign.create')
+        : (Route::has('admin.email_marketing.campaigns.create_product_targeted')
+            ? route('admin.email_marketing.campaigns.create_product_targeted')
             : url('admin/email-marketing/campaigns/create-product-targeted'));
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       PRODUCT MARKETING - ENTERPRISE UI
+       Bootstrap 5 | Strict 5px Radius | Responsive
+    ========================================================= */
+
+    #email-marketing-product-root {
+        --pm-primary: #2563eb;
+        --pm-primary-dark: #1d4ed8;
+        --pm-text: #172033;
+        --pm-muted: #64748b;
+        --pm-border: #e2e8f0;
+        --pm-surface: #ffffff;
+        --pm-soft: #f8fafc;
+        --pm-radius: 5px;
+        color: var(--pm-text);
+        font-size: 12px;
+    }
+
+    #email-marketing-product-root *,
+    #productPhotoZoomModal * {
+        border-radius: 5px;
+    }
+
     #email-marketing-product-root .btn,
-    #email-marketing-product-root .btn-sm,
-    #email-marketing-product-root button,
     #email-marketing-product-root .badge,
     #email-marketing-product-root .alert,
     #email-marketing-product-root .form-control,
     #email-marketing-product-root .form-select,
     #email-marketing-product-root .input-group-text,
     #email-marketing-product-root .card,
-    #email-marketing-product-root .metric-card,
-    #email-marketing-product-root .product-thumb-box,
     #email-marketing-product-root .page-link,
-    #email-marketing-product-root .page-item span,
+    #email-marketing-product-root .product-thumb-box,
     #email-marketing-product-root .collapse-toggle-btn,
-    .product-modal-scope .modal-content,
-    .product-modal-scope .btn {
+    #productPhotoZoomModal .modal-content,
+    #productPhotoZoomModal .btn {
         border-radius: 5px !important;
     }
 
@@ -52,561 +75,881 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #email-marketing-product-root .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-product-root .font-monospace,
+    #email-marketing-product-root .bn-digit {
+        font-weight: 600;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    /* Header */
+    #email-marketing-product-root .product-header-wrap {
+        gap: 12px;
+    }
+
+    #email-marketing-product-root .page-title {
+        font-size: 18px;
+        font-weight: 750;
+        letter-spacing: -0.35px;
+        color: #172033;
+    }
+
+    #email-marketing-product-root .page-description {
+        font-size: 11.5px;
+        color: #64748b;
+        line-height: 1.6;
+        max-width: 650px;
+    }
+
+    /* Compact Buttons */
+    #email-marketing-product-root .btn-compact {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        font-size: 11px;
+        font-weight: 650;
+        padding: 6px 11px;
+        line-height: 1.35;
+        transition: all .18s ease;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #email-marketing-product-root .btn-primary {
+        background: var(--pm-primary);
+        border-color: var(--pm-primary);
+    }
+
+    #email-marketing-product-root .btn-primary:hover {
+        background: var(--pm-primary-dark);
+        border-color: var(--pm-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    #email-marketing-product-root .btn-outline-primary:hover {
+        transform: translateY(-1px);
+    }
+
+    #email-marketing-product-root .top-action-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+    }
+
+    /* Alerts */
+    #email-marketing-product-root .alert {
+        border: 1px solid transparent !important;
+        font-size: 11px;
+    }
+
+    #email-marketing-product-root .alert-success {
+        background: #f0fdf4;
+        border-color: #bbf7d0 !important;
+    }
+
+    #email-marketing-product-root .alert-danger {
+        background: #fef2f2;
+        border-color: #fecaca !important;
+    }
+
+    /* Main Cards */
+    #email-marketing-product-root .card {
+        background: var(--pm-surface);
+        border: 1px solid var(--pm-border) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
+        margin-bottom: 14px;
+        overflow: hidden;
+    }
+
+    #email-marketing-product-root .section-header-wrap {
+        min-height: 42px;
+        padding: 9px 13px;
+        background: #fff;
+        border-bottom: 1px solid var(--pm-border);
+    }
+
+    #email-marketing-product-root .section-title {
+        font-size: 11.5px;
+        font-weight: 750;
+        color: #334155;
+        letter-spacing: .01em;
+    }
+
+    /* Collapse Button */
+    #email-marketing-product-root .collapse-toggle-btn {
+        width: 25px;
+        height: 25px;
         padding: 0;
         display: inline-flex;
-        align-items: center;
         justify-content: center;
-        background-color: #ffffff;
+        align-items: center;
+        background: #fff;
+        color: #64748b;
         border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        transition: all .2s ease;
+        flex-shrink: 0;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #email-marketing-product-root .collapse-toggle-btn:hover {
+        background: var(--pm-primary);
+        border-color: var(--pm-primary);
+        color: #fff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #email-marketing-product-root .collapse-icon {
+        font-size: 10px;
+        transition: transform .25s ease;
+    }
+
+    #email-marketing-product-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-product-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
+    /* KPI Cards */
+    #email-marketing-product-root .metric-card {
+        min-height: 105px;
+        height: 100%;
+        padding: 13px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+        overflow: hidden;
+        transition: transform .18s ease, box-shadow .18s ease;
+        border: 1px solid var(--pm-border) !important;
     }
-    .metric-card:hover {
+
+    #email-marketing-product-root .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
     }
-    .stat-label-title {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
+
+    #email-marketing-product-root .metric-card-blue {
+        background: linear-gradient(145deg, #fff 0%, #eff6ff 100%);
+        border-left: 3px solid #2563eb !important;
+    }
+
+    #email-marketing-product-root .metric-card-green {
+        background: linear-gradient(145deg, #fff 0%, #f0fdf4 100%);
+        border-left: 3px solid #10b981 !important;
+    }
+
+    #email-marketing-product-root .metric-card-amber {
+        background: linear-gradient(145deg, #fff 0%, #fffbeb 100%);
+        border-left: 3px solid #f59e0b !important;
+    }
+
+    #email-marketing-product-root .metric-card-red {
+        background: linear-gradient(145deg, #fff 0%, #fef2f2 100%);
+        border-left: 3px solid #ef4444 !important;
+    }
+
+    #email-marketing-product-root .stat-label-title {
+        font-size: 10.5px;
+        font-weight: 750;
+        color: #64748b;
+        line-height: 1.35;
+    }
+
+    #email-marketing-product-root .stat-val-num {
+        font-size: 21px;
+        font-weight: 800;
         line-height: 1.2;
-    }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-        white-space: nowrap;
+        letter-spacing: -.5px;
+        color: #172033;
+        margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    .stat-sub-text {
-        font-size: 10px;
-        margin-top: 2px;
+
+    #email-marketing-product-root .stat-sub-text {
+        display: block;
+        font-size: 9.5px;
+        margin-top: 4px;
+        color: #64748b;
     }
-    .metric-icon-square {
+
+    #email-marketing-product-root .metric-icon-square {
         width: 32px;
         height: 32px;
-        display: flex;
-        align-items: center;
+        display: inline-flex;
         justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
         font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-red    { background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%); border-left: 3.5px solid #ef4444 !important; }
+    /* Filter Form */
+    #email-marketing-product-root .form-label {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 750;
+        color: #475569;
+        margin-bottom: 5px;
+    }
 
-    /* Product Thumbnail Box */
-    .product-thumb-box {
-        width: 44px;
-        height: 44px;
-        background: #ffffff;
+    #email-marketing-product-root .form-control,
+    #email-marketing-product-root .form-select {
+        min-height: 35px;
+        padding: 6px 10px;
+        font-size: 11.5px;
+        color: #1e293b;
         border: 1px solid #cbd5e1;
-        overflow: hidden;
+        background-color: #fff;
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #email-marketing-product-root .form-control:focus,
+    #email-marketing-product-root .form-select:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+    }
+
+    #email-marketing-product-root .input-group-text {
+        min-width: 35px;
+        justify-content: center;
+        font-size: 11px;
+        border-color: #cbd5e1;
+    }
+
+    /* Table */
+    #email-marketing-product-root .custom-products-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #email-marketing-product-root .custom-products-table thead th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 9.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .045em;
+        padding: 11px 9px;
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    #email-marketing-product-root .custom-products-table tbody td {
+        padding: 9px;
+        font-size: 11px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    #email-marketing-product-root .custom-products-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #email-marketing-product-root .custom-products-table tbody tr {
+        transition: background-color .15s ease;
+    }
+
+    #email-marketing-product-root .custom-products-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    /* Product Thumbnail */
+    #email-marketing-product-root .product-thumb-box {
+        width: 43px;
+        height: 43px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
+        overflow: hidden;
         position: relative;
+        cursor: zoom-in;
+        flex-shrink: 0;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .product-thumb-box img {
+
+    #email-marketing-product-root .product-thumb-box:hover {
+        border-color: #93c5fd;
+        box-shadow: 0 2px 7px rgba(37, 99, 235, .12);
+    }
+
+    #email-marketing-product-root .product-thumb-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    .product-thumb-hover-overlay {
+
+    #email-marketing-product-root .product-thumb-hover-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(15, 23, 42, 0.45);
+        background: rgba(15, 23, 42, .48);
         display: flex;
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: opacity 0.15s ease;
-        border-radius: 5px !important;
+        transition: opacity .15s ease;
+        pointer-events: none;
     }
-    .product-thumb-box:hover .product-thumb-hover-overlay {
+
+    #email-marketing-product-root .product-thumb-box:hover .product-thumb-hover-overlay {
         opacity: 1;
     }
 
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
-    .custom-products-table {
-        width: 100%;
-        margin-bottom: 0;
-    }
-    .custom-products-table thead th {
-        font-size: 10px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 8px;
-        white-space: nowrap;
-    }
-    .custom-products-table tbody td {
-        padding: 8px 8px;
+    /* Product Info */
+    #email-marketing-product-root .product-name {
+        font-size: 11.5px;
+        font-weight: 750;
         color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 11px;
-        vertical-align: middle;
+        max-width: 100%;
+    }
+
+    #email-marketing-product-root .product-meta {
+        color: #94a3b8;
+        font-size: 9.5px;
+        margin-top: 3px;
+    }
+
+    #email-marketing-product-root .stock-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 5px 7px;
+        border: 1px solid transparent;
         white-space: nowrap;
     }
-    .custom-products-table tbody tr:hover td {
-        background-color: #fafbfc;
+
+    #email-marketing-product-root .category-badge {
+        max-width: 100%;
+        font-size: 9.5px;
+        padding: 4px 7px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
     }
 
+    /* Table Width Architecture */
     @media (min-width: 992px) {
-        .custom-products-table {
-            table-layout: fixed !important;
-            width: 100% !important;
-        }
-        .pc-fit-container {
-            overflow-x: hidden !important;
-        }
-        .custom-products-table th,
-        .custom-products-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+        #email-marketing-product-root .custom-products-table {
+            table-layout: fixed;
         }
 
-        /* 6 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-pr-img    { width: 6% !important; }
-        .col-pr-info   { width: 32% !important; }
-        .col-pr-cat    { width: 14% !important; }
-        .col-pr-price  { width: 15% !important; }
-        .col-pr-stock  { width: 15% !important; }
-        .col-pr-action { width: 18% !important; }
+        #email-marketing-product-root .pc-fit-container {
+            overflow-x: hidden;
+        }
+
+        #email-marketing-product-root .custom-products-table th,
+        #email-marketing-product-root .custom-products-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #email-marketing-product-root .col-pr-img    { width: 7%; }
+        #email-marketing-product-root .col-pr-info   { width: 31%; }
+        #email-marketing-product-root .col-pr-cat    { width: 14%; }
+        #email-marketing-product-root .col-pr-price  { width: 14%; }
+        #email-marketing-product-root .col-pr-stock  { width: 16%; }
+        #email-marketing-product-root .col-pr-action { width: 18%; }
     }
 
-    /* Form Controls */
-    #email-marketing-product-root .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
-    }
-    #email-marketing-product-root .form-control,
-    #email-marketing-product-root .form-select {
-        min-height: 32px;
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #email-marketing-product-root .form-control:focus,
-    #email-marketing-product-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
-    }
-
-    /* Bulletproof Responsive Pagination */
-    .card-footer nav {
+    /* Pagination */
+    #email-marketing-product-root .card-footer nav {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
         width: auto !important;
         margin: 0 !important;
     }
-    .card-footer nav > div.d-sm-none,
-    .card-footer nav > .d-sm-none {
+
+    #email-marketing-product-root .card-footer nav > div.d-sm-none,
+    #email-marketing-product-root .card-footer nav > .d-sm-none {
         display: none !important;
     }
-    .card-footer nav > div.d-none,
-    .card-footer nav > .d-none.flex-sm-fill {
+
+    #email-marketing-product-root .card-footer nav > div.d-none,
+    #email-marketing-product-root .card-footer nav > .d-none.flex-sm-fill {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
-    .card-footer nav p,
-    .card-footer nav .small.text-muted,
-    .card-footer nav div:has(> p),
-    .card-footer nav > div.d-none > div:first-child,
-    .card-footer nav .d-none.flex-sm-fill > div:first-child {
+
+    #email-marketing-product-root .card-footer nav p,
+    #email-marketing-product-root .card-footer nav .small.text-muted,
+    #email-marketing-product-root .card-footer nav div:has(> p),
+    #email-marketing-product-root .card-footer nav > div.d-none > div:first-child,
+    #email-marketing-product-root .card-footer nav .d-none.flex-sm-fill > div:first-child {
         display: none !important;
     }
-    .card-footer .pagination {
-        margin: 0 !important;
+
+    #email-marketing-product-root .card-footer .pagination {
         display: flex !important;
         flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
+        gap: 4px !important;
         padding: 0 !important;
+        margin: 0 !important;
         list-style: none !important;
     }
-    .card-footer .page-item {
+
+    #email-marketing-product-root .card-footer .page-item {
         display: inline-flex !important;
     }
-    .card-footer .page-item .page-link,
-    .card-footer .page-item span {
+
+    #email-marketing-product-root .card-footer .page-item .page-link,
+    #email-marketing-product-root .card-footer .page-item span {
+        min-width: 27px !important;
+        height: 27px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        color: #475569 !important;
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 5px !important;
-        text-decoration: none !important;
+        font-size: 10.5px !important;
+        font-weight: 650 !important;
         line-height: 1 !important;
-        transition: all 0.12s ease !important;
-    }
-    .card-footer .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    .card-footer .page-item.active .page-link,
-    .card-footer .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
-    }
-    .card-footer .page-item.disabled .page-link,
-    .card-footer .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
-        cursor: not-allowed !important;
-    }
-    .card-footer nav svg {
-        width: 10px !important;
-        height: 10px !important;
+        color: #475569 !important;
+        background: #fff !important;
+        border: 1px solid #cbd5e1 !important;
+        text-decoration: none !important;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    #email-marketing-product-root .card-footer .page-item.active .page-link,
+    #email-marketing-product-root .card-footer .page-item.active span {
+        background: #2563eb !important;
+        border-color: #2563eb !important;
+        color: #fff !important;
+    }
+
+    #email-marketing-product-root .card-footer .page-item.disabled .page-link,
+    #email-marketing-product-root .card-footer .page-item.disabled span {
+        opacity: .4 !important;
+        background: #f8fafc !important;
+        cursor: not-allowed !important;
+    }
+
+    #email-marketing-product-root .card-footer nav svg {
+        width: 11px !important;
+        height: 11px !important;
+    }
+
+    /* Modal */
+    #productPhotoZoomModal {
+        z-index: 108000;
+    }
+
+    #productPhotoZoomModal .modal-content {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+
+    #productPhotoZoomModal .modal-header {
+        padding: 12px 14px 5px;
+    }
+
+    #productPhotoZoomModal .modal-body {
+        padding: 12px;
+    }
+
+    #productPhotoZoomModal #productZoomImgTag {
+        max-height: 380px;
+        max-width: 100%;
+        object-fit: contain;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .product-header-wrap h5 {
-            font-size: 16px !important;
+        #email-marketing-product-root {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
-        .top-action-btns {
+
+        #email-marketing-product-root .page-title {
+            font-size: 16px;
+        }
+
+        #email-marketing-product-root .page-description {
+            font-size: 10.5px;
+        }
+
+        #email-marketing-product-root .top-action-btns {
             width: 100%;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 7px;
         }
-        .top-action-btns .btn {
+
+        #email-marketing-product-root .top-action-btns .btn {
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
+            min-height: 34px;
+            padding: 7px 5px;
+            font-size: 10px;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
+
+        #email-marketing-product-root .metric-card {
+            min-height: 88px;
+            padding: 10px;
         }
-        .stat-label-title {
-            font-size: 10px !important;
+
+        #email-marketing-product-root .stat-label-title {
+            font-size: 9.5px;
         }
-        .stat-val-num {
-            font-size: 14px !important;
+
+        #email-marketing-product-root .stat-val-num {
+            font-size: 17px;
         }
-        .stat-sub-text {
-            font-size: 9px !important;
+
+        #email-marketing-product-root .stat-sub-text {
+            font-size: 9px;
         }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
+
+        #email-marketing-product-root .metric-icon-square {
+            width: 27px;
+            height: 27px;
+            font-size: 11px;
         }
-        .pc-fit-container {
+
+        #email-marketing-product-root .section-header-wrap {
+            padding: 9px 10px;
+        }
+
+        #email-marketing-product-root .section-title {
+            font-size: 10.5px;
+        }
+
+        #email-marketing-product-root .pc-fit-container {
             width: 100%;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }
-        .custom-products-table {
-            min-width: 760px !important;
-            table-layout: auto !important;
+
+        #email-marketing-product-root .custom-products-table {
+            min-width: 760px;
+            table-layout: auto;
         }
-        #email-marketing-product-root .card {
-            margin-bottom: 12px !important;
+
+        #email-marketing-product-root .custom-products-table thead th {
+            padding: 10px 8px;
+        }
+
+        #email-marketing-product-root .custom-products-table tbody td {
+            padding: 8px;
+        }
+
+        #email-marketing-product-root .card-footer {
+            padding: 10px !important;
+        }
+
+        #email-marketing-product-root .card-footer > div {
+            width: 100%;
+            justify-content: center !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #email-marketing-product-root .metric-card {
+            padding: 8px;
+        }
+
+        #email-marketing-product-root .stat-val-num {
+            font-size: 15px;
+        }
+
+        #email-marketing-product-root .stat-label-title {
+            font-size: 9px;
         }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-product-root">
 
-    {{-- 1. Header & Navigation (Original Clean Light Theme) --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 product-header-wrap">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-bullseye text-primary"></i>
+    {{-- 1. Page Header --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 product-header-wrap">
+
+        <div class="min-w-0">
+            <h5 class="page-title mb-1 d-flex align-items-center gap-2">
+                <span class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary"
+                      style="width:32px;height:32px;border-radius:5px;">
+                    <i class="fas fa-bullseye"></i>
+                </span>
                 <span>Product-Targeted Email Marketing</span>
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
+
+            <p class="page-description mb-0">
                 Select a specific product to target past buyers, launch cross-sell promotions, or announce stock arrivals.
-            </small>
+            </p>
         </div>
 
-        <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ route('admin.email_marketing.campaigns.create') }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold">
-                <i class="fas fa-paper-plane me-1"></i> <span>Standard Campaign</span>
+        <div class="top-action-btns mt-2 mt-md-0">
+            <a href="{{ route('admin.email_marketing.campaigns.create') }}"
+               class="btn btn-sm btn-outline-primary btn-compact">
+                <i class="fas fa-paper-plane"></i>
+                <span>Standard Campaign</span>
             </a>
-            <a href="{{ route('admin.email_marketing.dashboard') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
-                <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>
+
+            <a href="{{ route('admin.email_marketing.dashboard') }}"
+               class="btn btn-sm btn-outline-secondary btn-compact">
+                <i class="fas fa-chart-pie"></i>
+                <span>Dashboard</span>
             </a>
         </div>
     </div>
 
     {{-- 2. Feedback Messages --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-success alert-dismissible fade show py-2 px-3 mb-3 d-flex align-items-center justify-content-between shadow-sm"
+             role="alert">
             <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-check-circle text-success fs-5"></i>
+                <i class="fas fa-check-circle text-success fs-6"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-exclamation-circle text-danger fs-5"></i>
-                <span class="fw-semibold text-dark">{{ session('error') }}</span>
-            </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    {{-- 3. Telemetry KPI Overview (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-primary me-1"></i> Catalog &amp; Targetable Products Overview
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseProductKpis" aria-expanded="true" aria-controls="collapseProductKpis" title="Toggle Section">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3 d-flex align-items-center justify-content-between shadow-sm"
+             role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-exclamation-circle text-danger fs-6"></i>
+                <span class="fw-semibold text-dark">{{ session('error') }}</span>
+            </div>
+            <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- 3. Catalog KPI Overview --}}
+    <div class="card mb-3">
+
+        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+            <div class="section-title">
+                <i class="fas fa-chart-pie text-primary me-1"></i>
+                Catalog &amp; Targetable Products Overview
+            </div>
+
+            <button type="button"
+                    class="collapse-toggle-btn no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseProductKpis"
+                    aria-expanded="true"
+                    aria-controls="collapseProductKpis"
+                    title="Toggle Section">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseProductKpis">
             <div class="p-3">
                 <div class="row g-2">
+
                     {{-- Total Catalog --}}
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Catalog</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+                        <div class="card metric-card metric-card-blue mb-0">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Total Catalog</span>
+                                <div class="metric-icon-square bg-primary-subtle text-primary">
                                     <i class="fas fa-boxes-stacked"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
+
+                            <div>
+                                <h4 class="stat-val-num font-monospace">
                                     {{ number_format($totalProductsCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Active store items</small>
+                                <small class="stat-sub-text">Active store items</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- In Stock Items --}}
+                    {{-- In Stock --}}
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">In Stock (Active)</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                        <div class="card metric-card metric-card-green mb-0">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">In Stock (Active)</span>
+                                <div class="metric-icon-square bg-success-subtle text-success">
                                     <i class="fas fa-circle-check"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num">
+
+                            <div>
+                                <h4 class="stat-val-num text-success font-monospace">
                                     {{ number_format($inStockCount) }}
                                 </h4>
-                                <small class="text-success d-block text-truncate font-monospace stat-sub-text">Ready for broadcast</small>
+                                <small class="stat-sub-text text-success">Ready for broadcast</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Low Stock Items --}}
+                    {{-- Low Stock --}}
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Low Stock</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+                        <div class="card metric-card metric-card-amber mb-0">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Low Stock</span>
+                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
                                     <i class="fas fa-triangle-exclamation"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-warning-emphasis bn-digit font-monospace stat-val-num">
+
+                            <div>
+                                <h4 class="stat-val-num text-warning-emphasis font-monospace">
                                     {{ number_format($lowStockCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Urgency promo items</small>
+                                <small class="stat-sub-text">Urgency promo items</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Out of Stock Items --}}
+                    {{-- Out of Stock --}}
                     <div class="col-6 col-xl-3">
-                        <div class="card metric-card metric-card-red h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Out of Stock</span>
-                                <div class="metric-icon-square bg-danger-subtle text-danger shadow-xs">
+                        <div class="card metric-card metric-card-red mb-0">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="stat-label-title text-truncate">Out of Stock</span>
+                                <div class="metric-icon-square bg-danger-subtle text-danger">
                                     <i class="fas fa-ban"></i>
                                 </div>
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num">
+
+                            <div>
+                                <h4 class="stat-val-num font-monospace">
                                     {{ number_format($outOfStockCount) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Restock notification focus</small>
+                                <small class="stat-sub-text">Restock notification focus</small>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 4. Instant Live Search & Filter Toolbar (Collapsible) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Filter Products by Name, SKU, Category &amp; Stock Status
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseProductFilter" aria-expanded="true" aria-controls="collapseProductFilter" title="Toggle Filters">
+    {{-- 4. Product Search & Filter --}}
+    <div class="card mb-3">
+
+        <div class="section-header-wrap d-flex justify-content-between align-items-center">
+            <div class="section-title">
+                <i class="fas fa-filter text-primary me-1"></i>
+                Filter Products by Name, SKU, Category &amp; Stock Status
+            </div>
+
+            <button type="button"
+                    class="collapse-toggle-btn no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseProductFilter"
+                    aria-expanded="true"
+                    aria-controls="collapseProductFilter"
+                    title="Toggle Filters">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseProductFilter">
             <div class="p-3">
-                <div class="row g-2 align-items-end">
+                <div class="row g-3 align-items-end">
+
                     <div class="col-12 col-md-5">
                         <label class="form-label" for="productSearchInput">
-                            <i class="fas fa-search me-1 text-primary"></i> Search Product Name or SKU
+                            <i class="fas fa-search me-1 text-primary"></i>
+                            Search Product Name or SKU
                         </label>
+
                         <div class="input-group">
-                            <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                            <input type="text" id="productSearchInput" class="form-control border-start-0 ps-0 shadow-none font-monospace" placeholder="Georgette Dress, SKU-1049..." onkeyup="filterProductsTable()">
+                            <span class="input-group-text bg-light text-muted">
+                                <i class="fas fa-search"></i>
+                            </span>
+
+                            <input type="text"
+                                   id="productSearchInput"
+                                   class="form-control font-monospace"
+                                   placeholder="Georgette Dress, SKU-1049..."
+                                   onkeyup="filterProductsTable()">
                         </div>
                     </div>
 
                     <div class="col-6 col-md-4">
                         <label class="form-label" for="productStockFilter">
-                            <i class="fas fa-warehouse me-1 text-success"></i> Stock Status
+                            <i class="fas fa-warehouse me-1 text-success"></i>
+                            Stock Status
                         </label>
-                        <select id="productStockFilter" class="form-select shadow-none font-monospace" onchange="filterProductsTable()">
+
+                        <select id="productStockFilter"
+                                class="form-select font-monospace"
+                                onchange="filterProductsTable()">
                             <option value="all" selected>All Stock Conditions</option>
-                            <option value="instock">In Stock Only (> 5)</option>
+                            <option value="instock">In Stock Only (&gt; 5)</option>
                             <option value="lowstock">Low Stock Only (1 - 5)</option>
                             <option value="outofstock">Out of Stock (0)</option>
                         </select>
                     </div>
 
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-light border btn-compact w-100 shadow-xs fw-semibold text-secondary" onclick="resetProductFilters()">
-                            <i class="fas fa-rotate-left me-1"></i> <span>Reset Filters</span>
+                        <button type="button"
+                                class="btn btn-light border btn-compact w-100"
+                                style="min-height:35px;"
+                                onclick="resetProductFilters()">
+                            <i class="fas fa-rotate-left"></i>
+                            Reset Filters
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 5. Products Table Card (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
-    <div class="card border-0 shadow-sm overflow-hidden mb-3">
-        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
-            <div>
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
-                    <i class="fas fa-box-open text-primary"></i> <span>Select Product to Target Audience</span>
+    {{-- 5. Products Table --}}
+    <div class="card mb-3">
+
+        <div class="p-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
+
+            <div class="min-w-0">
+                <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size:12px;">
+                    <i class="fas fa-box-open text-primary"></i>
+                    Select Product to Target Audience
                 </h6>
-                <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">
-                    Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{$products->total() }} products
+
+                <small class="text-muted font-monospace bn-digit" style="font-size:10px;">
+                    Showing {{ $products->firstItem() ?? 0 }}
+                    to {{ $products->lastItem() ?? 0 }}
+                    of {{ $products->total() }} products
                 </small>
             </div>
+
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;" id="visible-products-count">
+                <span class="badge bg-white text-secondary border font-monospace px-2 py-2"
+                      style="font-size:10px;"
+                      id="visible-products-count">
                     {{ $products->total() }} Total
                 </span>
-                <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseProductsTable" aria-expanded="true" aria-controls="collapseProductsTable" title="Toggle Table">
+
+                <button type="button"
+                        class="collapse-toggle-btn no-print"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseProductsTable"
+                        aria-expanded="true"
+                        aria-controls="collapseProductsTable"
+                        title="Toggle Table">
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </button>
             </div>
         </div>
 
         <div class="collapse show" id="collapseProductsTable">
+
             <div class="table-responsive pc-fit-container">
                 <table class="table align-middle mb-0 custom-products-table" id="products-table">
+
                     <thead>
                         <tr>
                             <th class="ps-3 col-pr-img text-center">Image</th>
@@ -617,194 +960,372 @@
                             <th class="text-end pe-3 col-pr-action">Marketing Action</th>
                         </tr>
                     </thead>
+
                     <tbody id="products-tbody">
+
                         @forelse($products as $product)
+
                             @php
                                 $img = $product->thumbnail ?? ($product->image ?? null);
-                                $thumbUrl =$resolveThumb($img);$pTitle = $product->title ?? ($product->name ?? 'Product #' . $product->id);$pSku = $product->sku ?? ($product->product_code ?? 'N/A');
+                                $thumbUrl = $resolveThumb($img);
 
-                                // Smart Price Resolution (MRP, Sale Price, Regular Price)
+                                $pTitle = $product->title ?? ($product->name ?? 'Product #' . $product->id);
+                                $pSku = $product->sku ?? ($product->product_code ?? 'N/A');
+
+                                // Smart Price Resolution
                                 $mrpPrice = (float)($product->mrp ?? ($product->regular_price ?? 0));
                                 $salePrice = (float)($product->sale_price ?? ($product->offer_price ?? 0));
-                                
+
                                 $resolvedPrice = 0.00;
+
                                 if ($salePrice > 0) {
-                                    $resolvedPrice =$salePrice;
+                                    $resolvedPrice = $salePrice;
                                 } elseif ($mrpPrice > 0) {
-                                    $resolvedPrice =$mrpPrice;
+                                    $resolvedPrice = $mrpPrice;
                                 } else {
                                     $resolvedPrice = (float)($product->price ?? ($product->selling_price ?? ($product->unit_price ?? 0)));
                                 }
 
                                 // Check variants table if available
-                                if ($resolvedPrice <= 0 && \Illuminate\Support\Facades\Schema::hasTable('product_variants')) {$varPrice = \Illuminate\Support\Facades\DB::table('product_variants')
+                                if ($resolvedPrice <= 0 && \Illuminate\Support\Facades\Schema::hasTable('product_variants')) {
+                                    $varPrice = \Illuminate\Support\Facades\DB::table('product_variants')
                                         ->where('product_id', $product->id)
-                                        ->value('price') 
-                                        ?? \Illuminate\Support\Facades\DB::table('product_variants')->where('product_id', $product->id)->value('mrp');
+                                        ->value('price')
+                                        ?? \Illuminate\Support\Facades\DB::table('product_variants')
+                                            ->where('product_id', $product->id)
+                                            ->value('mrp');
+
                                     if ($varPrice) {
                                         $resolvedPrice = (float)$varPrice;
                                     }
                                 }
 
                                 $stock = (int)($product->stock ?? ($product->qty ?? 0));
-                                $stockSlug = $stock > 5 ? 'instock' : ($stock > 0 ? 'lowstock' : 'outofstock');
+
+                                $stockSlug = $stock > 5
+                                    ? 'instock'
+                                    : ($stock > 0 ? 'lowstock' : 'outofstock');
 
                                 $categoryName = optional($product->category)->name ?? 'General';
 
                                 $rowSearchData = strtolower(
-                                    $pTitle . ' ' .$pSku . ' ' .
-                                    $categoryName . ' ' .$stockSlug
+                                    $pTitle . ' ' .
+                                    $pSku . ' ' .
+                                    $categoryName . ' ' .
+                                    $stockSlug
                                 );
                             @endphp
-                            <tr class="product-entry-row" data-search="{{ $rowSearchData }}" data-stock="{{ $stockSlug }}">
+
+                            <tr class="product-entry-row"
+                                data-search="{{ $rowSearchData }}"
+                                data-stock="{{ $stockSlug }}">
+
+                                {{-- Product Image --}}
                                 <td class="ps-3 col-pr-img text-center">
-                                    <div class="product-thumb-box shadow-xs mx-auto" onclick="zoomProductPhoto('{{ $thumbUrl }}', '{{ addslashes($pTitle) }}')" title="Click to Zoom Image">
-                                        <img src="{{ $thumbUrl }}" alt="{{ $pTitle }}" onerror="this.src='https://placehold.co/60x60?text=Product';">
+                                    <div class="product-thumb-box mx-auto"
+                                         onclick="zoomProductPhoto(@js($thumbUrl), @js($pTitle))"
+                                         title="Click to Zoom Image">
+
+                                        <img src="{{ $thumbUrl }}"
+                                             alt="{{ $pTitle }}"
+                                             loading="lazy"
+                                             onerror="this.onerror=null;this.src='https://placehold.co/60x60?text=Product';">
+
                                         <div class="product-thumb-hover-overlay">
-                                            <i class="fas fa-search-plus text-white" style="font-size: 9px;"></i>
+                                            <i class="fas fa-search-plus text-white" style="font-size:10px;"></i>
                                         </div>
                                     </div>
                                 </td>
+
+                                {{-- Product Details --}}
                                 <td class="col-pr-info">
-                                    <div class="min-w-0" style="line-height: 1.3;">
-                                        <strong class="text-dark d-block text-truncate" style="font-size: 12px;" title="{{ $pTitle }}">
+                                    <div class="min-w-0" style="line-height:1.35;">
+                                        <strong class="product-name d-block text-truncate"
+                                                title="{{ $pTitle }}">
                                             {{ $pTitle }}
                                         </strong>
-                                        <small class="text-muted font-monospace d-block text-truncate" style="font-size: 10px;">
-                                            SKU: {{ $pSku }} &bull; ID: #{{ $product->id }}
+
+                                        <small class="product-meta font-monospace d-block text-truncate">
+                                            SKU: {{ $pSku }}
+                                            <span class="mx-1">&bull;</span>
+                                            ID: #{{ $product->id }}
                                         </small>
                                     </div>
                                 </td>
+
+                                {{-- Category --}}
                                 <td class="col-pr-cat">
-                                    <span class="badge bg-light text-secondary border font-monospace text-truncate d-inline-block px-2 py-0" style="font-size: 10px; max-width: 100%; border-radius: 5px !important;" title="{{ $categoryName }}">
+                                    <span class="badge bg-light text-secondary border category-badge"
+                                          title="{{ $categoryName }}">
                                         {{ $categoryName }}
                                     </span>
                                 </td>
+
+                                {{-- Price --}}
                                 <td class="col-pr-price font-monospace bn-digit">
-                                    @if($salePrice > 0 && $mrpPrice >$salePrice)
-                                        <div style="line-height: 1.25;">
-                                            <strong class="text-dark d-block" style="font-size: 12px;">৳ {{ number_format($salePrice, 2) }}</strong>
-                                            <small class="text-muted text-decoration-line-through d-block" style="font-size: 9.5px;">৳ {{ number_format($mrpPrice, 2) }}</small>
+
+                                    @if($salePrice > 0 && $mrpPrice > $salePrice)
+
+                                        <div style="line-height:1.4;">
+                                            <strong class="text-dark d-block" style="font-size:12px;">
+                                                ৳ {{ number_format($salePrice, 2) }}
+                                            </strong>
+
+                                            <small class="text-muted text-decoration-line-through d-block"
+                                                   style="font-size:9.5px;">
+                                                ৳ {{ number_format($mrpPrice, 2) }}
+                                            </small>
                                         </div>
+
                                     @else
-                                        <strong class="text-dark font-monospace" style="font-size: 12px;">
+
+                                        <strong class="text-dark" style="font-size:12px;">
                                             ৳ {{ number_format($resolvedPrice, 2) }}
                                         </strong>
+
                                     @endif
+
                                 </td>
+
+                                {{-- Stock Status --}}
                                 <td class="col-pr-stock">
+
                                     @if($stock > 5)
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            <i class="fas fa-circle-check me-1"></i> {{ $stock }} in stock
+
+                                        <span class="stock-badge bg-success-subtle text-success border-success-subtle">
+                                            <i class="fas fa-circle-check"></i>
+                                            {{ $stock }} in stock
                                         </span>
+
                                     @elseif($stock > 0)
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            <i class="fas fa-triangle-exclamation me-1"></i> Low ({{ $stock }})
+
+                                        <span class="stock-badge bg-warning-subtle text-warning-emphasis border-warning-subtle">
+                                            <i class="fas fa-triangle-exclamation"></i>
+                                            Low ({{ $stock }})
                                         </span>
+
                                     @else
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace px-2 py-1" style="border-radius: 5px !important; font-size: 9.5px;">
-                                            <i class="fas fa-ban me-1"></i> Out of stock
+
+                                        <span class="stock-badge bg-danger-subtle text-danger border-danger-subtle">
+                                            <i class="fas fa-ban"></i>
+                                            Out of stock
                                         </span>
+
                                     @endif
+
                                 </td>
+
+                                {{-- Marketing Action --}}
                                 <td class="text-end pe-3 col-pr-action">
-                                    <form action="{{ $targetActionRoute }}" method="GET" class="d-inline">
-                                        <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                        <button type="submit" class="btn btn-sm btn-primary btn-compact shadow-xs fw-semibold" title="Create Campaign for Previous Buyers">
-                                            <i class="fas fa-bullseye me-1"></i> <span>Target Audience</span>
+
+                                    <form action="{{ $targetActionRoute }}"
+                                          method="GET"
+                                          class="d-inline">
+
+                                        <input type="hidden"
+                                               name="product_id"
+                                               value="{{ $product->id }}">
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-primary btn-compact"
+                                                title="Create Campaign for Previous Buyers">
+                                            <i class="fas fa-bullseye"></i>
+                                            <span>Target Audience</span>
                                         </button>
+
                                     </form>
+
                                 </td>
+
                             </tr>
+
                         @empty
+
                             <tr id="emptyProductsRow">
-                                <td colspan="6" class="text-center py-5 text-muted small">
-                                    <i class="fas fa-box-open fa-2x mb-2 d-block text-secondary opacity-25"></i>
-                                    <span class="fw-semibold">No active products found to target.</span>
+                                <td colspan="6" class="text-center py-5 text-muted">
+
+                                    <div class="mb-2">
+                                        <i class="fas fa-box-open fa-2x opacity-25"></i>
+                                    </div>
+
+                                    <div class="fw-semibold" style="font-size:12px;">
+                                        No active products found to target.
+                                    </div>
+
+                                    <small class="text-muted d-block mt-1">
+                                        Products will appear here when available.
+                                    </small>
+
                                 </td>
                             </tr>
+
                         @endforelse
+
                     </tbody>
                 </table>
             </div>
 
-            {{-- Bulletproof Responsive Pagination Footer --}}
+            {{-- Pagination --}}
             @if($products->hasPages())
-                <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
-                    <small class="text-muted font-monospace bn-digit" style="font-size: 11px;">
-                        Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{$products->total() }} products
+
+                <div class="p-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50 card-footer no-print">
+
+                    <small class="text-muted font-monospace bn-digit" style="font-size:10.5px;">
+                        Showing {{ $products->firstItem() }}
+                        to {{ $products->lastItem() }}
+                        of {{ $products->total() }} products
                     </small>
+
                     <div>
                         {{ $products->links('pagination::bootstrap-5') }}
                     </div>
+
                 </div>
+
             @endif
+
         </div>
     </div>
+
 </div>
 
-<!-- Modal: Lightbox Zoom Modal for Product Photo -->
-<div class="modal fade product-modal-scope" id="productPhotoZoomModal" tabindex="-1" aria-hidden="true" style="z-index: 108000;">
+{{-- 6. Product Image Preview Modal --}}
+<div class="modal fade"
+     id="productPhotoZoomModal"
+     tabindex="-1"
+     aria-labelledby="productZoomTitle"
+     aria-hidden="true"
+     style="z-index:108000;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-2">
+
+        <div class="modal-content shadow-lg">
+
             <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
-                <span class="fw-bold text-dark small" style="font-size: 12px;" id="productZoomTitle">
-                    <i class="fas fa-image text-primary me-1"></i> Product Preview
+
+                <span class="fw-bold text-dark" style="font-size:12px;" id="productZoomTitle">
+                    <i class="fas fa-image text-primary me-1"></i>
+                    Product Preview
                 </span>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+
             </div>
-            <div class="modal-body p-2">
-                <img id="productZoomImgTag" src="" alt="Product Photo" class="img-fluid border" style="max-height: 380px; object-fit: contain; border-radius: 5px;">
+
+            <div class="modal-body text-center">
+
+                <img id="productZoomImgTag"
+                     src=""
+                     alt="Product Photo"
+                     class="img-fluid">
+
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
+    /* =========================================================
+       PRODUCT MARKETING - INTERACTIVE FUNCTIONS
+    ========================================================= */
+
+    /**
+     * Product Image Zoom
+     */
     function zoomProductPhoto(url, title = 'Product Preview') {
+        const modalEl = document.getElementById('productPhotoZoomModal');
         const titleEl = document.getElementById('productZoomTitle');
-        const imgTag  = document.getElementById('productZoomImgTag');
-        if (url && imgTag) {
-            if (titleEl) titleEl.innerText = title;
-            imgTag.src = url;
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('productPhotoZoomModal')).show();
+        const imgTag = document.getElementById('productZoomImgTag');
+
+        if (!url || !imgTag || !modalEl || typeof bootstrap === 'undefined') {
+            return;
         }
+
+        if (titleEl) {
+            titleEl.textContent = title || 'Product Preview';
+        }
+
+        imgTag.onerror = function () {
+            this.onerror = null;
+            this.src = 'https://placehold.co/400x400?text=Product';
+        };
+
+        imgTag.src = url;
+
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
     }
 
+    /**
+     * Live Product Search & Stock Filtering
+     */
     function filterProductsTable() {
-        const query = (document.getElementById('productSearchInput')?.value || '').toLowerCase().trim();
-        const stock = (document.getElementById('productStockFilter')?.value || 'all').toLowerCase();
+        const searchInput = document.getElementById('productSearchInput');
+        const stockFilter = document.getElementById('productStockFilter');
 
-        const rows = document.querySelectorAll('.product-entry-row');
+        const query = (searchInput?.value || '').toLowerCase().trim();
+        const stock = (stockFilter?.value || 'all').toLowerCase();
+
+        const rows = document.querySelectorAll(
+            '#email-marketing-product-root .product-entry-row'
+        );
+
         let visibleCount = 0;
 
         rows.forEach(row => {
-            const rowSearch = row.getAttribute('data-search') || '';
-            const rowStock  = row.getAttribute('data-stock') || '';
+            const rowSearch = (row.getAttribute('data-search') || '').toLowerCase();
+            const rowStock = (row.getAttribute('data-stock') || '').toLowerCase();
 
             const matchesQuery = !query || rowSearch.includes(query);
             const matchesStock = stock === 'all' || rowStock === stock;
 
-            if (matchesQuery && matchesStock) {
-                row.style.display = '';
+            const isVisible = matchesQuery && matchesStock;
+
+            row.style.display = isVisible ? '' : 'none';
+
+            if (isVisible) {
                 visibleCount++;
-            } else {
-                row.style.display = 'none';
             }
         });
 
         const countBadge = document.getElementById('visible-products-count');
+
         if (countBadge) {
-            countBadge.innerText = `${visibleCount} Showing`;
+            countBadge.textContent = `${visibleCount} Showing`;
         }
     }
 
+    /**
+     * Reset All Product Filters
+     */
     function resetProductFilters() {
         const searchInput = document.getElementById('productSearchInput');
         const stockFilter = document.getElementById('productStockFilter');
-        if (searchInput) searchInput.value = '';
-        if (stockFilter) stockFilter.value = 'all';
+
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        if (stockFilter) {
+            stockFilter.value = 'all';
+        }
+
         filterProductsTable();
     }
+
+    /**
+     * Initialize Page Interactions
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('productSearchInput');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterProductsTable);
+        }
+    });
 </script>
+
 @endsection

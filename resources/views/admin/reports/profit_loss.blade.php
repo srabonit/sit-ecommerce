@@ -1,12 +1,36 @@
+
 @extends('layouts.admin')
 
-@section('title', 'Profit & Loss Statement (Income Statement) - ' . config('app.name'))
+@section('title', 'Profit & Loss Statement - ' . config('app.name', 'Shop Now BD'))
 
 @section('admin_content')
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       PROFIT & LOSS — KAIADMIN LITE CLASSIC / WHITE
+    ========================================================= */
+    #pnl-report-root {
+        --pnl-primary: #1572e8;
+        --pnl-primary-soft: #eaf2ff;
+        --pnl-success: #31ce36;
+        --pnl-warning: #ffad46;
+        --pnl-danger: #f25961;
+        --pnl-border: #e5e7eb;
+        --pnl-muted: #6b7280;
+        --pnl-text: #2a2f36;
+        --pnl-heading: #1f2937;
+        --pnl-bg: #f8fafc;
+        color: var(--pnl-text);
+        min-width: 0;
+    }
+
+    #pnl-report-root *,
+    #pnl-report-root *::before,
+    #pnl-report-root *::after {
+        box-sizing: border-box;
+    }
+
+    /* Consistent 5px radius */
     #pnl-report-root .btn,
-    #pnl-report-root .btn-sm,
     #pnl-report-root button,
     #pnl-report-root .badge,
     #pnl-report-root .alert,
@@ -23,225 +47,584 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #pnl-report-root .input-group > .form-control,
     #pnl-report-root .input-group > .form-select {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #pnl-report-root .bn-digit,
+    #pnl-report-root .font-monospace {
+        font-weight: 600 !important;
+        font-variant-numeric: tabular-nums;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
+    /* Page heading */
+    #pnl-report-root .page-heading {
+        color: var(--pnl-heading);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -.25px;
+    }
+
+    #pnl-report-root .page-subtitle {
+        color: var(--pnl-muted);
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+
+    /* Compact buttons */
+    #pnl-report-root .btn-compact {
+        min-height: 32px;
+        padding: 6px 11px !important;
         font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
+        line-height: 1.35 !important;
         font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 2px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
     }
 
-    /* Original Theme Card Styling */
-    .report-card {
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #pnl-report-root .btn-compact:focus-visible,
+    #pnl-report-root .collapse-toggle-btn:focus-visible {
+        outline: 2px solid var(--pnl-primary);
+        outline-offset: 2px;
+    }
+
+    /* Report cards */
+    #pnl-report-root .report-card {
+        min-width: 0;
         margin-bottom: 16px;
-    }
-    .report-card-header {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
+        border: 1px solid var(--pnl-border) !important;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .045) !important;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #pnl-report-root .report-card-header {
+        min-height: 42px;
+        padding: 10px 14px;
+        background: #fff;
+        border-bottom: 1px solid var(--pnl-border);
+    }
+
+    #pnl-report-root .report-card-header h6 {
+        color: var(--pnl-heading);
+        line-height: 1.4;
+    }
+
+    /* Collapse button */
+    #pnl-report-root .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
+        min-width: 27px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        background: #fff;
+        border: 1px solid #d7dce3;
+        color: #6b7280;
+        transition: all .2s ease;
+        flex-shrink: 0;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #pnl-report-root .collapse-toggle-btn:hover {
+        background: var(--pnl-primary);
+        border-color: var(--pnl-primary);
+        color: #fff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #pnl-report-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    #pnl-report-root .collapse-icon {
         font-size: 10px;
+        transition: transform .25s ease;
     }
 
-    /* Original KPI Stat Cards */
-    .kpi-stat-card {
-        padding: 14px 16px;
-        position: relative;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        height: 100%;
-    }
-    .kpi-stat-card::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 3.5px;
-    }
-    .kpi-sales::before   { background-color: #0284c7; }
-    .kpi-gross::before   { background-color: #f59e0b; }
-    .kpi-expense::before { background-color: #ef4444; }
-    .kpi-net::before     { background-color: #10b981; }
-
-    /* Statement Tables */
-    .statement-table {
-        width: 100%;
-        margin-bottom: 0;
-    }
-    .statement-table thead th {
-        background-color: #f8fafc;
-        color: #475569;
-        font-size: 10.5px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 12px;
-        white-space: nowrap;
-    }
-    .statement-table tbody td {
-        padding: 8px 12px;
-        vertical-align: middle;
-        font-size: 12px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .statement-section-header td {
-        background-color: #f8fafc;
-        font-weight: 700;
-        font-size: 11px;
-        color: #0f172a;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        padding: 6px 12px;
+    /* Filter panel */
+    #pnl-report-root .filter-card {
+        padding: 14px;
+        background: #fff;
     }
 
-    /* Form Controls */
-    .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
+    #pnl-report-root .form-label {
         display: block;
+        margin-bottom: 5px;
+        color: #4b5563;
+        font-size: 11px;
+        font-weight: 700;
     }
+
     #pnl-report-root .form-control,
     #pnl-report-root .form-select {
-        min-height: 32px;
+        min-height: 35px;
+        padding: 6px 10px;
+        border: 1px solid #d8dee8;
+        background-color: #fff;
+        color: #374151;
         font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
         box-shadow: none;
-        transition: border-color 0.15s ease;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
+
     #pnl-report-root .form-control:focus,
     #pnl-report-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        border-color: var(--pnl-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .11);
         outline: none;
     }
 
-    /* Print Styles */
-    @media print {
-        @page { size: A4 portrait; margin: 8mm; }
-        body { background: #ffffff !important; color: #000000 !important; }
-        #pnl-report-root .no-print, .admin-dark-sidebar, .admin-header, .main-footer { display: none !important; }
-        #pnl-report-root { padding: 0 !important; margin: 0 !important; width: 100% !important; }
-        .report-card { border: 1px solid #000000 !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 10px !important; }
+    #pnl-report-root .form-control::placeholder {
+        color: #9ca3af;
     }
 
-    /* Mobile Responsive Optimizations (< 768px) */
+    /* Period information */
+    #pnl-report-root .period-info {
+        border: 1px solid var(--pnl-border);
+        background: #fff;
+        color: var(--pnl-text);
+    }
+
+    /* KPI cards */
+    #pnl-report-root .kpi-stat-card {
+        position: relative;
+        height: 100%;
+        min-width: 0;
+        overflow: hidden;
+        padding: 14px;
+        border: 1px solid var(--pnl-border);
+        background: #fff;
+        transition: box-shadow .2s ease, transform .2s ease;
+    }
+
+    #pnl-report-root .kpi-stat-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, .07) !important;
+    }
+
+    #pnl-report-root .kpi-stat-card::before {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 3px;
+        content: '';
+    }
+
+    #pnl-report-root .kpi-sales::before {
+        background: #1572e8;
+    }
+
+    #pnl-report-root .kpi-gross::before {
+        background: #ffad46;
+    }
+
+    #pnl-report-root .kpi-expense::before {
+        background: #f25961;
+    }
+
+    #pnl-report-root .kpi-net::before {
+        background: #31ce36;
+    }
+
+    #pnl-report-root .kpi-stat-card .kpi-label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--pnl-muted);
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    #pnl-report-root .kpi-stat-card h5 {
+        margin-bottom: 4px;
+        color: var(--pnl-heading);
+        font-size: clamp(14px, 1.3vw, 18px);
+        font-weight: 700;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    #pnl-report-root .kpi-stat-card small {
+        display: block;
+        margin-top: 3px;
+        font-size: 9.5px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    /* Tables */
+    #pnl-report-root .pc-fit-container {
+        width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #pnl-report-root .statement-table {
+        width: 100%;
+        min-width: 540px;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #pnl-report-root .statement-table thead th {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--pnl-border);
+        background: #f8fafc;
+        color: #5b6472;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .025em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    #pnl-report-root .statement-table tbody td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #edf0f4;
+        color: var(--pnl-text);
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    #pnl-report-root .statement-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #pnl-report-root .statement-table tbody tr:not(.statement-section-header):hover {
+        background: #fafcff;
+    }
+
+    #pnl-report-root .statement-section-header td {
+        padding: 9px 12px;
+        background: #f3f6fb;
+        color: #344054;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .025em;
+        text-transform: uppercase;
+    }
+
+    #pnl-report-root .statement-table .bg-light {
+        background-color: #f8fafc !important;
+    }
+
+    #pnl-report-root .statement-table .text-end {
+        white-space: nowrap;
+    }
+
+    #pnl-report-root .statement-table .text-truncate {
+        max-width: 320px;
+    }
+
+    /* Main statement */
+    #pnl-report-root .main-statement-title {
+        min-width: 0;
+        line-height: 1.4;
+    }
+
+    #pnl-report-root .main-statement-title span {
+        overflow-wrap: anywhere;
+    }
+
+    /* Side overview cards */
+    #pnl-report-root .side-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    #pnl-report-root .side-stat-row:last-child {
+        border-bottom: 0;
+    }
+
+    #pnl-report-root .side-stat-row > * {
+        min-width: 0;
+    }
+
+    #pnl-report-root .side-stat-row strong,
+    #pnl-report-root .side-stat-row span {
+        overflow-wrap: anywhere;
+    }
+
+    #pnl-report-root .side-stat-row > div {
+        flex: 1;
+    }
+
+    #pnl-report-root .side-stat-row > span:last-child,
+    #pnl-report-root .side-stat-row > strong:last-child {
+        text-align: right;
+    }
+
+    #pnl-report-root .side-card-title {
+        padding-bottom: 9px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid var(--pnl-border);
+        color: var(--pnl-heading);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    #pnl-report-root .side-info-box {
+        border: 1px solid var(--pnl-border);
+        border-radius: 5px !important;
+        background: #f8fafc;
+    }
+
+    /* Responsive */
+    @media (max-width: 1199.98px) {
+        #pnl-report-root .top-action-btns {
+            gap: 6px !important;
+        }
+
+        #pnl-report-root .btn-compact {
+            padding-right: 9px !important;
+            padding-left: 9px !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        #pnl-report-root .kpi-stat-card {
+            padding: 12px;
+        }
+
+        #pnl-report-root .main-statement-title {
+            font-size: 12px !important;
+        }
+    }
+
     @media (max-width: 767.98px) {
-        .header-top-wrap {
+        #pnl-report-root {
+            padding-right: 10px !important;
+            padding-left: 10px !important;
+        }
+
+        #pnl-report-root .header-top-wrap {
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 8px !important;
+            gap: 11px !important;
         }
-        .top-action-btns {
-            width: 100%;
+
+        #pnl-report-root .page-heading {
+            font-size: 17px;
+        }
+
+        #pnl-report-root .top-action-btns {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .top-action-btns .btn {
             width: 100%;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px !important;
+        }
+
+        #pnl-report-root .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            min-height: 34px;
             justify-content: center;
+            padding: 7px 5px !important;
+            font-size: 11px !important;
         }
-        .pc-fit-container {
+
+        #pnl-report-root .filter-card {
+            padding: 12px !important;
+        }
+
+        #pnl-report-root .filter-actions {
             width: 100%;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
         }
-        .statement-table {
-            min-width: 480px !important;
-            table-layout: auto !important;
+
+        #pnl-report-root .filter-actions .btn {
+            flex: 1;
+        }
+
+        #pnl-report-root .period-info {
+            padding: 10px 12px !important;
+            font-size: 11px !important;
+        }
+
+        #pnl-report-root .report-card-header {
+            padding: 9px 11px;
+        }
+
+        #pnl-report-root .kpi-stat-card {
+            padding: 11px 12px;
+        }
+
+        #pnl-report-root .kpi-stat-card h5 {
+            font-size: 14px;
+        }
+
+        #pnl-report-root .statement-table {
+            min-width: 540px;
+            table-layout: auto;
+        }
+
+        #pnl-report-root .side-stat-row {
+            padding: 8px 0;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #pnl-report-root .page-heading {
+            font-size: 16px;
+        }
+
+        #pnl-report-root .page-subtitle {
+            font-size: 10.5px;
+        }
+
+        #pnl-report-root .kpi-stat-card {
+            padding: 10px;
+        }
+
+        #pnl-report-root .kpi-stat-card h5 {
+            font-size: 12px;
+        }
+
+        #pnl-report-root .kpi-stat-card .kpi-label {
+            font-size: 9.5px;
+        }
+
+        #pnl-report-root .kpi-stat-card small {
+            font-size: 9px !important;
+        }
+
+        #pnl-report-root .period-info {
+            gap: 7px !important;
+        }
+
+        #pnl-report-root .side-stat-row {
+            gap: 8px;
+        }
+    }
+
+    @media (max-width: 350px) {
+        #pnl-report-root .top-action-btns .btn {
+            font-size: 10px !important;
+        }
+
+        #pnl-report-root .kpi-stat-card h5 {
+            font-size: 11px;
+        }
+    }
+
+    /* Print */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+
+        body {
+            background: #fff !important;
+            color: #000 !important;
+        }
+
+        #pnl-report-root .no-print,
+        .admin-dark-sidebar,
+        .admin-header,
+        .main-footer {
+            display: none !important;
+        }
+
+        #pnl-report-root {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        #pnl-report-root .report-card {
+            margin-bottom: 10px !important;
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        #pnl-report-root .collapse:not(.show) {
+            display: block !important;
+        }
+
+        #pnl-report-root .pc-fit-container {
+            overflow: visible !important;
+        }
+
+        #pnl-report-root .statement-table {
+            min-width: 0 !important;
+        }
+
+        #pnl-report-root .statement-table thead th,
+        #pnl-report-root .statement-section-header td {
+            background: #f1f1f1 !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        #pnl-report-root .statement-table tbody td {
+            color: #000 !important;
         }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4" id="pnl-report-root">
 
-    <!-- 1. Header (Original Clean Light Theme) -->
+    {{-- Header --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 header-top-wrap no-print">
         <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
+            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2 page-heading">
                 <i class="fas fa-file-invoice-dollar text-primary"></i>
                 <span>Profit &amp; Loss Statement</span>
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Comprehensive Gross Margin, COGS breakdown, Operating Expenses &amp; Net Operating Income
+            <small class="page-subtitle d-block">
+                Audited Real P&amp;L: Sales, Direct Costs, Shop Overheads &amp; Staff Salaries
             </small>
         </div>
+
         <div class="top-action-btns d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-sm btn-dark btn-compact shadow-xs fw-semibold" onclick="window.print()">
-                <i class="fas fa-print me-1"></i> <span>Print A4</span>
+            <button type="button" class="btn btn-sm btn-dark btn-compact shadow-xs" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> Print
             </button>
+
             <a href="{{ route('admin.report.export_pnl') }}?{{ http_build_query(request()->all()) }}" class="btn btn-sm btn-outline-success btn-compact shadow-xs">
-                <i class="fas fa-file-csv me-1"></i> <span>Export CSV</span>
+                <i class="fas fa-file-csv me-1"></i> Export CSV
             </a>
+
+            <a href="{{ route('admin.payroll.index') }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold">
+                <i class="fas fa-money-check-dollar me-1"></i> Staff Payroll
+            </a>
+
             <a href="{{ route('admin.report.balance_sheet') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs">
-                <i class="fas fa-scale-balanced me-1"></i> <span>Balance Sheet</span>
+                <i class="fas fa-scale-balanced me-1"></i> Balance Sheet
             </a>
+
             <a href="{{ route('admin.report.cash_flow') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs">
-                <i class="fas fa-money-bill-trend-up me-1 text-primary"></i> <span>Cash Flow</span>
+                <i class="fas fa-money-bill-trend-up me-1 text-primary"></i> Cash Flow
             </a>
+
             <a href="{{ route('admin.report.cogs') }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs">
-                <i class="fas fa-boxes-stacked me-1 text-warning"></i> <span>COGS Analysis</span>
+                <i class="fas fa-boxes-stacked me-1 text-warning"></i> COGS
             </a>
         </div>
     </div>
 
-    <!-- 2. Filter Toolbar (Clean & Symmetric) -->
-    <div class="card border-0 shadow-sm report-card mb-3 p-3 no-print">
+    {{-- Filters --}}
+    <div class="card border-0 shadow-sm report-card filter-card mb-3 no-print">
         <form action="{{ route('admin.report.profit_loss') }}" method="GET" class="row g-2 align-items-end">
+
             <div class="col-6 col-md-3">
-                <label class="form-label">Reporting Period</label>
+                <label class="form-label">Period</label>
                 <select name="date_filter" id="dateFilterSelect" class="form-select font-monospace" onchange="toggleCustomDates(this.value)">
                     <option value="today" {{ $dateFilter === 'today' ? 'selected' : '' }}>Today</option>
                     <option value="yesterday" {{ $dateFilter === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
@@ -249,7 +632,7 @@
                     <option value="this_month" {{ $dateFilter === 'this_month' ? 'selected' : '' }}>This Month</option>
                     <option value="last_month" {{ $dateFilter === 'last_month' ? 'selected' : '' }}>Last Month</option>
                     <option value="this_year" {{ $dateFilter === 'this_year' ? 'selected' : '' }}>This Year</option>
-                    <option value="custom" {{ $dateFilter === 'custom' ? 'selected' : '' }}>Custom Date Range</option>
+                    <option value="custom" {{ $dateFilter === 'custom' ? 'selected' : '' }}>Custom</option>
                 </select>
             </div>
 
@@ -264,7 +647,7 @@
             </div>
 
             <div class="col-6 col-md-3">
-                <label class="form-label">Sales Channel</label>
+                <label class="form-label">Channel</label>
                 <select name="channel" class="form-select font-monospace">
                     <option value="all">All Channels</option>
                     <option value="web" {{ request('channel') === 'web' ? 'selected' : '' }}>Online Store</option>
@@ -273,10 +656,11 @@
                 </select>
             </div>
 
-            <div class="col-12 col-md-auto d-flex gap-2">
+            <div class="col-12 col-md-auto d-flex gap-2 filter-actions">
                 <button type="submit" class="btn btn-dark btn-compact shadow-xs fw-bold px-3">
-                    <i class="fas fa-filter me-1"></i> Apply Filter
+                    <i class="fas fa-filter me-1"></i> Apply
                 </button>
+
                 @if(request()->anyFilled(['date_filter', 'channel', 'start_date', 'end_date']))
                     <a href="{{ route('admin.report.profit_loss') }}" class="btn btn-light border btn-compact shadow-xs">Reset</a>
                 @endif
@@ -284,192 +668,205 @@
         </form>
     </div>
 
-    <!-- 3. Active Statement Period Header -->
-    <div class="alert alert-light border py-2 px-3 small d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3 shadow-xs">
+    {{-- Period Info --}}
+    <div class="alert alert-light period-info border py-2 px-3 small d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3 shadow-xs">
         <div>
-            <span class="text-muted">Audit Scope:</span> 
+            <span class="text-muted">Period:</span>
             <strong class="text-dark ms-1">{{ $summary['period_label'] ?? 'Current Period' }}</strong>
         </div>
+
         <div>
-            <span class="text-muted">Delivered Orders Reconciled:</span> 
+            <span class="text-muted">Delivered Orders:</span>
             <strong class="font-monospace bn-digit text-primary ms-1">{{ $summary['delivered_orders'] ?? 0 }} Orders</strong>
         </div>
     </div>
 
-    <!-- 4. KPI Metric Summary Cards (Collapsible) -->
+    {{-- 4 Core KPI Stat Cards --}}
     <div class="report-card mb-3">
         <div class="report-card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-chart-pie text-primary"></i>
-                <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Profitability Performance Metrics</h6>
+                <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Executive Profit &amp; Cost Overview</h6>
             </div>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapsePnlKpis" aria-expanded="true" aria-controls="collapsePnlKpis" title="Toggle Metrics">
+
+            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapsePnlKpis" aria-expanded="true" aria-controls="collapsePnlKpis" title="Toggle Summary">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapsePnlKpis">
             <div class="p-3 bg-light bg-opacity-25">
                 <div class="row g-2">
-                    <!-- Net Sales -->
+
+                    <!-- 1. Total Customer Bill -->
                     <div class="col-6 col-lg-3">
                         <div class="kpi-stat-card kpi-sales shadow-xs">
-                            <span class="text-muted small d-block mb-1" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Net Sales Revenue</span>
-                            <h5 class="fw-bold text-dark mb-0 font-monospace bn-digit">৳ {{ number_format((float)($summary['net_sales'] ?? 0), 2) }}</h5>
-                            <small class="text-muted" style="font-size: 10px;">Delivered subtotals excl. discounts</small>
+                            <span class="kpi-label">Customer Total Bill</span>
+                            <h5 class="font-monospace bn-digit">৳ {{ number_format((float)($summary['total_customer_bill'] ?? ($summary['net_sales'] ?? 0)), 2) }}</h5>
+                            <small class="text-muted">Sales + Delivery + VAT</small>
                         </div>
                     </div>
 
-                    <!-- Gross Margin -->
+                    <!-- 2. Estimated Gross Profit -->
                     <div class="col-6 col-lg-3">
                         <div class="kpi-stat-card kpi-gross shadow-xs">
-                            <span class="text-muted small d-block mb-1" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Gross Product Margin</span>
-                            <h5 class="fw-bold text-dark mb-0 font-monospace bn-digit">৳ {{ number_format((float)($summary['gross_profit'] ?? 0), 2) }}</h5>
-                            <small class="text-warning fw-bold font-monospace" style="font-size: 10px;">Gross Margin: {{ $summary['gross_margin'] ?? 0 }}%</small>
+                            <span class="kpi-label">Est. Gross Profit</span>
+                            <h5 class="font-monospace bn-digit">৳ {{ number_format((float)($summary['estimated_gross_profit'] ?? ($summary['gross_profit'] ?? 0)), 2) }}</h5>
+                            <small class="text-warning fw-bold font-monospace">Margin: {{ $summary['gross_margin'] ?? 0 }}%</small>
                         </div>
                     </div>
 
-                    <!-- Operating Expenses -->
+                    <!-- 3. Overheads & Staff Salaries -->
                     <div class="col-6 col-lg-3">
                         <div class="kpi-stat-card kpi-expense shadow-xs">
-                            <span class="text-muted small d-block mb-1" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Operating Overheads</span>
-                            <h5 class="fw-bold text-danger mb-0 font-monospace bn-digit">৳ {{ number_format((float)($summary['operating_expenses'] ?? 0), 2) }}</h5>
-                            <small class="text-muted" style="font-size: 10px;">Rent, ads, salary, bills &amp; others</small>
+                            <span class="kpi-label">Expenses &amp; Salaries</span>
+                            <h5 class="text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['total_operating_expenses'] ?? ($summary['operating_expenses'] ?? 0)), 2) }}</h5>
+                            <small class="text-muted">Shop: ৳{{ number_format((float)($summary['general_expenses'] ?? 0), 0) }} | Staff: ৳{{ number_format((float)($summary['staff_salary_expense'] ?? 0), 0) }}</small>
                         </div>
                     </div>
 
-                    <!-- Net Operating Profit -->
+                    <!-- 4. Real Net Profit -->
                     <div class="col-6 col-lg-3">
                         <div class="kpi-stat-card kpi-net shadow-xs">
-                            <span class="text-muted small d-block mb-1" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">Net Profit (EBIT)</span>
-                            <h5 class="fw-bold {{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} mb-0 font-monospace bn-digit">
+                            <span class="kpi-label">Real Net Profit (EBIT)</span>
+                            <h5 class="{{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} font-monospace bn-digit">
                                 ৳ {{ number_format((float)($summary['net_profit'] ?? 0), 2) }}
                             </h5>
-                            <small class="{{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} fw-bold font-monospace" style="font-size: 10px;">
+                            <small class="{{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} fw-bold font-monospace">
                                 Net Margin: {{ $summary['net_margin'] ?? 0 }}%
                             </small>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 5. Main Content Grid -->
+    {{-- Main Statement & Overviews --}}
     <div class="row g-3">
-        <!-- Left: Official P&L Financial Statement Table -->
+
+        {{-- Left: Itemized Income Statement Table --}}
         <div class="col-12 col-lg-8">
             <div class="card border-0 shadow-sm report-card overflow-hidden">
-                <div class="report-card-header d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                        <i class="fas fa-table-list text-primary"></i> <span>Income Statement (Statement of Profit &amp; Loss)</span>
+                <div class="report-card-header d-flex justify-content-between align-items-center gap-2">
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1 main-statement-title" style="font-size: 13px;">
+                        <i class="fas fa-table-list text-primary"></i>
+                        <span>Statement of Real Profit and Loss</span>
                     </h6>
+
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-light text-secondary border font-monospace" style="font-size: 9.5px;">BDT (৳)</span>
+
                         <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseIncomeStatement" aria-expanded="true" aria-controls="collapseIncomeStatement" title="Toggle Table">
                             <i class="fas fa-chevron-down collapse-icon"></i>
                         </button>
                     </div>
                 </div>
+
                 <div class="collapse show" id="collapseIncomeStatement">
                     <div class="card-body p-0">
                         <div class="table-responsive pc-fit-container">
                             <table class="table align-middle mb-0 statement-table">
                                 <thead>
                                     <tr>
-                                        <th>Account / Ledger Particulars</th>
-                                        <th class="text-end" style="width: 140px;">Debit (৳)</th>
+                                        <th>Account Particulars</th>
+                                        <th class="text-end" style="width: 140px;">Debit / Cost (৳)</th>
                                         <th class="text-end pe-3" style="width: 150px;">Credit / Net (৳)</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
-                                    <!-- 1. REVENUE SECTION -->
+                                    {{-- 1. Total Customer Bill --}}
                                     <tr class="statement-section-header">
-                                        <td colspan="3"><i class="fas fa-coins me-1 text-primary"></i> Operating Revenue &amp; Product Sales</td>
+                                        <td colspan="3"><i class="fas fa-file-invoice me-1 text-primary"></i> 1. Customer Invoiced Bill &amp; Revenue Inflow</td>
                                     </tr>
+
                                     <tr>
-                                        <td class="ps-3">Gross Product Sales (Delivered Subtotals)</td>
+                                        <td class="ps-3">Gross Product Sales (Delivered Orders)</td>
                                         <td class="text-end text-muted font-monospace bn-digit">—</td>
                                         <td class="text-end pe-3 font-monospace bn-digit">৳ {{ number_format((float)($summary['gross_sales'] ?? 0), 2) }}</td>
                                     </tr>
+
+                                    @if(($summary['discounts'] ?? 0) > 0)
+                                        <tr>
+                                            <td class="ps-3 text-danger">Less: Customer Discounts Granted</td>
+                                            <td class="text-end text-danger font-monospace bn-digit">-৳ {{ number_format((float)$summary['discounts'], 2) }}</td>
+                                            <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                        </tr>
+                                    @endif
+
                                     <tr>
-                                        <td class="ps-3 text-danger">Less: Customer Discounts &amp; Coupons Granted</td>
-                                        <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['discounts'] ?? 0), 2) }}</td>
-                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
-                                    </tr>
-                                    <tr class="bg-light fw-bold">
-                                        <td class="ps-3 text-dark">Net Sales Revenue</td>
-                                        <td class="text-end">—</td>
-                                        <td class="text-end pe-3 text-primary font-monospace bn-digit">৳ {{ number_format((float)($summary['net_sales'] ?? 0), 2) }}</td>
+                                        <td class="ps-3">Net Product Sales</td>
+                                        <td class="text-end text-muted font-monospace bn-digit">—</td>
+                                        <td class="text-end pe-3 font-monospace bn-digit">৳ {{ number_format((float)($summary['net_sales'] ?? 0), 2) }}</td>
                                     </tr>
 
-                                    <!-- 2. COGS SECTION -->
-                                    <tr class="statement-section-header">
-                                        <td colspan="3"><i class="fas fa-dolly me-1 text-warning"></i> Cost of Goods Sold (COGS)</td>
-                                    </tr>
                                     <tr>
-                                        <td class="ps-3 text-danger">Purchased Product Cost of Delivered Items</td>
-                                        <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['cogs'] ?? 0), 2) }}</td>
-                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
-                                    </tr>
-                                    <tr class="bg-light fw-bold">
-                                        <td class="ps-3 text-dark">Gross Product Profit (Margin: {{ $summary['gross_margin'] ?? 0 }}%)</td>
-                                        <td class="text-end">—</td>
-                                        <td class="text-end pe-3 text-dark font-monospace bn-digit">৳ {{ number_format((float)($summary['gross_profit'] ?? 0), 2) }}</td>
-                                    </tr>
-
-                                    <!-- 3. LOGISTICS SECTION -->
-                                    <tr class="statement-section-header">
-                                        <td colspan="3"><i class="fas fa-truck-fast me-1 text-info"></i> Logistics &amp; Courier Operations</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="ps-3">Delivery Fees Collected from Customers</td>
+                                        <td class="ps-3">Customer Delivery Fees Collected</td>
                                         <td class="text-end text-muted font-monospace bn-digit">—</td>
                                         <td class="text-end pe-3 font-monospace bn-digit">৳ {{ number_format((float)($summary['shipping_collected'] ?? 0), 2) }}</td>
                                     </tr>
-                                    <tr>
-                                        <td class="ps-3 text-danger">Less: Actual Courier Delivery Charges Paid</td>
-                                        <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['courier_cost_spent'] ?? 0), 2) }}</td>
-                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
-                                    </tr>
-                                    @if(($summary['courier_cod_fee'] ?? 0) > 0)
+
+                                    @if(($summary['collected_vat'] ?? 0) > 0)
                                         <tr>
-                                            <td class="ps-3 text-danger">Less: Courier COD Collection Commission (1%)</td>
-                                            <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)$summary['courier_cod_fee'], 2) }}</td>
-                                            <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                            <td class="ps-3">Output VAT / Tax Collected from Customer</td>
+                                            <td class="text-end text-muted font-monospace bn-digit">—</td>
+                                            <td class="text-end pe-3 font-monospace bn-digit">৳ {{ number_format((float)$summary['collected_vat'], 2) }}</td>
                                         </tr>
                                     @endif
-                                    @if(($summary['courier_return_loss'] ?? 0) > 0)
-                                        <tr>
-                                            <td class="ps-3 text-danger">Less: Return Parcel Shipping Charges</td>
-                                            <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)$summary['courier_return_loss'], 2) }}</td>
-                                            <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
-                                        </tr>
-                                    @endif
-                                    <tr class="bg-light">
-                                        <td class="ps-3 text-secondary fw-semibold">Net Shipping Operation Balance</td>
+
+                                    <tr class="bg-light fw-bold">
+                                        <td class="ps-3 text-dark">Customer Total Billed Inflow</td>
                                         <td class="text-end">—</td>
-                                        <td class="text-end pe-3 font-monospace bn-digit {{ ($summary['logistics_balance'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                            {{ ($summary['logistics_balance'] ?? 0) >= 0 ? '+' : '' }}৳ {{ number_format((float)($summary['logistics_balance'] ?? 0), 2) }}
-                                        </td>
+                                        <td class="text-end pe-3 text-primary font-monospace bn-digit">৳ {{ number_format((float)($summary['total_customer_bill'] ?? ($summary['net_sales'] ?? 0)), 2) }}</td>
                                     </tr>
 
-                                    <!-- 4. LOSSES & WRITE-OFFS -->
-                                    @if(($summary['damage_loss'] ?? 0) > 0)
-                                        <tr class="statement-section-header">
-                                            <td colspan="3"><i class="fas fa-triangle-exclamation me-1 text-danger"></i> Returns &amp; Damage Write-Offs</td>
-                                        </tr>
+                                    {{-- 2. Direct Sales Costs --}}
+                                    <tr class="statement-section-header">
+                                        <td colspan="3"><i class="fas fa-boxes-packing me-1 text-warning"></i> 2. Direct Sales Costs &amp; Deductions</td>
+                                    </tr>
+
+                                    @if(($summary['collected_vat'] ?? 0) > 0)
                                         <tr>
-                                            <td class="ps-3 text-danger">Damaged / Scrapped Return Write-Off Loss</td>
+                                            <td class="ps-3 text-danger">Less: Output VAT Payable to Govt (Pass-through)</td>
+                                            <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)$summary['collected_vat'], 2) }}</td>
+                                            <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                        </tr>
+                                    @endif
+
+                                    <tr>
+                                        <td class="ps-3 text-danger">Less: Actual Courier Dispatch &amp; COD Fees</td>
+                                        <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['total_courier_cost'] ?? ($summary['courier_cost_spent'] ?? 0)), 2) }}</td>
+                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="ps-3 text-danger">Less: Product Purchase Cost (WAC COGS)</td>
+                                        <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['cogs'] ?? 0), 2) }}</td>
+                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                    </tr>
+
+                                    @if(($summary['damage_loss'] ?? 0) > 0)
+                                        <tr>
+                                            <td class="ps-3 text-danger">Less: Damaged / Written-Off Inventory Loss</td>
                                             <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)$summary['damage_loss'], 2) }}</td>
                                             <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
                                         </tr>
                                     @endif
 
-                                    <!-- 5. OTHER BUSINESS INFLOWS & INCOME -->
+                                    <tr class="bg-light fw-bold">
+                                        <td class="ps-3 text-dark">Estimated Gross Profit ({{ $summary['gross_margin'] ?? 0 }}%)</td>
+                                        <td class="text-end">—</td>
+                                        <td class="text-end pe-3 text-warning-emphasis font-monospace bn-digit">৳ {{ number_format((float)($summary['estimated_gross_profit'] ?? ($summary['gross_profit'] ?? 0)), 2) }}</td>
+                                    </tr>
+
+                                    {{-- 3. Other Inflows --}}
                                     @if(($summary['other_income'] ?? 0) > 0 || (isset($incomeCategoryBreakdown) && $incomeCategoryBreakdown->isNotEmpty()))
                                         <tr class="statement-section-header">
-                                            <td colspan="3"><i class="fas fa-hand-holding-dollar me-1 text-success"></i> Other Business Inflows &amp; Non-Operating Income</td>
+                                            <td colspan="3"><i class="fas fa-hand-holding-dollar me-1 text-success"></i> 3. Other Business Inflows</td>
                                         </tr>
+
                                         @if(isset($incomeCategoryBreakdown) && $incomeCategoryBreakdown->isNotEmpty())
                                             @foreach($incomeCategoryBreakdown as $catInc)
                                                 <tr>
@@ -480,22 +877,18 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td class="ps-3 text-success">Add: Total Miscellaneous Business Inflows</td>
+                                                <td class="ps-3 text-success">Add: Other Operating Income</td>
                                                 <td class="text-end text-muted font-monospace bn-digit">—</td>
                                                 <td class="text-end pe-3 text-success font-monospace bn-digit">৳ {{ number_format((float)($summary['other_income'] ?? 0), 2) }}</td>
                                             </tr>
                                         @endif
-                                        <tr class="bg-light">
-                                            <td class="ps-3 text-secondary fw-semibold">Total Additional Inflows</td>
-                                            <td class="text-end">—</td>
-                                            <td class="text-end pe-3 text-success font-monospace bn-digit fw-bold">+৳ {{ number_format((float)($summary['other_income'] ?? 0), 2) }}</td>
-                                        </tr>
                                     @endif
 
-                                    <!-- 6. OPERATIONAL EXPENSES & OVERHEADS -->
+                                    {{-- 4. Operating Expenses & Staff Payroll --}}
                                     <tr class="statement-section-header">
-                                        <td colspan="3"><i class="fas fa-receipt me-1 text-danger"></i> Operating Expenses &amp; Business Overheads</td>
+                                        <td colspan="3"><i class="fas fa-receipt me-1 text-danger"></i> 4. Operating Overheads &amp; Staff Salaries</td>
                                     </tr>
+
                                     @if(isset($expenseCategoryBreakdown) && $expenseCategoryBreakdown->isNotEmpty())
                                         @foreach($expenseCategoryBreakdown as $catExp)
                                             <tr>
@@ -506,25 +899,38 @@
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td class="ps-3 text-danger">Less: Total General Operating Expenses</td>
-                                            <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['operating_expenses'] ?? 0), 2) }}</td>
+                                            <td class="ps-3 text-danger">Less: Shop, Transport &amp; Utilities</td>
+                                            <td class="text-end text-danger font-monospace bn-digit">৳ {{ number_format((float)($summary['general_expenses'] ?? ($summary['operating_expenses'] ?? 0)), 2) }}</td>
                                             <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
                                         </tr>
                                     @endif
-                                    <tr class="bg-light">
-                                        <td class="ps-3 text-secondary fw-semibold">Total Operating Overheads</td>
-                                        <td class="text-end text-danger font-monospace bn-digit fw-bold">৳ {{ number_format((float)($summary['operating_expenses'] ?? 0), 2) }}</td>
+
+                                    <tr>
+                                        <td class="ps-3 text-danger fw-semibold">
+                                            <i class="fas fa-money-check-dollar me-1"></i> Less: Staff Monthly Salaries Paid
+                                        </td>
+                                        <td class="text-end text-danger font-monospace bn-digit fw-bold">৳ {{ number_format((float)($summary['staff_salary_expense'] ?? 0), 2) }}</td>
                                         <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
                                     </tr>
 
-                                    <!-- 7. FINAL NET BOTTOM-LINE PROFIT -->
+                                    <tr class="bg-light">
+                                        <td class="ps-3 text-secondary fw-semibold">Total Operating &amp; Salary Expenses</td>
+                                        <td class="text-end text-danger font-monospace bn-digit fw-bold">৳ {{ number_format((float)($summary['total_operating_expenses'] ?? ($summary['operating_expenses'] ?? 0)), 2) }}</td>
+                                        <td class="text-end pe-3 text-muted font-monospace bn-digit">—</td>
+                                    </tr>
+
+                                    {{-- 5. Real Net Profit --}}
                                     <tr class="bg-light border-top border-2 fw-bold" style="font-size: 12.5px;">
-                                        <td class="py-2.5 ps-3">
-                                            <span class="text-dark">NET BOTTOM-LINE PROFIT (EBIT)</span>
-                                            <small class="d-block text-muted fw-normal" style="font-size: 10px;">Final retained profit after COGS, logistics, damage loss, other income, and operational overheads</small>
+                                        <td class="py-2 ps-3">
+                                            <span class="text-dark">REAL NET BOTTOM-LINE PROFIT (EBIT)</span>
+                                            <small class="d-block text-muted fw-normal" style="font-size: 10px;">
+                                                Bill - VAT - Courier - COGS - Damages + Other Income - Shop Expenses - Staff Salary
+                                            </small>
                                         </td>
-                                        <td class="text-end py-2.5">—</td>
-                                        <td class="text-end pe-3 py-2.5 font-monospace bn-digit {{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} fw-bold" style="font-size: 13.5px;">
+
+                                        <td class="text-end py-2">—</td>
+
+                                        <td class="text-end pe-3 py-2 font-monospace bn-digit {{ ($summary['net_profit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} fw-bold" style="font-size: 14px;">
                                             ৳ {{ number_format((float)($summary['net_profit'] ?? 0), 2) }}
                                         </td>
                                     </tr>
@@ -536,104 +942,109 @@
             </div>
         </div>
 
-        <!-- Right: Channel Breakdown & Operational Cards -->
+        {{-- Right: Side Overviews --}}
         <div class="col-12 col-lg-4">
-            <!-- Channel Performance -->
+
+            {{-- Channel Performance --}}
             <div class="card border-0 shadow-sm report-card mb-3 p-3">
-                <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                    <i class="fas fa-network-wired text-info"></i> <span>Sales by Channel</span>
+                <h6 class="side-card-title d-flex align-items-center gap-1">
+                    <i class="fas fa-network-wired text-info"></i> Sales Channels
                 </h6>
-                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+
+                <div class="side-stat-row">
                     <div>
-                        <strong class="d-block text-dark small">Online Web Orders</strong>
+                        <strong class="d-block text-dark small">Online Store</strong>
                         <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">{{ $channelStats['web']['count'] ?? 0 }} orders</small>
                     </div>
                     <span class="fw-bold text-primary font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)($channelStats['web']['revenue'] ?? 0), 2) }}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+
+                <div class="side-stat-row">
                     <div>
-                        <strong class="d-block text-dark small">Facebook &amp; Phone (Manual)</strong>
+                        <strong class="d-block text-dark small">Manual / Social</strong>
                         <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">{{ $channelStats['manual']['count'] ?? 0 }} orders</small>
                     </div>
                     <span class="fw-bold text-warning font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)($channelStats['manual']['revenue'] ?? 0), 2) }}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center py-1">
+
+                <div class="side-stat-row">
                     <div>
-                        <strong class="d-block text-dark small">POS Outlets / Showroom</strong>
+                        <strong class="d-block text-dark small">POS Outlet</strong>
                         <small class="text-muted font-monospace bn-digit" style="font-size: 10px;">{{ $channelStats['pos']['count'] ?? 0 }} orders</small>
                     </div>
                     <span class="fw-bold text-success font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)($channelStats['pos']['revenue'] ?? 0), 2) }}</span>
                 </div>
             </div>
 
-            <!-- Other Business Inflows Breakdown Card -->
-            @if(($summary['other_income'] ?? 0) > 0 || (isset($incomeCategoryBreakdown) && $incomeCategoryBreakdown->isNotEmpty()))
-                <div class="card border-0 shadow-sm report-card mb-3 p-3">
-                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                            <i class="fas fa-hand-holding-dollar text-success"></i> <span>Other Inflows Breakdown</span>
-                        </h6>
-                        <a href="{{ url('/admin/accounts/income') }}" class="small text-success text-decoration-none fw-semibold" style="font-size: 11px;">View All</a>
-                    </div>
-                    @if(isset($incomeCategoryBreakdown) && $incomeCategoryBreakdown->isNotEmpty())
-                        @foreach($incomeCategoryBreakdown as $incRow)
-                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                <span class="text-dark small">{{ $incRow->category_name }}</span>
-                                <span class="fw-bold text-success font-monospace bn-digit" style="font-size: 12px;">+৳ {{ number_format((float)$incRow->total_amount, 2) }}</span>
-                            </div>
-                        @endforeach
-                        <div class="d-flex justify-content-between align-items-center pt-2">
-                            <strong class="text-dark small">Total Inflows:</strong>
-                            <strong class="text-success font-monospace bn-digit" style="font-size: 12px;">+৳ {{ number_format((float)($summary['other_income'] ?? 0), 2) }}</strong>
-                        </div>
-                    @else
-                        <p class="text-muted small mb-0 py-2 text-center">No additional inflows recorded for this period.</p>
-                    @endif
-                </div>
-            @endif
-
-            <!-- Operating Expenses Breakdown Card -->
+            {{-- Staff Payroll Quick Card --}}
             <div class="card border-0 shadow-sm report-card mb-3 p-3">
-                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
-                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                        <i class="fas fa-receipt text-danger"></i> <span>Expense Breakdown</span>
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 gap-2">
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
+                        <i class="fas fa-money-check-dollar text-primary"></i> Staff Payroll (Salaries)
                     </h6>
-                    <a href="{{ url('/admin/accounts/expenses') }}" class="small text-primary text-decoration-none fw-semibold" style="font-size: 11px;">View All</a>
+                    <a href="{{ route('admin.payroll.index') }}" class="small text-primary text-decoration-none fw-semibold text-nowrap" style="font-size: 11px;">Manage Sheet</a>
                 </div>
+
+                <div class="side-stat-row small">
+                    <span class="text-muted">Disbursed This Period:</span>
+                    <strong class="font-monospace text-danger bn-digit">৳ {{ number_format((float)($summary['staff_salary_expense'] ?? 0), 2) }}</strong>
+                </div>
+
+                <div class="side-info-box p-2 mt-2 small font-monospace text-muted" style="font-size: 10px;">
+                    <i class="fas fa-circle-info text-primary me-1"></i> Auto-counted based on joining date closing on 30th.
+                </div>
+            </div>
+
+            {{-- Expenses Breakdown --}}
+            <div class="card border-0 shadow-sm report-card mb-3 p-3">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2 gap-2">
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
+                        <i class="fas fa-receipt text-danger"></i> Shop &amp; Overheads
+                    </h6>
+                    <a href="{{ url('/admin/accounts/expenses') }}" class="small text-primary text-decoration-none fw-semibold text-nowrap" style="font-size: 11px;">View All</a>
+                </div>
+
                 @if(isset($expenseCategoryBreakdown) && $expenseCategoryBreakdown->isNotEmpty())
                     @foreach($expenseCategoryBreakdown as $expRow)
-                        <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                        <div class="side-stat-row">
                             <span class="text-dark small">{{ $expRow->category_name }}</span>
                             <span class="fw-bold text-danger font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)$expRow->total_amount, 2) }}</span>
                         </div>
                     @endforeach
-                    <div class="d-flex justify-content-between align-items-center pt-2">
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 gap-2">
                         <strong class="text-dark small">Total Overheads:</strong>
-                        <strong class="text-danger font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)($summary['operating_expenses'] ?? 0), 2) }}</strong>
+                        <strong class="text-danger font-monospace bn-digit" style="font-size: 12px;">৳ {{ number_format((float)($summary['general_expenses'] ?? 0), 2) }}</strong>
                     </div>
                 @else
-                    <p class="text-muted small mb-0 py-2 text-center">No operating expenses recorded for this period.</p>
+                    <p class="text-muted small mb-0 py-2 text-center">No shop expenses recorded.</p>
                 @endif
             </div>
 
-            <!-- Logistics Audit Summary -->
+            {{-- Shipping & Courier Cost --}}
             <div class="card border-0 shadow-sm report-card p-3">
-                <h6 class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                    <i class="fas fa-boxes-packing text-primary"></i> <span>Shipping Operations Audit</span>
+                <h6 class="side-card-title d-flex align-items-center gap-1">
+                    <i class="fas fa-boxes-packing text-primary"></i> Shipping &amp; Courier Summary
                 </h6>
-                <div class="d-flex justify-content-between py-1 small">
-                    <span class="text-muted">Customer Delivery Collected:</span>
+
+                <div class="side-stat-row small">
+                    <span class="text-muted">Delivery Fee Collected</span>
                     <strong class="font-monospace text-dark bn-digit">৳ {{ number_format((float)($summary['shipping_collected'] ?? 0), 2) }}</strong>
                 </div>
-                <div class="d-flex justify-content-between py-1 small">
-                    <span class="text-muted">Courier Dispatch Cost Paid:</span>
+
+                <div class="side-stat-row small">
+                    <span class="text-muted">Actual Courier Paid</span>
                     <strong class="font-monospace text-danger bn-digit">৳ {{ number_format((float)($summary['courier_cost_spent'] ?? 0), 2) }}</strong>
                 </div>
-                <div class="d-flex justify-content-between py-1 small">
-                    <span class="text-muted">Courier 1% COD Fee:</span>
-                    <strong class="font-monospace text-danger bn-digit">৳ {{ number_format((float)($summary['courier_cod_fee'] ?? 0), 2) }}</strong>
-                </div>
-                <div class="d-flex justify-content-between py-1 small border-top pt-1 mt-1">
+
+                @if(($summary['courier_cod_fee'] ?? 0) > 0)
+                    <div class="side-stat-row small">
+                        <span class="text-muted">Courier COD Fee</span>
+                        <strong class="font-monospace text-danger bn-digit">৳ {{ number_format((float)$summary['courier_cod_fee'], 2) }}</strong>
+                    </div>
+                @endif
+
+                <div class="d-flex justify-content-between py-2 border-top mt-1 small gap-2">
                     <strong class="text-dark">Net Logistics Margin:</strong>
                     <strong class="font-monospace bn-digit {{ ($summary['logistics_balance'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
                         ৳ {{ number_format((float)($summary['logistics_balance'] ?? 0), 2) }}
@@ -643,16 +1054,19 @@
         </div>
     </div>
 
-    <!-- 6. Top High-Margin Products Table (Collapsible) -->
+    {{-- Top Products Table --}}
     <div class="card border-0 shadow-sm report-card overflow-hidden mt-2">
-        <div class="report-card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                <i class="fas fa-ranking-star text-warning"></i> <span>Top High-Margin Delivered Products in this Period</span>
+        <div class="report-card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center gap-2">
+            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
+                <i class="fas fa-ranking-star text-warning"></i>
+                <span>Top High-Margin Profitable Products</span>
             </h6>
+
             <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseTopProducts" aria-expanded="true" aria-controls="collapseTopProducts" title="Toggle Products">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseTopProducts">
             <div class="card-body p-0">
                 <div class="table-responsive pc-fit-container">
@@ -660,27 +1074,34 @@
                         <thead>
                             <tr>
                                 <th class="ps-3" style="width: 50px;">#</th>
-                                <th>Product Description</th>
-                                <th class="text-center" style="width: 100px;">Units Sold</th>
+                                <th>Product Title</th>
+                                <th class="text-center" style="width: 100px;">Sold Qty</th>
                                 <th class="text-end" style="width: 130px;">Sales (৳)</th>
-                                <th class="text-end" style="width: 130px;">COGS (৳)</th>
-                                <th class="text-end" style="width: 130px;">Net Profit (৳)</th>
-                                <th class="text-end pe-3" style="width: 100px;">Margin %</th>
+                                <th class="text-end" style="width: 130px;">WAC COGS (৳)</th>
+                                <th class="text-end" style="width: 130px;">Gross Profit (৳)</th>
+                                <th class="text-end pe-3" style="width: 100px;">Margin</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             @forelse($topProfitableProducts as $idx => $prod)
                                 <tr>
                                     <td class="ps-3 font-monospace text-muted" style="font-size: 10.5px;">{{ $idx + 1 }}</td>
+
                                     <td>
                                         <strong class="text-dark d-block text-truncate" style="max-width: 320px; font-size: 12px;" title="{{ $prod->title }}">
                                             {{ $prod->title }}
                                         </strong>
                                     </td>
+
                                     <td class="text-center font-monospace bn-digit" style="font-size: 11px;">&times; {{ $prod->total_qty }}</td>
+
                                     <td class="text-end font-monospace bn-digit" style="font-size: 11.5px;">৳ {{ number_format((float)$prod->total_revenue, 2) }}</td>
+
                                     <td class="text-end font-monospace bn-digit text-muted" style="font-size: 11.5px;">৳ {{ number_format((float)$prod->total_cogs, 2) }}</td>
+
                                     <td class="text-end font-monospace bn-digit text-success fw-bold" style="font-size: 11.5px;">৳ {{ number_format((float)$prod->profit, 2) }}</td>
+
                                     <td class="text-end pe-3">
                                         <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace px-1 py-0" style="font-size: 9.5px;">
                                             {{ $prod->margin }}%
@@ -689,7 +1110,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted small">No delivered products recorded in this period.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted small">No product sales found for this period.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -698,12 +1119,14 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
 function toggleCustomDates(val) {
     const startCol = document.getElementById('customStartCol');
     const endCol   = document.getElementById('customEndCol');
+
     if (val === 'custom') {
         startCol.classList.remove('d-none');
         endCol.classList.remove('d-none');

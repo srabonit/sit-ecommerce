@@ -14,7 +14,7 @@ return new class extends Migration
         // 1. Dynamic SMS Gateways / Providers Configuration
         Schema::create('sms_providers', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique(); // e.g. 'Onecodesoft', 'Custom Gateway'
+            $table->string('name')->unique(); // 'Onecodesoft', 'Custom Gateway'
             $table->string('driver')->default('onecodesoft');
             $table->string('base_url')->default('https://api.onecodesoft.com/api');
             $table->string('api_version')->default('v3');

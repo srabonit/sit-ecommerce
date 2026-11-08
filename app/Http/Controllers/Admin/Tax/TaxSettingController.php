@@ -20,7 +20,7 @@ class TaxSettingController extends Controller
      * 3. Product-Specific Direct VAT (0%, 2%, Flat, etc. strictly honored)
      * 4. Category-Specific Direct VAT (Subcategory > Category)
      * 5. Tax Rules Database Cascade
-     * 6. Central Settings Default VAT (default_vat_rate - e.g. 5%)
+     * 6. Central Settings Default VAT (default_vat_rate - 5%)
      */
     protected array $taxSettingKeys = [
         'vat_enabled',

@@ -1,3 +1,4 @@
+
 @forelse($logs as $log)
     @php
         $carbonCreated = !empty($log->created_at)
@@ -34,11 +35,15 @@
         class="{{ $log->security_status === 'blocked' ? 'table-danger bg-opacity-25' : '' }}">
 
         {{-- Date & Time --}}
-        <td class="ps-3 font-monospace" style="font-size: 11px;">
+        <td class="ps-3">
             @if($carbonCreated)
-                <div class="d-flex flex-column text-muted">
-                    <span class="text-dark fw-bold">{{ $carbonCreated->format('H:i:s') }}</span>
-                    <span>{{ $carbonCreated->format('M d, Y') }}</span>
+                <div class="d-flex flex-column gap-1">
+                    <span class="font-monospace fw-semibold text-dark" style="font-size: 12px;">
+                        {{ $carbonCreated->format('H:i:s') }}
+                    </span>
+                    <span class="text-muted" style="font-size: 10px;">
+                        <i class="far fa-calendar-alt me-1"></i>{{ $carbonCreated->format('M d, Y') }}
+                    </span>
                 </div>
             @else
                 <span class="text-muted small">N/A</span>
@@ -47,13 +52,13 @@
 
         {{-- IP Address --}}
         <td>
-            <div class="d-flex flex-column">
+            <div class="d-flex flex-column gap-1">
                 <a href="{{ route('admin.security.ips.show', $log->ip_address) }}"
-                   class="font-monospace fw-bold text-dark text-decoration-none hover-primary"
+                   class="font-monospace fw-semibold text-dark text-decoration-none hover-primary"
                    style="font-size: 12px;">
                     {{ $log->ip_address }}
                 </a>
-                <span class="text-secondary small" style="font-size: 10px;">
+                <span class="text-muted" style="font-size: 10px;">
                     <i class="fas fa-globe me-1"></i>{{ $log->country ?: 'Unknown' }}
                 </span>
             </div>
@@ -62,34 +67,35 @@
         {{-- User --}}
         <td>
             @if($log->user)
-                <div class="d-flex align-items-center gap-1.5" style="font-size: 11px;">
-                    <span class="badge bg-light text-dark border px-1 py-0.5 font-monospace">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-secondary border font-monospace px-2 py-1"
+                          style="font-size: 10px;">
                         #{{ $log->user_id }}
                     </span>
                     <span class="text-dark fw-semibold text-truncate"
-                          style="max-width: 110px;"
+                          style="max-width: 110px; font-size: 11px;"
                           title="{{ $log->user->name }}">
                         {{ $log->user->name }}
                     </span>
                 </div>
             @else
-                <span class="badge bg-secondary bg-opacity-10 text-secondary border px-1.5 py-0.5"
-                      style="font-size: 9.5px;">
-                    Guest
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1"
+                      style="font-size: 10px;">
+                    <i class="fas fa-user-secret me-1"></i>Guest
                 </span>
             @endif
         </td>
 
         {{-- Request --}}
         <td>
-            <div class="d-flex align-items-center gap-1.5">
-                <span class="badge bg-light text-secondary border px-1.5 py-0.5 font-monospace"
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-secondary border font-monospace px-2 py-1"
                       style="font-size: 9px;">
                     {{ strtoupper($log->request_method ?? 'GET') }}
                 </span>
 
-                <span class="font-monospace text-dark text-truncate d-inline-block fw-semibold"
-                      style="max-width: 220px; font-size: 11.5px;"
+                <span class="font-monospace text-dark text-truncate d-inline-block fw-medium"
+                      style="max-width: 220px; font-size: 11px;"
                       title="{{ $log->url_path }}">
                     {{ $log->url_path }}
                 </span>
@@ -98,7 +104,7 @@
 
         {{-- HTTP --}}
         <td class="text-center">
-            <span class="badge {{ $httpBadge }} font-monospace px-1.5 py-0.5"
+            <span class="badge {{ $httpBadge }} font-monospace px-2 py-1"
                   style="font-size: 10px;">
                 {{ $resp }}
             </span>
@@ -106,26 +112,27 @@
 
         {{-- Activity --}}
         <td>
-            <span class="badge bg-secondary bg-opacity-10 text-secondary border px-1.5 py-0.5 text-uppercase"
+            <span class="badge bg-light text-secondary border px-2 py-1 text-uppercase"
                   style="font-size: 9px;">
                 {{ str_replace('_', ' ', $log->activity_type ?? 'traffic') }}
             </span>
         </td>
 
         {{-- Risk --}}
-        <td class="text-center font-monospace">
+        <td class="text-center">
             @if($risk > 0)
-                <span class="badge {{ $riskBadge }} px-1.5 py-0.5" style="font-size: 10px;">
-                    {{ $risk }}
+                <span class="badge {{ $riskBadge }} font-monospace px-2 py-1"
+                      style="font-size: 10px;">
+                    {{ $risk }}<span class="opacity-75">/100</span>
                 </span>
             @else
-                <span class="text-muted small">0</span>
+                <span class="text-muted font-monospace small">0</span>
             @endif
         </td>
 
         {{-- Security Status --}}
         <td class="text-center">
-            <span class="badge {{ $statusBadge }} px-2 py-0.5 text-uppercase"
+            <span class="badge {{ $statusBadge }} px-2 py-1 text-uppercase"
                   style="font-size: 9px;">
                 {{ $log->security_status }}
             </span>
@@ -134,10 +141,11 @@
         {{-- Action --}}
         <td class="pe-3 text-end text-nowrap">
             <button type="button"
-                    class="btn btn-sm btn-outline-secondary py-0 px-2 btn-inspect-log"
+                    class="btn btn-sm btn-outline-secondary btn-inspect-log"
                     data-id="{{ $log->id }}"
-                    style="font-size: 11px;"
-                    title="View Details">
+                    style="width: 30px; height: 28px; padding: 0; font-size: 11px;"
+                    title="View Details"
+                    aria-label="View log details">
                 <i class="fas fa-search"></i>
             </button>
         </td>
@@ -146,9 +154,14 @@
 @empty
     <tr>
         <td colspan="9" class="text-center py-5 text-muted">
-            <i class="fas fa-list-check fa-3x text-secondary mb-2 opacity-50"></i>
-            <h6 class="fw-semibold mb-1">No Logs Found</h6>
-            <p class="small text-muted mb-0">Try changing your filters.</p>
+            <div class="d-flex flex-column align-items-center justify-content-center">
+                <div class="d-flex align-items-center justify-content-center rounded-circle bg-light border mb-3"
+                     style="width: 58px; height: 58px;">
+                    <i class="fas fa-list-check fa-2x text-secondary opacity-50"></i>
+                </div>
+                <h6 class="fw-semibold text-dark mb-1">No Logs Found</h6>
+                <p class="small text-muted mb-0">Try changing your filters to find matching activity.</p>
+            </div>
         </td>
     </tr>
 @endforelse

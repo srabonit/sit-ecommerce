@@ -1,4 +1,4 @@
-<!-- GLOBAL WORDPRESS-STYLE MEDIA PICKER MODAL -->
+<!-- GLOBAL MEDIA PICKER -->
 <div class="modal fade" id="globalMediaPickerModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable my-2 my-md-3">
         <div class="modal-content border-0 shadow-lg overflow-hidden picker-modal-canvas">
@@ -8,19 +8,19 @@
                 <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
                     <h6 class="fw-bold text-dark mb-0 d-flex align-items-center text-truncate" style="font-size: 13.5px;">
                         <i class="fas fa-photo-video text-primary me-2"></i>
-                        <span>Select or Upload Media</span>
+                        <span>Media</span>
                     </h6>
                     <ul class="nav picker-segmented-tabs ms-auto ms-sm-2" id="mediaPickerTabs" role="tablist">
                         <li class="nav-item">
                             <button class="nav-link active btn-compact" id="tab-library-btn" data-bs-toggle="pill" data-bs-target="#tab-library" type="button">
                                 <i class="fas fa-images me-1" style="font-size: 10px;"></i>
-                                <span>Media Library</span>
+                                <span>Library</span>
                             </button>
                         </li>
                         <li class="nav-item">
                             <button class="nav-link btn-compact" id="tab-upload-btn" data-bs-toggle="pill" data-bs-target="#tab-upload" type="button">
                                 <i class="fas fa-cloud-upload-alt me-1" style="font-size: 10px;"></i>
-                                <span>Upload Files</span>
+                                <span>Upload</span>
                             </button>
                         </li>
                     </ul>
@@ -39,15 +39,15 @@
                             <div class="row g-2 align-items-center">
                                 <div class="col-5 col-sm-4 col-md-3">
                                     <select id="pickerFilterType" class="form-select form-select-sm picker-filter-select" onchange="fetchPickerMedia(1)">
-                                        <option value="all">All media items</option>
+                                        <option value="all">All</option>
                                         <option value="image">Images</option>
-                                        <option value="pdf">PDF Documents</option>
+                                        <option value="pdf">PDFs</option>
                                     </select>
                                 </div>
                                 <div class="col-7 col-sm-8 col-md-5 ms-auto">
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-light border-end-0 picker-search-addon"><i class="fas fa-search text-muted" style="font-size: 10px;"></i></span>
-                                        <input type="text" id="pickerSearchInput" class="form-control border-start-0 picker-filter-input" placeholder="Search media..." oninput="debouncePickerSearch()">
+                                        <input type="text" id="pickerSearchInput" class="form-control border-start-0 picker-filter-input" placeholder="Search..." oninput="debouncePickerSearch()">
                                     </div>
                                 </div>
                             </div>
@@ -60,16 +60,16 @@
                             <div class="picker-grid-column flex-grow-1 p-2 p-md-3 overflow-auto">
                                 <div id="pickerMediaLoader" class="text-center py-5 d-none">
                                     <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                                    <div class="small text-muted mt-2 fw-semibold" style="font-size: 11px;">Loading media library...</div>
+                                    <div class="small text-muted mt-2 fw-semibold" style="font-size: 11px;">Loading...</div>
                                 </div>
 
                                 <div class="picker-media-grid" id="pickerGridWrapper"></div>
 
                                 <div id="pickerEmptyNotice" class="text-center py-5 text-muted d-none">
                                     <i class="far fa-images fa-2x mb-2 text-secondary opacity-50 d-block"></i>
-                                    <p class="small mb-1 fw-semibold" style="font-size: 12px;">No media files found.</p>
+                                    <p class="small mb-1 fw-semibold" style="font-size: 12px;">No files found.</p>
                                     <button type="button" class="btn btn-outline-primary btn-compact" onclick="document.getElementById('tab-upload-btn')?.click()">
-                                        <i class="fas fa-cloud-upload-alt me-1"></i> Upload Your First File
+                                        <i class="fas fa-cloud-upload-alt me-1"></i> Upload File
                                     </button>
                                 </div>
                                 
@@ -82,11 +82,11 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Attachment Details Sidebar (Scrollable) -->
+                            <!-- Right: Details Sidebar (Scrollable) -->
                             <div class="picker-details-column border-start bg-light bg-opacity-25 overflow-auto p-3" id="pickerSidebarColumn">
                                 <div id="pickerDetailsPanel" style="display: none;">
                                     <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                        <span class="fw-bold text-dark text-uppercase small" style="font-size: 11px; letter-spacing: 0.04em;">Attachment Details</span>
+                                        <span class="fw-bold text-dark text-uppercase small" style="font-size: 11px; letter-spacing: 0.04em;">Details</span>
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle bn-digit" id="pickerSelectedBadge" style="font-size: 9.5px; border-radius: 5px;">Selected</span>
                                     </div>
 
@@ -103,22 +103,22 @@
                                     
                                     <div class="mb-2">
                                         <label class="form-label text-muted small fw-bold mb-1" style="font-size: 11px;">Alt Text</label>
-                                        <input type="text" id="pickerDetailAlt" class="form-control form-control-sm picker-filter-input" placeholder="Alternative text">
+                                        <input type="text" id="pickerDetailAlt" class="form-control form-control-sm picker-filter-input" placeholder="Alt text">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-muted small fw-bold mb-1" style="font-size: 11px;">Title</label>
-                                        <input type="text" id="pickerDetailTitle" class="form-control form-control-sm picker-filter-input" placeholder="Media title">
+                                        <input type="text" id="pickerDetailTitle" class="form-control form-control-sm picker-filter-input" placeholder="Title">
                                     </div>
 
                                     <button type="button" class="btn btn-outline-secondary btn-compact w-100 shadow-xs" onclick="savePickerMetaAjax()">
                                         <i class="fas fa-check me-1" style="font-size: 10px;"></i>
-                                        <span>Save Changes</span>
+                                        <span>Save</span>
                                     </button>
                                 </div>
 
                                 <div id="pickerNoSelectionPanel" class="text-center py-5 text-muted">
                                     <i class="far fa-hand-pointer fa-2x mb-2 text-secondary opacity-25 d-block"></i>
-                                    <p class="small mb-0" style="font-size: 11.5px; line-height: 1.4;">Click any media thumbnail to view details and select.</p>
+                                    <p class="small mb-0" style="font-size: 11.5px; line-height: 1.4;">Select a file to view details.</p>
                                 </div>
                             </div>
 
@@ -131,8 +131,8 @@
                             <div class="dropzone-icon-wrap mb-3">
                                 <i class="fas fa-cloud-upload-alt fa-3x text-primary"></i>
                             </div>
-                            <h6 class="fw-bold text-dark mb-1" style="font-size: 16px;">Drop files anywhere to upload</h6>
-                            <p class="text-muted small mb-3" style="font-size: 12px;">or browse from your device</p>
+                            <h6 class="fw-bold text-dark mb-1" style="font-size: 16px;">Drop files to upload</h6>
+                            <p class="text-muted small mb-3" style="font-size: 12px;">or choose files</p>
                             
                             <label class="btn btn-primary btn-compact px-4 py-2 cursor-pointer shadow-xs mb-2">
                                 <i class="fas fa-folder-open me-1.5"></i>
@@ -140,7 +140,7 @@
                                 <input type="file" id="pickerFileInput" multiple class="d-none" accept="image/*,.pdf" onchange="uploadPickerFiles(this.files)">
                             </label>
 
-                            <div class="text-muted mt-2" style="font-size: 11px;">Maximum upload file size: 20 MB (Images, PDFs).</div>
+                            <div class="text-muted mt-2" style="font-size: 11px;">Max 20 MB per file</div>
                         </div>
 
                         <!-- Upload Progress Area -->
@@ -149,7 +149,7 @@
                                 <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%;"></div>
                             </div>
                             <div class="text-center small text-muted mt-2 fw-semibold" style="font-size: 11px;">
-                                <i class="fas fa-spinner fa-spin me-1"></i> Uploading and optimizing files, please wait...
+                                <i class="fas fa-spinner fa-spin me-1"></i> Uploading...
                             </div>
                         </div>
                     </div>
@@ -163,14 +163,14 @@
                     <div id="pickerFooterThumbPreview" class="d-none border bg-white p-0.5 flex-shrink-0" style="border-radius: 4px; width: 28px; height: 28px; overflow: hidden;">
                         <img id="pickerFooterThumbImg" src="" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
-                    <div class="small text-muted bn-digit text-truncate" id="pickerSelectedCountText" style="font-size: 11px;">No items selected</div>
+                    <div class="small text-muted bn-digit text-truncate" id="pickerSelectedCountText" style="font-size: 11px;">None selected</div>
                 </div>
 
                 <div class="d-flex gap-2 flex-shrink-0">
                     <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" id="pickerInsertBtn" class="btn btn-primary btn-compact px-3 shadow-xs" disabled onclick="executeMediaSelection()">
                         <i class="fas fa-check me-1" style="font-size: 10px;"></i>
-                        <span>Select Media</span>
+                        <span>Select</span>
                     </button>
                 </div>
             </div>
@@ -395,6 +395,81 @@
             padding: 24px 12px;
         }
     }
+
+
+    /* Responsive layout refinements */
+    @media (max-width: 767.98px) {
+        #globalMediaPickerModal .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+
+        #globalMediaPickerModal .modal-header {
+            flex-wrap: wrap;
+            padding: 0.5rem 0.75rem !important;
+        }
+
+        #globalMediaPickerModal .modal-header > .d-flex {
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        #globalMediaPickerModal .picker-segmented-tabs {
+            margin-left: 0 !important;
+        }
+
+        #globalMediaPickerModal .picker-grid-column {
+            min-height: 0;
+        }
+
+        #globalMediaPickerModal .picker-details-column {
+            flex: 0 0 auto;
+            overflow-y: auto;
+        }
+
+        #globalMediaPickerModal .modal-footer {
+            padding: 0.5rem 0.75rem !important;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #globalMediaPickerModal .picker-modal-canvas {
+            height: 94vh;
+            max-height: 94vh;
+        }
+
+        #globalMediaPickerModal .picker-media-grid {
+            grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+        }
+
+        #globalMediaPickerModal .picker-segmented-tabs .nav-link {
+            padding: 4px 7px !important;
+            font-size: 10px !important;
+        }
+
+        #globalMediaPickerModal .picker-details-column {
+            max-height: 175px;
+            padding: 0.75rem !important;
+        }
+
+        #globalMediaPickerModal .modal-footer > .d-flex:last-child {
+            width: 100%;
+        }
+
+        #globalMediaPickerModal .modal-footer > .d-flex:last-child .btn {
+            flex: 1 1 0;
+        }
+
+        #globalMediaPickerModal #pickerSelectedCountText {
+            max-width: 145px;
+        }
+
+        #globalMediaPickerModal .wp-dropzone-box {
+            margin: 0 auto;
+            padding: 20px 10px;
+        }
+    }
+
 </style>
 
 <script>

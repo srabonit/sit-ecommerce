@@ -11,3 +11,8 @@ database\seeders\AdminUserSeeder.php
 php artisan security:maintenance
 
 php artisan schedule:list
+
+
+
+corn job for sms
+curl -s https:// আপনার-ডোমেইন.com/admin/sms/campaigns/cron-run > /dev/null 2>&1

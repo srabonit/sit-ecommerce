@@ -4,6 +4,32 @@
 
 @section('admin_content')
 <div class="container-fluid py-3 px-2 px-md-3">
+    <!-- সেশন ও ভ্যালিডেশন অ্যালার্ট -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show py-2 px-3 mb-3 rounded-3" style="font-size: 12px;">
+            <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3 rounded-3" style="font-size: 12px;">
+            <i class="fas fa-exclamation-triangle me-1"></i> {{ session('error') }}
+            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-3 rounded-3" style="font-size: 12px;">
+            <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <h5 class="fw-bold text-dark mb-0">New Assign Product</h5>
@@ -26,7 +52,9 @@
                         <select name="branch_id" id="assignBranchDropdown" class="form-select rounded-2" required>
                             <option value="" disabled selected>Select Branch</option>
                             @foreach($branches as $b)
-                                <option value="{{ $b->id }}">{{ $b->name }} ({{ $b->code }})</option>
+                                <option value="{{ $b->id }}" {{ old('branch_id') == $b->id ? 'selected' : '' }}>
+                                    {{ $b->name }} ({{ $b->code ?? ($b->branch_code ?? 'Hub') }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -63,14 +91,14 @@
                         </label>
                         <div class="d-flex flex-column flex-md-row gap-2">
                             <select id="productSelectDropdown" class="form-select rounded-2">
-                                <option value="" disabled selected>-- Browse & Select Product --</option>
+                                <option value="" disabled selected>-- Browse &amp; Select Product --</option>
                                 @foreach($products as $p)
                                     <option value="{{ $p->id }}" 
-                                            data-title="{{ $p->title }}" 
-                                            data-code="{{ $p->product_code ?? 'N/A' }}" 
-                                            data-cat="{{ $p->category_name ?? 'General' }}" 
-                                            data-stock="{{ $p->stock }}">
-                                        {{ $p->title }} | SKU: {{ $p->product_code ?? 'N/A' }} | Cat: {{ $p->category_name ?? 'General' }} (Available Stock: {{ $p->stock }})
+                                            data-title="{{ $p->title ?? $p->name }}" 
+                                            data-code="{{ $p->product_code ?? ($p->sku ?? 'N/A') }}" 
+                                            data-cat="{{ $p->category_name ?? ($p->category?->name ?? 'General') }}" 
+                                            data-stock="{{ $p->stock ?? ($p->quantity ?? 0) }}">
+                                        {{ $p->title ?? $p->name }} | SKU: {{ $p->product_code ?? ($p->sku ?? 'N/A') }} | Cat: {{ $p->category_name ?? ($p->category?->name ?? 'General') }} (Available Stock: {{ $p->stock ?? ($p->quantity ?? 0) }})
                                     </option>
                                 @endforeach
                             </select>
@@ -102,7 +130,7 @@
 
                 <div class="mb-4">
                     <label class="form-label small fw-bold text-muted">Transfer Notes (Optional)</label>
-                    <textarea name="notes" rows="2" class="form-control rounded-2" placeholder=" transfer via delivery van"></textarea>
+                    <textarea name="notes" rows="2" class="form-control rounded-2" placeholder="Transfer notes or delivery van memo"></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-warning fw-bold text-white px-4" id="submitAssignBtn" disabled>Assign Products</button>
@@ -229,19 +257,20 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 let html = '<div class="list-group list-group-flush small">';
                 products.forEach(p => {
-                    const sku = p.product_code ? p.product_code : 'N/A';
+                    const sku = p.product_code ? p.product_code : (p.sku ? p.sku : 'N/A');
                     const cat = p.category_name ? p.category_name : 'General';
+                    const title = p.title ? p.title : (p.name ? p.name : 'Product');
                     const isAdded = addedProductIds.has(String(p.id));
 
                     html += `
                         <a href="javascript:void(0)" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center select-search-item ${isAdded ? 'bg-light text-muted disabled' : ''}"
                            data-id="${p.id}" 
-                           data-title="${p.title.replace(/"/g, '&quot;')}" 
+                           data-title="${title.replace(/"/g, '&quot;')}" 
                            data-code="${sku}" 
                            data-cat="${cat}" 
                            data-stock="${p.stock}">
                             <div>
-                                <strong class="d-block text-dark">${p.title}</strong>
+                                <strong class="d-block text-dark">${title}</strong>
                                 <span class="text-muted small">ID: #${p.id} | SKU: <code>${sku}</code> | Cat: <strong>${cat}</strong></span>
                             </div>
                             <div class="text-end">

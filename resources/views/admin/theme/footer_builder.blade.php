@@ -596,15 +596,6 @@
     <!-- Header -->
     <div class="builder-header-card d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9.5px; font-weight: 700;">
-                    <i class="fas fa-layer-group me-1"></i> Theme Settings
-                </span>
-                <span class="badge bg-light text-secondary border" style="font-size: 9.5px; font-weight: 600;">
-                    Footer Builder
-                </span>
-            </div>
-
             <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-dark" style="font-size: 18px;">
                 <i class="fas fa-layer-group text-primary"></i>
                 <span>Footer Builder</span>

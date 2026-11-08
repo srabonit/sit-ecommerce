@@ -316,7 +316,7 @@
                 <i class="fas fa-boxes-packing text-primary"></i>
                 <span>Orders Management</span>
             </h5>
-            <small class="text-muted d-block mt-0.5" style="font-size: 11.5px; line-height: 1.35;">Manage web and POS orders, export data, live payment verification &amp; fulfillments.</small>
+            <small class="text-muted d-block mt-0.5" style="font-size: 11.5px; line-height: 1.35;">Manage web and POS orders</small>
         </div>
         <div class="header-top-actions d-flex flex-wrap gap-1.5">
             <button type="button" class="btn btn-outline-success me-2 btn-compact shadow-xs" onclick="exportOrdersData('excel')" title="Export filtered orders to Excel/CSV">
@@ -334,9 +334,9 @@
         </div>
     </div>
 
-    <!-- Status Tabs -->
+   <!-- Status Tabs -->
     <div class="orders-panel-card mb-2 p-1.5">
-        <div class="status-tabs-scroll-wrap">
+        <div class="status-tabs-scroll-wrap" style="overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
             <div class="d-inline-flex gap-1 align-items-center" id="statusTabsWrapper">
                 <button type="button" class="btn btn-compact status-tab {{ empty(request('status')) ? 'active-tab fw-bold' : '' }}" data-status="">
                     All Orders (<span id="count-tab-all" class="bn-digit">{{ $counts['all'] ?? 0 }}</span>)
@@ -374,7 +374,6 @@
             </div>
         </div>
     </div>
-
     <!-- Multi-Dimensional Advanced Filter Toolbar -->
     <div class="orders-panel-card mb-2 p-2">
         <div class="row g-1.5 align-items-center">

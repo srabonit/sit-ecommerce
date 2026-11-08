@@ -17,7 +17,7 @@ class RbacDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. System module definitions theke module list load kora
+        // 1. System module definitions theke shokol module list load kora
         $systemModules = RolePermissionController::getSystemModules();
 
         if (Schema::hasTable('role_route_permissions')) {
@@ -36,7 +36,7 @@ class RbacDatabaseSeeder extends Seeder
                 }
                 $modulesList = array_unique($modulesList);
 
-                // A. 'admin' role-er jonno shokol module-e full CRUD (1, 1, 1, 1) access
+                // A. 'admin' role-er jonno shokol (27-ti) module-e full CRUD (1, 1, 1, 1) access
                 DB::table('role_route_permissions')->where($roleCol, 'admin')->delete();
 
                 $adminBatch = [];
@@ -65,17 +65,20 @@ class RbacDatabaseSeeder extends Seeder
                 DB::table('role_route_permissions')->where($roleCol, 'branch_manager')->delete();
 
                 $branchMatrix = [
-                    'dashboard'                => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'pos_terminal'             => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'order_management'         => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'courier_logistics'        => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'product_management'       => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'branch_hubs'              => ['c' => 0, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'media_library'            => ['c' => 1, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'accounts_ledger'          => ['c' => 1, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'reports_audit'            => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'customer_support_reviews' => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'promo_campaigns'          => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'dashboard'                         => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'pos_terminal'                      => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'order_management'                  => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'courier_logistics'                 => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'product_management'                => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'product_reviews'                   => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'inventory_management'              => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'branch_hubs'                       => ['c' => 0, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'payment_transactions_verification' => ['c' => 0, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'media_library'                     => ['c' => 1, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'accounts_ledger'                   => ['c' => 1, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'reports_audit'                     => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'customer_support_contacts'         => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'promo_campaigns'                   => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
                 ];
 
                 $branchBatch = [];
@@ -103,10 +106,11 @@ class RbacDatabaseSeeder extends Seeder
                 // C. 'staff' role-er jonno basic operations matrix
                 DB::table('role_route_permissions')->where($roleCol, 'staff')->delete();
                 $staffMatrix = [
-                    'dashboard'        => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
-                    'pos_terminal'     => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'order_management' => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
-                    'branch_hubs'      => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'dashboard'            => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'pos_terminal'         => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'order_management'     => ['c' => 1, 'u' => 1, 'd' => 0, 'r' => 1],
+                    'inventory_management' => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
+                    'branch_hubs'          => ['c' => 0, 'u' => 0, 'd' => 0, 'r' => 1],
                 ];
 
                 $staffBatch = [];
@@ -205,8 +209,12 @@ class RbacDatabaseSeeder extends Seeder
 
         // 3. Root Super Admin user account check & unlock
         $superAdmin = DB::table('users')
-            ->where('role', 'super_admin')
-            ->orWhere('is_super_admin', true)
+            ->where(function ($q) {
+                $q->where('role', 'super_admin');
+                if (Schema::hasColumn('users', 'is_super_admin')) {
+                    $q->orWhere('is_super_admin', true);
+                }
+            })
             ->first();
 
         if (!$superAdmin) {
@@ -217,25 +225,26 @@ class RbacDatabaseSeeder extends Seeder
                 'password'          => Hash::make('admin123456'),
                 'role'              => 'super_admin',
                 'designation'       => 'Chief Executive Officer',
-                'is_super_admin'    => true,
-                'is_active'         => true,
-                'is_locked'         => false,
-                'monthly_salary'    => 0,
                 'created_at'        => now(),
                 'updated_at'        => now(),
             ];
+
+            if (Schema::hasColumn('users', 'is_super_admin')) $userData['is_super_admin'] = true;
+            if (Schema::hasColumn('users', 'is_active')) $userData['is_active'] = true;
+            if (Schema::hasColumn('users', 'is_locked')) $userData['is_locked'] = false;
+            if (Schema::hasColumn('users', 'monthly_salary')) $userData['monthly_salary'] = 0;
             if (Schema::hasColumn('users', 'status')) $userData['status'] = 'active';
             if (Schema::hasColumn('users', 'force_logout')) $userData['force_logout'] = false;
 
             DB::table('users')->insert($userData);
         } else {
-            $updateData = [
-                'is_super_admin' => true,
-                'is_active'      => true,
-                'is_locked'      => false,
-                'force_logout'   => false,
-            ];
+            $updateData = ['updated_at' => now()];
+
+            if (Schema::hasColumn('users', 'is_super_admin')) $updateData['is_super_admin'] = true;
+            if (Schema::hasColumn('users', 'is_active')) $updateData['is_active'] = true;
+            if (Schema::hasColumn('users', 'is_locked')) $updateData['is_locked'] = false;
             if (Schema::hasColumn('users', 'status')) $updateData['status'] = 'active';
+            if (Schema::hasColumn('users', 'force_logout')) $updateData['force_logout'] = false;
 
             DB::table('users')->where('id', $superAdmin->id)->update($updateData);
         }

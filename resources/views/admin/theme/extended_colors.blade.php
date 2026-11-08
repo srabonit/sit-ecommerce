@@ -257,18 +257,17 @@
     <div class="container-fluid px-2 px-md-4 py-2" id="extendedColorsRoot">
 
         <!-- Header Card -->
-        <div class="theme-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
-            <div>
-            
-                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 17px;">
-                    <i class="fas fa-swatchbook text-warning"></i>
-                    <span>Advance Colors</span>
-                </h5>
-                <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
-                    Customize colors for dashboard, emails, cart, checkout, receipts & hovers.
-                </small>
-            </div>
-        </div>
+        <div class="theme-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 bg-white p-3 border rounded-3 shadow-xs">
+    <div class="min-w-0">
+        <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2 text-nowrap" style="font-size: 16px;">
+            <i class="fas fa-swatchbook text-warning"></i>
+            <span>Advance Colors</span>
+        </h5>
+        <small class="text-secondary d-block mt-0 text-nowrap" style="font-size: 11.5px; line-height: 1.35;">
+            Customize colors for dashboard, emails, cart &amp; checkout.
+        </small>
+    </div>
+</div>
 
         @if(session('success'))
             <div class="alert alert-success border-0 shadow-xs py-2 px-3 mb-2 small d-flex align-items-center justify-content-between" style="border-radius: 5px;">
@@ -310,7 +309,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-user-circle text-primary"></i>
                                 <span>1. User Dashboard Suite Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">Dashboard, Orders, Addresses, Wishlist, Coupons, Profile &amp; Support</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="true">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -464,7 +462,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-envelope-open-text text-danger"></i>
                                 <span>2. Email Templates, Notifications &amp; Unsubscribe Preferences</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">Order Placed, Digital Delivery, Dynamic Forms &amp; Unsubscribe Pages</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -596,7 +593,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-shopping-basket text-primary"></i>
                                 <span>3. Shopping Cart &amp; Cart Drawer Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">cart.blade, cart_drawer_body &amp; cart_drawer_items</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -869,7 +865,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-credit-card text-success"></i>
                                 <span>4. Checkout Page Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">checkout.blade.php</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -1050,9 +1045,7 @@
                         <div class="theme-section-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapseExtToken" aria-expanded="false">
                             <div class="section-title-text">
                                 <i class="fas fa-receipt text-info"></i>
-                                <span>5. Order Confirmation &amp; Thermal Receipt Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">order-confirmation.blade.php</span>
-                            </div>
+                                <span>5. Order Confirmation &amp; Thermal Receipt Colors</span>                            </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
                             </button>
@@ -1202,8 +1195,7 @@
                         <div class="theme-section-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapseExtComponents" aria-expanded="false">
                             <div class="section-title-text">
                                 <i class="fas fa-cubes text-secondary"></i>
-                                <span>6. Category Card, Section Header &amp; Widget Area Components</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">category-card, section-header &amp; widget-area</span>
+                                <span>6. Category Card, Section Header &amp; Widget</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -1314,8 +1306,7 @@
                         <div class="theme-section-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapseExtAuth" aria-expanded="false">
                             <div class="section-title-text">
                                 <i class="fas fa-user-lock text-danger"></i>
-                                <span>7. Authentication &amp; Error Pages Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">login, register, reset, 404, 429, 500 &amp; minimal</span>
+                                <span>7. Login &amp; Error Pages Colors</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -1456,8 +1447,7 @@
                         <div class="theme-section-header d-flex justify-content-between align-items-center" data-bs-toggle="collapse" data-bs-target="#collapseExtHovers" aria-expanded="false">
                             <div class="section-title-text">
                                 <i class="fas fa-hand-pointer text-warning"></i>
-                                <span>8. Product Details, Quick View, WhatsApp &amp; Footer Social Hover Controls</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2" style="font-size: 10px;">Buy Now, Add to Cart, WhatsApp Brand Green &amp; Social Icons</span>
+                                <span>8. Product Details, Quick View, WhatsApp &amp; Footer Social</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>

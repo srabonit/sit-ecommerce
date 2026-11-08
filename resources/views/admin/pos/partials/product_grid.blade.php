@@ -1,32 +1,27 @@
+@php
+    $svgPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'><rect fill='%23f1f5f9' width='150' height='150'/><text fill='%2394a3b8' font-family='sans-serif' font-size='12' dy='4' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'>No Image</text></svg>";
+@endphp
+
 @forelse($products as $p)
     @php
         $imgUrl = '';
-        if (!empty($p->thumbnail)) {
-            $t = ltrim($p->thumbnail, '/');
+        $rawThumb = $p->thumbnail ?? ($p->image ?? '');
+        if (!empty($rawThumb)) {
+            $t = ltrim(str_replace('\\', '/', $rawThumb), '/');
             if (str_starts_with($t, 'http://') || str_starts_with($t, 'https://')) {
                 $imgUrl = $t;
-            } elseif (str_starts_with($t, 'uploads/')) {
-                $imgUrl = asset($t);
-            } elseif (str_starts_with($t, 'storage/')) {
-                $imgUrl = asset($t);
-            } elseif (file_exists(public_path('uploads/' . $t))) {
-                $imgUrl = asset('uploads/' . $t);
-            } elseif (file_exists(public_path($t))) {
-                $imgUrl = asset($t);
-            } elseif (file_exists(public_path('storage/' . $t))) {
-                $imgUrl = asset('storage/' . $t);
             } else {
-                $imgUrl = asset('uploads/' . $t);
+                // লোকালহোস্ট এবং লাইভ সার্ভার উভয়ের জন্য ডায়নামিক রুট সিঙ্ক
+                $imgUrl = url('thumb/' . $t . '?w=150&h=150');
             }
         }
         $finalPrice = (float) (!empty($p->sale_price) && $p->sale_price > 0 ? $p->sale_price : $p->regular_price);
         
-        // Controller থেকে attach করা ভ্যারিয়েন্ট ব্যবহার করা (ট্যাক্স রেট সহ)
-        $variants = !empty($p->variants) ? $p->variants : (
-            \Illuminate\Support\Facades\Schema::hasTable('product_variants') 
-                ? \Illuminate\Support\Facades\DB::table('product_variants')->where('product_id', $p->id)->get() 
-                : collect()
-        );
+        // Controller থেকে attach করা eager-loaded ভ্যারিয়েন্ট ব্যবহার করা
+        $variants = $p->relationLoaded('variants') 
+            ? $p->variants 
+            : (!empty($p->variants) ? $p->variants : collect());
+            
         $hasVariants = $variants->count() > 0;
         $branchStock = (int) ($p->branch_stock ?? 0);
 
@@ -37,7 +32,8 @@
         $pTaxInclusive = !empty($p->is_tax_inclusive);
 
         // Safe title string for JavaScript functions
-        $safeTitleJs = addslashes(str_replace(["\r", "\n"], '', $p->title));
+        $pTitle = $p->title ?? ($p->name ?? 'Product');
+        $safeTitleJs = addslashes(str_replace(["\r", "\n"], '', $pTitle));
     @endphp
     <div class="col-6 col-sm-6 col-md-4 col-xl-3 mb-2">
         <div class="card border shadow-xs rounded-1 p-2 bg-white d-flex flex-column justify-content-between h-100" 
@@ -48,12 +44,12 @@
              data-tax-fixed="{{ $pTaxFixed }}"
              data-is-inclusive="{{ $pTaxInclusive ? '1' : '0' }}">
             <div>
-                <!-- ইমেজ বক্স -->
+                <!-- ইমেজ বক্স (অন-দ্য-ফ্লাই থাম্বনেইল ও লাইভ/লোকাল সিঙ্কড ফলব্যাক) -->
                 <div class="rounded-1 overflow-hidden bg-light mb-2 border position-relative d-flex align-items-center justify-content-center" style="height: 120px; width: 100%;">
                     @if(!empty($imgUrl))
-                        <img src="{{ $imgUrl }}" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null; this.src='https://placehold.co/150x150?text=No+Image';">
+                        <img src="{{ $imgUrl }}" class="w-100 h-100 object-fit-cover" loading="lazy" onerror="this.onerror=null; this.src='{{ $svgPlaceholder }}';">
                     @else
-                        <img src="https://placehold.co/150x150?text=No+Image" class="w-100 h-100 object-fit-cover">
+                        <img src="{{ $svgPlaceholder }}" class="w-100 h-100 object-fit-cover" loading="lazy">
                     @endif
 
                     @if($hasVariants)
@@ -64,7 +60,7 @@
                 </div>
 
                 <!-- টাইটেল ও প্রাইস -->
-                <h6 class="fw-semibold text-dark text-truncate small mb-1" title="{{ $p->title }}" style="font-size: 12px; line-height: 1.2;">{{ $p->title }}</h6>
+                <h6 class="fw-semibold text-dark text-truncate small mb-1" title="{{ $pTitle }}" style="font-size: 12px; line-height: 1.2;">{{ $pTitle }}</h6>
                 
                 <div class="d-flex justify-content-between align-items-center mb-1.5">
                     <span class="fw-bold text-primary small font-monospace bn-digit" id="gridPrice{{ $p->id }}">{{ number_format($finalPrice, 2) }} ৳</span>
@@ -104,7 +100,7 @@
                                         data-price="{{ $vPrice }}" 
                                         data-stock="{{ $vStock }}"
                                         data-code="{{ e($vCode) }}"
-                                        data-title="{{ e($p->title . ' (' . $vLabel . ')') }}"
+                                        data-title="{{ e($pTitle . ' (' . $vLabel . ')') }}"
                                         data-tax-rate="{{ $vTaxRate !== null ? $vTaxRate : '' }}"
                                         data-tax-type="{{ $vTaxType }}"
                                         data-tax-fixed="{{ $vTaxFixed }}"
@@ -118,7 +114,7 @@
             </div>
 
             <div class="mt-auto">
-                <!-- কোয়ান্টিটি ইনপুট -->
+                <!-- কোয়ান্টিটি ইনপুট -->
                 <div class="input-group input-group-sm mb-2 border rounded-1 overflow-hidden" style="height: 28px;">
                     <span class="input-group-text bg-primary text-white border-0 py-0 px-2 fw-semibold" style="font-size: 11px;">Quantity</span>
                     <input type="number" id="gridQty{{ $p->id }}" class="form-control form-control-sm text-center border-0 p-0 fw-bold font-monospace bn-digit" value="1" min="1" max="{{ $branchStock > 0 ? $branchStock : 9999 }}">

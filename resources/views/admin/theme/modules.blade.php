@@ -1,12 +1,34 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Theme Modules & Features - ' . config('app.name'))
 
 @section('admin_content')
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       THEME MODULES — MODERN ADMIN DESIGN SYSTEM
+       Scoped styles | Bootstrap compatible | 5px radius
+    ========================================================= */
+    #themeModulesRoot,
+    .modules-modal-scope {
+        --tm-primary: var(--bs-primary, #2563eb);
+        --tm-primary-rgb: var(--bs-primary-rgb, 37, 99, 235);
+        --tm-success: var(--bs-success, #16a34a);
+        --tm-border: var(--bs-border-color, #e2e8f0);
+        --tm-muted: var(--bs-secondary-color, #64748b);
+        --tm-surface: var(--bs-body-bg, #ffffff);
+        --tm-soft: var(--bs-tertiary-bg, #f8fafc);
+        --tm-radius: 5px;
+        --tm-shadow: 0 1px 3px rgba(15, 23, 42, .045);
+        color: var(--bs-body-color, #334155);
+    }
+
+    #themeModulesRoot *,
+    .modules-modal-scope * {
+        box-sizing: border-box;
+    }
+
     #themeModulesRoot .btn,
-    #themeModulesRoot .btn-sm,
     #themeModulesRoot button,
     #themeModulesRoot .badge,
     #themeModulesRoot .alert,
@@ -19,461 +41,971 @@
     .modules-modal-scope .modal-content,
     .modules-modal-scope .btn,
     .modules-modal-scope .badge {
-        border-radius: 5px !important;
+        border-radius: var(--tm-radius) !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
+    #themeModulesRoot .bn-digit,
+    #themeModulesRoot .font-monospace {
         font-weight: 700 !important;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
+    #themeModulesRoot .btn-compact {
+        min-height: 32px;
+        padding: 6px 13px !important;
         font-size: 11.5px !important;
-        padding: 5px 14px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, border-color .15s ease,
+                    color .15s ease, box-shadow .15s ease;
     }
 
-    /* Enterprise Surface Header Card */
-    .modules-header-card {
-        background: #0f172a;
-        color: #ffffff;
-        padding: 14px 18px;
-        border: 1px solid #1e293b;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-        margin-bottom: 14px;
+    #themeModulesRoot .btn:focus-visible,
+    #themeModulesRoot button:focus-visible,
+    #themeModulesRoot input:focus-visible,
+    .modules-modal-scope .btn:focus-visible {
+        outline: 2px solid rgba(var(--tm-primary-rgb), .4);
+        outline-offset: 2px;
+        box-shadow: none;
     }
 
-    /* Section Card */
-    .module-section-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 14px;
+    /* Header */
+    #themeModulesRoot .modules-header-card {
+        position: relative;
         overflow: hidden;
+        background: #111c32;
+        color: #fff;
+        padding: 16px 18px;
+        border: 1px solid #26354e;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, .08);
+        margin-bottom: 14px;
     }
-    .module-section-header {
-        padding: 10px 14px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+
+    #themeModulesRoot .modules-header-card::after {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        right: 9%;
+        top: -125px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .035);
+        pointer-events: none;
     }
-    .section-title-text {
-        font-size: 12.5px;
+
+    #themeModulesRoot .header-content,
+    #themeModulesRoot .header-actions {
+        position: relative;
+        z-index: 1;
+    }
+
+    #themeModulesRoot .header-eyebrow {
+        font-size: 9px;
+        letter-spacing: .55px;
         font-weight: 700;
-        color: #1e293b;
+    }
+
+    #themeModulesRoot .header-title {
+        font-size: 17px;
+        line-height: 1.4;
+        font-weight: 750;
+        letter-spacing: -.25px;
+    }
+
+    #themeModulesRoot .header-description {
+        max-width: 590px;
+        font-size: 11.5px;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, .65);
+    }
+
+    #themeModulesRoot .header-actions .btn-outline-light {
+        border-color: rgba(255, 255, 255, .3);
+        color: #fff;
+    }
+
+    #themeModulesRoot .header-actions .btn-outline-light:hover {
+        background: rgba(255, 255, 255, .1);
+        border-color: rgba(255, 255, 255, .65);
+    }
+
+    /* KPI Cards */
+    #themeModulesRoot .status-kpi-pill {
+        min-height: 68px;
+        height: 100%;
         display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 11px 14px;
+        background: var(--tm-surface);
+        border: 1px solid var(--tm-border);
+        box-shadow: var(--tm-shadow);
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #themeModulesRoot .status-kpi-pill:hover {
+        border-color: rgba(var(--tm-primary-rgb), .35);
+        box-shadow: 0 3px 10px rgba(15, 23, 42, .045);
+    }
+
+    #themeModulesRoot .kpi-label {
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--tm-muted);
+        margin-bottom: 3px;
+    }
+
+    #themeModulesRoot .kpi-value {
+        font-size: 13px;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    #themeModulesRoot .kpi-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 15px;
+    }
+
+    /* Section Cards */
+    #themeModulesRoot .module-section-card {
+        background: var(--tm-surface);
+        border: 1px solid var(--tm-border);
+        box-shadow: var(--tm-shadow);
+        margin-bottom: 13px;
+        overflow: hidden;
+    }
+
+    #themeModulesRoot .module-section-header {
+        min-height: 47px;
+        padding: 9px 13px;
+        background: var(--tm-soft);
+        border-bottom: 1px solid var(--tm-border);
+        gap: 10px;
+    }
+
+    #themeModulesRoot .section-title-text {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--bs-emphasis-color, #1e293b);
+        font-size: 12.5px;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    #themeModulesRoot .section-title-icon {
+        width: 27px;
+        height: 27px;
+        border-radius: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(var(--tm-primary-rgb), .09);
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+
+    #themeModulesRoot .section-category-badge {
+        font-size: 8.5px;
+        font-weight: 750;
+        letter-spacing: .3px;
+        padding: 5px 7px;
+        white-space: nowrap;
+    }
+
+    /* Collapse Button */
+    #themeModulesRoot .collapse-toggle-btn {
+        width: 26px;
+        height: 26px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        flex-shrink: 0;
+        background: var(--tm-surface);
+        border: 1px solid var(--tm-border);
+        color: var(--tm-muted);
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #themeModulesRoot .collapse-toggle-btn:hover {
+        background: var(--tm-primary);
+        border-color: var(--tm-primary);
+        color: #fff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #themeModulesRoot .collapse-icon {
+        font-size: 10px;
+        transition: transform .2s ease;
+    }
+
+    #themeModulesRoot .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
+
+    /* Module Grid Area */
+    #themeModulesRoot .module-section-body {
+        padding: 14px;
+        background: var(--bs-tertiary-bg, #f8fafc);
+        background: color-mix(in srgb, var(--tm-soft) 65%, transparent);
     }
 
-    /* Symmetric Mini KPI Pill */
-    .status-kpi-pill {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 10px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+    #themeModulesRoot .module-item-box {
+        min-height: 132px;
         height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-    }
-
-    /* Module Item Box */
-    .module-item-box {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 12px 14px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
-        transition: all 0.15s ease;
-    }
-    .module-item-box:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        padding: 13px 14px;
+        background: var(--tm-surface);
+        border: 1px solid var(--tm-border);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .025);
+        transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
-    .module-icon-badge {
-        width: 34px;
-        height: 34px;
+    #themeModulesRoot .module-item-box:hover {
+        border-color: rgba(var(--tm-primary-rgb), .4);
+        box-shadow: 0 4px 13px rgba(15, 23, 42, .055);
+        transform: translateY(-1px);
+    }
+
+    #themeModulesRoot .module-item-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 13px;
+    }
+
+    #themeModulesRoot .module-icon-badge {
+        width: 35px;
+        height: 35px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
-        border-radius: 5px !important;
         flex-shrink: 0;
+        border-radius: 5px !important;
+        font-size: 14px;
     }
 
-    /* Enhanced Toggle Switches */
-    .form-switch .form-check-input {
+    #themeModulesRoot .module-name {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--bs-emphasis-color, #1e293b);
+        font-size: 12.5px;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    #themeModulesRoot .module-description {
+        display: block;
+        color: var(--tm-muted);
+        font-size: 10.5px;
+        font-weight: 400;
+        line-height: 1.55;
+    }
+
+    /* Toggle Switch */
+    #themeModulesRoot .module-switch {
+        margin: 0;
+        padding: 0;
+        min-height: auto;
+    }
+
+    #themeModulesRoot .module-switch .form-check-input {
+        float: none;
         width: 36px;
-        height: 18px;
+        height: 19px;
+        margin: 0;
         cursor: pointer;
-        border-color: #cbd5e1;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
-    }
-    .form-switch .form-check-input:checked {
-        background-color: #2563eb;
-        border-color: #2563eb;
+        border: 1px solid #cbd5e1;
+        background-color: #e2e8f0;
+        box-shadow: none;
+        transition: background-color .15s ease, border-color .15s ease;
     }
 
-    /* Mobile Responsive (< 768px) */
-    @media (max-width: 767.98px) {
-        .modules-header-card { padding: 12px 14px !important; }
-        .header-top-wrap {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 8px !important;
+    #themeModulesRoot .module-switch .form-check-input:checked {
+        background-color: var(--tm-primary);
+        border-color: var(--tm-primary);
+    }
+
+    #themeModulesRoot .module-switch .form-check-input:focus {
+        border-color: var(--tm-primary);
+        box-shadow: 0 0 0 3px rgba(var(--tm-primary-rgb), .13);
+    }
+
+    /* Bottom Action */
+    #themeModulesRoot .modules-bottom-actions {
+        padding: 2px 0 16px;
+    }
+
+    #themeModulesRoot .modules-bottom-actions .btn {
+        min-height: 36px;
+        font-size: 12px !important;
+        padding: 7px 20px !important;
+    }
+
+    /* Success Alert */
+    #themeModulesRoot .alert {
+        border: 1px solid rgba(25, 135, 84, .15) !important;
+        background: rgba(25, 135, 84, .075);
+    }
+
+    /* Notice Modal */
+    .modules-modal-scope .modal-content {
+        border: 1px solid var(--tm-border);
+        box-shadow: 0 15px 45px rgba(15, 23, 42, .17);
+    }
+
+    .modules-modal-scope .modal-body {
+        padding: 10px 8px !important;
+    }
+
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #themeModulesRoot .module-item-box {
+            min-height: 138px;
         }
-        .top-action-btns {
-            width: 100%;
-            display: grid;
+    }
+
+    /* Mobile */
+    @media (max-width: 767.98px) {
+        #themeModulesRoot {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        #themeModulesRoot .modules-header-card {
+            padding: 13px 14px !important;
+        }
+
+        #themeModulesRoot .header-top-wrap {
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+
+        #themeModulesRoot .header-title {
+            font-size: 15px;
+        }
+
+        #themeModulesRoot .header-description {
+            font-size: 11px;
+        }
+
+        #themeModulesRoot .header-actions {
+            display: grid !important;
             grid-template-columns: 1fr 1fr;
+            gap: 7px !important;
+            width: 100%;
+        }
+
+        #themeModulesRoot .header-actions .btn {
+            width: 100%;
+            min-width: 0;
+            padding-left: 7px !important;
+            padding-right: 7px !important;
+            font-size: 10.5px !important;
+        }
+
+        #themeModulesRoot .status-kpi-pill {
+            min-height: 62px;
+            padding: 9px 11px;
+        }
+
+        #themeModulesRoot .kpi-value {
+            font-size: 12px;
+        }
+
+        #themeModulesRoot .module-section-header {
+            padding: 9px 10px;
+        }
+
+        #themeModulesRoot .section-title-text {
+            font-size: 11.5px;
             gap: 6px;
         }
-        .top-action-btns .btn {
+
+        #themeModulesRoot .section-category-badge {
+            display: none;
+        }
+
+        #themeModulesRoot .module-section-body {
+            padding: 10px;
+        }
+
+        #themeModulesRoot .module-item-box {
+            min-height: 122px;
+            padding: 12px;
+        }
+
+        #themeModulesRoot .module-item-top {
+            margin-bottom: 10px;
+        }
+
+        #themeModulesRoot .modules-bottom-actions .btn {
             width: 100%;
-            justify-content: center;
+        }
+    }
+
+    @media (max-width: 359.98px) {
+        #themeModulesRoot .header-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #themeModulesRoot *,
+        .modules-modal-scope * {
+            transition: none !important;
+            animation: none !important;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-2" id="themeModulesRoot">
 
-    <!-- 1. Header & Quick Controls -->
-    <div class="modules-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 9px;">
+    {{-- Header & Quick Actions --}}
+    <div class="modules-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 header-top-wrap">
+
+        <div class="header-content">
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle header-eyebrow">
                     <i class="fas fa-cubes me-1"></i> STOREFRONT FEATURES
                 </span>
-                <span class="badge bg-light text-white-50 border border-secondary font-monospace" style="font-size: 9px;">
+                <span class="badge bg-light bg-opacity-10 text-white-50 border border-secondary header-eyebrow">
                     6 CORE MODULES
                 </span>
             </div>
-            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 17px;">
+
+            <h5 class="header-title mb-0 d-flex align-items-center gap-2">
                 <i class="fas fa-toggle-on text-primary"></i>
                 <span>Theme Modules &amp; Feature Toggles</span>
             </h5>
-            <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
+
+            <p class="header-description mb-0 mt-1">
                 Enable or disable essential e-commerce modules, checkout options, live search and purchase policies.
-            </small>
+            </p>
         </div>
 
-        <div class="top-action-btns d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-compact text-white border-white-50 shadow-xs" onclick="toggleAllModuleSections()">
-                <i class="fas fa-arrows-up-down me-1"></i>
+        <div class="header-actions d-flex align-items-center gap-2">
+            <button type="button"
+                    class="btn btn-outline-light btn-compact"
+                    onclick="toggleAllModuleSections()">
+                <i class="fas fa-arrows-up-down"></i>
                 <span id="expandAllModulesBtnText">Collapse All</span>
             </button>
-            <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" onclick="document.getElementById('themeModulesForm').submit()">
-                <i class="fas fa-check-circle me-1"></i>
-                <span>Save Module Settings</span>
+
+            <button type="submit"
+                    form="themeModulesForm"
+                    class="btn btn-primary btn-compact fw-bold px-3">
+                <i class="fas fa-check-circle"></i>
+                <span>Save Settings</span>
             </button>
         </div>
     </div>
 
-    <!-- 2. Status Summary KPI Row -->
+    {{-- Calculate Module Status --}}
     @php
         $activeCount = 0;
-        $modulesKeys = ['module_ajax_cart_drawer', 'module_buy_now_btn', 'module_quick_view', 'module_ajax_search', 'module_instant_checkout', 'module_allow_stockout_orders'];
-        foreach($modulesKeys as $k) {
-            if (($settings[$k] ?? '1') == '1') $activeCount++;
+        $modulesKeys = [
+            'module_ajax_cart_drawer',
+            'module_buy_now_btn',
+            'module_quick_view',
+            'module_ajax_search',
+            'module_instant_checkout',
+            'module_allow_stockout_orders'
+        ];
+
+        foreach ($modulesKeys as $k) {
+            if (($settings[$k] ?? '1') == '1') {
+                $activeCount++;
+            }
         }
+
         $disabledCount = count($modulesKeys) - $activeCount;
     @endphp
 
+    {{-- Status Summary --}}
     <div class="row g-2 mb-3">
+
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Active Features</small>
-                    <strong class="text-success d-block font-monospace bn-digit" style="font-size: 13px;">{{ $activeCount }} Modules Active</strong>
+                    <div class="kpi-label">Active Features</div>
+                    <strong class="kpi-value text-success d-block font-monospace bn-digit">
+                        {{ $activeCount }} Modules Active
+                    </strong>
                 </div>
-                <div class="text-success fs-5"><i class="fas fa-circle-check"></i></div>
+                <div class="kpi-icon bg-success-subtle text-success">
+                    <i class="fas fa-circle-check"></i>
+                </div>
             </div>
         </div>
+
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Disabled Features</small>
-                    <strong class="text-secondary d-block font-monospace bn-digit" style="font-size: 13px;">{{ $disabledCount }} Modules Off</strong>
+                    <div class="kpi-label">Disabled Features</div>
+                    <strong class="kpi-value text-secondary d-block font-monospace bn-digit">
+                        {{ $disabledCount }} Modules Off
+                    </strong>
                 </div>
-                <div class="text-secondary fs-5"><i class="fas fa-circle-pause"></i></div>
+                <div class="kpi-icon bg-secondary-subtle text-secondary">
+                    <i class="fas fa-circle-pause"></i>
+                </div>
             </div>
         </div>
+
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">System Sync</small>
-                    <strong class="text-primary d-block" style="font-size: 13px;">Real-Time Storefront</strong>
+                    <div class="kpi-label">System Sync</div>
+                    <strong class="kpi-value text-primary d-block">
+                        Real-Time Storefront
+                    </strong>
                 </div>
-                <div class="text-primary fs-5"><i class="fas fa-arrows-rotate"></i></div>
+                <div class="kpi-icon bg-primary-subtle text-primary">
+                    <i class="fas fa-arrows-rotate"></i>
+                </div>
             </div>
         </div>
+
     </div>
 
+    {{-- Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success border-0 shadow-xs py-2 px-3 mb-2 small d-flex align-items-center justify-content-between" style="border-radius: 5px;">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-check-circle text-success"></i>
-                <span class="fw-semibold text-dark">{{ session('success') }}</span>
+        <div class="alert alert-success shadow-none py-2 px-3 mb-3 d-flex align-items-center justify-content-between gap-2"
+             role="alert">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <i class="fas fa-circle-check text-success"></i>
+                <span class="fw-semibold text-dark small">
+                    {{ session('success') }}
+                </span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+            <button type="button"
+                    class="btn-close shadow-none flex-shrink-0"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     @endif
 
-    <form action="{{ route('admin.theme.setting.modules.update') }}" method="POST" id="themeModulesForm">
+    <form action="{{ route('admin.theme.setting.modules.update') }}"
+          method="POST"
+          id="themeModulesForm">
         @csrf
 
-        <!-- Section 1: Cart, Checkout & Conversion Modules (COLLAPSIBLE) -->
+        {{-- Section 1: Cart & Checkout --}}
         <div class="module-section-card">
+
             <div class="module-section-header d-flex justify-content-between align-items-center">
+
                 <div class="section-title-text">
-                    <i class="fas fa-shopping-bag text-primary"></i>
+                    <span class="section-title-icon text-primary">
+                        <i class="fas fa-shopping-bag"></i>
+                    </span>
                     <span>Cart, Checkout &amp; Conversion Modules</span>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 8.5px;">PURCHASE FLOW</span>
-                    <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseCartModules" aria-expanded="true" aria-controls="collapseCartModules" title="Toggle Section">
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle section-category-badge">
+                        PURCHASE FLOW
+                    </span>
+
+                    <button type="button"
+                            class="collapse-toggle-btn"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseCartModules"
+                            aria-expanded="true"
+                            aria-controls="collapseCartModules"
+                            title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
                 </div>
+
             </div>
 
             <div class="collapse show" id="collapseCartModules">
-                <div class="p-3 bg-light bg-opacity-25">
+                <div class="module-section-body">
                     <div class="row g-2 g-md-3">
-                        <!-- 1. Ajax Floating Cart Drawer -->
+
+                        {{-- Ajax Floating Cart Drawer --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-primary-subtle text-primary">
                                         <i class="fas fa-shopping-bag"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_ajax_cart_drawer" value="1" {{ ($settings['module_ajax_cart_drawer'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_ajax_cart_drawer"
+                                               value="1"
+                                               aria-label="Enable Ajax Floating Cart Drawer"
+                                               {{ ($settings['module_ajax_cart_drawer'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Ajax Floating Cart Drawer</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Ajax Floating Cart Drawer</strong>
+                                    <small class="module-description">
                                         Opens slide-out cart drawer smoothly upon adding products without reloading.
                                     </small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. Buy Now Button -->
+                        {{-- Buy Now Button --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-success-subtle text-success">
                                         <i class="fas fa-bolt"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_buy_now_btn" value="1" {{ ($settings['module_buy_now_btn'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_buy_now_btn"
+                                               value="1"
+                                               aria-label="Enable Buy Now Button"
+                                               {{ ($settings['module_buy_now_btn'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Buy Now / Instant Order</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Buy Now / Instant Order</strong>
+                                    <small class="module-description">
                                         Enables direct 1-click purchase button on product cards bypassing cart page.
                                     </small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 3. Instant Checkout Modal -->
+                        {{-- Instant Checkout --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-danger-subtle text-danger">
                                         <i class="fas fa-cash-register"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_instant_checkout" value="1" {{ ($settings['module_instant_checkout'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_instant_checkout"
+                                               value="1"
+                                               aria-label="Enable Instant Checkout"
+                                               {{ ($settings['module_instant_checkout'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Instant Checkout Option</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Instant Checkout Option</strong>
+                                    <small class="module-description">
                                         Renders express checkout modal window directly on storefront.
                                     </small>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Section 2: Discovery, Preview & Inventory Policy Modules (COLLAPSIBLE) -->
+        {{-- Section 2: Discovery & Inventory --}}
         <div class="module-section-card">
+
             <div class="module-section-header d-flex justify-content-between align-items-center">
+
                 <div class="section-title-text">
-                    <i class="fas fa-search text-warning"></i>
+                    <span class="section-title-icon text-warning">
+                        <i class="fas fa-search"></i>
+                    </span>
                     <span>Discovery, Preview &amp; Inventory Policy</span>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle font-monospace text-uppercase" style="font-size: 8.5px;">CATALOG RULES</span>
-                    <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseDiscoveryModules" aria-expanded="true" aria-controls="collapseDiscoveryModules" title="Toggle Section">
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle section-category-badge">
+                        CATALOG RULES
+                    </span>
+
+                    <button type="button"
+                            class="collapse-toggle-btn"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseDiscoveryModules"
+                            aria-expanded="true"
+                            aria-controls="collapseDiscoveryModules"
+                            title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
                 </div>
+
             </div>
 
             <div class="collapse show" id="collapseDiscoveryModules">
-                <div class="p-3 bg-light bg-opacity-25">
+                <div class="module-section-body">
                     <div class="row g-2 g-md-3">
-                        <!-- 4. Ajax Product Search -->
+
+                        {{-- Ajax Product Search --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-warning-subtle text-warning-emphasis">
                                         <i class="fas fa-search"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_ajax_search" value="1" {{ ($settings['module_ajax_search'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_ajax_search"
+                                               value="1"
+                                               aria-label="Enable Ajax Product Live Search"
+                                               {{ ($settings['module_ajax_search'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Ajax Product Live Search</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Ajax Product Live Search</strong>
+                                    <small class="module-description">
                                         Renders real-time live product suggestions with prices while typing in header.
                                     </small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 5. Quick View Modal -->
+                        {{-- Quick View --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-info-subtle text-info">
                                         <i class="fas fa-eye"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_quick_view" value="1" {{ ($settings['module_quick_view'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_quick_view"
+                                               value="1"
+                                               aria-label="Enable Quick View Modal"
+                                               {{ ($settings['module_quick_view'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Quick View Modal Preview</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Quick View Modal Preview</strong>
+                                    <small class="module-description">
                                         Enables interactive product details popup modal right from catalog cards.
                                     </small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 6. Allow Out of Stock Orders (Pre-Order) -->
+                        {{-- Stockout Orders --}}
                         <div class="col-12 col-md-4">
-                            <div class="module-item-box shadow-xs">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="module-item-box">
+                                <div class="module-item-top">
                                     <div class="module-icon-badge bg-secondary-subtle text-secondary">
                                         <i class="fas fa-box-open"></i>
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="module_allow_stockout_orders" value="1" {{ ($settings['module_allow_stockout_orders'] ?? '1') == '1' ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch module-switch">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="module_allow_stockout_orders"
+                                               value="1"
+                                               aria-label="Enable Stockout Orders"
+                                               {{ ($settings['module_allow_stockout_orders'] ?? '1') == '1' ? 'checked' : '' }}>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <strong class="text-dark d-block mb-1" style="font-size: 12.5px;">Allow Stockout / Pre-Orders</strong>
-                                    <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.35;">
+                                    <strong class="module-name">Allow Stockout / Pre-Orders</strong>
+                                    <small class="module-description">
                                         Permits customers to place orders even when inventory balance reaches zero.
                                     </small>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Action Bar -->
-        <div class="d-flex justify-content-end pt-2 pb-3">
-            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 35px; font-size: 12px;">
-                <i class="fas fa-check-circle me-1"></i> Save Module Settings
+        {{-- Bottom Save Action --}}
+        <div class="modules-bottom-actions d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary btn-compact fw-bold">
+                <i class="fas fa-check-circle"></i>
+                Save Module Settings
             </button>
         </div>
+
     </form>
 </div>
 
-<!-- Modal: Custom Enterprise Notice Modal -->
-<div class="modal fade modules-modal-scope" id="modulesNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 108500;">
+{{-- Custom Enterprise Notice Modal --}}
+<div class="modal fade modules-modal-scope"
+     id="modulesNoticeModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 108500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
-            <div class="modal-body p-1">
+
+            <div class="modal-body">
                 <div class="mb-2" id="modulesNoticeIconWrap">
                     <i class="fas fa-circle-check text-success fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="modulesNoticeTitle" style="font-size: 14px;">Notification</h6>
-                <p class="text-muted small mb-3" id="modulesNoticeMessage" style="font-size: 12px; line-height: 1.45;"></p>
-                <button type="button" class="btn btn-primary btn-compact px-4" data-bs-dismiss="modal">Acknowledge</button>
+
+                <h6 class="fw-bold text-dark mb-1"
+                    id="modulesNoticeTitle"
+                    style="font-size: 14px;">
+                    Notification
+                </h6>
+
+                <p class="text-muted small mb-3"
+                   id="modulesNoticeMessage"
+                   style="font-size: 12px; line-height: 1.5;"></p>
+
+                <button type="button"
+                        class="btn btn-primary btn-compact px-4"
+                        data-bs-dismiss="modal">
+                    Acknowledge
+                </button>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-// Toggle All Module Sections (Expand All / Collapse All)
-let allModuleSectionsExpanded = true;
-function toggleAllModuleSections() {
-    const collapses = document.querySelectorAll('#themeModulesRoot .module-section-card .collapse');
-    const toggleBtns = document.querySelectorAll('#themeModulesRoot .module-section-card .collapse-toggle-btn');
-    const btnText = document.getElementById('expandAllModulesBtnText');
+    // =========================================================
+    // MODULE SECTION CONTROLS
+    // Expand All / Collapse All
+    // =========================================================
 
-    allModuleSectionsExpanded = !allModuleSectionsExpanded;
+    let allModuleSectionsExpanded = true;
 
-    collapses.forEach(col => {
-        if (allModuleSectionsExpanded) {
-            bootstrap.Collapse.getOrCreateInstance(col, { toggle: false }).show();
-        } else {
-            bootstrap.Collapse.getOrCreateInstance(col, { toggle: false }).hide();
+    function toggleAllModuleSections() {
+        const root = document.getElementById('themeModulesRoot');
+
+        if (!root || typeof bootstrap === 'undefined') {
+            return;
         }
-    });
 
-    toggleBtns.forEach(btn => {
-        btn.setAttribute('aria-expanded', allModuleSectionsExpanded ? 'true' : 'false');
-    });
+        const collapses = root.querySelectorAll(
+            '.module-section-card .collapse'
+        );
 
-    if (btnText) {
-        btnText.innerText = allModuleSectionsExpanded ? 'Collapse All' : 'Expand All';
+        const toggleBtns = root.querySelectorAll(
+            '.module-section-card .collapse-toggle-btn'
+        );
+
+        const btnText = document.getElementById(
+            'expandAllModulesBtnText'
+        );
+
+        allModuleSectionsExpanded = !allModuleSectionsExpanded;
+
+        collapses.forEach(function (col) {
+            const instance = bootstrap.Collapse.getOrCreateInstance(
+                col,
+                { toggle: false }
+            );
+
+            if (allModuleSectionsExpanded) {
+                instance.show();
+            } else {
+                instance.hide();
+            }
+        });
+
+        toggleBtns.forEach(function (btn) {
+            btn.setAttribute(
+                'aria-expanded',
+                allModuleSectionsExpanded ? 'true' : 'false'
+            );
+        });
+
+        if (btnText) {
+            btnText.innerText = allModuleSectionsExpanded
+                ? 'Collapse All'
+                : 'Expand All';
+        }
     }
-}
+
+    // Keep the global button label synchronized when users
+    // individually expand or collapse a section.
+    document.addEventListener('DOMContentLoaded', function () {
+        const root = document.getElementById('themeModulesRoot');
+
+        if (!root) {
+            return;
+        }
+
+        root.querySelectorAll('.module-section-card .collapse').forEach(function (collapseEl) {
+
+            collapseEl.addEventListener('shown.bs.collapse', function () {
+                const section = collapseEl.closest('.module-section-card');
+                const toggleBtn = section?.querySelector('.collapse-toggle-btn');
+
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                }
+
+                syncModuleExpandButton();
+            });
+
+            collapseEl.addEventListener('hidden.bs.collapse', function () {
+                const section = collapseEl.closest('.module-section-card');
+                const toggleBtn = section?.querySelector('.collapse-toggle-btn');
+
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+
+                syncModuleExpandButton();
+            });
+        });
+    });
+
+    function syncModuleExpandButton() {
+        const root = document.getElementById('themeModulesRoot');
+
+        if (!root) {
+            return;
+        }
+
+        const collapses = Array.from(
+            root.querySelectorAll('.module-section-card .collapse')
+        );
+
+        const allExpanded = collapses.every(function (el) {
+            return el.classList.contains('show');
+        });
+
+        const btnText = document.getElementById('expandAllModulesBtnText');
+
+        allModuleSectionsExpanded = allExpanded;
+
+        if (btnText) {
+            btnText.innerText = allExpanded ? 'Collapse All' : 'Expand All';
+        }
+    }
 </script>
 @endsection

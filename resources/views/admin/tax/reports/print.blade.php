@@ -20,17 +20,33 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap/bootstrap.min.css') }}">
 
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: #0f172a;
-            background: #f8fafc;
-            font-size: 12px;
-            line-height: 1.45;
-            margin: 0;
-            padding: 16px;
+        :root {
+            --statement-primary: #1572e8;
+            --statement-primary-soft: #edf5ff;
+            --statement-success: #31ce36;
+            --statement-danger: #f25961;
+            --statement-dark: #1a2035;
+            --statement-muted: #6b7280;
+            --statement-border: #e6e9f0;
+            --statement-light: #f8f9fc;
+            --statement-radius: 5px;
         }
 
-        /* Strict 5px Radius Rule */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--statement-dark);
+            background: #f4f6f9;
+            font-size: 12px;
+            line-height: 1.55;
+            margin: 0;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
         .statement-wrapper,
         .statement-wrapper .card,
         .statement-wrapper .btn,
@@ -39,135 +55,294 @@
         .statement-wrapper .meta-box,
         .statement-wrapper .sign-box,
         .no-print .btn {
-            border-radius: 5px !important;
+            border-radius: var(--statement-radius) !important;
         }
 
         .statement-wrapper {
+            width: 100%;
             max-width: 1050px;
             margin: 0 auto;
-            padding: 24px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+            padding: 30px;
+            background: #fff;
+            border: 1px solid var(--statement-border);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .035);
         }
 
+        /* Action Bar */
+        .statement-action-bar {
+            max-width: 1050px;
+            margin: 0 auto 16px;
+        }
+
+        .statement-action-bar .btn {
+            min-height: 34px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 5px !important;
+            padding: 7px 13px;
+        }
+
+        /* Header */
         .statement-header {
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 16px;
-            margin-bottom: 18px;
+            border-bottom: 2px solid var(--statement-dark);
+            padding-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         .company-logo-text {
             margin: 0;
-            color: #0f172a;
-            font-size: 22px;
+            color: var(--statement-dark);
+            font-size: 23px;
             font-weight: 800;
-            letter-spacing: -0.5px;
+            letter-spacing: -.7px;
+            line-height: 1.3;
             text-transform: uppercase;
+            overflow-wrap: anywhere;
+        }
+
+        .company-contact-details {
+            color: var(--statement-muted);
+            font-size: 11px;
+            line-height: 1.9;
+            margin-top: 7px;
+        }
+
+        .company-contact-details strong {
+            color: var(--statement-dark);
+            font-weight: 700;
         }
 
         .report-title-badge {
             display: inline-block;
-            padding: 3px 8px;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            padding: 5px 9px;
+            background: var(--statement-primary-soft);
+            color: var(--statement-primary);
+            border: 1px solid #d8e8ff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .65px;
             text-transform: uppercase;
         }
 
+        .statement-report-title {
+            color: var(--statement-dark);
+            font-size: 17px;
+            font-weight: 800;
+            margin: 7px 0 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .meta-box {
+            min-width: 245px;
+            padding: 12px 14px;
+            background: var(--statement-light);
+            border: 1px solid var(--statement-border);
+        }
+
+        .meta-box .meta-line {
+            color: var(--statement-muted);
+            font-size: 10.5px;
+            line-height: 1.9;
+        }
+
+        .meta-box .meta-line strong {
+            color: var(--statement-dark);
+            font-weight: 700;
+        }
+
+        /* Summary Cards */
         .summary-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 10px 14px;
+            height: 100%;
+            padding: 13px 14px;
+            background: #fff;
+            border: 1px solid var(--statement-border);
+            border-left: 3px solid var(--statement-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .025);
+        }
+
+        .summary-card.summary-success {
+            border-left-color: var(--statement-success);
+        }
+
+        .summary-card.summary-info {
+            border-left-color: #6861ce;
+        }
+
+        .summary-card.summary-dark {
+            border-left-color: #1a2035;
+        }
+
+        .summary-label {
+            display: block;
+            color: var(--statement-muted);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .55px;
+            text-transform: uppercase;
         }
 
         .metric-value {
-            font-size: clamp(1rem, 1.8vw, 1.25rem);
-            line-height: 1.2;
+            color: var(--statement-dark);
+            font-size: clamp(15px, 1.8vw, 20px);
+            font-weight: 800;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        /* Table */
+        .statement-table-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 24px 0 10px;
+        }
+
+        .statement-table-heading h6 {
+            color: var(--statement-dark);
+            font-size: 12px;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .statement-table-heading span {
+            color: var(--statement-muted);
+            font-size: 10px;
+        }
+
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .table-statement {
             width: 100%;
+            min-width: 640px;
             margin-bottom: 20px;
             border-collapse: collapse;
-            font-size: 11.5px;
+            font-size: 10.5px;
+            color: #3b4354;
+        }
+
+        .table-statement thead {
+            display: table-header-group;
         }
 
         .table-statement th {
-            padding: 7px 10px;
-            color: #0f172a;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            font-size: 11px;
-            font-weight: 700;
+            padding: 10px 9px;
+            color: #3b4354;
+            background: #f4f5f9;
+            border: 1px solid #e1e4eb;
+            font-size: 9.5px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: .35px;
+            white-space: nowrap;
         }
 
         .table-statement td {
-            padding: 7px 10px;
-            border: 1px solid #e2e8f0;
+            padding: 9px;
+            border: 1px solid #e6e9f0;
             vertical-align: middle;
+            line-height: 1.5;
         }
 
+        .table-statement tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .table-statement tbody tr {
+            page-break-inside: avoid;
+        }
+
+        .table-statement .text-success {
+            color: #159947 !important;
+        }
+
+        .table-statement .text-danger {
+            color: #e04452 !important;
+        }
+
+        .table-statement .text-primary {
+            color: var(--statement-primary) !important;
+        }
+
+        /* Signature */
         .sign-area {
             display: flex;
             justify-content: space-between;
-            gap: 16px;
-            margin-top: 50px;
+            align-items: flex-end;
+            gap: 18px;
+            margin-top: 65px;
             page-break-inside: avoid;
         }
 
         .sign-box {
             width: 210px;
-            padding-top: 6px;
-            border-top: 1px dashed #64748b;
-            color: #475569;
-            font-size: 11px;
-            font-weight: 600;
+            padding-top: 9px;
+            border-top: 1px dashed #8991a3;
+            color: #596174;
+            font-size: 10px;
+            font-weight: 700;
             text-align: center;
         }
 
-        /* Mobile Responsive View */
+        /* Disclaimer */
+        .statement-disclaimer {
+            color: #8991a3;
+            font-size: 9.5px;
+            line-height: 1.6;
+        }
+
+        /* Mobile */
         @media (max-width: 767.98px) {
             body {
-                padding: 8px;
+                padding: 10px;
             }
 
             .statement-wrapper {
-                padding: 14px;
+                padding: 16px;
             }
 
             .statement-header > .d-flex {
                 flex-direction: column;
-                gap: 12px;
+                gap: 15px;
             }
 
             .statement-header .meta-box {
                 width: 100%;
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                padding: 10px;
+                min-width: 0;
+                text-align: left !important;
+            }
+
+            .company-logo-text {
+                font-size: 20px;
+            }
+
+            .statement-report-title {
+                font-size: 15px;
+            }
+
+            .statement-action-bar {
+                gap: 8px;
+            }
+
+            .statement-action-bar .btn {
+                flex: 1;
+                justify-content: center;
             }
 
             .sign-area {
                 flex-wrap: wrap;
                 justify-content: center;
-                gap: 24px 12px;
-                margin-top: 36px;
+                gap: 35px 12px;
+                margin-top: 45px;
             }
 
             .sign-box {
-                width: 46%;
-                font-size: 10.5px;
-            }
-
-            .table-responsive-wrapper {
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+                width: calc(50% - 8px);
+                font-size: 9px;
             }
 
             .table-statement {
@@ -175,12 +350,36 @@
             }
         }
 
-        /* Clean Print View */
+        @media (max-width: 420px) {
+            .statement-wrapper {
+                padding: 12px;
+            }
+
+            .statement-action-bar .btn {
+                font-size: 10px;
+                padding: 7px 8px;
+            }
+
+            .metric-value {
+                font-size: 14px;
+            }
+        }
+
+        /* Print */
         @media print {
+            @page {
+                size: A4 landscape;
+                margin: 12mm;
+            }
+
             body {
                 padding: 0 !important;
+                margin: 0 !important;
                 color: #000 !important;
                 background: #fff !important;
+                font-size: 10px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .statement-wrapper {
@@ -198,10 +397,45 @@
                 display: none !important;
             }
 
+            .statement-header {
+                margin-bottom: 14px;
+                padding-bottom: 12px;
+            }
+
+            .summary-card {
+                box-shadow: none !important;
+                break-inside: avoid;
+            }
+
+            .table-responsive-wrapper {
+                overflow: visible !important;
+            }
+
+            .table-statement {
+                width: 100% !important;
+                min-width: 0 !important;
+                font-size: 9px;
+            }
+
             .table-statement th {
-                background: #e2e8f0 !important;
+                background: #e9edf3 !important;
+                color: #000 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+
+            .table-statement td,
+            .table-statement th {
+                padding: 6px 7px;
+            }
+
+            .sign-area {
+                margin-top: 45px;
+                break-inside: avoid;
+            }
+
+            .statement-disclaimer {
+                margin-top: 20px !important;
             }
 
             tr {
@@ -210,61 +444,96 @@
         }
     </style>
 </head>
+
 <body>
-    <!-- Top Action Bar (Screen Only) -->
-    <div class="no-print d-flex align-items-center justify-content-between mb-3 mx-auto" style="max-width: 1050px;">
-        <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1" onclick="window.close()">
-            <i class="fas fa-arrow-left"></i> <span>Close Window</span>
+
+    <!-- Action Bar -->
+    <div class="no-print statement-action-bar d-flex align-items-center justify-content-between">
+        <button type="button"
+                class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
+                onclick="window.close()">
+            <i class="fas fa-arrow-left"></i>
+            <span>Close Window</span>
         </button>
-        <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm d-inline-flex align-items-center gap-1" onclick="window.print()">
-            <i class="fas fa-print"></i> <span>Print Statement</span>
+
+        <button type="button"
+                class="btn btn-sm btn-primary px-3 shadow-sm d-inline-flex align-items-center gap-2"
+                onclick="window.print()">
+            <i class="fas fa-print"></i>
+            <span>Print Statement</span>
         </button>
     </div>
 
-    <!-- Main Statement Sheet -->
+    <!-- Main Statement -->
     <div class="statement-wrapper">
-        <!-- Statement Header -->
+
+        <!-- Header -->
         <div class="statement-header">
             <div class="d-flex justify-content-between align-items-start gap-3">
-                <div>
+
+                <div class="flex-grow-1">
                     <h1 class="company-logo-text">{{ $siteTitle }}</h1>
-                    <div class="text-secondary small mt-1">
+
+                    <div class="company-contact-details">
                         {{ $siteAddress }}<br>
-                        Phone: {{ $sitePhone }} | Email: {{ $siteEmail }}<br>
-                        <strong>BIN:</strong> <span class="font-monospace text-dark fw-semibold">{{ $companyBin }}</span>
+                        Phone: {{ $sitePhone }}<br>
+                        Email: {{ $siteEmail }}<br>
+                        <strong>BIN:</strong>
+                        <span class="font-monospace text-dark fw-semibold">{{ $companyBin }}</span>
                     </div>
                 </div>
 
                 <div class="text-md-end meta-box">
-                    <span class="report-title-badge mb-1">NBR Audit Statement</span>
-                    <h5 class="fw-bold mb-1 text-dark fs-6">{{ ucwords(str_replace('_', ' ', $reportType)) }}</h5>
-                    <div class="text-secondary small">
-                        <strong>Period:</strong> {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}<br>
-                        <strong>Generated:</strong> {{ date('d M Y, h:i A') }}<br>
-                        <strong>Prepared By:</strong> {{ auth()->user()->name ?? 'System Administrator' }}
+                    <span class="report-title-badge">NBR Audit Statement</span>
+
+                    <h5 class="statement-report-title">
+                        {{ ucwords(str_replace('_', ' ', $reportType)) }}
+                    </h5>
+
+                    <div class="meta-line">
+                        <strong>Period:</strong>
+                        {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}
+                        -
+                        {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
+                        <br>
+
+                        <strong>Generated:</strong>
+                        {{ date('d M Y, h:i A') }}
+                        <br>
+
+                        <strong>Prepared By:</strong>
+                        {{ auth()->user()->name ?? 'System Administrator' }}
                     </div>
                 </div>
+
             </div>
         </div>
 
-        <!-- Metric Summary Strip -->
+        <!-- Summary Cards -->
         <div class="row g-2 mb-3">
+
             <div class="col-6 col-md-3">
-                <div class="summary-card h-100">
-                    <span class="text-secondary text-uppercase fw-semibold d-block text-truncate" style="font-size: 10.5px; letter-spacing: 0.5px;">Taxable Sales</span>
-                    <div class="fw-bold text-dark metric-value font-monospace text-truncate mt-1">৳{{ number_format($summary['total_taxable_amount'] ?? 0, 2) }}</div>
+                <div class="summary-card summary-dark">
+                    <span class="summary-label">Taxable Sales</span>
+                    <div class="metric-value font-monospace mt-2">
+                        ৳{{ number_format($summary['total_taxable_amount'] ?? 0, 2) }}
+                    </div>
                 </div>
             </div>
+
             <div class="col-6 col-md-3">
-                <div class="summary-card h-100">
-                    <span class="text-secondary text-uppercase fw-semibold d-block text-truncate" style="font-size: 10.5px; letter-spacing: 0.5px;">Total Tax</span>
-                    <div class="fw-bold text-success metric-value font-monospace text-truncate mt-1">৳{{ number_format($summary['total_tax_amount'] ?? 0, 2) }}</div>
+                <div class="summary-card summary-success">
+                    <span class="summary-label">Total Tax</span>
+                    <div class="metric-value font-monospace text-success mt-2">
+                        ৳{{ number_format($summary['total_tax_amount'] ?? 0, 2) }}
+                    </div>
                 </div>
             </div>
+
             <div class="col-6 col-md-3">
-                <div class="summary-card h-100">
-                    <span class="text-secondary text-uppercase fw-semibold d-block text-truncate" style="font-size: 10.5px; letter-spacing: 0.5px;">Average Rate</span>
-                    <div class="fw-bold text-primary metric-value font-monospace text-truncate mt-1">
+                <div class="summary-card summary-info">
+                    <span class="summary-label">Average Rate</span>
+                    <div class="metric-value font-monospace text-primary mt-2">
                         @php
                             $taxable = $summary['total_taxable_amount'] ?? 0;
                             $tax = $summary['total_tax_amount'] ?? 0;
@@ -274,17 +543,31 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-6 col-md-3">
-                <div class="summary-card h-100">
-                    <span class="text-secondary text-uppercase fw-semibold d-block text-truncate" style="font-size: 10.5px; letter-spacing: 0.5px;">Total Records</span>
-                    <div class="fw-bold text-dark metric-value font-monospace text-truncate mt-1">{{ number_format($summary['total_records'] ?? 0) }} Rows</div>
+                <div class="summary-card summary-dark">
+                    <span class="summary-label">Total Records</span>
+                    <div class="metric-value font-monospace mt-2">
+                        {{ number_format($summary['total_records'] ?? 0) }} Rows
+                    </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- Data Table Container -->
+        <!-- Table Heading -->
+        <div class="statement-table-heading">
+            <h6>
+                <i class="fas fa-table me-1 text-primary"></i>
+                Report Details
+            </h6>
+            <span>All amounts are in BDT (৳)</span>
+        </div>
+
+        <!-- Data Table -->
         <div class="table-responsive-wrapper">
             <table class="table-statement">
+
                 <thead>
                     @if($reportType === 'product_wise')
                         <tr>
@@ -378,6 +661,7 @@
                         </tr>
                     @endif
                 </thead>
+
                 <tbody>
                     @forelse($records as $row)
                         @if($reportType === 'product_wise')
@@ -475,10 +759,17 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center py-4 text-secondary">No records found for the selected period.</td>
+                            <td colspan="10" class="text-center py-5">
+                                <div class="text-secondary">
+                                    <i class="fas fa-file-invoice-dollar fs-2 opacity-50 mb-2 d-block"></i>
+                                    <h6 class="fw-bold text-dark mb-1">No Records Found</h6>
+                                    <p class="small mb-0">No records found for the selected period.</p>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
 
@@ -489,10 +780,12 @@
             <div class="sign-box">Authorized Officer / Tax Consultant</div>
         </div>
 
-        <!-- Legal Reference Disclaimer -->
-        <div class="text-center text-secondary small mt-4 pt-3 border-top" style="font-size: 10px;">
+        <!-- Legal Disclaimer -->
+        <div class="statement-disclaimer text-center mt-4 pt-3 border-top">
             Computer-generated statement under NBR General Order No. 05/VAT/2026.
         </div>
+
     </div>
+
 </body>
 </html>

@@ -369,29 +369,22 @@
 <div class="container-fluid px-2 px-md-4 py-3" id="heroSliderMgmtRoot">
 
     <!-- 1. Top Header Banner -->
-    <div class="slider-mgmt-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace text-uppercase" style="font-size: 9px;">
-                    <i class="fas fa-film me-1"></i> HERO CAROUSEL
-                </span>
-                <span class="badge bg-light text-white-50 border border-secondary font-monospace" style="font-size: 9px;">
-                    BANNER MANAGER
-                </span>
-            </div>
-            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-film text-primary"></i>
-                <span>Hero Sliders Settings</span>
-            </h5>
-            <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
-                Configure hero slideshow banners, text overlays, mobile aspect ratios and action buttons.
-            </small>
-        </div>
-
-        <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" data-bs-toggle="modal" data-bs-target="#addSliderModal" onclick="prepareAddSlideModal()">
-            <i class="fas fa-plus me-1"></i> <span>Add New Slide</span>
-        </button>
+   <div class="slider-mgmt-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-3 bg-white p-3 border rounded-3 shadow-xs">
+    <div class="min-w-0">
+        <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2 text-nowrap" style="font-size: 16px;">
+            <i class="fas fa-film text-primary"></i>
+            <span>Hero Sliders Settings</span>
+        </h5>
+        <small class="text-secondary d-block mt-0 text-nowrap" style="font-size: 11.5px; line-height: 1.35;">
+            Manage Slider banners, text, mobile views &amp; buttons.
+        </small>
     </div>
+
+    <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap flex-shrink-0" style="height: 34px; font-size: 11.5px;" data-bs-toggle="modal" data-bs-target="#addSliderModal" onclick="prepareAddSlideModal()">
+        <i class="fas fa-plus me-1"></i>
+        <span>Add New Slide</span>
+    </button>
+</div>
 
     <!-- 2. Status Summary KPI Row (Symmetric 3-Column Grid) -->
     @php
@@ -436,7 +429,7 @@
         <div class="slider-card-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-list text-primary"></i>
-                <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Active Hero Sliders Ledger</h6>
+                <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Active Hero Sliders</h6>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge bg-light text-dark border font-monospace bn-digit px-2 py-0.5" style="font-size: 9.5px;">
@@ -638,7 +631,7 @@
             @csrf
             <div class="modal-header bg-dark text-white py-2 px-3 d-flex justify-content-between align-items-center">
                 <h6 class="modal-title fw-bold d-flex align-items-center gap-1 mb-0" style="font-size: 13.5px;">
-                    <i class="fas fa-plus-circle text-primary"></i>
+                    <i class="fas fa-plus-circle text-primary me-1"></i>
                     <span>Add New Hero Slide</span>
                 </h6>
                 <button type="button" class="btn-close btn-close-white btn-sm shadow-none" data-bs-dismiss="modal"></button>

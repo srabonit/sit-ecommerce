@@ -37,6 +37,36 @@ class HomeController extends Controller
         return asset('storage/' . $clean);
     }
 
+    /**
+     * Schema-safe Online Storefront Scope:
+     * Hides branch-restricted and POS-only products from public website.
+     */
+    protected function applyOnlineScope($query)
+    {
+        if (Schema::hasColumn('products', 'is_active')) {
+            $query->where('products.is_active', true);
+        } elseif (Schema::hasColumn('products', 'status')) {
+            $query->where(function ($sq) {
+                $sq->where('products.status', 'active')
+                   ->orWhere('products.status', 1)
+                   ->orWhere('products.status', '1');
+            });
+        }
+
+        if (Schema::hasColumn('products', 'is_sellable_online')) {
+            $query->where('products.is_sellable_online', true);
+        }
+
+        if (Schema::hasColumn('products', 'branch_availability_mode')) {
+            $query->where(function ($bQ) {
+                $bQ->whereNull('products.branch_availability_mode')
+                   ->orWhereNotIn('products.branch_availability_mode', ['pos_only', 'branch_only']);
+            });
+        }
+
+        return $query;
+    }
+
     public function index()
     {
         // ১. ক্যাটাগরি লিস্ট (মাল্টিপল প্রোডাক্ট পিভট সহ কাউন্ট)
@@ -79,11 +109,15 @@ class HomeController extends Controller
         $enablePagination = ($themeSettings['featured_enable_pagination'] ?? '1') == '1';
         $colPc = $themeSettings['featured_grid_pc'] ?? '4';
 
-        $prodQuery = Product::with(['category', 'categories', 'brand'])
-            ->where('is_featured', 1)
-            ->orWhere(function ($q) {
-                $q->latest();
-            });
+        $prodQuery = Product::with(['category', 'categories', 'brand'])->select('products.*');
+        $this->applyOnlineScope($prodQuery);
+
+        $prodQuery->where(function ($q) {
+            $q->where('is_featured', 1)
+              ->orWhere(function ($subQ) {
+                  $subQ->latest('products.id');
+              });
+        });
 
         if ($enablePagination) {
             $featuredProducts = $prodQuery->paginate($featuredLimit, ['*'], 'featured_page')->withQueryString();
@@ -104,18 +138,22 @@ class HomeController extends Controller
             if (!empty($rawIds) && is_array($rawIds)) {
                 $intIds = array_values(array_filter(array_map('intval', $rawIds)));
                 if (!empty($intIds)) {
-                    $dealProducts = Product::with(['category', 'categories', 'brand'])
-                        ->whereIn('id', $intIds)
-                        ->get();
+                    $dealQuery = Product::with(['category', 'categories', 'brand'])
+                        ->select('products.*')
+                        ->whereIn('products.id', $intIds);
+                    $this->applyOnlineScope($dealQuery);
+                    $dealProducts = $dealQuery->get();
                 }
             }
         }
 
         if ($dealProducts->isEmpty()) {
-            $dealProducts = Product::with(['category', 'categories', 'brand'])
-                ->whereNotNull('sale_price')
-                ->where('sale_price', '>', 0)
-                ->latest()
+            $dealQuery = Product::with(['category', 'categories', 'brand'])
+                ->select('products.*')
+                ->whereNotNull('products.sale_price')
+                ->where('products.sale_price', '>', 0);
+            $this->applyOnlineScope($dealQuery);
+            $dealProducts = $dealQuery->latest('products.id')
                 ->take(5)
                 ->get();
         }
@@ -210,10 +248,10 @@ class HomeController extends Controller
 
         $hasPivot = Schema::hasTable('product_category');
         $query = Product::with(['category', 'categories', 'brand'])->select('products.*')->distinct();
+        $this->applyOnlineScope($query);
 
         if ($isChild) {
             // ১. যদি ইউজার সরাসরি কোনো Child Category পেজে থাকে:
-            // শুধু এই চাইল্ড এবং এর নিজস্ব নেস্টেড চাইল্ডদের প্রোডাক্ট দেখাবে (অন্য ভাইবোন চাইল্ড বা মূল প্যারেন্টের নিজস্ব প্রোডাক্ট আসবে না)
             $childIds = method_exists($subCategory, 'getAllDescendantIds') 
                 ? $subCategory->getAllDescendantIds() 
                 : [(int)$subCategory->id];
@@ -233,22 +271,18 @@ class HomeController extends Controller
             });
         } else {
             // ২. যদি ইউজার কোনো Main / Parent Category পেজে থাকে:
-            // এই প্যারেন্টের প্রোডাক্ট + এর অধীনস্থ সব Child ও Nested Child Category-র সমস্ত প্রোডাক্ট দেখাবে
             $parentId = (int)$category->id;
             $descendantSubIds = method_exists($category, 'getAllDescendantSubCategoryIds') 
                 ? $category->getAllDescendantSubCategoryIds() 
                 : [];
 
             $query->where(function ($q) use ($parentId, $descendantSubIds, $hasPivot) {
-                // প্যারেন্টের নিজস্ব প্রোডাক্ট
                 $q->where('products.category_id', $parentId);
 
-                // অথবা এর অধীনস্থ যেকোনো চাইল্ড বা নেস্টেড চাইল্ডের প্রোডাক্ট
                 if (!empty($descendantSubIds)) {
                     $q->orWhereIn('products.sub_category_id', $descendantSubIds);
                 }
 
-                // পিভট টেবিলেও প্যারেন্ট অথবা অধীনস্থ চাইল্ড হিসেবে থাকলে
                 if ($hasPivot) {
                     $q->orWhereExists(function ($sub) use ($parentId, $descendantSubIds) {
                         $sub->select(DB::raw(1))
@@ -320,6 +354,7 @@ class HomeController extends Controller
         $enablePagination = ($settings['featured_enable_pagination'] ?? '1') == '1';
 
         $query = Product::with(['category', 'categories', 'brand'])->select('products.*')->distinct();
+        $this->applyOnlineScope($query);
 
         if ($categoryId && $categoryId !== 'all') {
             $catId = (int)$categoryId;
@@ -350,7 +385,10 @@ class HomeController extends Controller
                 }
             });
         } else {
-            $query->where('is_featured', 1)->orWhere(fn($q) => $q->latest());
+            $query->where(function ($q) {
+                $q->where('is_featured', 1)
+                  ->orWhere(fn($sub) => $sub->latest('products.id'));
+            });
         }
 
         if ($enablePagination) {

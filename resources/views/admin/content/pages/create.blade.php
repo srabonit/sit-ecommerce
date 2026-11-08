@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Add New Page - ' . config('app.name'))
@@ -11,10 +12,32 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       ADD PAGE — KAIADMIN CLASSIC / WHITE CLASSIC
+    ========================================================= */
+
+    #pageCreateRoot {
+        --pc-primary: var(--bs-primary, #1572e8);
+        --pc-text: #1c2434;
+        --pc-muted: #6b7280;
+        --pc-border: #e6e9ef;
+        --pc-surface: #ffffff;
+        --pc-soft: #f8fafc;
+        --pc-radius: 8px;
+        --pc-shadow: 0 1px 3px rgba(20, 32, 50, 0.05);
+
+        min-width: 0;
+        color: var(--pc-text);
+        font-size: 13px;
+    }
+
+    #pageCreateRoot *,
+    #pageCreateNoticeModal * {
+        box-sizing: border-box;
+    }
+
+    /* Consistent Radius */
     #pageCreateRoot .btn,
-    #pageCreateRoot .btn-sm,
-    #pageCreateRoot .btn-xs,
     #pageCreateRoot button:not(.btn-clear-featured):not(.note-btn),
     #pageCreateRoot .form-control,
     #pageCreateRoot .form-select,
@@ -29,192 +52,520 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #pageCreateRoot .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Compact & Sleek Button Styling */
+    /* Header */
+    #pageCreateRoot > .d-flex:first-child {
+        min-width: 0;
+    }
+
+    #pageCreateRoot h5 {
+        color: var(--pc-text) !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.3px;
+    }
+
+    #pageCreateRoot > .d-flex:first-child small {
+        color: var(--pc-muted) !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+    }
+
+    /* Compact Buttons */
     #pageCreateRoot .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
+        min-height: 32px;
+        padding: 6px 12px !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        font-weight: 600 !important;
         white-space: nowrap;
+        transition: all 0.18s ease;
     }
 
-    /* Enterprise Card Surface */
-    .panel-card {
-        background: #ffffff;
-        border-radius: 8px !important;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #pageCreateRoot .btn-primary {
+        background-color: var(--pc-primary);
+        border-color: var(--pc-primary);
+    }
+
+    #pageCreateRoot .btn-primary:hover {
+        filter: brightness(0.94);
+    }
+
+    #pageCreateRoot .shadow-xs {
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    /* Validation Alert */
+    #pageCreateRoot .alert {
+        border: 1px solid #fecaca !important;
+        background: #fff7f7;
+        color: #991b1b;
+        line-height: 1.6;
+    }
+
+    #pageCreateRoot .alert ul {
+        padding-left: 20px;
+    }
+
+    /* Main Cards */
+    #pageCreateRoot .panel-card {
+        width: 100%;
+        min-width: 0;
         margin-bottom: 16px;
+        overflow: hidden;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        border-radius: var(--pc-radius) !important;
+        box-shadow: var(--pc-shadow);
     }
-    .panel-header {
-        padding: 11px 16px;
-        font-weight: 700;
-        font-size: 13px;
-        color: #1e293b;
-        border-bottom: 1px solid #e2e8f0;
+
+    #pageCreateRoot .panel-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 42px;
+        padding: 11px 15px;
+        color: #334155;
         background: #f8fafc;
-        border-radius: 7px 7px 0 0;
+        border-bottom: 1px solid var(--pc-border);
+        font-size: 12.5px;
+        font-weight: 700;
     }
-    .panel-body {
+
+    #pageCreateRoot .panel-body {
+        min-width: 0;
         padding: 16px;
     }
 
-    /* Form Controls */
+    /* Form Labels */
     #pageCreateRoot .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #475569;
         font-size: 11.5px;
         font-weight: 600;
-        color: #334155;
-        margin-bottom: 4px;
     }
+
+    /* Form Controls */
     #pageCreateRoot .form-control,
     #pageCreateRoot .form-select {
+        min-height: 34px;
+        padding: 7px 10px;
+        color: #1e293b;
+        background-color: #fff;
+        border: 1px solid #dce2ea;
         font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        color: #0f172a;
         box-shadow: none;
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    #pageCreateRoot .form-control:focus,
-    #pageCreateRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
-    }
-    #pageCreateRoot #pageTitle {
-        font-size: 14px;
-        padding: 8px 12px;
+
+    #pageCreateRoot .form-control::placeholder {
+        color: #a0a8b5;
+        opacity: 1;
     }
 
-    /* Editors */
-    .note-editor.note-frame {
+    #pageCreateRoot .form-control:focus,
+    #pageCreateRoot .form-select:focus {
+        border-color: var(--pc-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, 0.10);
+        outline: none;
+    }
+
+    #pageCreateRoot #pageTitle {
+        min-height: 42px;
+        padding: 9px 12px;
+        color: var(--pc-text);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    #pageCreateRoot .input-group-text {
+        min-height: 34px;
+        border-color: #dce2ea;
+        font-size: 11px;
+    }
+
+    #pageCreateRoot .form-select-sm,
+    #pageCreateRoot .form-control-sm {
+        min-height: 33px;
+        font-size: 12px;
+    }
+
+    #pageCreateRoot textarea.form-control {
+        min-height: auto;
+        line-height: 1.55;
+        resize: vertical;
+    }
+
+    /* Switches */
+    #pageCreateRoot .form-check-input {
+        border-color: #cbd5e1;
+        box-shadow: none;
+        cursor: pointer;
+    }
+
+    #pageCreateRoot .form-check-input:checked {
+        background-color: var(--pc-primary);
+        border-color: var(--pc-primary);
+    }
+
+    #pageCreateRoot .form-check-input:focus {
+        border-color: var(--pc-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, 0.10);
+    }
+
+    #pageCreateRoot .form-check-label {
+        color: #334155 !important;
+    }
+
+    /* Editor Toolbar */
+    #pageCreateRoot .editor-toolbar-header {
+        min-height: 48px;
+        padding: 8px 12px !important;
+        background: #f8fafc;
+    }
+
+    #pageCreateRoot .editor-mode-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #pageCreateRoot .editor-mode-group .btn {
+        min-height: 31px;
+    }
+
+    #pageCreateRoot .shortcode-btn-wrap {
+        flex-shrink: 0;
+    }
+
+    #pageCreateRoot .shortcode-btn-wrap .btn {
+        min-height: 31px;
+    }
+
+    /* Summernote */
+    #pageCreateRoot .note-editor.note-frame {
+        width: 100%;
+        margin-bottom: 0 !important;
+        overflow: hidden;
         border: 0 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
-        margin-bottom: 0 !important;
-    }
-    .note-toolbar {
-        background: #f8fafc !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        padding: 6px 10px !important;
-    }
-    .note-editable {
-        min-height: 480px !important;
-        font-size: 14px;
-        line-height: 1.65;
-        background: #ffffff;
-        color: #1e293b;
     }
 
-    .CodeMirror {
+    #pageCreateRoot .note-toolbar {
+        padding: 7px 9px !important;
+        background: #f8fafc !important;
+        border-bottom: 1px solid var(--pc-border) !important;
+    }
+
+    #pageCreateRoot .note-toolbar .note-btn {
+        border-radius: 4px !important;
+    }
+
+    #pageCreateRoot .note-editing-area {
+        min-width: 0;
+    }
+
+    #pageCreateRoot .note-editable {
+        min-height: 480px !important;
+        padding: 18px !important;
+        color: #334155;
+        background: #fff;
+        font-size: 14px;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+    }
+
+    #pageCreateRoot .note-statusbar {
+        border-top: 1px solid var(--pc-border) !important;
+    }
+
+    /* CodeMirror */
+    #pageCreateRoot .CodeMirror {
+        width: 100%;
         height: 500px !important;
         font-family: 'Fira Code', monospace !important;
-        font-size: 13px !important;
-        line-height: 1.6 !important;
+        font-size: 12px !important;
+        line-height: 1.65 !important;
         border-radius: 0 !important;
     }
-    .code-editor-area {
+
+    #pageCreateRoot .CodeMirror-scroll {
+        min-height: 100%;
+    }
+
+    #pageCreateRoot .code-editor-area {
         font-family: 'Fira Code', monospace !important;
         font-size: 12px !important;
-        background: #f8fafc !important;
         color: #1e293b !important;
-        border: 1px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+        border: 1px solid #dce2ea !important;
     }
 
-    /* SEO Google Preview Card */
-    .google-preview-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 12px;
+    /* Editor Footer */
+    #pageCreateRoot .editor-footer {
+        color: #64748b;
         background: #f8fafc;
+        border-top: 1px solid var(--pc-border);
+        font-size: 11.5px;
+        line-height: 1.5;
     }
-    .google-url { font-size: 11px; color: #475569; line-height: 1.3; }
-    .google-title { font-size: 15px; color: #1a0dab; font-weight: 600; margin-top: 2px; }
-    .google-desc { font-size: 12px; color: #4d5156; line-height: 1.4; margin-top: 3px; }
 
-    /* Media Preview Box Styling */
-    .preview-featured-box {
+    /* Sidebar Cards */
+    #pageCreateRoot .col-lg-4,
+    #pageCreateRoot .col-xl-3,
+    #pageCreateRoot .col-lg-8,
+    #pageCreateRoot .col-xl-9 {
+        min-width: 0;
+    }
+
+    #pageCreateRoot .panel-header[data-bs-toggle="collapse"] {
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.15s ease;
+    }
+
+    #pageCreateRoot .panel-header[data-bs-toggle="collapse"]:hover {
+        background: #f1f5f9;
+    }
+
+    #pageCreateRoot .panel-header[data-bs-toggle="collapse"] > i:last-child {
+        transition: transform 0.2s ease;
+    }
+
+    /* SEO Google Preview */
+    #pageCreateRoot .google-preview-card {
+        padding: 13px;
+        background: #f8fafc;
+        border: 1px solid var(--pc-border);
+        border-radius: 7px;
+    }
+
+    #pageCreateRoot .google-url {
+        color: #475569;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    #pageCreateRoot .google-title {
+        margin-top: 3px;
+        color: #1a0dab;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    #pageCreateRoot .google-desc {
+        margin-top: 4px;
+        color: #4d5156;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    /* Featured Image Preview */
+    #pageCreateRoot .preview-featured-box {
         position: relative;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
+        min-height: 100px;
+        padding: 10px;
         text-align: center;
         background: #f8fafc;
         border: 1px dashed #cbd5e1;
-        border-radius: 6px;
-        padding: 8px;
+        border-radius: 7px;
     }
-    .preview-featured-box img {
-        max-height: 130px;
+
+    #pageCreateRoot .preview-featured-box img {
+        display: block;
         max-width: 100%;
+        max-height: 160px;
         object-fit: contain;
         border-radius: 5px;
     }
-    .btn-clear-featured {
+
+    #pageCreateRoot .btn-clear-featured {
         position: absolute;
         top: 6px;
         right: 6px;
-        width: 24px;
-        height: 24px;
-        border-radius: 50% !important;
-        background: #ef4444;
-        color: #ffffff;
-        border: 2px solid #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        color: #fff;
+        background: #ef4444;
+        border: 2px solid #fff;
+        border-radius: 50% !important;
         font-size: 10px;
         cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        transition: transform 0.15s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
+        transition: transform 0.15s ease, background 0.15s ease;
     }
-    .btn-clear-featured:hover {
-        transform: scale(1.08);
+
+    #pageCreateRoot .btn-clear-featured:hover {
         background: #dc2626;
+        transform: scale(1.08);
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    /* Custom CSS / JS Fields */
+    #pageCreateRoot .code-editor-area {
+        min-height: 95px;
+        padding: 10px;
+        background: #f8fafc !important;
+        line-height: 1.6;
     }
 
-    /* Mobile Responsive Optimizations */
+    /* Monospace */
+    #pageCreateRoot .font-monospace,
+    #pageCreateRoot .bn-digit {
+        font-weight: 600 !important;
+    }
+
+    /* Notice Modal */
+    #pageCreateNoticeModal .modal-content {
+        border: 1px solid var(--pc-border, #e6e9ef);
+        border-radius: 9px !important;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, 0.16) !important;
+    }
+
+    #pageCreateNoticeModal .modal-body {
+        padding: 18px 12px !important;
+    }
+
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #pageCreateRoot .panel-body {
+            padding: 15px;
+        }
+
+        #pageCreateRoot .note-editable {
+            min-height: 400px !important;
+        }
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .header-top-actions {
+        #pageCreateRoot {
+            padding-top: 12px !important;
+        }
+
+        #pageCreateRoot > .d-flex:first-child {
+            align-items: flex-start !important;
+        }
+
+        #pageCreateRoot h5 {
+            font-size: 16px !important;
+        }
+
+        #pageCreateRoot .header-top-actions {
             width: 100%;
         }
-        .header-top-actions .btn-compact {
+
+        #pageCreateRoot .header-top-actions .btn-compact {
             width: 100%;
         }
-        .editor-toolbar-header {
+
+        #pageCreateRoot .panel-body {
+            padding: 13px;
+        }
+
+        #pageCreateRoot .editor-toolbar-header {
             flex-direction: column;
             align-items: stretch !important;
-            gap: 8px;
+            gap: 9px;
+            padding: 10px !important;
         }
-        .editor-mode-group {
+
+        #pageCreateRoot .editor-mode-group {
             display: flex;
             width: 100%;
             gap: 6px;
         }
-        .editor-mode-group .btn {
+
+        #pageCreateRoot .editor-mode-group .btn {
             flex: 1 1 0;
+            min-width: 0;
+            padding-right: 5px !important;
+            padding-left: 5px !important;
+            font-size: 10.5px !important;
         }
-        .shortcode-btn-wrap .btn {
+
+        #pageCreateRoot .shortcode-btn-wrap {
             width: 100%;
         }
-        .panel-body {
-            padding: 14px;
+
+        #pageCreateRoot .shortcode-btn-wrap .btn {
+            width: 100%;
+        }
+
+        #pageCreateRoot .note-toolbar {
+            padding: 6px !important;
+        }
+
+        #pageCreateRoot .note-editable {
+            min-height: 320px !important;
+            padding: 13px !important;
+            font-size: 13px;
+        }
+
+        #pageCreateRoot .CodeMirror {
+            height: 380px !important;
+            font-size: 11px !important;
+        }
+
+        #pageCreateRoot .google-preview-card {
+            padding: 11px;
+        }
+
+        #pageCreateRoot .panel-header {
+            padding: 11px 13px;
+        }
+
+        #pageCreateRoot .preview-featured-box img {
+            max-height: 140px;
+        }
+
+        #pageCreateRoot .row.g-3 {
+            --bs-gutter-x: 0.75rem;
+            --bs-gutter-y: 0.75rem;
+        }
+
+        #pageCreateNoticeModal .modal-dialog {
+            margin-right: 14px;
+            margin-left: 14px;
+        }
+    }
+
+    /* Small Mobile */
+    @media (max-width: 380px) {
+        #pageCreateRoot .panel-body {
+            padding: 11px;
+        }
+
+        #pageCreateRoot .editor-mode-group .btn {
+            font-size: 9.5px !important;
+        }
+
+        #pageCreateRoot .note-editable {
+            min-height: 280px !important;
+        }
+
+        #pageCreateRoot .CodeMirror {
+            height: 330px !important;
         }
     }
 </style>
@@ -300,7 +651,7 @@
 
                     <textarea name="content" id="finalContentInput" style="display: none;">{{ old('content') }}</textarea>
 
-                    <div class="py-2 px-3 bg-light border-top small text-muted" style="font-size: 11.5px;">
+                    <div class="py-2 px-3 bg-light border-top small text-muted editor-footer" style="font-size: 11.5px;">
                         <span>Write using Visual Editor or write raw HTML code in Code Editor.</span>
                     </div>
                 </div>

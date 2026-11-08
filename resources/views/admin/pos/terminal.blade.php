@@ -3,11 +3,27 @@
 @section('title', 'POS Terminal - ' . $branch->name)
 
 @section('admin_content')
-<!-- Html5-QRCode Library for Mobile / Tablet Camera Scanning -->
+@php
+    $taxSettings = $taxSettings ?? [
+        'is_vat_enabled' => true,
+        'enable_pos_vat' => true,
+        'default_vat_rate' => 0,
+        'default_calculation_type' => 'exclusive',
+        'vat_label' => 'Govt. VAT',
+        'pos_vat_display_mode' => 'itemized'
+    ];
+    $brands = $brands ?? (\Illuminate\Support\Facades\Schema::hasTable('brands') ? \App\Models\Brand::where('is_active', true)->orderBy('name')->get() : collect());
+    $categories = $categories ?? (\Illuminate\Support\Facades\Schema::hasTable('categories') ? \App\Models\Category::where('is_active', true)->orderBy('name')->get() : collect());
+    $customers = $customers ?? \App\Models\User::where('role', 'customer')->orWhere('user_type', 'customer')->take(50)->get();
+    $paymentMethods = $paymentMethods ?? ['Cash', 'bKash', 'Nagad', 'Rocket', 'Card', 'Bank Transfer'];
+    $selectableBranches = $selectableBranches ?? collect([$branch]);
+    $salesPersons = $salesPersons ?? collect();
+@endphp
+
+<!-- Html5-QRCode Library for Camera Scanning -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-    /* Global Strict 5px Element Radius */
     #posTerminalRoot .btn,
     #posTerminalRoot .btn-sm,
     #posTerminalRoot button,
@@ -36,13 +52,11 @@
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Bengali & Monospace Typography */
     .bn-digit,
     .font-monospace {
         font-weight: 700 !important;
     }
 
-    /* Compact Button Styling */
     .btn-compact {
         font-size: 11.5px !important;
         padding: 5px 12px !important;
@@ -153,17 +167,7 @@
         border-radius: 5px !important;
     }
 
-    /* Bulletproof Clean Pagination inside Grid */
-    #posProductGrid .card:has(.pagination),
-    #posProductGrid div:has(> .pagination),
-    #posProductGrid nav:has(.pagination) {
-        border-radius: 5px !important;
-        border: 1px solid #e2e8f0 !important;
-        background: #ffffff !important;
-        padding: 10px 8px !important;
-        margin-top: 8px !important;
-        margin-bottom: 16px !important;
-    }
+    /* Clean Pagination inside Grid */
     #posProductGrid .pagination {
         margin: 6px 0 0 0 !important;
         gap: 3px !important;
@@ -187,7 +191,6 @@
         border-color: #2563eb !important;
     }
 
-    /* Desktop Fixed Heights (>= 992px) */
     @media (min-width: 992px) {
         .pos-product-scroll-container {
             height: calc(100vh - 245px);
@@ -197,7 +200,7 @@
             height: calc(100vh - 120px);
         }
         .pos-cart-items-scroll {
-            max-height: calc(100vh - 435px);
+            max-height: calc(100vh - 460px);
         }
         .pos-mobile-nav-bar,
         .pos-mobile-sticky-dock {
@@ -205,7 +208,6 @@
         }
     }
 
-    /* Mobile Responsive Architecture (< 992px) */
     @media (max-width: 991.98px) {
         .pos-mobile-nav-bar {
             display: flex !important;
@@ -245,15 +247,8 @@
         .pos-cart-items-scroll {
             max-height: 280px;
         }
-        .pos-scanner-strip {
-            padding: 5px 6px;
-        }
-        .scanner-live-badge {
-            font-size: 10px;
-        }
     }
 
-    /* Floating Sticky Quick Checkout Dock on Mobile */
     .pos-mobile-sticky-dock {
         position: fixed;
         bottom: 8px;
@@ -264,25 +259,55 @@
 </style>
 
 <div class="container-fluid py-2 px-2 px-md-3" id="posTerminalRoot">
-    <!-- Top Branch Header Bar (Compact, Single Row & NBR BIN Supported) -->
-    <div class="d-flex justify-content-between align-items-center mb-2 bg-white p-2 px-3 shadow-xs border">
-        <div class="d-flex align-items-center gap-1.5 min-width-0 flex-wrap">
-            <span class="badge bg-warning text-dark fw-bold px-2 py-1 text-truncate" style="font-size: 11px;">
-                <i class="fas fa-store me-1"></i> {{ $branch->name }}
-            </span>
-            <small class="text-muted font-monospace bn-digit text-truncate d-none d-sm-inline" style="font-size: 10px;">{{ $branch->code }}</small>
-            @if(!empty($branch->bin_number))
-                <span class="badge bg-light text-dark border font-monospace ms-1" style="font-size: 10px;">
-                    <i class="fas fa-file-invoice text-primary me-1"></i>BIN: {{ $branch->bin_number }}
+    <!-- Top Branch Header Bar -->
+    <div class="mb-2 bg-white p-2 px-3 shadow-xs border rounded-3">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+            <!-- Left Side: Branch Info -->
+            <div class="d-flex align-items-center gap-2 min-w-0 flex-wrap">
+                <span class="badge bg-light text-primary border border-primary-subtle fw-bold px-2 py-1 text-truncate" style="font-size: 11px;">
+                    <i class="fas fa-store me-1 text-primary"></i> {{ $branch->name }}
                 </span>
-            @endif
+
+                @if(isset($registerStatus))
+                    @if(($registerStatus['session_status'] ?? '') === 'open')
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" style="font-size: 9.5px; font-weight: 600;">
+                            <i class="fas fa-cash-register me-1"></i> Open
+                        </span>
+                    @else
+                        <a href="{{ route('admin.daily_closing.session', $branch->id) }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2 py-0.5" style="font-size: 9.5px; font-weight: 600;">
+                            <i class="fas fa-exclamation-circle me-1"></i> Closed
+                        </a>
+                    @endif
+                @endif
+            </div>
+
+            <!-- Right Side: Action Buttons -->
+            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                @if(isset($selectableBranches) && $selectableBranches->count() > 1)
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-outline-primary btn-compact py-1 px-2 dropdown-toggle text-nowrap" type="button" data-bs-toggle="dropdown" style="font-size: 10.5px !important; height: 28px;">
+                            <i class="fas fa-store-alt me-1"></i> <span class="d-none d-sm-inline">Switch Hub</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: 11px;">
+                            @foreach($selectableBranches as $sb)
+                                <li>
+                                    <a class="dropdown-item py-1.5 {{ $sb->id == $branch->id ? 'active fw-bold' : '' }}" href="{{ route('admin.pos.terminal', $sb->id) }}">
+                                        {{ $sb->name }} ({{ $sb->code ?? $sb->branch_code }})
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <a href="{{ route('admin.pos.index') }}" class="btn btn-outline-secondary btn-compact py-1 px-2 text-nowrap" style="font-size: 10.5px !important; height: 28px; display: inline-flex; align-items: center;">
+                    <i class="fas fa-exchange-alt me-1"></i> <span class="d-none d-sm-inline">Change</span> Branch
+                </a>
+            </div>
         </div>
-        <a href="{{ route('admin.pos.index') }}" class="btn btn-outline-secondary btn-compact py-1 px-2.5 flex-shrink-0" style="font-size: 10.5px !important;">
-            <i class="fas fa-exchange-alt me-1"></i> Change Branch
-        </a>
     </div>
 
-    <!-- Mobile Segmented Navigation Bar -->
+    <!-- Mobile Navigation Bar -->
     <div class="pos-mobile-nav-bar d-lg-none">
         <div class="pos-mobile-nav-btn active" id="tabBtnProducts" onclick="switchMobilePosTab('products')">
             <i class="fas fa-boxes-stacked me-1"></i> Products &amp; Scanner
@@ -293,7 +318,7 @@
     </div>
 
     <div class="row g-2 align-items-start">
-        <!-- Left Column: Barcode Scanner, Filters & Product Grid (8 Cols on PC) -->
+        <!-- Left Column: Barcode Scanner, Filters & Product Grid -->
         <div class="col-12 col-lg-8 pos-view-column" id="posProductsColumn">
             <!-- 1. Super-Shop USB Barcode Scanner Strip -->
             <div class="pos-scanner-strip mb-2">
@@ -312,20 +337,19 @@
                         <span class="d-none d-sm-inline ms-1">Add</span>
                     </button>
 
-                    <!-- Camera Scanner Trigger -->
                     <button class="btn btn-info text-white fw-bold px-2" type="button" onclick="openCameraScannerModal()" title="Camera Scan">
                         <i class="fas fa-camera"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- 2. Manual Search & Filter Bar -->
+            <!-- 2. Live AJAX Search & Filter Bar (Product Name, ID, SKU, Barcode, Brand & Category) -->
             <div class="card border-0 shadow-xs p-2 bg-white mb-2">
                 <div class="row g-1.5">
                     <div class="col-12 col-md-5">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light border-end-0 py-1" style="height: 31px;"><i class="fas fa-search text-muted" style="font-size: 10px;"></i></span>
-                            <input type="text" id="posSearchProduct" class="form-control border-start-0 py-1" placeholder="Search title, SKU, barcode..." style="height: 31px; font-size: 11.5px;">
+                            <input type="text" id="posSearchProduct" class="form-control border-start-0 py-1" placeholder="Search title, SKU, barcode, ID..." style="height: 31px; font-size: 11.5px;" autocomplete="off">
                             <button class="btn btn-outline-light border border-start-0 text-muted d-none" type="button" id="clearProdSearchBtn"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
@@ -359,11 +383,11 @@
             </div>
         </div>
 
-        <!-- Right Column: POS Memo & Billing Control (4 Cols on PC, Toggleable on Mobile) -->
+        <!-- Right Column: POS Memo & Billing Control -->
         <div class="col-12 col-lg-4 pos-memo-panel pos-view-column" id="posMemoColumn">
             <div class="card border shadow-xs bg-white p-2 d-flex flex-column justify-content-between pos-memo-card">
                 <div>
-                    <!-- Customer Section -->
+                    <!-- Customer & Sales Person Section -->
                     <div class="border p-2 bg-light mb-2 position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-dark" style="font-size: 11px;">Customer</span>
@@ -379,12 +403,22 @@
 
                         <div id="custSearchResults" class="position-absolute start-0 end-0 bg-white border shadow-lg mt-1 d-none" style="top: 60px; z-index: 1050; max-height: 160px; overflow-y: auto;"></div>
 
-                        <select id="posCustomerSelect" class="form-select form-select-xs">
+                        <select id="posCustomerSelect" class="form-select form-select-xs mb-1.5">
                             <option value="">-- Walk-in Customer --</option>
                             @foreach($customers as $c)
                                 <option value="{{ $c->id }}" data-name="{{ $c->name }}" data-phone="{{ $c->phone }}">{{ $c->name }} ({{ $c->phone ?? 'N/A' }})</option>
                             @endforeach
                         </select>
+
+                        <!-- Sales Person (Locked to Authenticated User) -->
+                        <div class="d-flex align-items-center gap-1 mt-1">
+                            <label class="text-muted text-nowrap" style="font-size: 9.5px; width: 68px;">Sales Person:</label>
+                            <select id="posSalesPersonSelect" class="form-select form-select-xs" style="pointer-events: none; background-color: #f8fafc;">
+                                <option value="{{ Auth::id() }}" selected>
+                                    {{ Auth::user()->name }} ({{ Auth::user()->phone ?? 'Cashier' }})
+                                </option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Cart Header -->
@@ -405,22 +439,18 @@
 
                 <!-- Billing Summary & Checkout Buttons -->
                 <div class="border-top pt-2 mt-auto">
-                    <!-- Subtotal -->
                     <div class="d-flex justify-content-between align-items-center mb-1 text-muted" style="font-size: 10.5px;">
                         <span>Subtotal:</span>
                         <span class="fw-semibold text-dark font-monospace bn-digit" id="posSubtotalText">0.00 ৳</span>
                     </div>
 
-                    <!-- Dynamic VAT Breakdown (Strictly Hidden when 0 or Disabled) -->
                     <div class="d-flex justify-content-between align-items-center mb-1 text-muted" id="posVatRow" style="font-size: 10.5px; display: none;">
                         <span>
-                            <span id="posVatLabelText">{{ $taxSettings['vat_label'] ?? 'Govt. VAT' }}</span>:
-                            <span class="badge bg-light text-muted border ms-1" style="font-size: 8px; padding: 1px 3px;" id="posVatRateBadge">NBR Compliant</span>
+                            <span id="posVatLabelText">{{ $taxSettings['vat_label'] ?? 'VAT' }}</span>:
                         </span>
                         <span class="fw-semibold text-primary font-monospace bn-digit" id="posVatText">0.00 ৳</span>
                     </div>
 
-                    <!-- Shipping & Discount Inputs -->
                     <div class="row g-1 mb-1">
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Shipping (৳)</span>
@@ -432,13 +462,12 @@
                         </div>
                     </div>
 
-                    <!-- Payment Method & Paid Amount -->
                     <div class="row g-1 mb-2">
                         <div class="col-6">
                             <span class="text-muted d-block" style="font-size: 10px;">Payment Method</span>
                             <select id="posPayMethod" class="form-select form-select-xs">
                                 @foreach($paymentMethods as $pm)
-                                    <option value="{{ $pm }}">{{ $pm }}</option>
+                                    <option value="{{ strtolower(str_replace(' ', '_', $pm)) }}">{{ $pm }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -448,13 +477,12 @@
                         </div>
                     </div>
 
-                    <!-- Total Payable -->
                     <div class="d-flex justify-content-between align-items-center mb-2 px-1">
                         <span class="fw-bold text-muted">Total Payable:</span>
                         <h6 class="fw-bold text-dark mb-0 fs-6 font-monospace bn-digit" id="grandTotalText">0.00 ৳</h6>
                     </div>
 
-                    <!-- 3 Action Buttons -->
+                    <!-- Action Control Row: Order (Save), Paper Size Selector, Print -->
                     <div class="row g-1">
                         <div class="col-4">
                             <button type="button" class="btn btn-outline-dark w-100 pos-action-btn" onclick="submitPosOrder('only_order')">
@@ -462,13 +490,16 @@
                             </button>
                         </div>
                         <div class="col-4">
-                            <button type="button" class="btn btn-primary w-100 pos-action-btn" onclick="submitPosOrder('order_a5_print')">
-                                <i class="fas fa-print me-1"></i>A5 Print
-                            </button>
+                            <select id="posPaperSizeSelector" class="form-select form-select-xs w-100 pos-action-btn fw-bold text-dark border-primary" style="height: 31px !important; font-size: 10.5px !important; padding: 2px 2px !important; cursor: pointer;" onchange="handlePaperSizeChange(this.value)" title="Choose Default Paper Size for this Counter">
+                                <option value="58mm">2" (58mm)</option>
+                                <option value="80mm">3" (80mm)</option>
+                                <option value="a5">A5 Memo</option>
+                                <option value="a4">A4 Invoice</option>
+                            </select>
                         </div>
                         <div class="col-4">
-                            <button type="button" class="btn btn-warning w-100 pos-action-btn text-white" onclick="submitPosOrder('pos_thermal_print')">
-                                <i class="fas fa-receipt me-1"></i>POS Print
+                            <button type="button" class="btn btn-warning w-100 pos-action-btn text-white" onclick="submitPosOrder('print')">
+                                <i class="fas fa-print me-1"></i>Print
                             </button>
                         </div>
                     </div>
@@ -516,13 +547,13 @@
     </div>
 </div>
 
-<!-- Modal 2: Custom Notice Modal -->
+<!-- Modal 2: Notice Alert Modal -->
 <div class="modal fade pos-modal-scope" id="posAlertModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
             <div id="posAlertIcon" class="mb-2"></div>
             <h6 class="fw-bold text-dark mb-1" id="posAlertTitle">Notice</h6>
-            <p class="text-muted small mb-3" id="posAlertMessage" style="font-size: 11.5px; line-height: 1.4;"></p>
+            <p class="text-muted small mb-3" id="posAlertMessage" style="font-size: 11.5px; line-height: 1.4; word-break: break-word;"></p>
             <div class="d-flex justify-content-center">
                 <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal" onclick="refocusBarcodeScanner()">OK</button>
             </div>
@@ -538,7 +569,7 @@
                 <h6 class="fw-bold text-dark mb-0"><i class="fas fa-layer-group text-primary me-1"></i> Select Variant / Product</h6>
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
             </div>
-            <p class="small text-muted mb-2">Multiple records matched this barcode. Select the correct item:</p>
+            <p class="small text-muted mb-2">This product has multiple variants. Select color and size:</p>
             <div id="multipleMatchesList" class="list-group list-group-flush border" style="max-height: 250px; overflow-y: auto;"></div>
         </div>
     </div>
@@ -562,16 +593,57 @@
 const CSRF = "{{ csrf_token() }}";
 const BRANCH_ID = {{ $branch->id }};
 const BARCODE_SCAN_URL = "{{ route('admin.pos.scan.barcode') }}";
-
-// Central Tax & VAT Configuration injected safely from PosController
 const TAX_SETTINGS = @json($taxSettings);
+
+// Persistent Counter-Wise Paper Preference
+const STORAGE_KEY_PAPER_SIZE = 'pos_counter_paper_size';
 
 let posCart = [];
 let isScanning = false;
 let cameraScannerInstance = null;
 let currentMobileTab = 'products';
 let currentCalculatedGrandTotal = 0.00;
+let currentCalculatedTax = 0.00;
 let isPaidAmountManuallyEdited = false;
+let productSearchAbortController = null;
+
+// Paper Size Preference Storage
+function getSavedPaperSize() {
+    return localStorage.getItem(STORAGE_KEY_PAPER_SIZE) || '80mm';
+}
+
+function handlePaperSizeChange(val) {
+    localStorage.setItem(STORAGE_KEY_PAPER_SIZE, val);
+}
+
+// Pure Web Native Hidden iFrame Printing (Zero External App Dependency, Exact Memo Length)
+function executeSilentPrint(url) {
+    let frame = document.getElementById('posHiddenPrintFrame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'posHiddenPrintFrame';
+        frame.style.position = 'fixed';
+        frame.style.right = '0';
+        frame.style.bottom = '0';
+        frame.style.width = '0';
+        frame.style.height = '0';
+        frame.style.border = '0';
+        frame.style.visibility = 'hidden';
+        document.body.appendChild(frame);
+    }
+
+    frame.src = url;
+    frame.onload = function() {
+        setTimeout(() => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch(e) {
+                window.open(url, '_blank');
+            }
+        }, 300);
+    };
+}
 
 // Audio synth for cashier beep
 function playBeep(type = 'success') {
@@ -598,7 +670,6 @@ function playBeep(type = 'success') {
     } catch(e) {}
 }
 
-// Notice Modal Dialog Trigger
 function showPosAlert(message, title = 'Notice', type = 'info') {
     playBeep(type === 'success' ? 'success' : 'error');
 
@@ -614,13 +685,12 @@ function showPosAlert(message, title = 'Notice', type = 'info') {
     }
     
     document.getElementById('posAlertTitle').textContent = title;
-    document.getElementById('posAlertMessage').textContent = message;
+    document.getElementById('posAlertMessage').innerHTML = message;
     
     const alertModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('posAlertModal'));
     alertModal.show();
 }
 
-// Mobile Tab Switcher Handler
 function switchMobilePosTab(tab) {
     currentMobileTab = tab;
     const prodCol = document.getElementById('posProductsColumn');
@@ -655,7 +725,7 @@ function refocusBarcodeScanner() {
         const scannerInput = document.getElementById('posBarcodeScannerInput');
         const active = document.activeElement;
 
-        const ignoreIds = ['customerSearchInput', 'posSearchProduct', 'posShipping', 'posDiscount', 'posPaidAmount', 'custName', 'custPhone', 'custEmail', 'custAddress'];
+        const ignoreIds = ['customerSearchInput', 'posSearchProduct', 'posShipping', 'posDiscount', 'posPaidAmount', 'custName', 'custPhone', 'custEmail', 'custAddress', 'posSalesPersonSelect', 'posPaperSizeSelector'];
         if (active && (ignoreIds.includes(active.id) || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA')) {
             return;
         }
@@ -683,7 +753,7 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
-// Barcode Lookup & Auto Cart Addition Engine
+// Barcode Lookup & Cart Addition Engine (With Variable Product Check)
 function processBarcodeScan(rawBarcode) {
     const barcode = (rawBarcode || '').trim();
     if (!barcode) return;
@@ -708,13 +778,29 @@ function processBarcodeScan(rawBarcode) {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success && data.product) {
-            playBeep('success');
-            addScannedProductToCart(data.product);
-            if (scannerInput) scannerInput.value = '';
-        } else if (data.matched === 'multiple') {
+        if (data.matched === 'multiple' || data.is_variable) {
             playBeep('error');
-            handleMultipleBarcodeMatches(data.variants || data.products || []);
+            if (data.variants && data.variants.length > 0) {
+                handleMultipleBarcodeMatches(data.variants);
+            } else {
+                showPosAlert(data.message || 'Variable product found. Please select color and size from the card.', 'Select Variant', 'warning');
+            }
+            return;
+        }
+
+        if (data.success && (data.product || data.product_id)) {
+            playBeep('success');
+            const prodPayload = data.product || {
+                id: data.product_id,
+                variant_id: data.variant_id,
+                title: data.title,
+                price: data.unit_price || data.price,
+                stock: data.available_stock ?? data.stock,
+                product_code: data.sku || data.product_code,
+                sku: data.sku || data.product_code
+            };
+            addScannedProductToCart(prodPayload);
+            if (scannerInput) scannerInput.value = '';
         } else {
             playBeep('error');
             showPosAlert(data.message || 'Item barcode not found in this branch.', 'Barcode Not Found', 'warning');
@@ -757,18 +843,24 @@ document.addEventListener('DOMContentLoaded', function () {
         switchMobilePosTab('products');
     }
 
+    // Initialize Paper Size Selector from localStorage
+    const paperSelector = document.getElementById('posPaperSizeSelector');
+    if (paperSelector) {
+        paperSelector.value = getSavedPaperSize();
+    }
+
     refocusBarcodeScanner();
 });
 
-// Add scanned product to cart (Strictly respects 0%, Flat, or specific VAT rate)
 function addScannedProductToCart(p) {
     const targetKeyId = p.variant_id ? `var-${p.variant_id}` : p.id;
     const existing = posCart.find(item => (item.variant_id ? `var-${item.variant_id}` : item.id) === targetKeyId);
 
     const currentQtyInCart = existing ? existing.qty : 0;
-    if (p.stock > 0 && (currentQtyInCart + 1) > p.stock) {
+    const itemStock = parseInt(p.stock || p.available_stock) || 0;
+    if (itemStock > 0 && (currentQtyInCart + 1) > itemStock) {
         playBeep('error');
-        showPosAlert(`"${p.title}" is out of stock! Current stock: ${p.stock}`, 'Stock Alert', 'warning');
+        showPosAlert(`"${p.title}" stock limit exceeded! Current stock: ${itemStock}`, 'Stock Alert', 'warning');
         return;
     }
 
@@ -780,12 +872,10 @@ function addScannedProductToCart(p) {
     const isVatGloballyActive = Boolean(TAX_SETTINGS.is_vat_enabled && TAX_SETTINGS.enable_pos_vat);
 
     if (isVatGloballyActive) {
-        // If branch is exempt / zero_rated, force 0%
         if (TAX_SETTINGS.branch_tax_mode === 'exempt' || TAX_SETTINGS.branch_tax_mode === 'zero_rated') {
             pTaxRate = 0;
             pTaxFixed = 0;
         } else if (p.tax_rate !== undefined && p.tax_rate !== null && p.tax_rate !== '') {
-            // Strictly honor 0 as 0%, 2 as 2%, 10 as 10%
             pTaxRate = parseFloat(p.tax_rate);
             pIsInclusive = p.is_tax_inclusive !== undefined ? Boolean(p.is_tax_inclusive) : (TAX_SETTINGS.default_calculation_type === 'inclusive');
         } else if (pTaxFixed > 0) {
@@ -799,6 +889,8 @@ function addScannedProductToCart(p) {
         pTaxFixed = 0;
     }
 
+    const skuVal = p.sku || p.product_code || p.barcode || ('PRD-' + p.id);
+
     if (existing) {
         existing.qty += 1;
     } else {
@@ -806,10 +898,11 @@ function addScannedProductToCart(p) {
             id: p.id,
             variant_id: p.variant_id || null,
             title: p.title,
-            price: parseFloat(p.price) || 0,
-            stock: parseInt(p.stock) || 0,
+            price: parseFloat(p.price || p.unit_price) || 0,
+            stock: itemStock,
             qty: 1,
-            code: p.product_code || p.barcode || '',
+            code: skuVal,
+            sku: skuVal,
             tax_rate: pTaxRate,
             is_tax_inclusive: pIsInclusive,
             tax_type: pTaxType,
@@ -827,9 +920,9 @@ function handleMultipleBarcodeMatches(items) {
     items.forEach(it => {
         const title = it.main_title || it.title;
         const details = [it.color, it.size].filter(Boolean).join(' / ');
-        const price = it.variant_sale_price || it.sale_price || it.regular_price || 0;
-        const stock = it.branch_stock ?? it.stock ?? 0;
-        const code = it.variant_sku || it.product_code || '';
+        const price = it.variant_sale_price || it.sale_price || it.regular_price || it.price || 0;
+        const stock = it.branch_stock ?? it.available_stock ?? it.stock ?? 0;
+        const code = it.variant_sku || it.sku || it.product_code || '';
 
         const a = document.createElement('a');
         a.href = 'javascript:void(0)';
@@ -837,7 +930,7 @@ function handleMultipleBarcodeMatches(items) {
         a.innerHTML = `
             <div>
                 <strong class="text-dark d-block">${title} ${details ? '('+details+')' : ''}</strong>
-                <small class="text-muted font-monospace bn-digit">Code: ${code} | Stock: ${stock}</small>
+                <small class="text-muted font-monospace bn-digit">SKU: ${code} | Stock: ${stock}</small>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="fw-bold text-primary font-monospace bn-digit">${Number(price).toFixed(0)}৳</span>
@@ -848,10 +941,11 @@ function handleMultipleBarcodeMatches(items) {
         a.onclick = function () {
             addScannedProductToCart({
                 id: it.product_id || it.id,
-                variant_id: it.variant_id || null,
+                variant_id: it.variant_id || (it.id && it.color ? it.id : null),
                 title: title + (details ? ' ('+details+')' : ''),
                 price: price,
                 stock: stock,
+                sku: code,
                 product_code: code,
                 tax_rate: it.tax_rate !== undefined ? it.tax_rate : null,
                 is_tax_inclusive: it.is_tax_inclusive || false,
@@ -869,7 +963,7 @@ function handleMultipleBarcodeMatches(items) {
     modal.show();
 }
 
-// Mobile Camera Scanner Engine
+// Camera Scanner Engine
 function openCameraScannerModal() {
     const modalEl = document.getElementById('cameraScanModal');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -880,7 +974,7 @@ function openCameraScannerModal() {
             startCameraScanner();
         }, 300);
     } else {
-        showPosAlert('Camera scanner library failed to load. Please use USB or manual entry.', 'Camera Unavailable', 'warning');
+        showPosAlert('Camera scanner library failed to load.', 'Camera Unavailable', 'warning');
     }
 }
 
@@ -901,7 +995,7 @@ function startCameraScanner() {
         () => {}
     ).catch(err => {
         console.error("Camera access error:", err);
-        showPosAlert("Could not start camera. Please verify camera permissions.", "Camera Error", "warning");
+        showPosAlert("Could not start camera. Check permissions.", "Camera Error", "warning");
     });
 }
 
@@ -914,28 +1008,62 @@ function stopCameraScanner() {
     }
 }
 
-// Product Grid Fetch Engine (Intact AJAX Live Search & Filters)
+// Product Grid Fetch Engine (High Speed with Request Abort Controller)
 function fetchPosProducts(targetUrl = null) {
     const grid = document.getElementById('posProductGrid');
     const loader = document.getElementById('posGridLoader');
-    const search = document.getElementById('posSearchProduct').value;
-    const cat = document.getElementById('posCategoryFilter').value;
-    const brand = document.getElementById('posBrandFilter').value;
+    const searchVal = (document.getElementById('posSearchProduct')?.value || '').trim();
+    const catVal = document.getElementById('posCategoryFilter')?.value || '';
+    const brandVal = document.getElementById('posBrandFilter')?.value || '';
 
     loader.classList.remove('d-none');
     loader.classList.add('d-flex');
 
-    const url = targetUrl ? new URL(targetUrl) : new URL("{{ route('admin.pos.filter.products') }}", window.location.origin);
-    url.searchParams.set('branch_id', BRANCH_ID);
-    if (search) url.searchParams.set('search', search);
-    if (cat) url.searchParams.set('category_id', cat);
-    if (brand) url.searchParams.set('brand_id', brand);
+    if (productSearchAbortController) {
+        productSearchAbortController.abort();
+    }
+    productSearchAbortController = new AbortController();
 
-    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
+    const baseUrl = (typeof targetUrl === 'string' && targetUrl.startsWith('http')) 
+        ? targetUrl 
+        : "{{ route('admin.pos.filter.products') }}";
+
+    const url = new URL(baseUrl, window.location.origin);
+    url.searchParams.set('branch_id', BRANCH_ID);
+
+    if (searchVal) {
+        url.searchParams.set('search', searchVal);
+        url.searchParams.set('q', searchVal);
+    } else {
+        url.searchParams.delete('search');
+        url.searchParams.delete('q');
+    }
+
+    if (catVal) {
+        url.searchParams.set('category_id', catVal);
+    } else {
+        url.searchParams.delete('category_id');
+    }
+
+    if (brandVal) {
+        url.searchParams.set('brand_id', brandVal);
+    } else {
+        url.searchParams.delete('brand_id');
+    }
+
+    fetch(url, { 
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+        signal: productSearchAbortController.signal
+    })
     .then(res => res.text())
     .then(html => {
         grid.innerHTML = html;
         grid.scrollTop = 0;
+    })
+    .catch(err => {
+        if (err.name !== 'AbortError') {
+            console.error('POS Grid Fetch Error:', err);
+        }
     })
     .finally(() => {
         loader.classList.add('d-none');
@@ -974,7 +1102,7 @@ function onGridVariantChanged(productId, selectEl) {
     }
 }
 
-// Add Item to Memo from Grid Card (Comprehensive Tax Extraction)
+// Add Item to Memo from Grid Card
 function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, explicitIsInclusive = null, explicitTaxType = null, explicitTaxFixed = null) {
     const qtyInput = document.getElementById('gridQty' + id);
     const qtyToAdd = parseInt(qtyInput ? qtyInput.value : 1) || 1;
@@ -983,7 +1111,7 @@ function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, ex
     let finalPrice = parseFloat(price) || 0;
     let finalStock = parseInt(stock) || 0;
     let variantId = null;
-    let itemCode = 'ID: #' + id;
+    let itemCode = '';
 
     let itemTaxRate = (explicitTaxRate !== null && explicitTaxRate !== undefined && explicitTaxRate !== '') ? parseFloat(explicitTaxRate) : null;
     let itemIsTaxInclusive = explicitIsInclusive !== null ? Boolean(explicitIsInclusive) : (TAX_SETTINGS.default_calculation_type === 'inclusive');
@@ -1021,9 +1149,9 @@ function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, ex
             itemTaxFixed = parseFloat(opt.getAttribute('data-tax-fixed')) || 0;
         }
     } else {
-        // Deep search in parent card or input container
         const cardEl = document.querySelector(`[data-product-id="${id}"]`) || (qtyInput ? qtyInput.closest('.card, [data-product-id]') : null);
         if (cardEl) {
+            itemCode = cardEl.getAttribute('data-sku') || '';
             if (itemTaxRate === null && cardEl.hasAttribute('data-tax-rate') && cardEl.getAttribute('data-tax-rate') !== '') {
                 itemTaxRate = parseFloat(cardEl.getAttribute('data-tax-rate'));
             }
@@ -1039,20 +1167,21 @@ function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, ex
         }
     }
 
+    if (!itemCode) {
+        itemCode = 'PRD-' + id;
+    }
+
     const isVatGloballyActive = Boolean(TAX_SETTINGS.is_vat_enabled && TAX_SETTINGS.enable_pos_vat);
 
     if (isVatGloballyActive) {
-        // Branch 0% or exempt rule takes absolute precedence
         if (TAX_SETTINGS.branch_tax_mode === 'exempt' || TAX_SETTINGS.branch_tax_mode === 'zero_rated') {
             itemTaxRate = 0;
             itemTaxFixed = 0;
         } else if (itemTaxRate !== null && !isNaN(itemTaxRate)) {
-            // Strictly honor product or category rate (even 0% or 2%)
             itemTaxRate = itemTaxRate;
         } else if (itemTaxFixed > 0) {
             itemTaxRate = 0;
         } else {
-            // Fallback to Central Default VAT
             itemTaxRate = parseFloat(TAX_SETTINGS.default_vat_rate) || 0;
             itemIsTaxInclusive = (TAX_SETTINGS.default_calculation_type === 'inclusive');
         }
@@ -1064,7 +1193,7 @@ function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, ex
     const targetKeyId = variantId ? `var-${variantId}` : id;
     const existing = posCart.find(item => (item.variant_id ? `var-${item.variant_id}` : item.id) === targetKeyId);
 
-    if (finalStock <= 0 || ((existing ? existing.qty : 0) + qtyToAdd) > finalStock) {
+    if (finalStock > 0 && ((existing ? existing.qty : 0) + qtyToAdd) > finalStock) {
         playBeep('error');
         showPosAlert(`"${finalTitle}" stock limit exceeded! Available: ${finalStock}`, 'Stock Alert', 'warning');
         return;
@@ -1081,6 +1210,7 @@ function addToPosMemo(id, title, price, stock, thumb, explicitTaxRate = null, ex
             stock: finalStock,
             qty: qtyToAdd,
             code: itemCode,
+            sku: itemCode,
             tax_rate: itemTaxRate,
             is_tax_inclusive: itemIsTaxInclusive,
             tax_type: itemTaxType,
@@ -1097,7 +1227,7 @@ function handleManualPaidInput() {
     isPaidAmountManuallyEdited = true;
 }
 
-// Cart Items Render & Mobile Sticky Dock Update
+// Cart Items Render (Strictly Shows SKU, Eliminates ID & VAT)
 function renderCart() {
     const container = document.getElementById('cartItemsList');
     const countBadge = document.getElementById('cartCountBadge');
@@ -1129,22 +1259,13 @@ function renderCart() {
     let html = '';
     posCart.forEach((item, index) => {
         const itemTotal = (item.price * item.qty).toFixed(0);
-
-        // Visual VAT badge in item row for complete transparency
-        let taxBadgeText = '';
-        if (item.tax_type === 'flat' && item.tax_fixed_amount > 0) {
-            taxBadgeText = ` &bull; <span class="text-primary fw-bold">VAT: ৳${item.tax_fixed_amount}</span>`;
-        } else if (item.tax_rate !== undefined && item.tax_rate !== null && item.tax_rate > 0) {
-            taxBadgeText = ` &bull; <span class="text-primary fw-bold">VAT: ${item.tax_rate}%</span>`;
-        } else if (item.tax_rate === 0) {
-            taxBadgeText = ` &bull; <span class="text-muted">VAT: 0%</span>`;
-        }
+        const skuDisplay = item.sku || item.code || ('PRD-' + item.id);
 
         html += `
             <div class="pos-item-row d-flex align-items-center justify-content-between">
                 <div style="width: 54%; line-height: 1.2;">
                     <div class="fw-semibold text-dark text-truncate" title="${item.title}">${item.title}</div>
-                    ${item.code ? `<small class="text-muted font-monospace bn-digit" style="font-size: 9px;">${item.code}${taxBadgeText}</small><br>` : ''}
+                    <small class="text-muted font-monospace bn-digit" style="font-size: 9.5px;">SKU: ${skuDisplay}</small><br>
                     <span class="text-muted font-monospace bn-digit" style="font-size: 10px;">${item.price.toFixed(0)} × ${item.qty} = <strong class="text-dark">${itemTotal}৳</strong></span>
                 </div>
                 <div class="d-flex align-items-center gap-1">
@@ -1208,14 +1329,12 @@ function clearPosCart() {
     refocusBarcodeScanner();
 }
 
-// Summary Calculation with Subtotal & NBR Tax Estimation (Net Taxable Base Synchronized)
 function renderCartSummary() {
     const subtotal = posCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const shipping = parseFloat(document.getElementById('posShipping').value) || 0;
     const discountInput = parseFloat(document.getElementById('posDiscount').value) || 0;
     const discount = Math.min(subtotal, Math.max(0, discountInput));
 
-    // Proportional discount ratio to match Backend NBR calculation exactly
     const discountRatio = (subtotal > 0 && discount > 0) ? Math.min(1.0, discount / subtotal) : 0.0;
 
     let calculatedTax = 0;
@@ -1250,8 +1369,8 @@ function renderCartSummary() {
 
     calculatedTax = Math.round(calculatedTax * 100) / 100;
     exclusiveTax  = Math.round(exclusiveTax * 100) / 100;
+    currentCalculatedTax = calculatedTax;
 
-    // Grand Total Formula: Subtotal - Discount + Exclusive Tax + Shipping
     const grandTotal = Math.max(0, Math.round(((subtotal - discount) + exclusiveTax + shipping) * 100) / 100);
     currentCalculatedGrandTotal = grandTotal;
 
@@ -1266,7 +1385,6 @@ function renderCartSummary() {
         vatEl.textContent = calculatedTax.toFixed(2) + ' ৳';
     }
 
-    // Display toggle: Hide strictly if VAT is 0 or disabled or mode is hidden
     if (vatRow) {
         if (isVatActive && calculatedTax > 0 && TAX_SETTINGS.pos_vat_display_mode !== 'hidden') {
             vatRow.style.display = 'flex';
@@ -1275,7 +1393,6 @@ function renderCartSummary() {
         }
     }
 
-    // Total Payable and Paid Amount Synchronized
     document.getElementById('grandTotalText').textContent = grandTotal.toFixed(2) + ' ৳';
     
     const paidInput = document.getElementById('posPaidAmount');
@@ -1289,7 +1406,7 @@ function renderCartSummary() {
     }
 }
 
-// Customer Search & Creation
+// Customer Live Search
 const custSearch = document.getElementById('customerSearchInput');
 const custResults = document.getElementById('custSearchResults');
 const custSpinner = document.getElementById('custSpinner');
@@ -1310,11 +1427,12 @@ custSearch.addEventListener('input', function () {
         })
         .then(res => res.json())
         .then(data => {
-            if (data.length === 0) {
+            const listData = Array.isArray(data) ? data : (data.customers || []);
+            if (listData.length === 0) {
                 custResults.innerHTML = '<div class="p-2 text-center text-muted" style="font-size: 10px;">No customer found</div>';
             } else {
                 let html = '<div class="list-group list-group-flush">';
-                data.forEach(c => {
+                listData.forEach(c => {
                     html += `
                         <a href="javascript:void(0)" class="list-group-item list-group-item-action py-1 px-2 select-cust-item" style="font-size: 10.5px;" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone ?? ''}">
                             <strong>${c.name}</strong> <small class="text-muted font-monospace bn-digit">(${c.phone ?? 'N/A'})</small>
@@ -1378,23 +1496,33 @@ function saveCustomerAjax() {
         },
         body: JSON.stringify({ name, phone, email, address })
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
+    .then(res => {
+        return res.json().then(data => ({ ok: res.ok, data }));
+    })
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
             const select = document.getElementById('posCustomerSelect');
-            const opt = new Option(`${data.customer.name} (${data.customer.phone})`, data.customer.id, true, true);
+            const cust = data.customer || data;
+            const opt = new Option(`${cust.name} (${cust.phone})`, cust.id, true, true);
             select.add(opt);
-            custSearch.value = data.customer.name;
+            custSearch.value = cust.name;
             bootstrap.Modal.getInstance(document.getElementById('newCustomerModal')).hide();
             showPosAlert('Customer registered successfully.', 'Success', 'success');
             refocusBarcodeScanner();
         } else {
-            showPosAlert(data.message || 'Customer creation failed.', 'Error', 'danger');
+            let errorMsg = data.message || 'Customer creation failed.';
+            if (data.errors) {
+                errorMsg = Object.values(data.errors).flat().join('<br>');
+            }
+            showPosAlert(errorMsg, 'Registration Error', 'danger');
         }
+    })
+    .catch(err => {
+        showPosAlert('Server connection error. Please try again.', 'Error', 'danger');
     });
 }
 
-// Order Placement Checkout Flow with Confirmed Tax Return
+// Order Checkout Submission with Dynamic Paper Format Resolution
 function submitPosOrder(actionType = 'only_order') {
     if (posCart.length === 0) {
         showPosAlert('Cart is empty! Please scan barcode or add products to memo first.', 'Empty Memo', 'warning');
@@ -1406,24 +1534,31 @@ function submitPosOrder(actionType = 'only_order') {
     const paidAmountInput = document.getElementById('posPaidAmount');
     const rawPaidVal = parseFloat(paidAmountInput.value);
     
-    // Accurate numeric payable sync without currency parsing issues
     const finalPaid = isNaN(rawPaidVal) ? currentCalculatedGrandTotal : rawPaidVal;
+    const salesPersonEl = document.getElementById('posSalesPersonSelect');
 
     const orderData = {
         branch_id: BRANCH_ID,
         customer_id: document.getElementById('posCustomerSelect').value || null,
+        sales_person_id: salesPersonEl ? (salesPersonEl.value || null) : null,
         items: posCart.map(item => ({
             id: item.id,
+            product_id: item.id,
             variant_id: item.variant_id,
+            sku: item.sku || item.code,
             qty: item.qty,
             price: item.price,
+            unit_price: item.price,
             tax_rate: item.tax_rate,
             is_tax_inclusive: item.is_tax_inclusive,
             tax_type: item.tax_type,
             tax_fixed_amount: item.tax_fixed_amount
         })),
         shipping_charge: shippingCharge,
+        delivery_charge: shippingCharge,
         discount: discountAmount,
+        discount_amount: discountAmount,
+        tax_amount: currentCalculatedTax,
         payment_method: document.getElementById('posPayMethod').value,
         paid_amount: finalPaid
     };
@@ -1442,16 +1577,31 @@ function submitPosOrder(actionType = 'only_order') {
     .then(data => {
         if (data.success) {
             clearPosCart();
-            const taxMsg = data.tax_amount ? ` (VAT: ৳${Number(data.tax_amount).toFixed(2)})` : '';
+            playBeep('success');
 
             if (actionType === 'only_order') {
+                const taxMsg = data.tax_amount ? ` (VAT: ৳${Number(data.tax_amount).toFixed(2)})` : '';
                 showPosAlert(`Order placed successfully! Invoice: ${data.invoice_no}${taxMsg}`, 'Order Confirmed', 'success');
                 fetchPosProducts();
-            } else if (actionType === 'order_a5_print') {
-                window.open("{{ url('admin/pos/print-a5-memo') }}/" + data.order_id, '_blank');
-                fetchPosProducts();
-            } else if (actionType === 'pos_thermal_print') {
-                window.open("{{ url('admin/pos/print-pos-receipt') }}/" + data.order_id, '_blank');
+            } else {
+                // Determine user's selected paper format
+                const selectedFormat = (document.getElementById('posPaperSizeSelector')?.value || getSavedPaperSize()).toLowerCase();
+                let targetPrintUrl = '';
+
+                if (selectedFormat === '58mm' || selectedFormat === '2inch') {
+                    targetPrintUrl = data.print_url_58 || ("{{ url('admin/pos/print-pos-receipt-58mm') }}/" + data.order_id);
+                } else if (selectedFormat === '80mm' || selectedFormat === '3inch') {
+                    targetPrintUrl = data.print_url_80 || data.print_url || ("{{ url('admin/pos/print-pos-receipt') }}/" + data.order_id);
+                } else if (selectedFormat === 'a5') {
+                    targetPrintUrl = data.print_url_a5 || data.memo_url || ("{{ url('admin/pos/print-a5-memo') }}/" + data.order_id);
+                } else if (selectedFormat === 'a4') {
+                    targetPrintUrl = data.print_url_a4 || ("{{ url('admin/pos/print-a4-memo') }}/" + data.order_id);
+                } else {
+                    targetPrintUrl = data.print_url || ("{{ url('admin/pos/print-pos-receipt') }}/" + data.order_id);
+                }
+
+                // মোডাল ছাড়া সাথে সাথে ব্যাকগ্রাউন্ডে প্রিন্ট এক্সিকিউট
+                executeSilentPrint(targetPrintUrl);
                 fetchPosProducts();
             }
         } else {
@@ -1467,29 +1617,50 @@ function submitPosOrder(actionType = 'only_order') {
     });
 }
 
-// Page Initialization (Preserves live search, debouncing and filters)
+// Auto Live Search & Event Handlers
 document.addEventListener('DOMContentLoaded', function () {
     fetchPosProducts();
 
     const searchInput = document.getElementById('posSearchProduct');
     const clearBtn = document.getElementById('clearProdSearchBtn');
-    let debounce;
+    let debounceTimer;
 
-    searchInput.addEventListener('input', () => {
-        clearBtn.classList.toggle('d-none', !searchInput.value.trim());
-        clearTimeout(debounce);
-        debounce = setTimeout(fetchPosProducts, 250);
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            if (clearBtn) clearBtn.classList.toggle('d-none', !this.value.trim());
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchPosProducts();
+            }, 160);
+        });
 
-    clearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        clearBtn.classList.add('d-none');
-        fetchPosProducts();
-        refocusBarcodeScanner();
-    });
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                fetchPosProducts();
+            }
+        });
+    }
 
-    document.getElementById('posCategoryFilter').addEventListener('change', () => fetchPosProducts());
-    document.getElementById('posBrandFilter').addEventListener('change', () => fetchPosProducts());
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function () {
+            searchInput.value = '';
+            clearBtn.classList.add('d-none');
+            fetchPosProducts();
+            refocusBarcodeScanner();
+        });
+    }
+
+    const catFilter = document.getElementById('posCategoryFilter');
+    if (catFilter) {
+        catFilter.addEventListener('change', () => fetchPosProducts());
+    }
+
+    const brandFilter = document.getElementById('posBrandFilter');
+    if (brandFilter) {
+        brandFilter.addEventListener('change', () => fetchPosProducts());
+    }
 });
 </script>
 @endsection

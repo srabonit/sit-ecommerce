@@ -1,10 +1,12 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Popular Categories Slider - ' . config('app.name'))
 
 @php
-    // Safe dynamic route resolver for category directory (Prevents RouteNotFoundException)
+    // Safe dynamic route resolver
     $categoryIndexRoute = '#';
+
     if (\Illuminate\Support\Facades\Route::has('admin.categories.index')) {
         $categoryIndexRoute = route('admin.categories.index');
     } elseif (\Illuminate\Support\Facades\Route::has('admin.category.index')) {
@@ -22,51 +24,46 @@
 @endphp
 
 @section('admin_content')
-<!-- Font Awesome 6.5.1 CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<!-- Google Fonts: Plus Jakarta Sans & Inter -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-    /* Professional Enterprise Typography */
+    /* =========================================================
+       POPULAR CATEGORIES — ADMIN DESIGN SYSTEM
+       Bootstrap compatible | Scoped | Responsive | 5px radius
+    ========================================================= */
+
     #popCategoriesRoot,
     .popcat-modal-scope {
-        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        letter-spacing: -0.01em;
-        color: #1e293b;
+        --pc-primary: var(--bs-primary, #2563eb);
+        --pc-primary-rgb: var(--bs-primary-rgb, 37, 99, 235);
+        --pc-border: var(--bs-border-color, #e2e8f0);
+        --pc-muted: var(--bs-secondary-color, #64748b);
+        --pc-surface: var(--bs-body-bg, #ffffff);
+        --pc-soft: var(--bs-tertiary-bg, #f8fafc);
+        --pc-radius: 5px;
+        --pc-shadow: 0 1px 3px rgba(15, 23, 42, .045);
+
+        color: var(--bs-body-color, #334155);
+        font-family: 'Plus Jakarta Sans', 'Inter', -apple-system,
+                     BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* FontAwesome Protection */
-    #popCategoriesRoot i,
-    #popCategoriesRoot .fa,
-    #popCategoriesRoot .fas,
-    #popCategoriesRoot .far,
-    #popCategoriesRoot .fab,
-    #popCategoriesRoot .fa-solid,
-    #popCategoriesRoot .fa-regular,
-    .popcat-modal-scope i,
-    .popcat-modal-scope .fa-solid {
-        font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
-        font-style: normal;
-        font-weight: 900;
-        line-height: 1;
-        letter-spacing: normal !important;
-        display: inline-block;
-    }
-    #popCategoriesRoot .far,
-    .popcat-modal-scope .far {
-        font-weight: 400 !important;
+    #popCategoriesRoot *,
+    .popcat-modal-scope * {
+        box-sizing: border-box;
     }
 
-    /* Strict 5px Element Radius Across Controls */
+    /* Typography */
+    #popCategoriesRoot .bn-digit,
+    #popCategoriesRoot .font-tabular {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+    }
+
+    /* Consistent Radius */
     #popCategoriesRoot .btn,
-    #popCategoriesRoot .btn-sm,
     #popCategoriesRoot button,
-    #popCategoriesRoot .form-control,
     #popCategoriesRoot .badge,
+    #popCategoriesRoot .alert,
     #popCategoriesRoot .card,
     #popCategoriesRoot .header-banner-card,
     #popCategoriesRoot .panel-section-card,
@@ -74,341 +71,657 @@
     #popCategoriesRoot .cat-multi-select-box,
     #popCategoriesRoot .cat-chip,
     #popCategoriesRoot .cat-check-item,
-    #popCategoriesRoot .collapse-toggle-btn {
-        border-radius: 5px !important;
+    #popCategoriesRoot .collapse-toggle-btn,
+    .popcat-modal-scope .modal-content,
+    .popcat-modal-scope .btn {
+        border-radius: var(--pc-radius) !important;
     }
 
-    /* Clean Tabular Numbers */
-    .bn-digit,
-    .font-tabular {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif !important;
-        font-weight: 700 !important;
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* Sleek Compact Buttons */
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 6px 14px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    /* Compact Buttons */
+    #popCategoriesRoot .btn-compact {
+        min-height: 33px;
+        padding: 6px 13px !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        font-weight: 650 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease,
+                    border-color .15s ease,
+                    color .15s ease,
+                    box-shadow .15s ease;
     }
 
-    .btn-primary {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
-    }
-    .btn-primary:hover {
-        background-color: #1d4ed8 !important;
-        border-color: #1d4ed8 !important;
-        color: #ffffff !important;
+    #popCategoriesRoot .btn-primary {
+        background: var(--pc-primary);
+        border-color: var(--pc-primary);
+        color: #fff;
     }
 
-    .btn-outline-secondary {
-        background-color: #ffffff !important;
-        border-color: #cbd5e1 !important;
-        color: #334155 !important;
-    }
-    .btn-outline-secondary:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
+    #popCategoriesRoot .btn-primary:hover {
+        filter: brightness(.93);
+        color: #fff;
     }
 
-    /* Clean White Theme Header Card */
-    .header-banner-card {
-        background: #ffffff;
-        color: #0f172a;
-        padding: 14px 18px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #popCategoriesRoot .btn-outline-secondary {
+        background: var(--pc-surface);
+        border-color: var(--pc-border);
+        color: var(--bs-body-color, #334155);
+    }
+
+    #popCategoriesRoot .btn-outline-secondary:hover {
+        background: var(--pc-soft);
+        border-color: #94a3b8;
+    }
+
+    #popCategoriesRoot .btn:focus-visible,
+    #popCategoriesRoot button:focus-visible,
+    #popCategoriesRoot input:focus-visible,
+    .popcat-modal-scope button:focus-visible {
+        outline: 2px solid rgba(var(--pc-primary-rgb), .4);
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+
+    /* Header */
+    #popCategoriesRoot .header-banner-card {
+        background: var(--pc-surface);
+        color: var(--bs-body-color, #0f172a);
+        padding: 15px 18px;
+        border: 1px solid var(--pc-border);
+        box-shadow: var(--pc-shadow);
         margin-bottom: 14px;
     }
 
-    /* Panel Section Cards */
-    .panel-section-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 14px;
-        overflow: hidden;
-        border-radius: 6px !important;
-    }
-    .panel-section-header {
-        padding: 12px 16px;
-        background: #ffffff;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .section-title-text {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    #popCategoriesRoot .header-eyebrow {
+        font-size: 9px;
+        font-weight: 750;
+        letter-spacing: .4px;
+        padding: 5px 8px;
     }
 
-    /* Symmetric Mini KPI Pill */
-    .status-kpi-pill {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 12px 14px;
+    #popCategoriesRoot .header-title {
+        font-size: 17px;
+        font-weight: 750;
+        line-height: 1.4;
+        letter-spacing: -.3px;
+        color: var(--bs-emphasis-color, #0f172a);
+    }
+
+    #popCategoriesRoot .header-description {
+        max-width: 620px;
+        font-size: 11.5px;
+        line-height: 1.55;
+        color: var(--pc-muted);
+    }
+
+    /* KPI Cards */
+    #popCategoriesRoot .status-kpi-pill {
+        min-height: 69px;
+        height: 100%;
+        padding: 11px 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-        border-radius: 6px !important;
+        gap: 10px;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        box-shadow: var(--pc-shadow);
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #popCategoriesRoot .status-kpi-pill:hover {
+        border-color: rgba(var(--pc-primary-rgb), .35);
+        box-shadow: 0 3px 10px rgba(15, 23, 42, .045);
+    }
+
+    #popCategoriesRoot .kpi-label {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 10.5px;
+        font-weight: 600;
+        color: var(--pc-muted);
+    }
+
+    #popCategoriesRoot .kpi-value {
+        display: block;
+        font-size: 13px;
+        font-weight: 750;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    #popCategoriesRoot .kpi-icon {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 5px;
+        font-size: 15px;
+    }
+
+    /* Section Cards */
+    #popCategoriesRoot .panel-section-card {
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        box-shadow: var(--pc-shadow);
+        margin-bottom: 13px;
+        overflow: hidden;
+    }
+
+    #popCategoriesRoot .panel-section-header {
+        min-height: 48px;
+        padding: 9px 14px;
+        background: var(--pc-surface);
+        border-bottom: 1px solid var(--pc-border);
+        gap: 10px;
+    }
+
+    #popCategoriesRoot .section-title-text {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--bs-emphasis-color, #0f172a);
+        font-size: 12.5px;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    #popCategoriesRoot .section-title-icon {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 5px;
+        background: rgba(var(--pc-primary-rgb), .09);
+        font-size: 12px;
+    }
+
+    #popCategoriesRoot .section-category-badge {
+        font-size: 8.5px;
+        font-weight: 750;
+        letter-spacing: .3px;
+        padding: 5px 7px;
+        white-space: nowrap;
+    }
+
+    /* Collapse Toggle */
+    #popCategoriesRoot .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        flex-shrink: 0;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        color: var(--pc-muted);
         cursor: pointer;
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #popCategoriesRoot .collapse-toggle-btn:hover {
+        background: var(--pc-primary);
+        border-color: var(--pc-primary);
+        color: #fff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
-        transform: rotate(180deg);
-    }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    #popCategoriesRoot .collapse-icon {
         font-size: 10px;
+        transition: transform .2s ease;
+    }
+
+    #popCategoriesRoot .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
     }
 
     /* Form Controls */
-    .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
+    #popCategoriesRoot .form-label {
         display: block;
+        margin-bottom: 5px;
+        color: var(--bs-emphasis-color, #334155);
+        font-size: 11.5px;
+        font-weight: 700;
     }
 
-    /* Category Multi-Select Box */
-    .cat-multi-select-box {
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        overflow: hidden;
-        border-radius: 6px !important;
-    }
-    .cat-select-search {
-        border: none;
-        border-bottom: 1px solid #e2e8f0;
-        border-radius: 0 !important;
-        padding: 9px 12px;
-        font-size: 12px;
-        outline: none;
-        box-shadow: none !important;
-        background: #ffffff;
-        color: #0f172a;
-    }
-    .cat-select-search:focus {
-        background: #f8fafc;
-    }
-    .cat-checklist-container {
-        max-height: 240px;
-        overflow-y: auto;
-        padding: 6px 8px;
-    }
-    .cat-checklist-container::-webkit-scrollbar { width: 4px; }
-    .cat-checklist-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    
-    .cat-check-item {
-        padding: 8px 10px;
-        transition: background-color 0.12s ease;
+    #popCategoriesRoot .form-check-input {
         cursor: pointer;
+    }
+
+    /* Visibility Setting */
+    #popCategoriesRoot .visibility-setting-box {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 2px;
-        border: 1px solid transparent;
-        border-radius: 4px !important;
+        gap: 15px;
+        padding: 14px 15px;
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        border-radius: 5px;
     }
-    .cat-check-item:hover {
-        background-color: #f1f5f9;
-        border-color: #e2e8f0;
+
+    #popCategoriesRoot .visibility-setting-title {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12.5px;
+        font-weight: 750;
+        color: var(--bs-emphasis-color, #1e293b);
+        cursor: pointer;
     }
-    
-    .selected-chips-box {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        padding: 8px 10px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        min-height: 42px;
-        max-height: 95px;
-        overflow-y: auto;
-    }
-    .cat-chip {
-        background: #2563eb;
-        color: #ffffff;
-        padding: 3px 8px;
+
+    #popCategoriesRoot .visibility-setting-description {
+        display: block;
         font-size: 11px;
-        font-weight: 600;
+        line-height: 1.5;
+        color: var(--pc-muted);
+    }
+
+    /* Category Selection */
+    #popCategoriesRoot .cat-multi-select-box {
+        background: var(--pc-surface);
+        border: 1px solid var(--pc-border);
+        overflow: hidden;
+    }
+
+    #popCategoriesRoot .selected-chips-box {
+        min-height: 43px;
+        max-height: 100px;
+        overflow-y: auto;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        padding: 8px 10px;
+        background: var(--pc-soft);
+        border-bottom: 1px solid var(--pc-border);
+    }
+
+    #popCategoriesRoot .cat-chip {
+        max-width: 100%;
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        max-width: 100%;
-        border-radius: 4px !important;
+        gap: 7px;
+        padding: 4px 8px;
+        background: var(--pc-primary);
+        color: #fff;
+        font-size: 10.5px;
+        font-weight: 650;
+        line-height: 1.4;
     }
-    .cat-chip .chip-remove {
-        cursor: pointer;
+
+    #popCategoriesRoot .cat-chip-name {
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #popCategoriesRoot .chip-remove {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: rgba(255, 255, 255, .15);
+        color: #fff;
+        border-radius: 3px !important;
         font-size: 13px;
         line-height: 1;
-        opacity: 0.8;
-    }
-    .cat-chip .chip-remove:hover {
-        opacity: 1;
-    }
-
-    /* Enhanced Toggle Switches */
-    .form-switch .form-check-input {
-        width: 36px;
-        height: 18px;
         cursor: pointer;
-        border-color: #cbd5e1;
-        border-radius: 20px !important;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
-    }
-    .form-switch .form-check-input:checked {
-        background-color: #2563eb;
-        border-color: #2563eb;
+        transition: background .15s ease;
     }
 
-    /* Minimal Modal System (Screenshot Reference) */
-    .minimal-modal-card {
-        background: #ffffff !important;
-        border: 1px solid #f1f5f9 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.14), 0 0 1px 1px rgba(15, 23, 42, 0.04) !important;
-        padding: 24px 26px !important;
-        text-align: left !important;
-    }
-    .minimal-modal-title {
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #0f172a !important;
-        margin-bottom: 6px !important;
-        letter-spacing: -0.02em !important;
-    }
-    .minimal-modal-subtext {
-        font-size: 13px !important;
-        color: #64748b !important;
-        margin-bottom: 20px !important;
-        line-height: 1.45 !important;
-    }
-    .btn-minimal-action {
-        background-color: #2563eb !important;
-        border: none !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        padding: 7px 22px !important;
-        border-radius: 7px !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28) !important;
-        transition: all 0.15s ease !important;
-        cursor: pointer !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .btn-minimal-action:hover {
-        background-color: #1d4ed8 !important;
-        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.38) !important;
-        color: #ffffff !important;
+    #popCategoriesRoot .chip-remove:hover {
+        background: rgba(255, 255, 255, .3);
     }
 
-    /* Mobile Responsive (< 768px) */
-    @media (max-width: 767.98px) {
-        .header-banner-card { padding: 12px 14px !important; }
-        .header-top-wrap {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 8px !important;
-        }
-        .top-action-btns {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .top-action-btns .btn {
-            width: 100%;
-            justify-content: center;
-        }
-        .panel-section-header {
+    #popCategoriesRoot .cat-select-search {
+        width: 100%;
+        min-height: 39px;
+        padding: 9px 12px;
+        border: 0;
+        border-bottom: 1px solid var(--pc-border);
+        border-radius: 0 !important;
+        background: var(--pc-surface);
+        color: var(--bs-body-color, #334155);
+        font-size: 11.5px;
+        outline: none;
+        box-shadow: none !important;
+    }
+
+    #popCategoriesRoot .cat-select-search:focus {
+        background: var(--pc-soft);
+        border-bottom-color: var(--pc-primary);
+    }
+
+    #popCategoriesRoot .cat-checklist-container {
+        max-height: 265px;
+        overflow-y: auto;
+        padding: 7px 8px;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    #popCategoriesRoot .cat-checklist-container::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #popCategoriesRoot .cat-checklist-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 5px;
+    }
+
+    #popCategoriesRoot .cat-check-item {
+        min-height: 39px;
+        margin-bottom: 3px;
+        padding: 7px 9px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid transparent;
+        background: transparent;
+        cursor: pointer;
+        transition: background .12s ease, border-color .12s ease;
+    }
+
+    #popCategoriesRoot .cat-check-item:hover {
+        background: var(--pc-soft);
+        border-color: var(--pc-border);
+    }
+
+    #popCategoriesRoot .cat-check-item:has(.cat-checkbox:checked) {
+        background: rgba(var(--pc-primary-rgb), .055);
+        border-color: rgba(var(--pc-primary-rgb), .17);
+    }
+
+    #popCategoriesRoot .cat-checkbox {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        flex-shrink: 0;
+        accent-color: var(--pc-primary);
+    }
+
+    #popCategoriesRoot .cat-item-name {
+        min-width: 0;
+        color: var(--bs-body-color, #334155);
+        font-size: 11.5px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #popCategoriesRoot .cat-product-count {
+        flex-shrink: 0;
+        font-size: 9px;
+        font-weight: 700;
+    }
+
+    #popCategoriesRoot .cat-empty-state {
+        padding: 18px 10px;
+        text-align: center;
+        color: var(--pc-muted);
+        font-size: 11px;
+    }
+
+    /* Enhanced Switch */
+    #popCategoriesRoot .form-switch .form-check-input {
+        width: 37px;
+        height: 19px;
+        margin: 0;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        background-color: #e2e8f0;
+        box-shadow: none;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+
+    #popCategoriesRoot .form-switch .form-check-input:checked {
+        background-color: var(--pc-primary);
+        border-color: var(--pc-primary);
+    }
+
+    #popCategoriesRoot .form-switch .form-check-input:focus {
+        border-color: var(--pc-primary);
+        box-shadow: 0 0 0 3px rgba(var(--pc-primary-rgb), .13);
+    }
+
+    /* Bottom Action */
+    #popCategoriesRoot .bottom-action-bar {
+        padding: 2px 0 16px;
+    }
+
+    #popCategoriesRoot .bottom-action-bar .btn {
+        min-height: 36px;
+        padding: 7px 20px !important;
+        font-size: 12px !important;
+    }
+
+    /* Success Alert */
+    #popCategoriesRoot .alert {
+        border: 1px solid rgba(25, 135, 84, .15) !important;
+        background: rgba(25, 135, 84, .07);
+    }
+
+    /* Minimal Notice Modal */
+    .popcat-modal-scope .modal-content {
+        padding: 23px 24px !important;
+        background: #fff;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .15);
+        text-align: left;
+    }
+
+    .popcat-modal-scope .minimal-modal-title {
+        margin-bottom: 6px;
+        color: #0f172a;
+        font-size: 15px;
+        font-weight: 750;
+    }
+
+    .popcat-modal-scope .minimal-modal-subtext {
+        margin-bottom: 17px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    .popcat-modal-scope .btn-minimal-action {
+        min-width: 65px;
+        padding: 7px 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 5px;
+        background: var(--pc-primary);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 650;
+        cursor: pointer;
+        transition: filter .15s ease;
+    }
+
+    .popcat-modal-scope .btn-minimal-action:hover {
+        filter: brightness(.92);
+    }
+
+    /* Tablet */
+    @media (max-width: 991.98px) {
+        #popCategoriesRoot .status-kpi-pill {
             padding: 10px 12px;
         }
-        .minimal-modal-card {
-            padding: 20px 20px !important;
+    }
+
+    /* Mobile */
+    @media (max-width: 767.98px) {
+        #popCategoriesRoot {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        #popCategoriesRoot .header-banner-card {
+            padding: 13px 14px !important;
+        }
+
+        #popCategoriesRoot .header-top-wrap {
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+
+        #popCategoriesRoot .header-title {
+            font-size: 15px;
+        }
+
+        #popCategoriesRoot .header-description {
+            font-size: 11px;
+        }
+
+        #popCategoriesRoot .top-action-btns {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px !important;
+            width: 100%;
+        }
+
+        #popCategoriesRoot .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            font-size: 10.5px !important;
+        }
+
+        #popCategoriesRoot .status-kpi-pill {
+            min-height: 62px;
+            padding: 9px 11px;
+        }
+
+        #popCategoriesRoot .kpi-value {
+            font-size: 12px;
+        }
+
+        #popCategoriesRoot .panel-section-header {
+            padding: 9px 10px;
+        }
+
+        #popCategoriesRoot .section-title-text {
+            font-size: 11.5px;
+            gap: 6px;
+        }
+
+        #popCategoriesRoot .section-category-badge {
+            display: none;
+        }
+
+        #popCategoriesRoot .visibility-setting-box {
+            padding: 12px;
+            gap: 10px;
+        }
+
+        #popCategoriesRoot .visibility-setting-title {
+            font-size: 11.5px;
+        }
+
+        #popCategoriesRoot .visibility-setting-description {
+            font-size: 10.5px;
+        }
+
+        #popCategoriesRoot .cat-checklist-container {
+            max-height: 235px;
+        }
+
+        #popCategoriesRoot .bottom-action-bar .btn {
+            width: 100%;
+        }
+
+        .popcat-modal-scope .modal-content {
+            padding: 19px 18px !important;
+        }
+    }
+
+    @media (max-width: 359.98px) {
+        #popCategoriesRoot .top-action-btns {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #popCategoriesRoot *,
+        .popcat-modal-scope * {
+            transition: none !important;
+            animation: none !important;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-2" id="popCategoriesRoot">
 
-    <!-- 1. Header & Quick Controls -->
-    <div class="header-banner-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9.5px; font-weight: 700;">
-                    <i class="fas fa-shield-heart me-1"></i> Storefront Slider
-                </span>
-                <span class="badge {{ $sectionStatus ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} text-uppercase" style="font-size: 9.5px; font-weight: 700;">
-                    {{ $sectionStatus ? 'Slider Live' : 'Slider Hidden' }}
+    {{-- Header & Quick Actions --}}
+    <div class="header-banner-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 header-top-wrap">
+
+        <div class="header-content">
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                <span class="badge {{ $sectionStatus ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle' }} header-eyebrow">
+                    <i class="fas {{ $sectionStatus ? 'fa-circle-check' : 'fa-circle-pause' }} me-1"></i>
+                    {{ $sectionStatus ? 'SLIDER LIVE' : 'SLIDER HIDDEN' }}
                 </span>
             </div>
-            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-dark" style="font-size: 18px;">
+
+            <h5 class="header-title mb-0 d-flex align-items-center gap-2">
                 <i class="fas fa-shield-heart text-primary"></i>
-                <span>Popular Categories Slider Settings</span>
+                <span>Popular Categories & Slider</span>
             </h5>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
-                Control homepage circular category slider visibility, custom items allocation and product link routing.
-            </small>
+
+            <p class="header-description mb-0 mt-1">
+                Control category slider visibility, items & links.
+            </p>
         </div>
 
-        <div class="top-action-btns d-flex gap-2">
-            <a href="{{ $categoryIndexRoute }}" class="btn btn-outline-secondary btn-compact shadow-xs bg-white text-dark fw-semibold">
-                <i class="fas fa-list me-1 text-primary"></i>
+        <div class="top-action-btns d-flex gap-2 flex-shrink-0">
+            <a href="{{ $categoryIndexRoute }}"
+               class="btn btn-outline-secondary btn-compact shadow-none fw-semibold">
+                <i class="fas fa-list text-primary"></i>
                 <span>Categories List</span>
             </a>
-            <button type="button" class="btn btn-primary btn-compact shadow-xs fw-bold px-3" onclick="document.getElementById('popularCategoriesForm').submit()">
-                <i class="fas fa-check-circle me-1"></i>
+
+            <button type="submit"
+                    form="popularCategoriesForm"
+                    class="btn btn-primary btn-compact fw-bold px-3">
+                <i class="fas fa-check-circle"></i>
                 <span>Save Settings</span>
             </button>
         </div>
+
     </div>
 
-    <!-- 2. Status Summary KPI Row (Symmetric 3-Column Grid) -->
+    {{-- Status Summary --}}
     <div class="row g-2 mb-3">
+
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Slider Visibility</small>
-                    <strong class="text-dark d-block" style="font-size: 13.5px;">{{ $sectionStatus ? 'Enabled (Active)' : 'Disabled (Hidden)' }}</strong>
+                    <span class="kpi-label">Slider Visibility</span>
+                    <strong class="kpi-value {{ $sectionStatus ? 'text-success' : 'text-secondary' }}">
+                        {{ $sectionStatus ? 'Enabled' : 'Disabled' }}
+                    </strong>
                 </div>
-                <div class="text-{{ $sectionStatus ? 'success' : 'secondary' }} fs-5">
+
+                <div class="kpi-icon {{ $sectionStatus ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
                     <i class="fas fa-toggle-{{ $sectionStatus ? 'on' : 'off' }}"></i>
                 </div>
             </div>
@@ -417,12 +730,13 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Selected Showcase</small>
-                    <strong class="text-primary d-block bn-digit font-tabular" style="font-size: 13.5px;">
-                        {{ $selectedCount > 0 ? $selectedCount . ' Categories' : 'All Categories (Auto)' }}
+                    <span class="kpi-label">Selected Showcase</span>
+                    <strong class="kpi-value text-primary font-tabular">
+                        {{ $selectedCount > 0 ? $selectedCount . ' Categories' : 'All Categories' }}
                     </strong>
                 </div>
-                <div class="text-primary fs-5">
+
+                <div class="kpi-icon bg-primary-subtle text-primary">
                     <i class="fas fa-check-double"></i>
                 </div>
             </div>
@@ -431,222 +745,475 @@
         <div class="col-12 col-md-4">
             <div class="status-kpi-pill">
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 11px;">Total Catalog Categories</small>
-                    <strong class="text-dark d-block bn-digit font-tabular" style="font-size: 13.5px;">{{ $totalCats }} Available</strong>
+                    <span class="kpi-label">Total Catalog Categories</span>
+                    <strong class="kpi-value text-dark font-tabular">
+                        {{ $totalCats }} Available
+                    </strong>
                 </div>
-                <div class="text-warning fs-5">
+
+                <div class="kpi-icon bg-warning-subtle text-warning-emphasis">
                     <i class="fas fa-layer-group"></i>
                 </div>
             </div>
         </div>
+
     </div>
 
+    {{-- Success Message --}}
     @if(session('success'))
-        <div class="alert alert-success border-0 shadow-xs py-2 px-3 mb-2 small d-flex align-items-center justify-content-between" style="border-radius: 5px;">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-check-circle text-success"></i>
-                <span class="fw-semibold text-dark">{{ session('success') }}</span>
+        <div class="alert alert-success shadow-none py-2 px-3 mb-3 d-flex align-items-center justify-content-between gap-2"
+             role="alert">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <i class="fas fa-circle-check text-success"></i>
+                <span class="fw-semibold text-dark small">
+                    {{ session('success') }}
+                </span>
             </div>
-            <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
+
+            <button type="button"
+                    class="btn-close shadow-none flex-shrink-0"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"></button>
         </div>
     @endif
 
-    <form action="{{ route('admin.theme.setting.popular_categories.update') }}" method="POST" id="popularCategoriesForm">
+    <form action="{{ route('admin.theme.setting.popular_categories.update') }}"
+          method="POST"
+          id="popularCategoriesForm">
+
         @csrf
 
-        <!-- Section 1: Visibility & Behavior Control (COLLAPSIBLE) -->
+        {{-- Section 1: Visibility & Display Rules --}}
         <div class="panel-section-card">
+
             <div class="panel-section-header d-flex justify-content-between align-items-center">
+
                 <div class="section-title-text">
-                    <i class="fas fa-sliders text-primary"></i>
-                    <span>Section Visibility &amp; Display Rules</span>
+                    <span class="section-title-icon text-primary">
+                        <i class="fas fa-sliders"></i>
+                    </span>
+                    <span>Section Display Settings</span>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Slider Mode</span>
-                    <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseVisibilityRules" aria-expanded="true" aria-controls="collapseVisibilityRules" title="Toggle Section">
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle section-category-badge">
+                        SLIDER MODE
+                    </span>
+
+                    <button type="button"
+                            class="collapse-toggle-btn"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseVisibilityRules"
+                            aria-expanded="true"
+                            aria-controls="collapseVisibilityRules"
+                            title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
                 </div>
+
             </div>
 
             <div class="collapse show" id="collapseVisibilityRules">
                 <div class="p-3 bg-light bg-opacity-25">
-                    <div class="p-3 bg-white border d-flex align-items-center justify-content-between" style="border-radius: 6px;">
-                        <div class="pe-2">
-                            <label class="form-check-label d-block text-dark fw-bold" for="popCatSecSwitch" style="font-size: 12.5px; cursor: pointer;">
-                                Homepage Popular Categories Slider
+
+                    <div class="visibility-setting-box">
+
+                        <div class="pe-2 min-w-0">
+                            <label class="visibility-setting-title"
+                                   for="popCatSecSwitch">
+                                Popular Categories Slider
                             </label>
-                            <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.35;">
-                                Enable or disable circular icon category showcase carousel on storefront homepage.
+
+                            <small class="visibility-setting-description">
+                                Enable or disable the homepage category slider.
                             </small>
                         </div>
+
                         <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                            <input class="form-check-input ms-0" type="checkbox" name="show_popular_categories_section" value="1" id="popCatSecSwitch" {{ $sectionStatus ? 'checked' : '' }}>
+                            <input class="form-check-input ms-0"
+                                   type="checkbox"
+                                   name="show_popular_categories_section"
+                                   value="1"
+                                   id="popCatSecSwitch"
+                                   {{ $sectionStatus ? 'checked' : '' }}>
                         </div>
+
                     </div>
+
                 </div>
             </div>
+
         </div>
 
-        <!-- Section 2: Category Selection & Checklist (COLLAPSIBLE) -->
+        {{-- Section 2: Category Selection --}}
         <div class="panel-section-card">
+
             <div class="panel-section-header d-flex justify-content-between align-items-center">
+
                 <div class="section-title-text">
-                    <i class="fas fa-list-check text-success"></i>
-                    <span>Category Selection &amp; Showcase Allocations</span>
+                    <span class="section-title-icon text-success">
+                        <i class="fas fa-list-check"></i>
+                    </span>
+                    <span>Category Selection & Display</span>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle text-uppercase" style="font-size: 9px; font-weight: 700;">Custom Items</span>
-                    <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseCategorySelection" aria-expanded="true" aria-controls="collapseCategorySelection" title="Toggle Section">
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle section-category-badge">
+                        CUSTOM ITEMS
+                    </span>
+
+                    <button type="button"
+                            class="collapse-toggle-btn"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapseCategorySelection"
+                            aria-expanded="true"
+                            aria-controls="collapseCategorySelection"
+                            title="Toggle Section">
                         <i class="fas fa-chevron-down collapse-icon"></i>
                     </button>
                 </div>
+
             </div>
 
             <div class="collapse show" id="collapseCategorySelection">
                 <div class="p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label mb-0">Select Featured Categories</label>
-                        <small class="text-muted" style="font-size: 11px;">
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <label class="form-label mb-0">
+                            Select Featured Categories
+                        </label>
+
+                        <small class="text-muted" style="font-size: 10.5px;">
                             Leave blank to show all active categories automatically.
                         </small>
                     </div>
 
-                    <div class="cat-multi-select-box shadow-xs">
-                        <!-- Selected Category Chips Wrapper -->
-                        <div class="selected-chips-box" id="selectedCatChipsWrapper">
-                            <span class="text-muted small my-auto placeholder-text" style="font-size: 11px;">No categories selected yet.</span>
+                    <div class="cat-multi-select-box">
+
+                        {{-- Selected Category Chips --}}
+                        <div class="selected-chips-box"
+                             id="selectedCatChipsWrapper"
+                             aria-live="polite">
+                            <span class="text-muted small my-auto placeholder-text"
+                                  style="font-size: 11px;">
+                                No categories selected yet.
+                            </span>
                         </div>
 
-                        <!-- Real-time Filter Input -->
-                        <input type="text" id="catFilterInput" class="form-control cat-select-search" placeholder="Type category title to search instantly...">
+                        {{-- Category Search --}}
+                        <div class="position-relative">
+                            <i class="fas fa-search text-muted position-absolute top-50 translate-middle-y"
+                               style="left: 12px; font-size: 11px; pointer-events: none;"></i>
 
-                        <!-- Checklist Container with Counter Badges -->
+                            <input type="text"
+                                   id="catFilterInput"
+                                   class="form-control cat-select-search"
+                                   style="padding-left: 32px;"
+                                   placeholder="Search categories by name..."
+                                   autocomplete="off"
+                                   aria-label="Search categories">
+                        </div>
+
+                        {{-- Category Checklist --}}
                         <div class="cat-checklist-container" id="catChecklist">
-                            @foreach($allCategories as $cat)
+
+                            @forelse($allCategories as $cat)
                                 @php
                                     $isChecked = in_array($cat->id, $selectedCategoryIds ?? []);
                                 @endphp
-                                <label class="cat-check-item" data-title="{{ strtolower($cat->name) }}">
+
+                                <label class="cat-check-item"
+                                       data-title="{{ strtolower($cat->name) }}">
+
                                     <div class="d-flex align-items-center gap-2 min-w-0">
-                                        <input class="form-check-input mt-0 cat-checkbox flex-shrink-0" type="checkbox" name="category_ids[]" value="{{ $cat->id }}" data-name="{{ $cat->name }}" {{ $isChecked ? 'checked' : '' }}>
-                                        <span class="small fw-semibold text-dark text-truncate" style="font-size: 12px;">{{ $cat->name }}</span>
+
+                                        <input class="form-check-input cat-checkbox"
+                                               type="checkbox"
+                                               name="category_ids[]"
+                                               value="{{ $cat->id }}"
+                                               data-name="{{ $cat->name }}"
+                                               {{ $isChecked ? 'checked' : '' }}>
+
+                                        <span class="cat-item-name">
+                                            {{ $cat->name }}
+                                        </span>
+
                                     </div>
-                                    <span class="badge bg-light text-secondary border small bn-digit font-tabular flex-shrink-0 ms-2" style="font-size: 9.5px;">
+
+                                    <span class="badge bg-light text-secondary border cat-product-count">
                                         {{ $cat->products_count ?? 0 }} Items
                                     </span>
+
                                 </label>
-                            @endforeach
+
+                            @empty
+                                <div class="cat-empty-state">
+                                    <i class="fas fa-folder-open d-block mb-2 fs-5"></i>
+                                    No categories available.
+                                </div>
+                            @endforelse
+
                         </div>
+
+                        {{-- Search Empty State --}}
+                        <div class="cat-empty-state d-none"
+                             id="catSearchEmptyState">
+                            <i class="fas fa-search d-block mb-2"></i>
+                            No matching categories found.
+                        </div>
+
                     </div>
+
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-2">
+                        <small class="text-muted" style="font-size: 10px;">
+                            <i class="fas fa-circle-info me-1"></i>
+                            Selected categories will appear in the showcase.
+                        </small>
+
+                        <small class="text-primary fw-semibold"
+                               id="catSelectedCounter"
+                               style="font-size: 10.5px;">
+                            {{ $selectedCount }} Selected
+                        </small>
+                    </div>
+
                 </div>
             </div>
+
         </div>
 
-        <!-- Submit Button Bar -->
-        <div class="d-flex justify-content-end pt-2 pb-3">
-            <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 w-100 w-md-auto" style="min-height: 36px; font-size: 12px;">
-                <i class="fas fa-check-circle me-1"></i> Save Changes
+        {{-- Bottom Action --}}
+        <div class="bottom-action-bar d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary btn-compact fw-bold">
+                <i class="fas fa-check-circle"></i>
+                Save Changes
             </button>
         </div>
+
     </form>
 </div>
 
-<!-- Modal: Minimal Notice Modal (Exact Match with Reference Screenshot) -->
-<div class="modal fade popcat-modal-scope" id="popCatNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 108500;">
+{{-- Minimal Notice Modal --}}
+<div class="modal fade popcat-modal-scope"
+     id="popCatNoticeModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 108500;">
+
     <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
-        <div class="modal-content minimal-modal-card">
-            <h6 class="minimal-modal-title" id="popCatNoticeTitle">Notification</h6>
-            <p class="minimal-modal-subtext" id="popCatNoticeMessage" style="margin-bottom: 16px !important;"></p>
+        <div class="modal-content">
+
+            <h6 class="minimal-modal-title" id="popCatNoticeTitle">
+                Notification
+            </h6>
+
+            <p class="minimal-modal-subtext"
+               id="popCatNoticeMessage"></p>
+
             <div class="d-flex align-items-center">
-                <button type="button" class="btn-minimal-action" data-bs-dismiss="modal">OK</button>
+                <button type="button"
+                        class="btn-minimal-action"
+                        data-bs-dismiss="modal">
+                    OK
+                </button>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-// Universal Notice Modal
-function showPopCatModalNotice(message, title = 'Notification') {
-    const titleEl = document.getElementById('popCatNoticeTitle');
-    const msgEl   = document.getElementById('popCatNoticeMessage');
+    // =========================================================
+    // POPULAR CATEGORIES — JAVASCRIPT
+    // =========================================================
 
-    if (titleEl) titleEl.innerText = title;
-    if (msgEl) msgEl.innerText = message;
+    /**
+     * Universal Notice Modal
+     */
+    function showPopCatModalNotice(message, title = 'Notification') {
+        const titleEl = document.getElementById('popCatNoticeTitle');
+        const msgEl = document.getElementById('popCatNoticeMessage');
+        const modalEl = document.getElementById('popCatNoticeModal');
 
-    const modalEl = document.getElementById('popCatNoticeModal');
-    if (modalEl && window.bootstrap) {
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        if (titleEl) {
+            titleEl.textContent = title;
+        }
+
+        if (msgEl) {
+            msgEl.textContent = message;
+        }
+
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     }
-}
 
-document.addEventListener('DOMContentLoaded', function () {
-    @if(session('success'))
-        showPopCatModalNotice('{{ session('success') }}', 'Success');
-    @endif
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // Real-time Category Search
-    const searchInput = document.getElementById('catFilterInput');
-    const items = document.querySelectorAll('.cat-check-item');
-    const chipsWrapper = document.getElementById('selectedCatChipsWrapper');
-    const checkboxes = document.querySelectorAll('.cat-checkbox');
+        const root = document.getElementById('popCategoriesRoot');
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            const query = this.value.toLowerCase().trim();
-            items.forEach(item => {
-                const title = item.getAttribute('data-title');
-                if (title && title.includes(query)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
+        if (!root) {
+            return;
+        }
+
+        // Safely display Laravel success message
+        const successMessage = @json(session('success'));
+
+        if (successMessage) {
+            showPopCatModalNotice(successMessage, 'Success');
+        }
+
+        // DOM References
+        const searchInput = document.getElementById('catFilterInput');
+        const checklist = document.getElementById('catChecklist');
+        const chipsWrapper = document.getElementById('selectedCatChipsWrapper');
+        const counter = document.getElementById('catSelectedCounter');
+        const emptyState = document.getElementById('catSearchEmptyState');
+
+        if (!checklist || !chipsWrapper) {
+            return;
+        }
+
+        const items = Array.from(
+            checklist.querySelectorAll('.cat-check-item')
+        );
+
+        const checkboxes = Array.from(
+            checklist.querySelectorAll('.cat-checkbox')
+        );
+
+        /**
+         * Update Category Search
+         */
+        function filterCategories() {
+            const query = (searchInput?.value || '').trim().toLowerCase();
+
+            let visibleCount = 0;
+
+            items.forEach(function (item) {
+                const title = (item.getAttribute('data-title') || '').toLowerCase();
+                const matches = title.includes(query);
+
+                item.style.display = matches ? 'flex' : 'none';
+
+                if (matches) {
+                    visibleCount++;
                 }
             });
-        });
-    }
 
-    // Render Active Category Chips
-    function renderCatChips() {
-        chipsWrapper.innerHTML = '';
-        let hasSelected = false;
+            if (emptyState) {
+                emptyState.classList.toggle(
+                    'd-none',
+                    visibleCount > 0 || items.length === 0
+                );
+            }
+        }
 
-        checkboxes.forEach(cb => {
-            if (cb.checked) {
-                hasSelected = true;
-                const id = cb.value;
-                const name = cb.getAttribute('data-name');
+        /**
+         * Render Selected Category Chips
+         *
+         * Uses textContent instead of innerHTML for category
+         * names to prevent HTML injection.
+         */
+        function renderCatChips() {
+            chipsWrapper.replaceChildren();
+
+            const selectedCheckboxes = checkboxes.filter(function (cb) {
+                return cb.checked;
+            });
+
+            selectedCheckboxes.forEach(function (cb) {
 
                 const chip = document.createElement('span');
-                chip.className = 'cat-chip shadow-xs';
-                chip.innerHTML = `
-                    <span class="text-truncate" style="max-width: 140px;">${name}</span>
-                    <span class="chip-remove" data-id="${id}" title="Remove">&times;</span>
-                `;
+                chip.className = 'cat-chip';
+
+                const name = document.createElement('span');
+                name.className = 'cat-chip-name';
+                name.textContent = cb.dataset.name || '';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'chip-remove';
+                removeBtn.dataset.id = cb.value;
+                removeBtn.title = 'Remove ' + (cb.dataset.name || 'category');
+                removeBtn.setAttribute(
+                    'aria-label',
+                    'Remove ' + (cb.dataset.name || 'category')
+                );
+                removeBtn.textContent = '\u00D7';
+
+                chip.appendChild(name);
+                chip.appendChild(removeBtn);
+
                 chipsWrapper.appendChild(chip);
+            });
+
+            // Empty state
+            if (selectedCheckboxes.length === 0) {
+                const placeholder = document.createElement('span');
+
+                placeholder.className =
+                    'text-muted small my-auto placeholder-text';
+
+                placeholder.style.fontSize = '11px';
+
+                placeholder.textContent =
+                    'No categories selected yet. All will display automatically.';
+
+                chipsWrapper.appendChild(placeholder);
+            }
+
+            // Selected counter
+            if (counter) {
+                counter.textContent =
+                    selectedCheckboxes.length + ' Selected';
+            }
+        }
+
+        /**
+         * Search Event
+         */
+        if (searchInput) {
+            searchInput.addEventListener('input', filterCategories);
+        }
+
+        /**
+         * Checkbox Change Event
+         */
+        checkboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', renderCatChips);
+        });
+
+        /**
+         * Remove Category from Selected Chips
+         */
+        chipsWrapper.addEventListener('click', function (event) {
+
+            const removeBtn = event.target.closest('.chip-remove');
+
+            if (!removeBtn || !chipsWrapper.contains(removeBtn)) {
+                return;
+            }
+
+            const targetId = removeBtn.dataset.id;
+
+            const targetCheckbox = checkboxes.find(function (cb) {
+                return cb.value === targetId;
+            });
+
+            if (targetCheckbox) {
+                targetCheckbox.checked = false;
+
+                targetCheckbox.dispatchEvent(
+                    new Event('change', { bubbles: true })
+                );
             }
         });
 
-        if (!hasSelected) {
-            chipsWrapper.innerHTML = '<span class="text-muted small my-auto placeholder-text" style="font-size: 11px;">No categories selected yet. All will display automatically.</span>';
-        }
-    }
+        // Initial Render
+        renderCatChips();
+        filterCategories();
 
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', renderCatChips);
     });
-
-    chipsWrapper.addEventListener('click', function (e) {
-        if (e.target.classList.contains('chip-remove')) {
-            const targetId = e.target.getAttribute('data-id');
-            const targetCb = document.querySelector(`.cat-checkbox[value="${targetId}"]`);
-            if (targetCb) {
-                targetCb.checked = false;
-                renderCatChips();
-            }
-        }
-    });
-
-    renderCatChips();
-});
 </script>
 @endsection

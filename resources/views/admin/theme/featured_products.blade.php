@@ -4,9 +4,33 @@
 
 @section('admin_content')
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =====================================================
+       FEATURED PRODUCTS SETTINGS
+       Kaiadmin Lite - Classic White Design
+    ===================================================== */
+
+    #featured-settings-root {
+        --featured-primary: var(--bs-primary, #1572e8);
+        --featured-success: var(--bs-success, #31ce36);
+        --featured-danger: var(--bs-danger, #f25961);
+        --featured-warning: var(--bs-warning, #ffad46);
+        --featured-info: var(--bs-info, #48abf7);
+
+        --featured-bg: #f8f9fa;
+        --featured-white: #ffffff;
+        --featured-border: #ebedf2;
+        --featured-heading: #2a2f5b;
+        --featured-text: #495057;
+        --featured-muted: #8d9498;
+
+        color: var(--featured-text);
+        font-size: 13px;
+        min-width: 0;
+    }
+
+    /* Global Radius */
+
     #featured-settings-root .btn,
-    #featured-settings-root .btn-sm,
     #featured-settings-root button,
     #featured-settings-root .form-control,
     #featured-settings-root .form-select,
@@ -22,332 +46,841 @@
         border-radius: 5px !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    /* Typography */
+
+    #featured-settings-root h5,
+    #featured-settings-root h6 {
+        color: var(--featured-heading);
+        letter-spacing: -0.2px;
     }
 
-    /* Compact Button Styling */
-    .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 14px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    #featured-settings-root .font-monospace,
+    #featured-settings-root .bn-digit {
+        font-weight: 700;
+    }
+
+    /* Page Header */
+
+    #featured-settings-root .header-top-wrap {
+        min-width: 0;
+    }
+
+    #featured-settings-root .page-title {
+        font-size: clamp(17px, 2vw, 21px);
+        font-weight: 700;
+        color: var(--featured-heading);
+        line-height: 1.35;
+    }
+
+    #featured-settings-root .page-description {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--featured-muted);
+    }
+
+    #featured-settings-root .header-status {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 5px 9px;
+    }
+
+    /* Compact Buttons */
+
+    #featured-settings-root .btn-compact {
+        min-height: 34px;
+        padding: 6px 13px;
+        font-size: 11.5px;
+        line-height: 1.3;
+        font-weight: 600;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 3px;
         white-space: nowrap;
-        transition: all 0.15s ease;
-    }
-
-    /* Enterprise Surface Cards */
-    .settings-main-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-
-    .settings-panel-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 14px 16px;
-        margin-bottom: 14px;
         transition: all 0.2s ease;
     }
 
-    /* Status Mini KPI Pill */
-    .status-kpi-pill {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 10px 14px;
+    #featured-settings-root .btn-compact:hover {
+        transform: translateY(-1px);
+    }
+
+    #featured-settings-root .top-action-btns {
+        flex-shrink: 0;
+    }
+
+    /* Main Settings Card */
+
+    #featured-settings-root .settings-main-card {
+        background: var(--featured-white);
+        border: 1px solid var(--featured-border);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.035);
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    #featured-settings-root .settings-main-card > .card-body {
+        min-width: 0;
+    }
+
+    /* Overview KPI Cards */
+
+    #featured-settings-root .status-kpi-pill {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: 12px;
+        min-height: 76px;
         height: 100%;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        padding: 13px 15px;
+        background: var(--featured-white);
+        border: 1px solid var(--featured-border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.025);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    /* Form Controls */
-    .form-label {
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
+    #featured-settings-root .status-kpi-pill:hover {
+        border-color: rgba(21, 114, 232, 0.25);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.045);
     }
 
-    #featured-settings-root .form-control,
-    #featured-settings-root .form-select {
-        min-height: 34px;
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #featured-settings-root .form-control:focus,
-    #featured-settings-root .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
-    }
-
-    /* Enhanced Toggle Switches */
-    .form-switch .form-check-input {
-        width: 38px;
-        height: 20px;
-        cursor: pointer;
-        border-color: #cbd5e1;
-        transition: background-color 0.15s ease, border-color 0.15s ease;
-    }
-    .form-switch .form-check-input:checked {
-        background-color: #2563eb;
-        border-color: #2563eb;
-    }
-    .form-check-label {
-        font-size: 11.5px;
+    #featured-settings-root .kpi-label {
+        font-size: 11px;
         font-weight: 600;
-        color: #1e293b;
-        cursor: pointer;
-        user-select: none;
+        color: var(--featured-muted);
+        margin-bottom: 4px;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 26px;
-        height: 26px;
+    #featured-settings-root .kpi-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--featured-heading);
+        line-height: 1.4;
+    }
+
+    #featured-settings-root .kpi-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        font-size: 16px;
+        background: var(--featured-bg);
+    }
+
+    /* Settings Panels */
+
+    #featured-settings-root .settings-panel-box {
+        background: var(--featured-white);
+        border: 1px solid var(--featured-border);
+        padding: 16px;
+        margin-bottom: 15px;
+        transition: border-color 0.2s ease;
+    }
+
+    #featured-settings-root .settings-panel-box:last-child {
+        margin-bottom: 0;
+    }
+
+    #featured-settings-root .panel-heading {
+        min-width: 0;
+        padding-bottom: 11px;
+        border-bottom: 1px solid var(--featured-border);
+    }
+
+    #featured-settings-root .panel-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--featured-heading);
+        line-height: 1.4;
+    }
+
+    #featured-settings-root .panel-icon {
+        width: 29px;
+        height: 29px;
+        min-width: 29px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(21, 114, 232, 0.08);
+        color: var(--featured-primary);
+        border-radius: 5px;
+        font-size: 13px;
+    }
+
+    /* Collapse Button */
+
+    #featured-settings-root .collapse-toggle-btn {
+        width: 29px;
+        height: 29px;
+        min-width: 29px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
+        background: var(--featured-white);
+        border: 1px solid var(--featured-border);
+        color: var(--featured-text);
         transition: all 0.2s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
-        transform: rotate(180deg);
-    }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
+
+    #featured-settings-root .collapse-toggle-btn:hover {
+        background: var(--featured-primary);
+        border-color: var(--featured-primary);
+        color: #fff;
     }
 
-    /* Mobile Responsive Optimizations (< 768px) */
-    @media (max-width: 767.98px) {
-        .settings-panel-box {
-            padding: 12px !important;
+    #featured-settings-root .collapse-icon {
+        font-size: 10px;
+        transition: transform 0.25s ease;
+    }
+
+    #featured-settings-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    /* Switch Setting Cards */
+
+    #featured-settings-root .setting-option-card {
+        min-height: 85px;
+        padding: 14px 15px;
+        background: var(--featured-white);
+        border: 1px solid var(--featured-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        height: 100%;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    #featured-settings-root .setting-option-card:hover {
+        border-color: rgba(21, 114, 232, 0.3);
+        background: #fcfdff;
+    }
+
+    #featured-settings-root .setting-option-card .form-check-label {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.45;
+        color: var(--featured-heading);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #featured-settings-root .setting-description {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--featured-muted);
+    }
+
+    /* Form Labels */
+
+    #featured-settings-root .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--featured-text);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Form Controls */
+
+    #featured-settings-root .form-control,
+    #featured-settings-root .form-select {
+        width: 100%;
+        min-height: 38px;
+        padding: 7px 11px;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #e6e9ef;
+        box-shadow: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #featured-settings-root .form-control:hover,
+    #featured-settings-root .form-select:hover {
+        border-color: #cbd3df;
+    }
+
+    #featured-settings-root .form-control:focus,
+    #featured-settings-root .form-select:focus {
+        border-color: var(--featured-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, 0.10);
+        outline: none;
+    }
+
+    #featured-settings-root .form-control::placeholder {
+        color: #b1b8c1;
+        opacity: 1;
+    }
+
+    #featured-settings-root input[type="number"] {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Toggle Switch */
+
+    #featured-settings-root .form-switch {
+        flex-shrink: 0;
+    }
+
+    #featured-settings-root .form-switch .form-check-input {
+        width: 39px;
+        height: 21px;
+        margin-top: 0;
+        cursor: pointer;
+        border-color: #d5d9e0;
+        background-color: #e9ecef;
+        box-shadow: none;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    #featured-settings-root .form-switch .form-check-input:checked {
+        background-color: var(--featured-primary);
+        border-color: var(--featured-primary);
+    }
+
+    #featured-settings-root .form-switch .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, 0.12);
+        border-color: var(--featured-primary);
+    }
+
+    /* Helper Text */
+
+    #featured-settings-root .form-helper {
+        display: block;
+        margin-top: 6px;
+        color: var(--featured-muted);
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+    /* Submit Area */
+
+    #featured-settings-root .submit-action-bar {
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--featured-border);
+    }
+
+    #featured-settings-root .save-settings-btn {
+        min-height: 38px;
+        padding: 8px 23px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Modal */
+
+    .featured-modal-scope .modal-content {
+        border: 1px solid var(--featured-border, #ebedf2);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .featured-modal-scope .modal-body {
+        padding: 12px;
+    }
+
+    .featured-modal-scope .modal-title {
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .featured-modal-scope .notice-message {
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    /* Tablet */
+
+    @media (max-width: 991.98px) {
+        #featured-settings-root .settings-main-card > .card-body {
+            padding: 20px !important;
         }
-        .header-top-wrap {
+
+        #featured-settings-root .settings-panel-box {
+            padding: 14px;
+        }
+    }
+
+    /* Mobile */
+
+    @media (max-width: 767.98px) {
+        #featured-settings-root {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        #featured-settings-root .header-top-wrap {
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 8px !important;
+            gap: 12px !important;
         }
-        .top-action-btns {
-            width: 100%;
+
+        #featured-settings-root .page-title {
+            font-size: 18px;
+        }
+
+        #featured-settings-root .page-description {
+            font-size: 11.5px;
+        }
+
+        #featured-settings-root .top-action-btns {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .top-action-btns .btn {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
-            justify-content: center;
+            gap: 8px;
+        }
+
+        #featured-settings-root .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            padding-left: 7px;
+            padding-right: 7px;
+            font-size: 10.5px;
+        }
+
+        #featured-settings-root .status-kpi-pill {
+            min-height: 68px;
+            padding: 11px 12px;
+        }
+
+        #featured-settings-root .settings-main-card > .card-body {
+            padding: 13px !important;
+        }
+
+        #featured-settings-root .settings-panel-box {
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        #featured-settings-root .panel-title {
+            font-size: 12px;
+        }
+
+        #featured-settings-root .setting-option-card {
+            min-height: 78px;
+            padding: 12px;
+        }
+
+        #featured-settings-root .submit-action-bar {
+            padding-top: 13px;
+        }
+
+        #featured-settings-root .save-settings-btn {
+            width: 100%;
+        }
+    }
+
+    /* Small Mobile */
+
+    @media (max-width: 380px) {
+        #featured-settings-root .header-status {
+            font-size: 9px;
+            padding: 4px 7px;
+        }
+
+        #featured-settings-root .top-action-btns .btn {
+            font-size: 10px;
+        }
+
+        #featured-settings-root .kpi-value {
+            font-size: 12px;
+        }
+
+        #featured-settings-root .kpi-icon {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            font-size: 14px;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3" id="featured-settings-root">
 
-    <!-- 1. Header & Quick Actions -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 header-top-wrap">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-danger-subtle text-danger border border-danger-subtle font-monospace text-uppercase" style="font-size: 9.5px;">
-                    <i class="fas fa-fire me-1"></i> HOMEPAGE SHOWCASE
-                </span>
-                <span class="badge {{ $showFeatured ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle' }} font-monospace text-uppercase" style="font-size: 9.5px;">
+    <!-- 1. Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4 header-top-wrap">
+
+        <div class="min-w-0">
+
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                <span class="badge {{ $showFeatured ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle' }} header-status">
                     {{ $showFeatured ? 'Live on Store' : 'Hidden' }}
                 </span>
+
             </div>
-            <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
+
+            <h5 class="page-title mb-1 d-flex align-items-center gap-2">
                 <i class="fas fa-fire text-danger"></i>
-                <span>Featured Products Settings</span>
+                <span>Featured Products</span>
             </h5>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
-                Configure homepage featured showcase visibility, pagination behavior and display quantities.
+
+            <small class="page-description d-block">
+                Manage Featured Products on the homepage.
             </small>
+
         </div>
 
         <div class="top-action-btns d-flex gap-2">
-            <a href="{{ route('admin.product.index') }}" class="btn btn-light border btn-compact shadow-xs text-secondary">
-                <i class="fas fa-boxes me-1 text-primary"></i>
+
+            <a href="{{ route('admin.product.index') }}"
+               class="btn btn-light border btn-compact shadow-xs text-secondary">
+
+                <i class="fas fa-boxes text-primary me-1"></i>
                 <span>Manage Products</span>
+
             </a>
-            <a href="{{ url('/') }}" target="_blank" class="btn btn-outline-primary btn-compact shadow-xs">
-                <i class="fas fa-arrow-up-right-from-square me-1"></i>
+
+            <a href="{{ url('/') }}"
+               target="_blank"
+               class="btn btn-outline-primary btn-compact shadow-xs">
+
+                <i class="fas fa-external-link-alt me-1"></i>
                 <span>View Storefront</span>
+
             </a>
+
         </div>
+
     </div>
 
-    <!-- 2. Section Overview Symmetric KPI Cards -->
-    <div class="row g-2 mb-3">
+    <!-- 2. Overview Cards -->
+    <div class="row g-2 g-md-3 mb-3">
+
+        <!-- Visibility -->
         <div class="col-12 col-md-4">
+
             <div class="status-kpi-pill">
+
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Section Visibility</small>
-                    <strong class="text-dark d-block" style="font-size: 13px;">{{ $showFeatured ? 'Enabled (Active)' : 'Disabled' }}</strong>
+
+                    <small class="kpi-label d-block">
+                        Section Visibility
+                    </small>
+
+                    <strong class="kpi-value d-block">
+                        {{ $showFeatured ? 'Enabled' : 'Disabled' }}
+                    </strong>
+
                 </div>
-                <div class="text-{{ $showFeatured ? 'success' : 'secondary' }} fs-5">
+
+                <div class="kpi-icon text-{{ $showFeatured ? 'success' : 'secondary' }}">
                     <i class="fas fa-toggle-{{ $showFeatured ? 'on' : 'off' }}"></i>
                 </div>
+
             </div>
+
         </div>
 
+        <!-- Pagination -->
         <div class="col-12 col-md-4">
+
             <div class="status-kpi-pill">
+
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Pagination Status</small>
-                    <strong class="text-dark d-block" style="font-size: 13px;">{{ $enablePagination ? 'Paginated' : 'Direct Limit' }}</strong>
+
+                    <small class="kpi-label d-block">
+                        Pagination
+                    </small>
+
+                    <strong class="kpi-value d-block">
+                        {{ $enablePagination ? 'Enabled' : 'Disabled' }}
+                    </strong>
+
                 </div>
-                <div class="text-primary fs-5">
+
+                <div class="kpi-icon text-primary">
                     <i class="fas fa-list-ol"></i>
                 </div>
+
             </div>
+
         </div>
 
+        <!-- Product Count -->
         <div class="col-12 col-md-4">
+
             <div class="status-kpi-pill">
+
                 <div class="min-w-0">
-                    <small class="text-muted d-block fw-semibold text-truncate" style="font-size: 10.5px;">Display Quantity</small>
-                    <strong class="text-dark d-block font-monospace bn-digit" style="font-size: 13px;">{{ $featuredCount }} Products</strong>
+
+                    <small class="kpi-label d-block">
+                        Display Quantity
+                    </small>
+
+                    <strong class="kpi-value d-block font-monospace bn-digit">
+                        {{ $featuredCount }} Products
+                    </strong>
+
                 </div>
-                <div class="text-warning fs-5">
+
+                <div class="kpi-icon text-warning">
                     <i class="fas fa-boxes-stacked"></i>
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    <!-- 3. Main Settings Form Card -->
+    <!-- 3. Main Settings Card -->
     <div class="card settings-main-card">
+
         <div class="card-body p-3 p-md-4">
-            <form action="{{ route('admin.theme.setting.featured_products.update') }}" method="POST" id="featuredSettingsForm">
+
+            <form action="{{ route('admin.theme.setting.featured_products.update') }}"
+                  method="POST"
+                  id="featuredSettingsForm">
+
                 @csrf
-                <!-- Hidden inputs for backend controller parameter compatibility -->
+
+                <!-- Hidden Backend Parameters -->
                 <input type="hidden" name="featured_grid_pc" value="{{ $gridPc ?? 4 }}">
                 <input type="hidden" name="featured_section_banner" value="{{ $featuredBanner ?? '' }}">
 
-                <!-- Panel 1: Visibility & Behavior Switches (COLLAPSIBLE) -->
+                <!-- Panel 1: Visibility & Behavior -->
                 <div class="settings-panel-box">
-                    <div class="d-flex justify-content-between align-items-center pb-2 border-bottom">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-sliders text-primary"></i>
-                            <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Section Visibility &amp; Behavior Rules</h6>
+
+                    <div class="d-flex justify-content-between align-items-center panel-heading">
+
+                        <div class="d-flex align-items-center gap-2 min-w-0">
+
+                            <span class="panel-icon">
+                                <i class="fas fa-sliders"></i>
+                            </span>
+
+                            <h6 class="panel-title mb-0">
+                              Visibility
+                            </h6>
+
                         </div>
-                        <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseVisibilityRules" aria-expanded="true" aria-controls="collapseVisibilityRules" title="Toggle Section View">
+
+                        <button type="button"
+                                class="collapse-toggle-btn shadow-xs"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapseVisibilityRules"
+                                aria-expanded="true"
+                                aria-controls="collapseVisibilityRules"
+                                title="Toggle Section View">
+
                             <i class="fas fa-chevron-down collapse-icon"></i>
+
                         </button>
+
                     </div>
 
                     <div class="collapse show" id="collapseVisibilityRules">
+
                         <div class="row g-3 pt-3">
-                            <!-- Switch 1: Enable Section -->
+
+                            <!-- Switch 1: Featured Section -->
                             <div class="col-12 col-md-6">
-                                <div class="p-3 bg-white border d-flex align-items-center justify-content-between h-100" style="border-radius: 5px;">
-                                    <div class="pe-2">
-                                        <label class="form-check-label d-block fw-bold" for="featSecSwitch">
+
+                                <div class="setting-option-card">
+
+                                    <div class="pe-2 min-w-0">
+
+                                        <label class="form-check-label d-block"
+                                               for="featSecSwitch">
+
                                             Homepage Featured Section
+
                                         </label>
-                                        <small class="text-muted d-block" style="font-size: 11px; line-height: 1.35;">
-                                            Showcase featured products spotlight block on storefront.
+
+                                        <small class="setting-description">
+                                            Show featured products on your storefront.
                                         </small>
+
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="show_featured_products_section" value="1" id="featSecSwitch" {{ $showFeatured ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch m-0 ps-0">
+
+                                        <input class="form-check-input ms-0"
+                                               type="checkbox"
+                                               name="show_featured_products_section"
+                                               value="1"
+                                               id="featSecSwitch"
+                                               {{ $showFeatured ? 'checked' : '' }}>
+
                                     </div>
+
                                 </div>
+
                             </div>
 
-                            <!-- Switch 2: Enable Pagination -->
+                            <!-- Switch 2: Pagination -->
                             <div class="col-12 col-md-6">
-                                <div class="p-3 bg-white border d-flex align-items-center justify-content-between h-100" style="border-radius: 5px;">
-                                    <div class="pe-2">
-                                        <label class="form-check-label d-block fw-bold" for="featPagSwitch">
-                                            Section Pagination Controls
+
+                                <div class="setting-option-card">
+
+                                    <div class="pe-2 min-w-0">
+
+                                        <label class="form-check-label d-block"
+                                               for="featPagSwitch">
+
+                                            Product Pagination
+
                                         </label>
-                                        <small class="text-muted d-block" style="font-size: 11px; line-height: 1.35;">
-                                            Render page navigation buttons below the product showcase.
+
+                                        <small class="setting-description">
+                                            Show navigation below featured products.
                                         </small>
+
                                     </div>
-                                    <div class="form-check form-switch m-0 ps-0 flex-shrink-0">
-                                        <input class="form-check-input ms-0" type="checkbox" name="featured_enable_pagination" value="1" id="featPagSwitch" {{ $enablePagination ? 'checked' : '' }}>
+
+                                    <div class="form-check form-switch m-0 ps-0">
+
+                                        <input class="form-check-input ms-0"
+                                               type="checkbox"
+                                               name="featured_enable_pagination"
+                                               value="1"
+                                               id="featPagSwitch"
+                                               {{ $enablePagination ? 'checked' : '' }}>
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
 
-                <!-- Panel 2: Product Limits & Display Density (COLLAPSIBLE) -->
+                <!-- Panel 2: Product Display Limits -->
                 <div class="settings-panel-box mb-3">
-                    <div class="d-flex justify-content-between align-items-center pb-2 border-bottom">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="fas fa-boxes-stacked text-primary"></i>
-                            <h6 class="fw-bold text-dark mb-0" style="font-size: 13px;">Product Display Limits &amp; Allocation</h6>
+
+                    <div class="d-flex justify-content-between align-items-center panel-heading">
+
+                        <div class="d-flex align-items-center gap-2 min-w-0">
+
+                            <span class="panel-icon">
+                                <i class="fas fa-boxes-stacked"></i>
+                            </span>
+
+                            <h6 class="panel-title mb-0">
+                                Product Display Limits
+                            </h6>
+
                         </div>
-                        <button type="button" class="collapse-toggle-btn shadow-xs" data-bs-toggle="collapse" data-bs-target="#collapseLimitRules" aria-expanded="true" aria-controls="collapseLimitRules" title="Toggle Section View">
+
+                        <button type="button"
+                                class="collapse-toggle-btn shadow-xs"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapseLimitRules"
+                                aria-expanded="true"
+                                aria-controls="collapseLimitRules"
+                                title="Toggle Section View">
+
                             <i class="fas fa-chevron-down collapse-icon"></i>
+
                         </button>
+
                     </div>
 
                     <div class="collapse show" id="collapseLimitRules">
+
                         <div class="pt-3">
+
                             <label class="form-label">
-                                Products To Display Per Page (Limit) <span class="text-danger">*</span>
+                                Products Per Page
+                                <span class="text-danger">*</span>
                             </label>
-                            <input type="number" name="featured_products_count" id="featured_products_count_input" class="form-control font-monospace bn-digit" value="{{ $featuredCount }}" min="1" max="100" required>
-                            <small class="text-muted d-block mt-1 font-monospace" style="font-size: 10.5px;">
-                                Enter any valid number (8, 10, 12, 16 or 24).
+
+                            <input type="number"
+                                   name="featured_products_count"
+                                   id="featured_products_count_input"
+                                   class="form-control font-monospace bn-digit"
+                                   value="{{ $featuredCount }}"
+                                   min="1"
+                                   max="100"
+                                   required>
+
+                            <small class="form-helper">
+                                Allowed range: 1–100. Suggested: 8, 10, 12, 16 or 24.
                             </small>
+
                         </div>
+
                     </div>
+
                 </div>
 
-                <!-- Submit Button Bar -->
-                <div class="d-flex justify-content-end gap-2 pt-2 border-top">
-                    <button type="submit" class="btn btn-primary btn-compact shadow-xs fw-bold px-4" style="min-height: 35px; font-size: 12px;">
-                        <i class="fas fa-check-circle me-1"></i> Save Settings
+                <!-- Submit Actions -->
+                <div class="d-flex justify-content-end gap-2 submit-action-bar">
+
+                    <button type="submit"
+                            class="btn btn-primary btn-compact save-settings-btn shadow-xs">
+
+                        <i class="fas fa-check-circle me-1"></i>
+                        Save Settings
+
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Modal: Custom Enterprise Notice / Alert Modal -->
-<div class="modal fade featured-modal-scope" id="featuredNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 108500;">
+<!-- Custom Notice Modal -->
+<div class="modal fade featured-modal-scope"
+     id="featuredNoticeModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 108500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
+
         <div class="modal-content border-0 shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
-                <div class="mb-2" id="featuredNoticeIconWrap">
+
+                <div class="mb-3" id="featuredNoticeIconWrap">
                     <i class="fas fa-circle-check text-success fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="featuredNoticeTitle" style="font-size: 14px;">Notification</h6>
-                <p class="text-muted small mb-3" id="featuredNoticeMessage" style="font-size: 12px; line-height: 1.45;"></p>
-                <button type="button" class="btn btn-primary btn-compact px-4" data-bs-dismiss="modal">Acknowledge</button>
+
+                <h6 class="fw-bold text-dark mb-2 modal-title"
+                    id="featuredNoticeTitle">
+
+                    Notification
+
+                </h6>
+
+                <p class="text-muted small mb-3 notice-message"
+                   id="featuredNoticeMessage"></p>
+
+                <button type="button"
+                        class="btn btn-primary btn-compact px-4"
+                        data-bs-dismiss="modal">
+
+                    OK
+
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <script>

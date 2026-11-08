@@ -154,4 +154,12 @@ class FormField extends Model
             'field_id'
         );
     }
+
+    /**
+     * Alias for submission values relation
+     */
+    public function values()
+    {
+        return $this->submissionValues();
+    }
 }

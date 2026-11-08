@@ -16,21 +16,19 @@ use Throwable;
 class SmsBlacklistController extends Controller
 {
     /**
-     * Display a paginated listing of blacklisted items with type filtering.
+     * Display a paginated listing of blacklisted numbers with instant AJAX search.
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $query = SmsBlacklist::query()->latest('id');
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->query('type'));
-        }
+        $query = SmsBlacklist::query()->where('type', 'phone')->latest('id');
 
         if ($request->filled('search')) {
             $search = trim($request->query('search'));
             $query->where(function ($q) use ($search) {
-                $q->where('value', 'like', "%{$search}%")
-                  ->orWhere('reason', 'like', "%{$search}%");
+                $q->where('value', 'like', "%{$search}%");
+                if (Schema::hasColumn('sms_blacklists', 'reason')) {
+                    $q->orWhere('reason', 'like', "%{$search}%");
+                }
             });
         }
 
@@ -42,119 +40,154 @@ class SmsBlacklistController extends Controller
             'total_keywords' => SmsBlacklist::where('type', 'keyword')->count(),
         ];
 
+        // Handle Live AJAX Search & Pagination without page reload
+        if ($request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'html'       => view('admin.sms.blacklist.partials.table_rows', compact('blacklists'))->render(),
+                'pagination' => $blacklists->hasPages() ? $blacklists->links('pagination::bootstrap-5')->render() : '',
+                'total'      => $blacklists->total(),
+                'from'       => $blacklists->firstItem() ?? 0,
+                'to'         => $blacklists->lastItem() ?? 0,
+            ]);
+        }
+
         return view('admin.sms.blacklist.index', compact('blacklists', 'stats'));
     }
 
     /**
-     * Store a newly created blacklist entry in database.
+     * Store single or multiple blacklist phone numbers in bulk safely without schema mismatch.
      */
     public function store(Request $request, SmsService $smsService): RedirectResponse
     {
-        $validated = $request->validate([
-            'type'   => 'required|in:phone,ip,keyword',
-            'value'  => 'required|string|max:150',
-            'reason' => 'nullable|string|max:255',
+        $request->validate([
+            'numbers' => 'nullable|string',
+            'value'   => 'nullable|string',
+            'reason'  => 'nullable|string|max:255',
         ]);
 
-        $type = $validated['type'];
-        $cleanValue = trim($validated['value']);
-
-        // Normalize value based on blacklist type
-        if ($type === 'phone') {
-            $cleanValue = $smsService->formatNumber($cleanValue);
-            if (!preg_match('/^8801[3-9]\d{8}$/', $cleanValue)) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Invalid Bangladeshi mobile number format (e.g. 017XXXXXXXX or 88017XXXXXXXX).');
-            }
-        } elseif ($type === 'ip') {
-            if (!filter_var($cleanValue, FILTER_VALIDATE_IP)) {
-                return back()
-                    ->withInput()
-                    ->with('error', 'Invalid IPv4 or IPv6 address format.');
-            }
-        } else {
-            $cleanValue = mb_strtolower($cleanValue, 'UTF-8');
+        $rawInput = trim((string) ($request->input('numbers') ?? $request->input('value', '')));
+        if (empty($rawInput)) {
+            return back()->withInput()->with('error', 'Please enter at least one mobile number.');
         }
 
-        // Check for existing duplicate entry
-        $exists = SmsBlacklist::where('type', $type)
-            ->where('value', $cleanValue)
-            ->exists();
+        // Split numbers by newline, comma, semicolon, or space
+        $lines = preg_split('/[\r\n,; ]+/', $rawInput, -1, PREG_SPLIT_NO_EMPTY);
+        $reason = $request->input('reason');
+        $authId = Auth::id();
 
-        if ($exists) {
-            return back()
-                ->withInput()
-                ->with('error', "This {$type} '{$cleanValue}' is already registered in the blacklist.");
+        $validNumbers = [];
+        $invalidCount = 0;
+        $alreadyExistsCount = 0;
+
+        foreach ($lines as $line) {
+            $raw = trim($line);
+            if (empty($raw)) continue;
+
+            $clean = $smsService->formatNumber($raw);
+            if (!preg_match('/^8801[3-9]\d{8}$/', $clean)) {
+                $invalidCount++;
+                continue;
+            }
+
+            if (in_array($clean, $validNumbers, true)) {
+                continue;
+            }
+
+            $exists = SmsBlacklist::where('type', 'phone')->where('value', $clean)->exists();
+            if ($exists) {
+                $alreadyExistsCount++;
+                continue;
+            }
+
+            $validNumbers[] = $clean;
+        }
+
+        if (empty($validNumbers)) {
+            $msg = 'No valid new Bangladeshi mobile numbers to block.';
+            if ($alreadyExistsCount > 0) $msg .= " ({$alreadyExistsCount} already blocked).";
+            if ($invalidCount > 0) $msg .= " ({$invalidCount} invalid format).";
+            return back()->withInput()->with('error', $msg);
         }
 
         try {
-            $blacklistData = [
-                'type'      => $type,
-                'value'     => $cleanValue,
-                'reason'    => $validated['reason'] ?? null,
-                'is_active' => true,
-            ];
+            $now = now();
+            $insertData = [];
 
-            // Safely assign creator ID without schema errors
-            if (Schema::hasColumn('sms_blacklists', 'blocked_by')) {
-                $blacklistData['blocked_by'] = Auth::id();
-            } elseif (Schema::hasColumn('sms_blacklists', 'user_id')) {
-                $blacklistData['user_id'] = Auth::id();
+            // Detect existing table columns to prevent 1054 Unknown column errors
+            $columns = Schema::hasTable('sms_blacklists') ? Schema::getColumnListing('sms_blacklists') : [];
+            $hasReason    = in_array('reason', $columns, true);
+            $hasIsActive  = in_array('is_active', $columns, true);
+            $hasStatus    = in_array('status', $columns, true);
+            $hasBlockedBy = in_array('blocked_by', $columns, true);
+            $hasUserId    = in_array('user_id', $columns, true);
+
+            foreach ($validNumbers as $num) {
+                $row = [
+                    'type'       => 'phone',
+                    'value'      => $num,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                if ($hasReason) {
+                    $row['reason'] = $reason;
+                }
+                if ($hasIsActive) {
+                    $row['is_active'] = true;
+                } elseif ($hasStatus) {
+                    $row['status'] = 1;
+                }
+                if ($hasBlockedBy) {
+                    $row['blocked_by'] = $authId;
+                } elseif ($hasUserId) {
+                    $row['user_id'] = $authId;
+                }
+
+                $insertData[] = $row;
             }
 
-            SmsBlacklist::create($blacklistData);
+            SmsBlacklist::insert($insertData);
 
-            return redirect()
-                ->route('admin.sms.blacklist.index')
-                ->with('success', "Item added to {$type} blacklist successfully.");
+            $addedCount = count($validNumbers);
+            $feedback = "{$addedCount} phone number(s) blocked successfully.";
+            if ($alreadyExistsCount > 0) {
+                $feedback .= " ({$alreadyExistsCount} duplicate(s) skipped).";
+            }
+
+            return redirect()->route('admin.sms.blacklist.index')->with('success', $feedback);
         } catch (Throwable $e) {
-            return back()
-                ->withInput()
-                ->with('error', 'Failed to add blacklist entry: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to block numbers: ' . $e->getMessage());
         }
     }
 
     /**
-     * Remove the specified item from blacklist.
+     * Remove the specified item from blacklist (Unblock).
      */
-    public function destroy(SmsBlacklist $blacklist): RedirectResponse
+    public function destroy(SmsBlacklist $blacklist): RedirectResponse|JsonResponse
     {
         try {
+            $phone = $blacklist->value;
             $blacklist->delete();
 
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Phone number '{$phone}' unblocked successfully.",
+                ]);
+            }
+
             return redirect()
                 ->route('admin.sms.blacklist.index')
-                ->with('success', 'Entry removed from blacklist successfully.');
+                ->with('success', "Phone number '{$phone}' unblocked successfully.");
         } catch (Throwable $e) {
+            if (request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Failed to unblock: ' . $e->getMessage()], 500);
+            }
+
             return redirect()
                 ->route('admin.sms.blacklist.index')
-                ->with('error', 'Failed to delete blacklist entry: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Quick status toggle (AJAX).
-     */
-    public function toggleStatus(Request $request, SmsBlacklist $blacklist): JsonResponse
-    {
-        try {
-            $newStatus = !$blacklist->is_active;
-
-            $blacklist->update([
-                'is_active' => $newStatus,
-            ]);
-
-            return response()->json([
-                'success'   => true,
-                'is_active' => (bool) $newStatus,
-                'message'   => 'Blacklist rule status updated successfully.',
-            ]);
-        } catch (Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to toggle status: ' . $e->getMessage(),
-            ], 500);
+                ->with('error', 'Failed to unblock number: ' . $e->getMessage());
         }
     }
 }

@@ -3,27 +3,36 @@
 @section('title', 'Tax Classes')
 
 @section('admin_content')
-<div class="container-fluid px-2 px-md-3 py-2 tax-classes-page">
-    <!-- Header & Action Controls (Title & Description Inline) -->
-    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
-        <div class="d-flex align-items-center flex-wrap gap-2">
-            <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4 d-flex align-items-center gap-2 text-nowrap">
-                <i class="fas fa-shapes text-primary"></i> Tax Classes
+<div class="container-fluid px-2 px-md-3 py-3 tax-classes-page">
+   
+    <div class="tax-page-header d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3 mb-4">
+    <!-- Left: Title & Subtitle Wrapper -->
+    <div class="d-flex align-items-center gap-3 min-w-0">
+        <span class="d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: #e0f2fe; color: #0284c7; border-radius: 8px; font-size: 16px;">
+            <i class="fas fa-shapes"></i>
+        </span>
+        <div class="min-w-0 lh-sm">
+            <h4 class="fw-bold mb-1 text-dark text-truncate" style="font-size: 16px;">
+                Tax Classes
             </h4>
-            <span class="text-secondary small d-none d-md-inline">•</span>
-            <span class="text-secondary small mb-0 text-nowrap">Manage categories &amp; rates</span>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="d-flex align-items-center gap-2 w-100 w-sm-auto justify-content-end page-actions">
-            <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary flex-fill flex-sm-grow-0 d-inline-flex align-items-center justify-content-center gap-1">
-                <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
-            </a>
-            <button type="button" class="btn btn-sm btn-primary px-3 flex-fill flex-sm-grow-0 d-inline-flex align-items-center justify-content-center gap-1" data-bs-toggle="modal" data-bs-target="#createTaxClassModal">
-                <i class="fas fa-plus-circle"></i> <span>Add Tax Class</span>
-            </button>
+            <div class="text-secondary text-truncate m-0 p-0" style="font-size: 11.5px;">
+                Manage categories &amp; rates
+            </div>
         </div>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex align-items-center gap-2 flex-wrap flex-lg-nowrap justify-content-start justify-content-lg-end page-actions w-100 w-lg-auto">
+        <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-1 text-nowrap flex-shrink-0" style="height: 34px;">
+            <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
+        </a>
+        <button type="button" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap flex-shrink-0" data-bs-toggle="modal" data-bs-target="#createTaxClassModal" style="height: 34px;">
+            <i class="fas fa-plus-circle"></i> <span>Add Tax Class</span>
+        </button>
+    </div>
+</div>
+
+
 
     <!-- Alert Notifications -->
     @if(session('success'))
@@ -62,12 +71,12 @@
     @endif
 
     <!-- Search & Filter Bar -->
-    <div class="card border border-light-subtle shadow-sm bg-white mb-3">
-        <div class="card-body p-2 p-md-3">
+    <div class="card tax-filter-card border-0 shadow-sm bg-white mb-4">
+        <div class="card-body p-3 p-md-4">
             <form action="{{ route('admin.tax.classes.index') }}" method="GET" class="row g-2 align-items-center">
                 <!-- Search Keyword -->
                 <div class="col-12 col-md-5">
-                    <div class="input-group input-group-sm">
+                    <div class="input-group tax-search-group">
                         <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-search"></i></span>
                         <input type="text" name="search" class="form-control border-start-0" placeholder="Search class or code..." value="{{ request('search') }}">
                     </div>
@@ -75,7 +84,7 @@
 
                 <!-- Status Filter -->
                 <div class="col-6 col-md-3">
-                    <select name="status" class="form-select form-select-sm">
+                    <select name="status" class="form-select form-select-sm tax-filter-select">
                         <option value="">All Statuses</option>
                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                         <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -98,9 +107,9 @@
     </div>
 
     <!-- Tax Classes Table Card -->
-    <div class="card border border-light-subtle shadow-sm bg-white mb-3">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-nowrap" style="font-size: 12.5px;">
+    <div class="card tax-table-card border-0 shadow-sm bg-white mb-4">
+        <div class="table-responsive tax-table-responsive">
+            <table class="table table-hover align-middle mb-0 tax-classes-table">
                 <thead class="table-light text-secondary">
                     <tr>
                         <th class="ps-3 py-2" style="width: 45px;">#</th>
@@ -208,8 +217,8 @@
 <!-- Modal 1: Create Tax Class -->
 <div class="modal fade" id="createTaxClassModal" tabindex="-1" aria-labelledby="createTaxClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="createTaxClassModalLabel">
                     <i class="fas fa-plus-circle text-primary"></i> Add Tax Class
                 </h6>
@@ -217,10 +226,10 @@
             </div>
             <form action="{{ route('admin.tax.classes.store') }}" method="POST">
                 @csrf
-                <div class="modal-body p-3">
+                <div class="modal-body p-4">
                     <div class="mb-2">
                         <label class="form-label fw-semibold text-dark small mb-1">Class Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-sm" id="createClassNameInput" placeholder="e.g. Standard VAT, Reduced Rate" required>
+                        <input type="text" name="name" class="form-control form-control-sm" id="createClassNameInput" placeholder="Standard VAT, Reduced Rate" required>
                     </div>
 
                     <div class="mb-2">
@@ -239,7 +248,7 @@
                         <label class="form-check-label fw-semibold text-dark small" for="createIsActive">Active Status</label>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 px-3 pb-3">
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold d-inline-flex align-items-center gap-1">
                         <i class="fas fa-save"></i> <span>Save Class</span>
@@ -253,8 +262,8 @@
 <!-- Modal 2: Edit Tax Class -->
 <div class="modal fade" id="editTaxClassModal" tabindex="-1" aria-labelledby="editTaxClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="editTaxClassModalLabel">
                     <i class="fas fa-edit text-primary"></i> Edit Tax Class
                 </h6>
@@ -263,7 +272,7 @@
             <form id="editTaxClassForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="modal-body p-3">
+                <div class="modal-body p-4">
                     <div class="mb-2">
                         <label class="form-label fw-semibold text-dark small mb-1">Class Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control form-control-sm" id="editClassName" required>
@@ -284,7 +293,7 @@
                         <label class="form-check-label fw-semibold text-dark small" for="editIsActive">Active Status</label>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 px-3 pb-3">
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold d-inline-flex align-items-center gap-1">
                         <i class="fas fa-check-circle"></i> <span>Update Class</span>
@@ -298,8 +307,8 @@
 <!-- Modal 3: Custom UI-Friendly Delete & Warning Modal -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="deleteModalTitle">
                     <i class="fas fa-trash-alt text-danger"></i> Delete Class
                 </h6>
@@ -316,7 +325,7 @@
                     This action cannot be undone.
                 </span>
             </div>
-            <div class="modal-footer border-0 pt-0 px-3 pb-3 d-flex justify-content-center gap-2" id="deleteModalFooter">
+            <div class="modal-footer border-0 pt-0 px-4 pb-4 d-flex justify-content-center gap-2" id="deleteModalFooter">
                 <button type="button" class="btn btn-sm btn-light border px-3 flex-fill" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-sm btn-danger px-3 fw-semibold flex-fill" id="confirmDeleteActionBtn">Delete</button>
             </div>
@@ -331,7 +340,17 @@
 </form>
 
 <style>
-    /* Strict 5px Radius Rule */
+    /* Tax Classes page — Kaiadmin Lite inspired White Classic UI */
+    .tax-classes-page {
+        --tax-primary: var(--bs-primary, #1572e8);
+        --tax-border: #e6e9ef;
+        --tax-muted: #6b7280;
+        --tax-surface: #ffffff;
+        --tax-page-bg: #f5f7fb;
+        color: #2a2f3a;
+        min-width: 0;
+    }
+
     .tax-classes-page .card,
     .tax-classes-page .btn,
     .tax-classes-page .form-control,
@@ -340,16 +359,119 @@
     .tax-classes-page .badge,
     .tax-classes-page .alert,
     .tax-classes-page .rounded-1,
-    .modal-content,
-    .modal-content .btn,
-    .modal-content .form-control,
-    .modal-content .form-select,
-    .modal-content .input-group-text,
-    .modal-content .badge {
+    .tax-modal-content,
+    .tax-modal-content .btn,
+    .tax-modal-content .form-control,
+    .tax-modal-content .form-select,
+    .tax-modal-content .input-group-text,
+    .tax-modal-content .badge {
         border-radius: 5px !important;
     }
 
-    /* Button Group Radius */
+    .tax-classes-page .tax-page-header h4 {
+        font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+        letter-spacing: -0.025em;
+    }
+
+    .tax-classes-page .card {
+        border: 1px solid var(--tax-border) !important;
+        background: var(--tax-surface);
+        box-shadow: 0 2px 8px rgba(28, 39, 60, 0.045) !important;
+        overflow: hidden;
+    }
+
+    .tax-classes-page .btn {
+        min-height: 34px;
+        font-weight: 600;
+        letter-spacing: 0.005em;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .tax-classes-page .btn:focus-visible,
+    .tax-classes-page .form-control:focus,
+    .tax-classes-page .form-select:focus {
+        box-shadow: 0 0 0 .2rem rgba(21, 114, 232, .12);
+    }
+
+    .tax-classes-page .form-control,
+    .tax-classes-page .form-select {
+        min-height: 38px;
+        border-color: #dfe3eb;
+        color: #344054;
+        font-size: .875rem;
+    }
+
+    .tax-classes-page .form-control::placeholder {
+        color: #98a2b3;
+        opacity: 1;
+    }
+
+    .tax-classes-page .input-group-text {
+        border-color: #dfe3eb;
+    }
+
+    .tax-classes-page .tax-filter-card .card-body {
+        padding: 1rem;
+    }
+
+    .tax-classes-page .tax-table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tax-classes-page .tax-classes-table {
+        width: 100%;
+        min-width: 920px;
+        font-size: 12.5px;
+        color: #475467;
+        border-color: #edf0f4;
+    }
+
+    .tax-classes-page .tax-classes-table thead th {
+        padding: .8rem .7rem;
+        background: #f8f9fc;
+        color: #667085;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--tax-border);
+    }
+
+    .tax-classes-page .tax-classes-table tbody td {
+        padding: .75rem .7rem;
+        vertical-align: middle;
+        border-color: #edf0f4;
+    }
+
+    .tax-classes-page .tax-classes-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .tax-classes-page .tax-classes-table tbody tr:hover {
+        --bs-table-accent-bg: #f8faff;
+    }
+
+    .tax-classes-page .tax-classes-table .badge {
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.35;
+    }
+
+    .tax-classes-page .tax-classes-table .btn-group .btn {
+        min-height: 30px;
+        padding: .25rem .5rem;
+    }
+
+    .tax-classes-page .tax-classes-table .form-check-input {
+        width: 2.1em;
+        height: 1.1em;
+        margin-top: 0;
+        cursor: pointer;
+    }
+
     .tax-classes-page .btn-group .btn:first-child {
         border-top-left-radius: 5px !important;
         border-bottom-left-radius: 5px !important;
@@ -360,29 +482,125 @@
         border-bottom-right-radius: 5px !important;
     }
 
-    /* Modal Max Height */
-    .tax-classes-page .modal-body {
-        max-height: 75vh;
+    .tax-classes-page .pagination {
+        gap: .25rem;
+        margin-bottom: 0;
+    }
+
+    .tax-classes-page .page-link {
+        border-radius: 5px !important;
+        font-size: .8rem;
+    }
+
+    .tax-modal-content {
+        border: 1px solid var(--tax-border) !important;
+        overflow: hidden;
+    }
+
+    .tax-modal-content .modal-header {
+        background: #fff;
+        border-color: var(--tax-border) !important;
+    }
+
+    .tax-modal-content .modal-title {
+        font-size: 1rem;
+    }
+
+    .tax-modal-content .modal-body {
+        max-height: 70vh;
         overflow-y: auto;
     }
 
-    /* Responsive Mobile Optimization */
-    @media (max-width: 575.98px) {
-        .tax-classes-page {
-            padding-left: 6px !important;
-            padding-right: 6px !important;
+    .tax-modal-content .form-label {
+        font-size: .8rem;
+        margin-bottom: .4rem;
+    }
+
+    .tax-modal-content .form-control {
+        min-height: 40px;
+    }
+
+    .tax-modal-content textarea.form-control {
+        min-height: 88px;
+    }
+
+    .tax-modal-content .form-check.form-switch {
+        border-color: var(--tax-border) !important;
+        background: #f8f9fc !important;
+        padding: .7rem .85rem .7rem 2.85rem !important;
+    }
+
+    .tax-modal-content .form-check-input {
+        cursor: pointer;
+    }
+
+    @media (min-width: 1200px) {
+        .tax-classes-page .tax-classes-table {
+            min-width: 0;
         }
 
+        .tax-classes-page .tax-classes-table thead th,
+        .tax-classes-page .tax-classes-table tbody td {
+            padding-left: .55rem;
+            padding-right: .55rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .tax-classes-page {
+            padding-left: .5rem;
+            padding-right: .5rem;
+        }
+
+        .tax-classes-page .tax-page-header {
+            align-items: stretch !important;
+        }
+
+        .tax-classes-page .page-actions {
+            width: 100%;
+        }
+
+        .tax-classes-page .tax-filter-card .card-body {
+            padding: .85rem;
+        }
+
+        .tax-classes-page .tax-classes-table {
+            min-width: 920px;
+        }
+
+        .tax-classes-page .card-footer {
+            padding: .75rem !important;
+        }
+    }
+
+    @media (max-width: 575.98px) {
         #createTaxClassModal .modal-dialog,
         #editTaxClassModal .modal-dialog,
         #deleteConfirmModal .modal-dialog {
-            margin: 0.5rem;
+            margin: .5rem;
         }
 
         #createTaxClassModal .modal-body,
         #editTaxClassModal .modal-body,
         #deleteConfirmModal .modal-body {
-            padding: 0.75rem !important;
+            padding: 1rem !important;
+        }
+
+        #createTaxClassModal .modal-header,
+        #editTaxClassModal .modal-header,
+        #deleteConfirmModal .modal-header {
+            padding: .85rem 1rem !important;
+        }
+
+        #createTaxClassModal .modal-footer,
+        #editTaxClassModal .modal-footer,
+        #deleteConfirmModal .modal-footer {
+            padding: 0 1rem 1rem !important;
+        }
+
+        .tax-classes-page .page-actions .btn {
+            flex: 1 1 0;
+            white-space: nowrap;
         }
     }
 </style>

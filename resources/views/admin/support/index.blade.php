@@ -4,115 +4,299 @@
 
 @section('admin_content')
 <style>
-    /* Global Strict 5px Element Radius */
+    /* Customer Support — Kaiadmin Lite Classic / White */
+    #supportIndexRoot {
+        --support-border: #e5e7eb;
+        --support-muted: #6b7280;
+        --support-heading: #374151;
+        --support-surface: #ffffff;
+        --support-soft: #f8fafc;
+        --support-primary: var(--bs-primary, #6861ce);
+        color: #374151;
+        min-width: 0;
+    }
+
     #supportIndexRoot .btn,
-    #supportIndexRoot .btn-sm,
     #supportIndexRoot .badge,
     #supportIndexRoot .alert,
     #supportIndexRoot .page-link,
     #supportIndexRoot .page-item span {
-        border-radius: 5px !important;
+        border-radius: 5px;
     }
 
     #supportIndexRoot .support-table-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        background: var(--support-surface);
+        border: 1px solid var(--support-border);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(31, 41, 55, .045);
         margin-bottom: 20px;
+        min-width: 0;
     }
 
-    /* Filter Navigation Pills (Individual 5px Buttons with Readable Contrast) */
-    .support-filter-group {
+    #supportIndexRoot h5 {
+        color: #343a40;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -.2px;
+        line-height: 1.4;
+    }
+
+    #supportIndexRoot .support-filter-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
         align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
     }
 
-    .support-filter-btn {
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        padding: 6px 12px !important;
-        white-space: nowrap !important;
+    #supportIndexRoot .support-filter-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.15s ease;
-    }
-
-    /* Fix unreadable yellow outline text on white background */
-    .support-filter-btn.btn-outline-warning {
-        color: #b45309 !important;
-        border-color: #fcd34d !important;
-        background-color: #fffbeb;
-    }
-    .support-filter-btn.btn-outline-warning:hover {
-        background-color: #fef3c7 !important;
-        color: #92400e !important;
-    }
-
-    /* Table Typography & Layout */
-    .custom-support-table th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 11px 16px;
+        min-height: 32px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
         white-space: nowrap;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
     }
 
-    .custom-support-table td {
+    #supportIndexRoot .support-filter-btn:focus-visible,
+    #supportIndexRoot .btn:focus-visible,
+    #supportIndexRoot a:focus-visible {
+        outline: 2px solid rgba(104, 97, 206, .35);
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+
+    #supportIndexRoot .support-filter-btn.btn-outline-warning {
+        color: #a16207;
+        border-color: #f3d28a;
+        background: #fffbeb;
+    }
+
+    #supportIndexRoot .support-filter-btn.btn-outline-warning:hover {
+        color: #854d0e;
+        border-color: #eabf55;
+        background: #fef3c7;
+    }
+
+    #supportIndexRoot .custom-support-table {
+        width: 100%;
+        margin-bottom: 0;
+        color: #374151;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #supportIndexRoot .custom-support-table thead th {
         padding: 12px 16px;
+        background: #f8f9fa;
+        color: #6b7280;
+        border-bottom: 1px solid var(--support-border);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .045em;
+        line-height: 1.4;
+        text-transform: uppercase;
+        white-space: nowrap;
         vertical-align: middle;
+    }
+
+    #supportIndexRoot .custom-support-table tbody td {
+        padding: 13px 16px;
+        color: #374151;
+        border-bottom: 1px solid #eef0f2;
         font-size: 12.5px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
+        line-height: 1.5;
+        vertical-align: middle;
     }
 
-    .custom-support-table tbody tr:hover {
-        background-color: #fafbfc;
+    #supportIndexRoot .custom-support-table tbody tr:last-child td {
+        border-bottom: 0;
     }
 
-    /* Soft Status Badges */
-    .status-badge {
+    #supportIndexRoot .custom-support-table tbody tr {
+        transition: background-color .15s ease;
+    }
+
+    #supportIndexRoot .custom-support-table tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    #supportIndexRoot .custom-support-table .text-muted {
+        color: var(--support-muted) !important;
+    }
+
+    #supportIndexRoot .custom-support-table .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 23px;
+        padding: 4px 9px;
+        border: 1px solid transparent;
+        border-radius: 5px;
         font-size: 10.5px;
         font-weight: 600;
-        padding: 4px 10px;
-        display: inline-block;
+        line-height: 1.2;
         white-space: nowrap;
     }
-    .badge-pending  { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-    .badge-checked  { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
-    .badge-resolved { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .badge-closed   { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #supportIndexRoot .custom-support-table .badge-pending {
+        color: #b42318;
+        background: #fef3f2;
+        border-color: #fecdca;
     }
 
-    /* Mobile Responsive Optimizations */
+    #supportIndexRoot .custom-support-table .badge-checked {
+        color: #946200;
+        background: #fffaeb;
+        border-color: #fedf89;
+    }
+
+    #supportIndexRoot .custom-support-table .badge-resolved {
+        color: #027a48;
+        background: #ecfdf3;
+        border-color: #abefc6;
+    }
+
+    #supportIndexRoot .custom-support-table .badge-closed {
+        color: #475467;
+        background: #f2f4f7;
+        border-color: #e4e7ec;
+    }
+
+    #supportIndexRoot .bn-digit,
+    #supportIndexRoot .font-monospace {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #supportIndexRoot .custom-support-table .btn {
+        min-height: 29px;
+        border-radius: 5px;
+        font-size: 11.5px;
+        font-weight: 600;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    #supportIndexRoot .card-footer {
+        border-color: var(--support-border) !important;
+    }
+
+    #supportIndexRoot .pagination {
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-bottom: 0;
+    }
+
+    #supportIndexRoot .page-link {
+        min-width: 30px;
+        text-align: center;
+        border-color: var(--support-border);
+        color: #5b6472;
+        font-size: 12px;
+    }
+
+    #supportIndexRoot .page-item.active .page-link {
+        color: #fff;
+        background: var(--support-primary);
+        border-color: var(--support-primary);
+    }
+
+    #supportIndexRoot .alert {
+        border: 1px solid #abefc6 !important;
+        border-radius: 6px;
+    }
+
+    @media (max-width: 991.98px) {
+        #supportIndexRoot > .d-flex {
+            align-items: flex-start !important;
+        }
+
+        #supportIndexRoot .support-filter-group {
+            justify-content: flex-start;
+        }
+    }
+
     @media (max-width: 767.98px) {
-        .support-filter-group {
-            width: 100%;
+        #supportIndexRoot {
+            padding-right: 10px !important;
+            padding-left: 10px !important;
+        }
+
+        #supportIndexRoot > .d-flex {
+            gap: 10px !important;
+            margin-bottom: 14px !important;
+        }
+
+        #supportIndexRoot h5 {
+            margin-bottom: 2px !important;
+            font-size: 17px !important;
+        }
+
+        #supportIndexRoot .support-filter-group {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            width: 100%;
             gap: 6px;
         }
-        .support-filter-btn {
+
+        #supportIndexRoot .support-filter-btn {
             width: 100%;
-            padding: 6px 6px !important;
-            font-size: 11.5px !important;
+            min-width: 0;
+            min-height: 34px;
+            padding: 6px 5px;
+            font-size: 11px;
+            white-space: normal;
+            text-align: center;
         }
-        .custom-support-table th,
-        .custom-support-table td {
-            padding: 10px 12px;
+
+        #supportIndexRoot .support-table-card {
+            border-radius: 7px;
+        }
+
+        #supportIndexRoot .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #supportIndexRoot .custom-support-table {
+            min-width: 820px;
+        }
+
+        #supportIndexRoot .custom-support-table thead th {
+            padding: 11px 12px;
+            font-size: 10px;
+        }
+
+        #supportIndexRoot .custom-support-table tbody td {
+            padding: 11px 12px;
             font-size: 12px;
+        }
+
+        #supportIndexRoot .card-footer {
+            padding: 10px 12px !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #supportIndexRoot .support-filter-group {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #supportIndexRoot *,
+        #supportIndexRoot *::before,
+        #supportIndexRoot *::after {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
         }
     }
 </style>

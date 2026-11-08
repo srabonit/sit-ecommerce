@@ -274,11 +274,8 @@
                     <i class="fas fa-triangle-exclamation text-warning"></i>
                     <span>Incomplete &amp; Failed Orders</span>
                 </h5>
-                <span class="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace bn-digit px-2 py-0.5" style="font-size: 10.5px;">
-                    {{ $orders->total() }} Recoverable
-                </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Customers who abandoned checkout, had gateway failures, or dropped off before final booking.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Customers who abandoned checkout, had gateway failures.</small>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('admin.order.online') }}" class="btn btn-outline-secondary btn-compact shadow-xs">

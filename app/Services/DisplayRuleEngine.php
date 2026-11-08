@@ -34,6 +34,7 @@ class DisplayRuleEngine
 
     /**
      * Get active dynamic popup matching current request, device, schedule & frequency.
+     * Synchronized with per_page & global cookie scopes (Hours & Days supported).
      */
     public function getActivePopup(Request $request): ?DynamicPopup
     {
@@ -51,13 +52,23 @@ class DisplayRuleEngine
             ->get();
 
         foreach ($popups as $popup) {
-            // Check cookie frequency
-            $cookieName = 'popup_viewed_' . $popup->id;
-            if ($request->hasCookie($cookieName)) {
+            $settings = is_array($popup->settings) 
+                ? $popup->settings 
+                : (json_decode($popup->settings ?? '[]', true) ?: []);
+
+            // 1. Check Cookie frequency (Supports both per_page hash and global cookie)
+            $freqScope = $settings['frequency_scope'] ?? 'per_page';
+            $pageSlugKey = ($freqScope === 'per_page') ? '_' . md5($currentPath) : '';
+            
+            $scopedCookie = 'popup_viewed_' . $popup->id . $pageSlugKey;
+            $globalCookie = 'popup_viewed_' . $popup->id;
+
+            // যদি নির্দিষ্ট পেজে বা গ্লোবালি অলরেডি দেখা হয়ে থাকে, তবে আর রেন্ডার হবে না
+            if ($request->hasCookie($scopedCookie) || $request->hasCookie($globalCookie)) {
                 continue;
             }
 
-            // If campaign rule exists, evaluate conditions
+            // 2. If campaign rule exists, evaluate conditions
             if ($popup->rule) {
                 $rule = $popup->rule;
 

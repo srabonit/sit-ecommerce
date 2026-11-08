@@ -96,7 +96,7 @@
     $regularPrice = (float) ($product->regular_price ?? 0);
     $hasDiscount  = !empty($product->sale_price) && ($product->sale_price < $regularPrice);
 
-    // ২. এক্স্যাক্ট স্টক লজিক
+    // ২. স্টক লজিক
     $actualStock = 0;
     $isActuallyOut = false;
 
@@ -122,29 +122,25 @@
                    (!empty($product->variants) && $product->variants->count() > 0) ||
                    (DB::table('product_variants')->where('product_id', $product->id)->exists());
 
-    // Universal Safe Dynamic Image Resolver
-    $resolveCardImg = function($path, $fallback = null) {
+    // ৪. লাইটওয়েট অফলাইন এসভিজি প্লেসহোল্ডার (জিরো নেটওয়ার্ক ল্যাগ)
+    $svgPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect fill='%23f8fafc' width='400' height='400'/><text fill='%2394a3b8' font-family='sans-serif' font-size='15' dy='5' font-weight='bold' x='50%' y='50%' text-anchor='middle'>No Image</text></svg>";
+
+    // ৫. আল্ট্রা-শার্প ৪০০x৪০০ অন-দ্য-ফ্লাই থাম্বনেইল রেজলভার
+    $resolveCardImg = function($path) use ($svgPlaceholder) {
         if (empty($path)) {
-            return $fallback;
+            return $svgPlaceholder;
         }
-        if (class_exists(\App\Services\ImagePathService::class)) {
-            return \App\Services\ImagePathService::resolveUrl($path, $fallback ?? '');
+        $clean = ltrim(str_replace('\\', '/', $path), '/');
+        if (str_starts_with($clean, 'http://') || str_starts_with($clean, 'https://')) {
+            return $clean;
         }
-        if (function_exists('show_image')) {
-            return show_image($path, $fallback ?? 'https://placehold.co/300x300?text=No+Image');
-        }
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            return $path;
-        }
-        return asset(ltrim($path, '/'));
+        // কার্ডের জন্য রেটিনা-রেডি ৪০০x৪০০ ডাইমেনশনে আল্ট্রা ক্রিস্প স্ট্রিমিং
+        return url('thumb/' . $clean . '?w=400&h=400');
     };
 
-    $thumb = 'https://placehold.co/300x300?text=No+Image';
-    if (!empty($product->thumbnail)) {
-        $thumb = $resolveCardImg($product->thumbnail, $thumb);
-    }
+    $thumb = !empty($product->thumbnail) ? $resolveCardImg($product->thumbnail) : $svgPlaceholder;
 
-    // ৪. সেকেন্ড ইমেজ লজিক (Gallery বা Variant Image)
+    // ৬. সেকেন্ড ইমেজ লজিক (গ্যালারি বা ভ্যারিয়েন্ট ইমেজ অন-দ্য-ফ্লাই রেজলভার সহ)
     $secondaryImg = null;
     if ($cardHoverStyle === 'gallery_flip' || $cardHoverStyle === 'slide_up') {
         if (!empty($product->galleries) && $product->galleries->count() > 0) {
@@ -300,10 +296,10 @@
         overflow: hidden;
     }
     .cpc-img-wrap img.primary-img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        padding: 6px;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
         transition: transform 0.35s ease, opacity 0.35s ease;
         display: block;
         opacity: 1 !important;
@@ -321,8 +317,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 6px;
+        object-fit: cover;
         opacity: 0;
         transition: opacity 0.4s ease, transform 0.4s ease;
         transform: rotateY(180deg);
@@ -343,8 +338,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        padding: 6px;
+        object-fit: cover;
         transition: top 0.35s ease;
     }
     .custom-product-card[data-has-secondary="true"][data-hover-style="slide_up"]:hover .cpc-img-wrap img.primary-img {
@@ -667,7 +661,7 @@
         @endif
 
         <a href="{{ route('product.details', $product->slug ?? $product->id) }}" class="w-100 h-100 d-flex align-items-center justify-content-center position-relative overflow-hidden">
-            <img src="{{ $thumb }}" alt="{{ $product->title ?? $product->name }}" class="primary-img" loading="lazy" onerror="this.src='https://placehold.co/300x300?text=No+Image'">
+            <img src="{{ $thumb }}" alt="{{ $product->title ?? $product->name }}" class="primary-img" loading="lazy" onerror="this.onerror=null; this.src='{{ $svgPlaceholder }}';">
             @if($hasSecondary)
                 <img src="{{ $secondaryImg }}" alt="{{ $product->title ?? $product->name }}" class="secondary-img" loading="lazy" onerror="this.style.display='none'">
             @endif

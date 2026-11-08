@@ -2,16 +2,16 @@
 
 @php
     $sectionTitles = [
-        'dashboard'         => 'Payment & Transaction Control Dashboard',
-        'checkout-requests' => 'Checkout Payment Requests',
-        'pos-cash'          => 'POS Terminal Cash & Counter Orders',
-        'cod-orders'        => 'Cash on Delivery (COD) Orders & Settlements',
-        'manual'            => 'Manual Transactions Ledger',
-        'all'               => 'All Payment Transactions (Unified Ledger)',
-        'unchecked'         => 'Unchecked & Pending Verification Queue',
-        'history'           => 'Immutable Payment Verification Audit History',
-        'reports'           => 'Financial Transaction Reports & Analytics',
-        'trash'             => 'Trashed & Replaced Transactions',
+        'dashboard'         => 'Payments & Transactions',
+        'checkout-requests' => 'Checkout Requests',
+        'pos-cash'          => 'POS Cash Orders',
+        'cod-orders'        => 'COD Orders & Settlements',
+        'manual'            => 'Manual Transactions',
+        'all'               => 'All Payment Transactions',
+        'unchecked'         => 'Pending Verification',
+        'history'           => 'Verification History',
+        'reports'           => 'Transaction Reports',
+        'trash'             => 'Archived Transactions',
     ];
     $pageTitle = $sectionTitles[$activeSection ?? 'all'] ?? 'Payment & Transactions Management';
     $gatewayOptions = isset($activeGatewayMethods) && count($activeGatewayMethods) > 0 ? $activeGatewayMethods : $availableMethods;
@@ -24,13 +24,75 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-    .txn-page-wrapper {
+
+/* Header Action Buttons Modern Styling & Hover Effects */
+    .txn-btn-gradient-primary {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .txn-btn-gradient-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+        color: #ffffff !important;
+    }
+    .txn-btn-gradient-primary:active {
+        transform: translateY(0);
+    }
+
+    .txn-btn-outline-excel {
+        background-color: #ffffff !important;
+        border: 1px solid #16a34a45 !important;
+        color: #15803d !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .txn-btn-outline-excel:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3) !important;
+    }
+    .txn-btn-outline-excel:hover i {
+        color: #ffffff !important;
+    }
+
+    .txn-btn-outline-pdf {
+        background-color: #ffffff !important;
+        border: 1px solid #dc262660 !important;
+        color: #b91c1c !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .txn-btn-outline-pdf:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+    }
+    .txn-btn-outline-pdf:hover i,
+    .txn-btn-outline-pdf:hover span {
+        color: #ffffff !important;
+    }
+    
+    /* Custom Style for Card Hover Effect */
+ .txn-kpi-card {
+        transition: all 0.25s ease-in-out;
+        border: 1px solid #e5e7eb !important;
+    }
+    .txn-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+    }
+ .txn-page-wrapper {
         padding: 12px 14px 28px;
         background-color: #f8fafc;
         min-height: calc(100vh - 65px);
     }
-
-    /* Strict 5px Global Radius System Across All Elements */
+/* Strict 5px Global Radius System Across All Elements */
     #txnRootContainer .btn,
     #txnRootContainer .btn-sm,
     #txnRootContainer button,
@@ -350,19 +412,16 @@
         width: auto !important;
         margin: 0 !important;
     }
-    /* Hide Laravel's mobile simple prev/next block to prevent duplicate layout */
     #txnPaginationLinks nav > div.d-sm-none,
     #txnPaginationLinks nav > .d-sm-none {
         display: none !important;
     }
-    /* Force Laravel's full-number block to render on mobile screens */
     #txnPaginationLinks nav > div.d-none,
     #txnPaginationLinks nav > .d-none.flex-sm-fill {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
-    /* Suppress duplicate text inside Laravel default pagination template */
     #txnPaginationLinks nav p,
     #txnPaginationLinks nav .small.text-muted,
     #txnPaginationLinks nav div:has(> p),
@@ -469,122 +528,128 @@
 </style>
 
 <div class="container-fluid txn-page-wrapper" id="txnRootContainer">
-    <!-- 1. Page Header & Top Action Buttons -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-money-check-dollar text-primary"></i>
-                <span>{{ $pageTitle }}</span>
-            </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Verify customer payment requests, prevent duplicate TrxIDs, synchronize online orders &amp; manage audit trails.
-            </small>
-        </div>
-
-        <div class="txn-top-actions d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-primary btn-compact shadow-xs gap-1" onclick="openManualTransactionModal()">
-                <i class="fas fa-plus-circle me-1"></i>
-                <span>Add Manual Transaction</span>
-            </button>
-            <button type="button" class="btn btn-outline-success btn-compact bg-white shadow-xs gap-1" onclick="exportTransactionsExcel()">
-                <i class="fas fa-file-excel text-success me-1"></i>
-                <span>Export Excel</span>
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-compact bg-white shadow-xs gap-1" id="btnExportTxnPdf" onclick="exportTransactionsPdf()">
-                <i class="fas fa-file-pdf text-danger me-1"></i>
-                <span id="btnExportTxnPdfText">Export PDF (A4)</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- 2. Section Navigation Strip -->
-    <div class="txn-card p-2 mb-3">
-        <div class="txn-section-nav">
-            <a href="{{ route('admin.transactions.dashboard') }}" class="txn-section-pill {{ $activeSection === 'dashboard' ? 'active' : '' }}">
-                <i class="fas fa-chart-pie text-warning"></i> <span>Dashboard</span>
-            </a>
-            <a href="{{ route('admin.transactions.checkout') }}" class="txn-section-pill {{ $activeSection === 'checkout-requests' ? 'active' : '' }}">
-                <i class="fas fa-globe text-info"></i> <span>Checkout Requests</span>
-                <span class="badge bg-warning text-dark px-2 py-0 bn-digit font-monospace" id="nav-badge-checkout">{{ $alertCounters['pending_checkout_count'] ?? 0 }}</span>
-            </a>
-            <a href="{{ route('admin.transactions.unchecked') }}" class="txn-section-pill {{ $activeSection === 'unchecked' ? 'active' : '' }}">
-                <i class="fas fa-clock text-danger"></i> <span>Unchecked Queue</span>
-                <span class="badge bg-danger text-white px-2 py-0 bn-digit font-monospace" id="nav-badge-unchecked">{{ $alertCounters['total_unchecked_count'] ?? 0 }}</span>
-            </a>
-            <a href="{{ route('admin.transactions.pos') }}" class="txn-section-pill {{ $activeSection === 'pos-cash' ? 'active' : '' }}">
-                <i class="fas fa-cash-register text-success"></i> <span>POS Cash Orders</span>
-            </a>
-            <a href="{{ route('admin.transactions.cod') }}" class="txn-section-pill {{ $activeSection === 'cod-orders' ? 'active' : '' }}">
-                <i class="fas fa-truck text-primary"></i> <span>COD Orders</span>
-            </a>
-            <a href="{{ route('admin.transactions.manual') }}" class="txn-section-pill {{ $activeSection === 'manual' ? 'active' : '' }}">
-                <i class="fas fa-hand-holding-dollar text-secondary"></i> <span>Manual Entries</span>
-            </a>
-            <a href="{{ route('admin.transactions.index') }}" class="txn-section-pill {{ $activeSection === 'all' ? 'active' : '' }}">
-                <i class="fas fa-layer-group"></i> <span>All Transactions</span>
-            </a>
-            <a href="{{ route('admin.transactions.history') }}" class="txn-section-pill {{ $activeSection === 'history' ? 'active' : '' }}">
-                <i class="fas fa-shield-halved text-info"></i> <span>Verification History</span>
-            </a>
-            <a href="{{ route('admin.transactions.reports') }}" class="txn-section-pill {{ $activeSection === 'reports' ? 'active' : '' }}">
-                <i class="fas fa-file-contract text-success"></i> <span>Reports</span>
-            </a>
-            <a href="{{ route('admin.transactions.trash') }}" class="txn-section-pill {{ $activeSection === 'trash' ? 'active' : '' }}">
-                <i class="fas fa-trash-can text-danger"></i> <span>Trashed</span>
-                <span class="badge bg-secondary text-white px-2 py-0 bn-digit font-monospace" id="nav-badge-trash">{{ $alertCounters['trashed_count'] ?? 0 }}</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- 3. Summary KPI Cards (Adaptive Grid on Mobile & Desktop) -->
-    <div class="row g-2 mb-3" id="txnSummaryCardsRow">
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box">
-                <span class="txn-stat-label">Active Records</span>
-                <div class="txn-stat-value text-primary bn-digit font-monospace" id="sum-total-count">{{ $summary['total_transactions'] ?? 0 }}</div>
-                <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Payable: ৳<span id="sum-expected-amt">{{ number_format((float)($summary['total_expected_amount'] ?? 0), 2) }}</span></small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box border-start border-success border-3">
-                <span class="txn-stat-label text-success">Verified Paid</span>
-                <div class="txn-stat-value text-success bn-digit font-monospace">৳<span id="sum-paid-amt">{{ number_format((float)($summary['total_paid_amount'] ?? 0), 2) }}</span></div>
-                <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Paid Orders: <strong id="sum-paid-count">{{ $summary['count_paid'] ?? 0 }}</strong></small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box border-start border-danger border-3">
-                <span class="txn-stat-label text-danger">Unpaid / Due</span>
-                <div class="txn-stat-value text-danger bn-digit font-monospace">৳<span id="sum-unpaid-amt">{{ number_format((float)($summary['total_unpaid_amount'] ?? 0), 2) }}</span></div>
-                <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Partial: ৳<span id="sum-partial-amt">{{ number_format((float)($summary['total_partial_amount'] ?? 0), 2) }}</span></small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box border-start border-warning border-3">
-                <span class="txn-stat-label text-warning-emphasis">Unchecked Queue</span>
-                <div class="txn-stat-value text-warning-emphasis bn-digit font-monospace" id="sum-pending-count">{{ $summary['count_pending'] ?? 0 }}</div>
-                <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Review: <strong id="sum-review-count">{{ $summary['count_under_review'] ?? 0 }}</strong></small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box">
-                <span class="txn-stat-label text-info">Admin Checked</span>
-                <div class="txn-stat-value text-info bn-digit font-monospace">
-                    <span id="sum-checked-count">{{ $summary['count_checked'] ?? 0 }}</span> <small class="text-muted fw-normal" style="font-size:11px;">/ App: <span id="sum-approved-count">{{ $summary['count_approved'] ?? 0 }}</span></small>
-                </div>
-                <small class="text-muted d-block text-truncate" style="font-size: 10px;">Verified by Staff</small>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="txn-stat-box">
-                <span class="txn-stat-label text-danger">Fake / Unmatched</span>
-                <div class="txn-stat-value text-danger bn-digit font-monospace">
-                    <span id="sum-fake-count">{{ $summary['count_fake'] ?? 0 }}</span> / <span id="sum-unmatched-count">{{ $summary['count_unmatched'] ?? 0 }}</span>
-                </div>
-                <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Refunded: ৳<span id="sum-refunded-amt">{{ number_format((float)($summary['total_refunded_amount'] ?? 0), 2) }}</span></small>
+ <!-- 1. Page Header & Top Action Buttons -->
+<div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3 mb-3">
+    <div class="d-flex align-items-center gap-3 min-w-0">
+        <span class="d-inline-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 40px; height: 40px; background: #e0f2fe; color: #0284c7; border-radius: 8px; font-size: 16px;">
+            <i class="fas fa-money-check-dollar"></i>
+        </span>
+        <div class="min-w-0 lh-sm">
+            <h4 class="fw-bold mb-1 text-dark text-truncate" style="font-size: 16px;">
+                {{ $pageTitle }}
+            </h4>
+            <div class="text-secondary text-truncate m-0 p-0" style="font-size: 11.5px;">
+                Verify payments, sync orders &amp; track transactions.
             </div>
         </div>
     </div>
+
+    <div class="txn-top-actions d-flex align-items-center gap-2 flex-wrap flex-lg-nowrap justify-content-start justify-content-lg-end w-100 w-lg-auto">
+        <button type="button" class="btn btn-sm txn-btn-gradient-primary flex-fill flex-lg-grow-0 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap" onclick="openManualTransactionModal()" style="height: 34px;">
+            <i class="fas fa-plus-circle me-1"></i>
+            <span>Add Manual Transaction</span>
+        </button>
+
+        <button type="button" class="btn btn-sm txn-btn-outline-excel flex-fill flex-lg-grow-0 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap" onclick="exportTransactionsExcel()" style="height: 34px;">
+            <i class="fas fa-file-excel text-success me-1"></i>
+            <span>Export Excel</span>
+        </button>
+
+        <button type="button" class="btn btn-sm txn-btn-outline-pdf flex-fill flex-lg-grow-0 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap" id="btnExportTxnPdf" onclick="exportTransactionsPdf()" style="height: 34px;">
+            <i class="fas fa-file-pdf text-danger me-1"></i>
+            <span id="btnExportTxnPdfText">Export PDF</span>
+        </button>
+    </div>
+</div>
+   <!-- 2. Section Navigation Strip -->
+<div class="txn-card p-2 mb-3 shadow-sm border-0 rounded-3 bg-white">
+    <div class="txn-section-nav d-flex flex-nowrap overflow-x-auto gap-2 align-items-center pb-1" style="scrollbar-width: thin;">
+        <a href="{{ route('admin.transactions.dashboard') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'dashboard' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-chart-pie {{ $activeSection === 'dashboard' ? 'text-white' : 'text-warning' }}"></i> <span>Dashboard</span>
+        </a>
+        <a href="{{ route('admin.transactions.checkout') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'checkout-requests' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-globe {{ $activeSection === 'checkout-requests' ? 'text-white' : 'text-info' }}"></i> <span>Checkout Requests</span>
+            <span class="badge bg-warning text-dark px-2 py-0 bn-digit font-monospace" id="nav-badge-checkout">{{ $alertCounters['pending_checkout_count'] ?? 0 }}</span>
+        </a>
+        <a href="{{ route('admin.transactions.unchecked') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'unchecked' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-clock {{ $activeSection === 'unchecked' ? 'text-white' : 'text-danger' }}"></i> <span>Unchecked Queue</span>
+            <span class="badge bg-danger text-white px-2 py-0 bn-digit font-monospace" id="nav-badge-unchecked">{{ $alertCounters['total_unchecked_count'] ?? 0 }}</span>
+        </a>
+        <a href="{{ route('admin.transactions.pos') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'pos-cash' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-cash-register {{ $activeSection === 'pos-cash' ? 'text-white' : 'text-success' }}"></i> <span>POS Cash Orders</span>
+        </a>
+        <a href="{{ route('admin.transactions.cod') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'cod-orders' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-truck {{ $activeSection === 'cod-orders' ? 'text-white' : 'text-primary' }}"></i> <span>COD Orders</span>
+        </a>
+        <a href="{{ route('admin.transactions.manual') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'manual' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-hand-holding-dollar {{ $activeSection === 'manual' ? 'text-white' : 'text-secondary' }}"></i> <span>Manual Entries</span>
+        </a>
+        <a href="{{ route('admin.transactions.index') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'all' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-layer-group {{ $activeSection === 'all' ? 'text-white' : 'text-dark' }}"></i> <span>All Transactions</span>
+        </a>
+        <a href="{{ route('admin.transactions.history') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'history' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-shield-halved {{ $activeSection === 'history' ? 'text-white' : 'text-info' }}"></i> <span>Verification History</span>
+        </a>
+        <a href="{{ route('admin.transactions.reports') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'reports' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-file-contract {{ $activeSection === 'reports' ? 'text-white' : 'text-success' }}"></i> <span>Reports</span>
+        </a>
+        <a href="{{ route('admin.transactions.trash') }}" class="txn-section-pill px-3 py-2 rounded-2 text-decoration-none fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 transition-all {{ $activeSection === 'trash' ? 'active bg-primary text-white shadow-xs' : 'text-secondary bg-light' }}" style="font-size: 13px;">
+            <i class="fas fa-trash-can {{ $activeSection === 'trash' ? 'text-white' : 'text-danger' }}"></i> <span>Trashed</span>
+            <span class="badge bg-secondary text-white px-2 py-0 bn-digit font-monospace" id="nav-badge-trash">{{ $alertCounters['trashed_count'] ?? 0 }}</span>
+        </a>
+    </div>
+</div>
+
+
+<!-- 3. Summary KPI Cards (Adaptive Grid on Mobile & Desktop) -->
+<div class="row g-2 mb-3" id="txnSummaryCardsRow">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-muted fw-semibold" style="font-size: 11px;">Active Records</span>
+            <div class="txn-stat-value text-primary fw-bold bn-digit font-monospace fs-5 my-1" id="sum-total-count">{{ $summary['total_transactions'] ?? 0 }}</div>
+            <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Payable: ৳<span id="sum-expected-amt">{{ number_format((float)($summary['total_expected_amount'] ?? 0), 2) }}</span></small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-success fw-semibold" style="font-size: 11px;">Verified Paid</span>
+            <div class="txn-stat-value text-success fw-bold bn-digit font-monospace fs-5 my-1">৳<span id="sum-paid-amt">{{ number_format((float)($summary['total_paid_amount'] ?? 0), 2) }}</span></div>
+            <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Paid Orders: <strong id="sum-paid-count">{{ $summary['count_paid'] ?? 0 }}</strong></small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-danger fw-semibold" style="font-size: 11px;">Unpaid / Due</span>
+            <div class="txn-stat-value text-danger fw-bold bn-digit font-monospace fs-5 my-1">৳<span id="sum-unpaid-amt">{{ number_format((float)($summary['total_unpaid_amount'] ?? 0), 2) }}</span></div>
+            <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Partial: ৳<span id="sum-partial-amt">{{ number_format((float)($summary['total_partial_amount'] ?? 0), 2) }}</span></small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-warning-emphasis fw-semibold" style="font-size: 11px;">Unchecked Queue</span>
+            <div class="txn-stat-value text-warning-emphasis fw-bold bn-digit font-monospace fs-5 my-1" id="sum-pending-count">{{ $summary['count_pending'] ?? 0 }}</div>
+            <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Review: <strong id="sum-review-count">{{ $summary['count_under_review'] ?? 0 }}</strong></small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-info fw-semibold" style="font-size: 11px;">Admin Checked</span>
+            <div class="txn-stat-value text-info fw-bold bn-digit font-monospace fs-6 my-1">
+                <span id="sum-checked-count">{{ $summary['count_checked'] ?? 0 }}</span> <small class="text-muted fw-normal" style="font-size:10px;">/ App: <span id="sum-approved-count">{{ $summary['count_approved'] ?? 0 }}</span></small>
+            </div>
+            <small class="text-muted d-block text-truncate" style="font-size: 10px;">Verified by Staff</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="txn-stat-box txn-kpi-card rounded-3 p-3 bg-white shadow-sm">
+            <span class="txn-stat-label text-danger fw-semibold" style="font-size: 11px;">Fake / Unmatched</span>
+            <div class="txn-stat-value text-danger fw-bold bn-digit font-monospace fs-6 my-1">
+                <span id="sum-fake-count">{{ $summary['count_fake'] ?? 0 }}</span> / <span id="sum-unmatched-count">{{ $summary['count_unmatched'] ?? 0 }}</span>
+            </div>
+            <small class="text-muted d-block text-truncate bn-digit font-monospace" style="font-size: 10px;">Refunded: ৳<span id="sum-refunded-amt">{{ number_format((float)($summary['total_refunded_amount'] ?? 0), 2) }}</span></small>
+        </div>
+    </div>
+</div>
 
     <!-- 4. Filter Toolbar -->
     <div class="txn-card p-3 mb-3">
@@ -863,21 +928,21 @@
 <div class="modal fade txn-modal-scope" id="txnDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-light py-2 px-3 border-bottom">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fas fa-shield-halved text-primary fs-5"></i>
-                    <div>
-                        <h6 class="fw-bold text-dark mb-0 font-monospace bn-digit" style="font-size: 14px;" id="mdl_txn_uid">TXN-000000</h6>
-                        <small class="text-muted bn-digit font-monospace" style="font-size: 11px;" id="mdl_txn_submitted_at">Submitted: —</small>
+            <div class="modal-header bg-light py-2 px-3 border-bottom align-items-center">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <i class="fas fa-shield-halved text-primary fs-5 flex-shrink-0"></i>
+                    <div class="min-w-0 lh-sm">
+                        <h6 class="fw-bold text-dark mb-0 font-monospace bn-digit text-truncate" style="font-size: 14px;" id="mdl_txn_uid">TXN-000000</h6>
+                        <small class="text-muted bn-digit font-monospace text-truncate d-block" style="font-size: 11px;" id="mdl_txn_submitted_at">Submitted: —</small>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-sm shadow-none flex-shrink-0 ms-auto" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body p-3">
                 <div id="mdl_duplicate_alert" class="alert alert-danger d-none py-2 px-3 mb-3 border-0 shadow-xs">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="fas fa-triangle-exclamation fs-5 text-danger"></i>
+                        <i class="fas fa-triangle-exclamation fs-5 text-danger flex-shrink-0"></i>
                         <div>
                             <strong class="d-block" style="font-size: 12.5px;">Security Alert: Duplicate Transaction ID Detected!</strong>
                             <span style="font-size: 12px;" id="mdl_duplicate_text"></span>
@@ -993,37 +1058,37 @@
                         <!-- Verification Action Controls -->
                         <div class="p-3 border bg-light" style="border-radius: 5px;">
                             <h6 class="fw-bold text-dark mb-1" style="font-size: 13px;">
-                                <i class="fas fa-sliders text-primary me-1"></i> Execute Verification Action
+                                <i class="fas fa-sliders text-primary me-1"></i> Verify Payment
                             </h6>
                             <p class="text-muted mb-2" style="font-size: 11.5px;">
-                                Marking an already Paid POS/Online record as <strong>Checked</strong> records your admin check without changing its Paid status.
+                                Checking a Paid POS/Online order won't change its payment status.
                             </p>
                             <div class="d-flex flex-wrap gap-2" id="mdl_action_buttons_wrap">
-                                <button type="button" class="btn btn-compact btn-info text-white" onclick="triggerModalVerifyAction('mark_checked')">
-                                    <i class="fas fa-eye me-1"></i> Mark Admin Checked
+                                <button type="button" class="btn btn-compact btn-info text-white flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('mark_checked')">
+                                    <i class="fas fa-eye me-1"></i> AdminChecked
                                 </button>
-                                <button type="button" class="btn btn-compact btn-primary" onclick="triggerModalVerifyAction('approve')">
+                                <button type="button" class="btn btn-compact btn-primary flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('approve')">
                                     <i class="fas fa-thumbs-up me-1"></i> Approve
                                 </button>
-                                <button type="button" class="btn btn-compact btn-success" onclick="triggerModalVerifyAction('mark_paid')">
-                                    <i class="fas fa-circle-check me-1"></i> Mark Paid / Received
+                                <button type="button" class="btn btn-compact btn-success flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('mark_paid')">
+                                    <i class="fas fa-circle-check me-1"></i> Mark Paid
                                 </button>
-                                <button type="button" class="btn btn-compact btn-outline-primary" onclick="triggerModalVerifyAction('mark_partially_paid')">
+                                <button type="button" class="btn btn-compact btn-outline-primary flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('mark_partially_paid')">
                                     <i class="fas fa-adjust me-1"></i> Partial Paid
                                 </button>
-                                <button type="button" class="btn btn-compact btn-warning text-dark" onclick="triggerModalVerifyAction('under_review')">
+                                <button type="button" class="btn btn-compact btn-warning text-dark flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('under_review')">
                                     <i class="fas fa-magnifying-glass me-1"></i> Under Review
                                 </button>
-                                <button type="button" class="btn btn-compact btn-danger" onclick="triggerModalVerifyAction('mark_unmatched')">
+                                <button type="button" class="btn btn-compact btn-danger flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('mark_unmatched')">
                                     <i class="fas fa-not-equal me-1"></i> Unmatched
                                 </button>
-                                <button type="button" class="btn btn-compact btn-dark" onclick="triggerModalVerifyAction('mark_fake')">
+                                <button type="button" class="btn btn-compact btn-dark flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('mark_fake')">
                                     <i class="fas fa-ban me-1 text-danger"></i> Fake / Reject
                                 </button>
-                                <button type="button" class="btn btn-compact btn-outline-secondary" onclick="triggerModalVerifyAction('refund')">
+                                <button type="button" class="btn btn-compact btn-outline-secondary flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('refund')">
                                     <i class="fas fa-rotate-left me-1"></i> Refund
                                 </button>
-                                <button type="button" class="btn btn-compact btn-outline-dark" onclick="triggerModalVerifyAction('add_note')">
+                                <button type="button" class="btn btn-compact btn-outline-dark flex-grow-1" style="flex-basis: calc(33.333% - 8px); min-width: 110px;" onclick="triggerModalVerifyAction('add_note')">
                                     <i class="fas fa-comment-medical me-1"></i> Add Note
                                 </button>
                             </div>
@@ -1064,7 +1129,6 @@
         </div>
     </div>
 </div>
-
 <!-- MODAL 2: VERIFICATION CONFIRMATION & REASON INPUT MODAL -->
 <div class="modal fade txn-modal-scope" id="txnActionConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 1075;">
     <div class="modal-dialog modal-dialog-centered">

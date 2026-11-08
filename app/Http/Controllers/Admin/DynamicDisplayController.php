@@ -87,12 +87,14 @@ class DynamicDisplayController extends Controller
     public function popupStore(Request $request)
     {
         $request->validate([
-            'title'          => 'nullable|string|max:255',
-            'popup_type'     => 'required|string|max:255',
-            'trigger_type'   => 'required|string|in:delay,scroll,immediate',
-            'trigger_value'  => 'nullable|numeric|min:0',
-            'frequency_days' => 'required|integer|min:0',
-            'image'          => 'nullable|string',
+            'title'           => 'nullable|string|max:255',
+            'popup_type'      => 'required|string|max:255',
+            'trigger_type'    => 'required|string|in:delay,scroll,immediate',
+            'trigger_value'   => 'nullable|numeric|min:0',
+            'frequency_value' => 'nullable|numeric|min:0',
+            'frequency_unit'  => 'nullable|string|in:hours,days',
+            'frequency_days'  => 'nullable|numeric|min:0',
+            'image'           => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -100,6 +102,12 @@ class DynamicDisplayController extends Controller
             $safeInternalTitle = $request->filled('title') 
                 ? trim($request->input('title')) 
                 : (ucfirst($request->input('popup_type', 'Promotion')) . ' Campaign #' . (DynamicPopup::max('id') + 1));
+
+            // ঘণ্টা ও দিন হিসাব
+            $freqUnit   = $request->input('frequency_unit', 'hours');
+            $freqVal    = (float) ($request->input('frequency_value', $request->input('frequency_days', 0)));
+            $totalHours = ($freqUnit === 'days') ? ($freqVal * 24) : $freqVal;
+            $daysVal    = ($freqUnit === 'days') ? (int)$freqVal : (int)ceil($freqVal / 24);
 
             $popup = DynamicPopup::create([
                 'title'          => $safeInternalTitle,
@@ -110,12 +118,15 @@ class DynamicDisplayController extends Controller
                 'button_url'     => $request->input('button_url'),
                 'trigger_type'   => $request->input('trigger_type'),
                 'trigger_value'  => $request->input('trigger_value', 3),
-                'frequency_days' => $request->input('frequency_days', 0),
+                'frequency_days' => $daysVal,
                 'is_active'      => $request->boolean('is_active', true),
                 'settings'       => [
                     'show_title'       => $request->boolean('show_title', false),
                     'show_button'      => $request->boolean('show_button', false),
                     'frequency_scope'  => $request->input('frequency_scope', 'per_page'),
+                    'frequency_value'  => $freqVal,
+                    'frequency_unit'   => $freqUnit,
+                    'frequency_hours'  => $totalHours,
                     'bg_color'         => $request->input('bg_color', '#ffffff'),
                     'text_color'       => $request->input('text_color', '#0f172a'),
                     'btn_bg_color'     => $request->input('btn_bg_color', '#2563eb'),
@@ -144,12 +155,14 @@ class DynamicDisplayController extends Controller
         $popup = DynamicPopup::findOrFail($id);
 
         $request->validate([
-            'title'          => 'nullable|string|max:255',
-            'popup_type'     => 'required|string|max:255',
-            'trigger_type'   => 'required|string|in:delay,scroll,immediate',
-            'trigger_value'  => 'nullable|numeric|min:0',
-            'frequency_days' => 'required|integer|min:0',
-            'image'          => 'nullable|string',
+            'title'           => 'nullable|string|max:255',
+            'popup_type'      => 'required|string|max:255',
+            'trigger_type'    => 'required|string|in:delay,scroll,immediate',
+            'trigger_value'   => 'nullable|numeric|min:0',
+            'frequency_value' => 'nullable|numeric|min:0',
+            'frequency_unit'  => 'nullable|string|in:hours,days',
+            'frequency_days'  => 'nullable|numeric|min:0',
+            'image'           => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -157,6 +170,27 @@ class DynamicDisplayController extends Controller
             $safeInternalTitle = $request->filled('title') 
                 ? trim($request->input('title')) 
                 : ($popup->title ?: (ucfirst($request->input('popup_type', 'Promotion')) . ' Campaign #' . $popup->id));
+
+            // ঘণ্টা ও দিন হিসাব
+            $freqUnit   = $request->input('frequency_unit', 'hours');
+            $freqVal    = (float) ($request->input('frequency_value', $request->input('frequency_days', 0)));
+            $totalHours = ($freqUnit === 'days') ? ($freqVal * 24) : $freqVal;
+            $daysVal    = ($freqUnit === 'days') ? (int)$freqVal : (int)ceil($freqVal / 24);
+
+            $existingSettings = is_array($popup->settings) ? $popup->settings : (json_decode($popup->settings ?? '[]', true) ?: []);
+
+            $newSettings = array_merge($existingSettings, [
+                'show_title'       => $request->boolean('show_title', false),
+                'show_button'      => $request->boolean('show_button', false),
+                'frequency_scope'  => $request->input('frequency_scope', 'per_page'),
+                'frequency_value'  => $freqVal,
+                'frequency_unit'   => $freqUnit,
+                'frequency_hours'  => $totalHours,
+                'bg_color'         => $request->input('bg_color', '#ffffff'),
+                'text_color'       => $request->input('text_color', '#0f172a'),
+                'btn_bg_color'     => $request->input('btn_bg_color', '#2563eb'),
+                'max_width'        => $request->input('max_width', '480px'),
+            ]);
 
             $popup->update([
                 'title'          => $safeInternalTitle,
@@ -167,17 +201,9 @@ class DynamicDisplayController extends Controller
                 'button_url'     => $request->input('button_url'),
                 'trigger_type'   => $request->input('trigger_type'),
                 'trigger_value'  => $request->input('trigger_value', 3),
-                'frequency_days' => $request->input('frequency_days', 0),
+                'frequency_days' => $daysVal,
                 'is_active'      => $request->boolean('is_active', true),
-                'settings'       => [
-                    'show_title'       => $request->boolean('show_title', false),
-                    'show_button'      => $request->boolean('show_button', false),
-                    'frequency_scope'  => $request->input('frequency_scope', 'per_page'),
-                    'bg_color'         => $request->input('bg_color', '#ffffff'),
-                    'text_color'       => $request->input('text_color', '#0f172a'),
-                    'btn_bg_color'     => $request->input('btn_bg_color', '#2563eb'),
-                    'max_width'        => $request->input('max_width', '480px'),
-                ],
+                'settings'       => $newSettings,
             ]);
 
             $this->syncDisplayRule($popup, $request, 'popup');
@@ -350,7 +376,6 @@ class DynamicDisplayController extends Controller
         $settingsData = [
             'display_style'    => $request->input('display_style', 'speed_dial'),
             'hub_label'        => $request->input('hub_label', 'Chat with Us'),
-            // Fixed: boolean default false so unchecking correctly saves as false
             'show_label'       => $request->boolean('show_label'),
             'hub_icon'         => $request->input('hub_icon', 'fas fa-comment-dots'),
             'hub_bg_color'     => $request->input('hub_bg_color', '#1e3a8a'),
@@ -359,7 +384,6 @@ class DynamicDisplayController extends Controller
             'badge_text_color' => $request->input('badge_text_color', '#1e3a8a'),
         ];
 
-        // Prevents SQL "Array to string conversion" QueryException
         $isCasted = method_exists($rule, 'hasCast') && $rule->hasCast('settings');
         $rule->settings = $isCasted ? $settingsData : json_encode($settingsData);
 

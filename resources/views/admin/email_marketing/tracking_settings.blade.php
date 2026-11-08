@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Tracking & Privacy Settings - Email Marketing')
@@ -22,269 +23,649 @@
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       KAIADMIN LITE - WHITE CLASSIC
+       Email Marketing / Tracking & Privacy Settings
+    ========================================================= */
+
+    #email-marketing-tracking-settings-root {
+        --tracking-primary: #1572e8;
+        --tracking-primary-rgb: 21, 114, 232;
+        --tracking-success: #18a979;
+        --tracking-info: #31a5c8;
+        --tracking-warning: #e9a23b;
+        --tracking-danger: #e65353;
+        --tracking-text: #344054;
+        --tracking-heading: #1d2939;
+        --tracking-muted: #7b8494;
+        --tracking-border: #e6eaf0;
+        --tracking-surface: #ffffff;
+        --tracking-soft-bg: #f7f9fc;
+        --tracking-radius: 5px;
+
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        color: var(--tracking-text);
+        font-size: 13px;
+        overflow-x: clip;
+    }
+
+    #email-marketing-tracking-settings-root *,
+    .tracking-modal-scope * {
+        box-sizing: border-box;
+    }
+
+    /* Main Header */
+    #email-marketing-tracking-settings-root .tracking-header-wrap {
+        gap: 14px;
+        margin-bottom: 20px !important;
+    }
+
+    #email-marketing-tracking-settings-root .tracking-page-title {
+        color: var(--tracking-heading);
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.35px;
+        line-height: 1.4;
+        margin: 0 0 4px;
+    }
+
+    #email-marketing-tracking-settings-root .tracking-page-subtitle {
+        color: var(--tracking-muted);
+        font-size: 12px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    #email-marketing-tracking-settings-root .top-action-btns {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Common Elements */
     #email-marketing-tracking-settings-root .btn,
-    #email-marketing-tracking-settings-root .btn-sm,
-    #email-marketing-tracking-settings-root button,
-    #email-marketing-tracking-settings-root .badge,
-    #email-marketing-tracking-settings-root .alert,
     #email-marketing-tracking-settings-root .form-control,
     #email-marketing-tracking-settings-root .form-select,
     #email-marketing-tracking-settings-root .input-group-text,
+    #email-marketing-tracking-settings-root .badge,
+    #email-marketing-tracking-settings-root .alert,
     #email-marketing-tracking-settings-root .card,
-    #email-marketing-tracking-settings-root .metric-card,
-    #email-marketing-tracking-settings-root .tag-chip,
     #email-marketing-tracking-settings-root .setting-switch-card,
     #email-marketing-tracking-settings-root .endpoint-box,
+    #email-marketing-tracking-settings-root .tag-chip,
     #email-marketing-tracking-settings-root .collapse-toggle-btn,
     .tracking-modal-scope .modal-content,
     .tracking-modal-scope .btn,
     .admin-tracking-toast {
-        border-radius: 5px !important;
+        border-radius: var(--tracking-radius) !important;
     }
 
-    #email-marketing-tracking-settings-root .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    #email-marketing-tracking-settings-root .input-group > .form-control {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-    }
-
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-tracking-settings-root .btn {
+        font-size: 12px;
+        font-weight: 600;
+        min-height: 34px;
+        padding: 7px 12px;
+        transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    #email-marketing-tracking-settings-root .btn-primary {
+        background-color: var(--tracking-primary);
+        border-color: var(--tracking-primary);
+    }
+
+    #email-marketing-tracking-settings-root .btn-primary:hover {
+        background-color: #0d63ce;
+        border-color: #0d63ce;
+        box-shadow: 0 3px 8px rgba(var(--tracking-primary-rgb), .16);
+    }
+
+    #email-marketing-tracking-settings-root .btn-outline-secondary {
+        color: #596579;
+        border-color: #d7dde6;
+        background: #fff;
+    }
+
+    #email-marketing-tracking-settings-root .btn-outline-secondary:hover {
+        color: var(--tracking-primary);
+        background: #f4f8ff;
+        border-color: #b9d3f7;
+    }
+
+    #email-marketing-tracking-settings-root .btn-compact {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        font-size: 11.5px;
+        line-height: 1.35;
+        font-weight: 600;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #email-marketing-tracking-settings-root .text-muted {
+        color: var(--tracking-muted) !important;
+    }
+
+    #email-marketing-tracking-settings-root .text-dark {
+        color: var(--tracking-heading) !important;
+    }
+
+    /* Alerts */
+    #email-marketing-tracking-settings-root .alert {
+        padding: 11px 14px !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        font-size: 12px;
+    }
+
+    #email-marketing-tracking-settings-root .alert-success {
+        background: #f0faf6;
+        border-color: #d4f1e3 !important;
+    }
+
+    #email-marketing-tracking-settings-root .alert-danger {
+        background: #fff5f5;
+        border-color: #f9dada !important;
+    }
+
+    /* Main Cards */
+    #email-marketing-tracking-settings-root .card {
+        background: var(--tracking-surface);
+        border: 1px solid var(--tracking-border) !important;
+        box-shadow: 0 1px 3px rgba(16, 24, 40, .035) !important;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+
+    #email-marketing-tracking-settings-root .section-header-wrap {
+        min-height: 47px;
+        padding: 11px 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #fff;
+        border-bottom: 1px solid var(--tracking-border);
+    }
+
+    #email-marketing-tracking-settings-root .section-title {
+        color: var(--tracking-heading);
+        font-size: 12.5px;
+        font-weight: 700;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    #email-marketing-tracking-settings-root .section-title i {
+        margin-right: 5px;
+    }
+
+    #email-marketing-tracking-settings-root .collapse-toggle-btn {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        color: #64748b;
+        background: #fff;
+        border: 1px solid #e1e6ed;
+        transition: all .2s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #email-marketing-tracking-settings-root .collapse-toggle-btn:hover {
+        color: var(--tracking-primary);
+        background: #f2f7ff;
+        border-color: #c9dcf8;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #email-marketing-tracking-settings-root .collapse-icon {
+        font-size: 10px;
+        transition: transform .25s ease;
+    }
+
+    #email-marketing-tracking-settings-root .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-tracking-settings-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
+    /* KPI Cards */
+    #email-marketing-tracking-settings-root .metric-card {
         position: relative;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        min-height: 105px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid var(--tracking-border) !important;
+        border-left: 3px solid var(--tracking-primary) !important;
+        box-shadow: none !important;
+        transition: border-color .18s ease, transform .18s ease;
     }
-    .metric-card:hover {
+
+    #email-marketing-tracking-settings-root .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        border-color: #cbd9eb !important;
     }
-    .stat-label-title {
+
+    #email-marketing-tracking-settings-root .metric-card-blue {
+        border-left-color: var(--tracking-primary) !important;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-green {
+        border-left-color: var(--tracking-success) !important;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-amber {
+        border-left-color: var(--tracking-warning) !important;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-cyan {
+        border-left-color: var(--tracking-info) !important;
+    }
+
+    #email-marketing-tracking-settings-root .stat-label-title {
+        color: var(--tracking-muted);
         font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    #email-marketing-tracking-settings-root .stat-val-num {
+        color: var(--tracking-heading);
+        font-size: 17px;
         font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        letter-spacing: -.35px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
     }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .stat-sub-text {
+
+    #email-marketing-tracking-settings-root .stat-sub-text {
+        color: var(--tracking-muted);
         font-size: 10px;
-        margin-top: 2px;
-    }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        flex-shrink: 0;
-        border-radius: 5px !important;
+        line-height: 1.5;
+        margin-top: 3px;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-cyan   { background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%); border-left: 3.5px solid #06b6d4 !important; }
-
-    /* Interactive Switch Setting Card */
-    .setting-switch-card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        padding: 12px;
-        transition: all 0.15s ease;
-    }
-    .setting-switch-card:hover {
-        border-color: #cbd5e1;
-        background-color: #f8fafc;
-    }
-    .setting-switch-card .form-check-input {
-        cursor: pointer;
-        width: 36px;
-        height: 20px;
-        margin-top: 2px;
-    }
-
-    /* Tag Chip */
-    .tag-chip {
+    #email-marketing-tracking-settings-root .metric-icon-square {
+        width: 33px;
+        height: 33px;
+        min-width: 33px;
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        padding: 2px 7px;
-        font-size: 10px;
-        font-weight: 600;
-        color: #475569;
-        background-color: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        cursor: pointer;
-        user-select: none;
-        transition: all 0.15s ease;
-    }
-    .tag-chip:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+        justify-content: center;
+        border-radius: 5px !important;
+        font-size: 13px;
     }
 
-    /* Endpoint Box */
-    .endpoint-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 8px 10px;
-        display: flex;
+    #email-marketing-tracking-settings-root .metric-card-blue .metric-icon-square {
+        color: var(--tracking-primary);
+        background: #edf4ff;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-green .metric-icon-square {
+        color: var(--tracking-success);
+        background: #eaf8f1;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-cyan .metric-icon-square {
+        color: var(--tracking-info);
+        background: #eaf8fb;
+    }
+
+    #email-marketing-tracking-settings-root .metric-card-amber .metric-icon-square {
+        color: var(--tracking-warning);
+        background: #fff6e8;
+    }
+
+    /* Settings Switch Cards */
+    #email-marketing-tracking-settings-root .setting-switch-card {
+        width: 100%;
+        padding: 15px;
+        background: #fff;
+        border: 1px solid var(--tracking-border);
+        transition: border-color .18s ease, background-color .18s ease;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card:hover {
+        background: #fbfcfe;
+        border-color: #cbd8e8;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card strong {
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card small {
+        color: var(--tracking-muted);
+        display: block;
+        font-size: 11px;
+        line-height: 1.6;
+        margin-top: 3px;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card .form-check {
+        padding-left: 0;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card .form-check-input {
+        width: 38px;
+        height: 21px;
+        margin: 2px 0 0;
+        cursor: pointer;
+        border-color: #cbd5e1;
+        box-shadow: none;
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card .form-check-input:checked {
+        background-color: var(--tracking-primary);
+        border-color: var(--tracking-primary);
+    }
+
+    #email-marketing-tracking-settings-root .setting-switch-card .form-check-input:focus {
+        border-color: var(--tracking-primary);
+        box-shadow: 0 0 0 3px rgba(var(--tracking-primary-rgb), .12);
+    }
+
+    #email-marketing-tracking-settings-root .setting-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 6px;
+        justify-content: center;
+        border-radius: 5px !important;
+        font-size: 13px;
     }
 
     /* Form Controls */
     #email-marketing-tracking-settings-root .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
         display: block;
+        color: var(--tracking-text);
+        font-size: 11.5px;
+        font-weight: 700;
+        line-height: 1.5;
+        margin-bottom: 7px;
     }
-    #email-marketing-tracking-settings-root .form-control {
-        font-size: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
+
+    #email-marketing-tracking-settings-root .form-control,
+    #email-marketing-tracking-settings-root .form-select {
+        width: 100%;
+        min-height: 37px;
+        padding: 8px 11px;
+        color: var(--tracking-heading);
+        background-color: #fff;
+        border: 1px solid #dce2ea;
+        border-radius: 5px !important;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 12px;
+        line-height: 1.5;
+        transition: border-color .18s ease, box-shadow .18s ease;
     }
-    #email-marketing-tracking-settings-root .form-control:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+
+    #email-marketing-tracking-settings-root textarea.form-control {
+        min-height: 95px;
+        resize: vertical;
+        line-height: 1.65;
+    }
+
+    #email-marketing-tracking-settings-root .form-control:focus,
+    #email-marketing-tracking-settings-root .form-select:focus {
+        border-color: var(--tracking-primary);
+        box-shadow: 0 0 0 3px rgba(var(--tracking-primary-rgb), .10);
         outline: none;
     }
 
-    /* Floating Toast Box */
-    .admin-tracking-toast {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 108000;
-        min-width: 280px;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-        animation: slideInRight 0.25s ease;
-    }
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    #email-marketing-tracking-settings-root .form-control::placeholder {
+        color: #a0a8b5;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
+    /* Template Tags */
+    #email-marketing-tracking-settings-root .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 8px;
+        color: #52647c;
+        background: #f4f7fb;
+        border: 1px solid #e1e7ef;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.3;
+        cursor: pointer;
+        user-select: none;
+        transition: all .18s ease;
+    }
+
+    #email-marketing-tracking-settings-root .tag-chip:hover {
+        color: var(--tracking-primary);
+        background: #edf4ff;
+        border-color: #c9dcf8;
+    }
+
+    /* Endpoint Boxes */
+    #email-marketing-tracking-settings-root .endpoint-box {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px;
+        background: #f8fafc;
+        border: 1px solid var(--tracking-border);
+    }
+
+    #email-marketing-tracking-settings-root .endpoint-box > div {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        line-height: 1.6;
+    }
+
+    #email-marketing-tracking-settings-root .endpoint-copy-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        color: #64748b;
+        background: #fff;
+        border: 1px solid #e1e6ed;
+        border-radius: 5px !important;
+    }
+
+    #email-marketing-tracking-settings-root .endpoint-copy-btn:hover {
+        color: var(--tracking-primary);
+        background: #edf4ff;
+        border-color: #c9dcf8;
+    }
+
+    /* Informational Alert */
+    #email-marketing-tracking-settings-root .pipeline-alert {
+        padding: 11px !important;
+        color: #42677c;
+        background: #f0f8fc;
+        border: 1px solid #d9edf6 !important;
+        font-size: 10.5px;
+        line-height: 1.6;
+    }
+
+    /* Right Column Information */
+    #email-marketing-tracking-settings-root .info-copy {
+        color: var(--tracking-muted);
+        font-size: 11.5px;
+        line-height: 1.7;
+        margin-bottom: 10px;
+    }
+
+    #email-marketing-tracking-settings-root .info-copy:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Toast */
+    #custom-toast-holder {
+        position: relative;
+        z-index: 108000;
+    }
+
+    .admin-tracking-toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 108000;
+        width: max-content;
+        max-width: min(380px, calc(100vw - 32px));
+        min-width: 260px;
+        box-shadow: 0 8px 25px rgba(15, 23, 42, .16);
+        animation: trackingToastIn .25s ease;
+    }
+
+    @keyframes trackingToastIn {
+        from {
+            transform: translateX(25px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 1199.98px) {
+        #email-marketing-tracking-settings-root .metric-card {
+            min-height: 100px;
+        }
+    }
+
     @media (max-width: 767.98px) {
-        .tracking-header-wrap h5 {
-            font-size: 16px !important;
+        #email-marketing-tracking-settings-root {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
         }
-        .top-action-btns {
-            width: 100%;
+
+        #email-marketing-tracking-settings-root .tracking-header-wrap {
+            align-items: stretch !important;
+            margin-bottom: 15px !important;
+        }
+
+        #email-marketing-tracking-settings-root .tracking-page-title {
+            font-size: 16px;
+        }
+
+        #email-marketing-tracking-settings-root .tracking-page-subtitle {
+            font-size: 11px;
+        }
+
+        #email-marketing-tracking-settings-root .top-action-btns {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .top-action-btns .btn {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
+            gap: 7px;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
+
+        #email-marketing-tracking-settings-root .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            min-height: 37px;
+            padding: 7px 5px;
+            font-size: 10.5px;
+            white-space: normal;
         }
-        .stat-label-title {
-            font-size: 10px !important;
+
+        #email-marketing-tracking-settings-root .section-header-wrap {
+            min-height: 44px;
+            padding: 10px 12px;
         }
-        .stat-val-num {
-            font-size: 14px !important;
+
+        #email-marketing-tracking-settings-root .section-title {
+            font-size: 11.5px;
         }
-        .stat-sub-text {
-            font-size: 9px !important;
+
+        #email-marketing-tracking-settings-root .metric-card {
+            min-height: 94px;
+            padding: 11px;
         }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
+
+        #email-marketing-tracking-settings-root .stat-label-title {
+            font-size: 10px;
         }
+
+        #email-marketing-tracking-settings-root .stat-val-num {
+            font-size: 14px;
+        }
+
+        #email-marketing-tracking-settings-root .stat-sub-text {
+            font-size: 9px;
+        }
+
+        #email-marketing-tracking-settings-root .metric-icon-square {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            font-size: 11px;
+        }
+
+        #email-marketing-tracking-settings-root .setting-switch-card {
+            padding: 12px;
+        }
+
+        #email-marketing-tracking-settings-root .setting-switch-card strong {
+            font-size: 11.5px;
+        }
+
+        #email-marketing-tracking-settings-root .setting-switch-card small {
+            font-size: 10px;
+        }
+
+        #email-marketing-tracking-settings-root .setting-icon {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+        }
+
         #email-marketing-tracking-settings-root .card {
-            margin-bottom: 12px !important;
+            margin-bottom: 12px;
+        }
+
+        #email-marketing-tracking-settings-root .p-3 {
+            padding: 12px !important;
+        }
+    }
+
+    @media (max-width: 380px) {
+        #email-marketing-tracking-settings-root .top-action-btns {
+            grid-template-columns: 1fr;
+        }
+
+        #email-marketing-tracking-settings-root .setting-switch-card > .d-flex {
+            gap: 8px !important;
+        }
+
+        #email-marketing-tracking-settings-root .tag-chip {
+            font-size: 9px;
+            padding: 4px 6px;
+        }
+
+        #email-marketing-tracking-settings-root .stat-val-num {
+            font-size: 12px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #email-marketing-tracking-settings-root *,
+        .admin-tracking-toast {
+            animation-duration: .01ms !important;
+            transition-duration: .01ms !important;
         }
     }
 </style>
@@ -292,30 +673,33 @@
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-tracking-settings-root">
 
     {{-- 1. Header & Quick Actions Toolbar --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 tracking-header-wrap">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center tracking-header-wrap">
+        <div class="min-w-0">
+            <h5 class="tracking-page-title d-flex align-items-center gap-2">
                 <i class="fas fa-chart-pie text-primary"></i>
                 <span>Email Tracking &amp; Privacy Settings</span>
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Manage 1x1 transparent tracking pixel injection, link redirect wrappers, and unsubscribe compliance.
-            </small>
+            <p class="tracking-page-subtitle">
+                Configure email engagement tracking, privacy controls and unsubscribe compliance.
+            </p>
         </div>
 
-        <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ $generalSettingsRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold">
-                <i class="fas fa-arrow-left me-1"></i> <span>General Settings</span>
+        <div class="top-action-btns">
+            <a href="{{ $generalSettingsRoute }}" class="btn btn-sm btn-outline-secondary btn-compact">
+                <i class="fas fa-arrow-left"></i>
+                <span>General Settings</span>
             </a>
-            <button type="button" class="btn btn-sm btn-primary btn-compact shadow-xs fw-bold" id="btn-save-tracking-settings" onclick="submitTrackingForm()">
-                <i class="fas fa-save me-1"></i> <span>Save Tracking Parameters</span>
+
+            <button type="button" class="btn btn-sm btn-primary btn-compact" id="btn-save-tracking-settings" onclick="submitTrackingForm()">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
             </button>
         </div>
     </div>
 
     {{-- 2. Feedback Messages --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-success alert-dismissible fade show mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-check-circle text-success fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
@@ -323,8 +707,9 @@
             <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 small border-0 shadow-xs mb-3 d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show mb-3 d-flex align-items-center justify-content-between" role="alert">
             <div class="d-flex align-items-center gap-2">
                 <i class="fas fa-exclamation-circle text-danger fs-5"></i>
                 <span class="fw-semibold text-dark">{{ session('error') }}</span>
@@ -333,69 +718,67 @@
         </div>
     @endif
 
-    {{-- 3. Telemetry KPI Overview (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-shield-halved text-primary me-1"></i> Engagement Telemetry &amp; Privacy Infrastructure
+    {{-- 3. Telemetry KPI Overview --}}
+    <div class="card mb-3">
+        <div class="section-header-wrap">
+            <span class="section-title">
+                <i class="fas fa-shield-halved text-primary"></i>
+                Engagement Telemetry Overview
             </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseTrackingKpis" aria-expanded="true" aria-controls="collapseTrackingKpis" title="Toggle Section">
+
+            <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseTrackingKpis" aria-expanded="true" aria-controls="collapseTrackingKpis" title="Toggle Section">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseTrackingKpis">
             <div class="p-3">
-                <div class="row g-2">
+                <div class="row g-3">
+
                     {{-- Open Tracking Pixel --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Open Tracking</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Open Tracking</span>
+                                <div class="metric-icon-square">
                                     <i class="fas fa-envelope-open"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num">
-                                    1x1 GIF
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Invisible pixel ping</small>
+                                <h4 class="my-0 stat-val-num font-monospace">1x1 GIF</h4>
+                                <small class="d-block stat-sub-text">Invisible tracking pixel</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Link Click Redirection (CTR) --}}
+                    {{-- Link Click Redirection --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Click Wrapping</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Click Tracking</span>
+                                <div class="metric-icon-square">
                                     <i class="fas fa-mouse-pointer"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success font-monospace stat-val-num">
-                                    302 Redirect
-                                </h4>
-                                <small class="text-success d-block text-truncate font-monospace stat-sub-text">Token link wrapper</small>
+                                <h4 class="my-0 stat-val-num font-monospace text-success">302 Redirect</h4>
+                                <small class="d-block stat-sub-text">Tracked link redirection</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Forensics & Fraud Audit --}}
+                    {{-- Device Telemetry --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-cyan h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Device Telemetry</span>
-                                <div class="metric-icon-square bg-info-subtle text-info shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Device Telemetry</span>
+                                <div class="metric-icon-square">
                                     <i class="fas fa-fingerprint"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num" style="font-size: 15px;">
-                                    IP &amp; Agent
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Bot / fraud audit trail</small>
+                                <h4 class="my-0 stat-val-num font-monospace" style="font-size: 15px;">IP &amp; Agent</h4>
+                                <small class="d-block stat-sub-text">Device and browser data</small>
                             </div>
                         </div>
                     </div>
@@ -403,20 +786,19 @@
                     {{-- Compliance Engine --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Opt-Out Sync</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Opt-Out Sync</span>
+                                <div class="metric-icon-square">
                                     <i class="fas fa-user-slash"></i>
                                 </div>
                             </div>
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-warning-emphasis font-monospace stat-val-num" style="font-size: 15px;">
-                                    Auto-Blacklist
-                                </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Suppression enforcement</small>
+                                <h4 class="my-0 stat-val-num font-monospace" style="font-size: 15px;">Auto-Suppress</h4>
+                                <small class="d-block stat-sub-text">Unsubscribe enforcement</small>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -427,37 +809,43 @@
         @csrf
 
         <div class="row g-3">
+
             {{-- Left Column: Tracking Parameters & Compliance --}}
             <div class="col-12 col-xl-8">
-                
-                {{-- Card 1: Engagement Telemetry (Collapsible) --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-bullseye text-primary me-1"></i> 1. Engagement Telemetry &amp; Pixel Injection
+
+                {{-- Card 1: Engagement Telemetry --}}
+                <div class="card mb-3">
+                    <div class="section-header-wrap">
+                        <span class="section-title">
+                            <i class="fas fa-bullseye text-primary"></i>
+                            1. Engagement Tracking &amp; Pixel Settings
                         </span>
-                        <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseTelemetrySwitches" aria-expanded="true" aria-controls="collapseTelemetrySwitches" title="Toggle Section">
+
+                        <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseTelemetrySwitches" aria-expanded="true" aria-controls="collapseTelemetrySwitches" title="Toggle Section">
                             <i class="fas fa-chevron-down collapse-icon"></i>
                         </button>
                     </div>
+
                     <div class="collapse show" id="collapseTelemetrySwitches">
                         <div class="p-3">
-                            <div class="d-flex flex-column gap-2">
-                                
+                            <div class="d-flex flex-column gap-3">
+
                                 {{-- Switch 1: Track Opens --}}
                                 <div class="setting-switch-card">
                                     <div class="d-flex justify-content-between align-items-start gap-3">
-                                        <div class="d-flex align-items-start gap-2.5">
-                                            <div class="rounded bg-primary-subtle text-primary p-2 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 5px !important;">
-                                                <i class="fas fa-envelope-open" style="font-size: 12px;"></i>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <div class="setting-icon bg-primary-subtle text-primary flex-shrink-0">
+                                                <i class="fas fa-envelope-open"></i>
                                             </div>
-                                            <div>
-                                                <strong class="text-dark d-block" style="font-size: 12.5px;">Inject Invisible 1x1 Open Tracking Pixel</strong>
-                                                <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.4;">
-                                                    Logs exact timestamp when a customer opens your broadcast email in their mail client (Apple Mail, Gmail, Outlook).
+
+                                            <div class="min-w-0">
+                                                <strong class="text-dark d-block">Enable Email Open Tracking</strong>
+                                                <small>
+                                                    Uses an invisible 1x1 tracking pixel to record when a recipient opens a campaign email. Some email providers may preload images, so open data may not always represent a direct human open.
                                                 </small>
                                             </div>
                                         </div>
+
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
                                             <input class="form-check-input" type="checkbox" name="track_opens" id="trackOpensInput" value="1" {{ $trackOpens ? 'checked' : '' }}>
                                         </div>
@@ -467,17 +855,19 @@
                                 {{-- Switch 2: Track Clicks --}}
                                 <div class="setting-switch-card">
                                     <div class="d-flex justify-content-between align-items-start gap-3">
-                                        <div class="d-flex align-items-start gap-2.5">
-                                            <div class="rounded bg-success-subtle text-success p-2 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 5px !important;">
-                                                <i class="fas fa-mouse-pointer" style="font-size: 12px;"></i>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <div class="setting-icon bg-success-subtle text-success flex-shrink-0">
+                                                <i class="fas fa-mouse-pointer"></i>
                                             </div>
-                                            <div>
-                                                <strong class="text-dark d-block" style="font-size: 12.5px;">Track Outbound Click-Throughs (CTR)</strong>
-                                                <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.4;">
-                                                    Rewrites hyperlinks in your broadcast via safe redirection tokens to register verified store visits and sales conversions.
+
+                                            <div class="min-w-0">
+                                                <strong class="text-dark d-block">Enable Link Click Tracking</strong>
+                                                <small>
+                                                    Uses tracked redirect links to record campaign link clicks and help measure engagement with your store content.
                                                 </small>
                                             </div>
                                         </div>
+
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
                                             <input class="form-check-input" type="checkbox" name="track_clicks" id="trackClicksInput" value="1" {{ $trackClicks ? 'checked' : '' }}>
                                         </div>
@@ -487,17 +877,19 @@
                                 {{-- Switch 3: Log IP & User Agent --}}
                                 <div class="setting-switch-card">
                                     <div class="d-flex justify-content-between align-items-start gap-3">
-                                        <div class="d-flex align-items-start gap-2.5">
-                                            <div class="rounded bg-info-subtle text-info p-2 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 5px !important;">
-                                                <i class="fas fa-fingerprint" style="font-size: 12px;"></i>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <div class="setting-icon bg-info-subtle text-info flex-shrink-0">
+                                                <i class="fas fa-fingerprint"></i>
                                             </div>
-                                            <div>
-                                                <strong class="text-dark d-block" style="font-size: 12.5px;">Log IP Address &amp; Client User-Agent</strong>
-                                                <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.4;">
-                                                    Records client network and browser environment to accurately isolate automated security scanner pings from real human shoppers.
+
+                                            <div class="min-w-0">
+                                                <strong class="text-dark d-block">Log IP Address &amp; User-Agent</strong>
+                                                <small>
+                                                    Records recipient network and browser information to support security reviews and help identify automated tracking activity. Ensure collection follows your privacy policy and applicable laws.
                                                 </small>
                                             </div>
                                         </div>
+
                                         <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
                                             <input class="form-check-input" type="checkbox" name="log_ip_addresses" id="logIpInput" value="1" {{ $logIpAddresses ? 'checked' : '' }}>
                                         </div>
@@ -509,53 +901,63 @@
                     </div>
                 </div>
 
-                {{-- Card 2: Legal Compliance & 1-Click Unsubscribe (Collapsible) --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-scale-balanced text-warning me-1"></i> 2. Consent, Unsubscribe Notice &amp; Legal Compliance
+                {{-- Card 2: Legal Compliance & Unsubscribe --}}
+                <div class="card mb-3">
+                    <div class="section-header-wrap">
+                        <span class="section-title">
+                            <i class="fas fa-scale-balanced text-warning"></i>
+                            2. Consent &amp; Unsubscribe Compliance
                         </span>
-                        <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseConsentSettings" aria-expanded="true" aria-controls="collapseConsentSettings" title="Toggle Section">
+
+                        <button type="button" class="collapse-toggle-btn no-print" data-bs-toggle="collapse" data-bs-target="#collapseConsentSettings" aria-expanded="true" aria-controls="collapseConsentSettings" title="Toggle Section">
                             <i class="fas fa-chevron-down collapse-icon"></i>
                         </button>
                     </div>
+
                     <div class="collapse show" id="collapseConsentSettings">
                         <div class="p-3">
+
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                                     <label class="form-label mb-0" for="unsubscribe_footer_notice">
-                                        Mandatory Footer Unsubscribe Notice <span class="text-danger">*</span>
+                                        Unsubscribe Footer Notice <span class="text-danger">*</span>
                                     </label>
+
                                     <div class="d-flex flex-wrap gap-1">
                                         <span class="tag-chip font-monospace" onclick="insertNoticeTag('{shop_url}')" title="Insert Shop URL">+{shop_url}</span>
                                         <span class="tag-chip font-monospace" onclick="insertNoticeTag('{unsubscribe_url}')" title="Insert Unsubscribe URL">+{unsubscribe_url}</span>
                                         <span class="tag-chip font-monospace" onclick="insertNoticeTag('{company_name}')" title="Insert Company Name">+{company_name}</span>
                                     </div>
                                 </div>
+
                                 <textarea name="unsubscribe_footer_notice" id="unsubscribe_footer_notice" rows="3" class="form-control font-monospace" style="font-size: 11.5px; line-height: 1.5;" required>{{ $footerNotice }}</textarea>
-                                <small class="text-muted font-monospace d-block mt-1" style="font-size: 10px;">
-                                    Required by CAN-SPAM and international mail laws. Included automatically in the footer of all marketing broadcast templates.
+
+                                <small class="text-muted d-block mt-2" style="font-size: 10.5px; line-height: 1.6;">
+                                    This notice is included in marketing email footers. Keep your unsubscribe instructions clear and aligned with applicable email marketing regulations.
                                 </small>
                             </div>
 
                             <div class="setting-switch-card">
                                 <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div class="d-flex align-items-start gap-2.5">
-                                        <div class="rounded bg-danger-subtle text-danger p-2 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 5px !important;">
-                                            <i class="fas fa-ban" style="font-size: 12px;"></i>
+                                    <div class="d-flex align-items-start gap-2">
+                                        <div class="setting-icon bg-danger-subtle text-danger flex-shrink-0">
+                                            <i class="fas fa-ban"></i>
                                         </div>
-                                        <div>
-                                            <strong class="text-dark d-block" style="font-size: 12.5px;">Auto-Add to Suppression Blacklist on Opt-Out</strong>
-                                            <small class="text-muted d-block font-monospace" style="font-size: 10.5px; line-height: 1.4;">
-                                                Instantly suppresses recipients across all future marketing broadcasts and automated drip pipelines once an unsubscribe request is received.
+
+                                        <div class="min-w-0">
+                                            <strong class="text-dark d-block">Automatically Suppress Unsubscribed Recipients</strong>
+                                            <small>
+                                                Automatically adds recipients to the suppression list after an unsubscribe request, preventing them from receiving future marketing campaigns and automated emails.
                                             </small>
                                         </div>
                                     </div>
+
                                     <div class="form-check form-switch m-0 pt-1 flex-shrink-0">
                                         <input class="form-check-input" type="checkbox" name="auto_suppress_on_unsubscribe" id="autoSuppressInput" value="1" {{ $autoSuppress ? 'checked' : '' }}>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -564,61 +966,83 @@
 
             {{-- Right Column: Telemetry Endpoints & Operational Insights --}}
             <div class="col-12 col-xl-4">
-                
+
                 {{-- Endpoints Card --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-link text-primary me-1"></i> Active Telemetry Endpoints
+                <div class="card mb-3">
+                    <div class="section-header-wrap">
+                        <span class="section-title">
+                            <i class="fas fa-link text-primary"></i>
+                            Tracking Endpoints
                         </span>
                     </div>
+
                     <div class="p-3">
-                        <p class="text-muted small mb-2" style="font-size: 11px; line-height: 1.45;">
-                            Your system exposes these high-speed cached endpoints for real-time tracking:
+                        <p class="info-copy">
+                            The following endpoints are used by your email tracking system:
                         </p>
 
                         <div class="d-flex flex-column gap-2 mb-3">
+
                             <div class="endpoint-box">
-                                <div class="text-truncate font-monospace" style="font-size: 10.5px;" id="endpointOpenUrl">
+                                <div class="font-monospace" style="font-size: 10.5px;" id="endpointOpenUrl">
                                     <span class="text-success fw-bold">GET</span> /email/track/open/{token}
                                 </div>
-                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;" onclick="copyEndpointText(this, '/email/track/open/{token}')" title="Copy Route">
-                                    <i class="fas fa-copy" style="font-size: 10px;"></i>
+
+                                <button type="button" class="endpoint-copy-btn flex-shrink-0" onclick="copyEndpointText(this, '/email/track/open/{token}')" title="Copy Route" aria-label="Copy open tracking endpoint">
+                                    <i class="fas fa-copy" style="font-size: 11px;"></i>
                                 </button>
                             </div>
 
                             <div class="endpoint-box">
-                                <div class="text-truncate font-monospace" style="font-size: 10.5px;" id="endpointClickUrl">
+                                <div class="font-monospace" style="font-size: 10.5px;" id="endpointClickUrl">
                                     <span class="text-primary fw-bold">GET</span> /email/track/click/{token}
                                 </div>
-                                <button type="button" class="btn btn-sm btn-light border p-0 text-secondary shadow-none d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;" onclick="copyEndpointText(this, '/email/track/click/{token}')" title="Copy Route">
-                                    <i class="fas fa-copy" style="font-size: 10px;"></i>
+
+                                <button type="button" class="endpoint-copy-btn flex-shrink-0" onclick="copyEndpointText(this, '/email/track/click/{token}')" title="Copy Route" aria-label="Copy click tracking endpoint">
+                                    <i class="fas fa-copy" style="font-size: 11px;"></i>
                                 </button>
                             </div>
+
                         </div>
 
-                        <div class="alert alert-info border-0 shadow-xs p-2.5 mb-0 small font-monospace d-flex align-items-start gap-2" style="border-radius: 5px; font-size: 10.5px; line-height: 1.4;">
+                        <div class="alert alert-info pipeline-alert mb-0 d-flex align-items-start gap-2">
                             <i class="fas fa-bolt text-info fs-5 flex-shrink-0"></i>
                             <div>
-                                <strong>Zero-Latency Pipeline:</strong> Routes return a 1x1 transparent GIF or issue a 302 redirect in under <strong>15ms</strong> without stalling the user.
+                                <strong>Tracking Pipeline</strong>
+                                <div>
+                                    Open tracking returns a transparent 1x1 GIF, while click tracking uses a redirect response. Actual response times depend on server and network conditions.
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Privacy Best Practice Note --}}
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-                        <span class="fw-bold text-dark small" style="font-size: 12px;">
-                            <i class="fas fa-circle-info text-info me-1"></i> Privacy &amp; Apple Mail Notice
+                <div class="card mb-3">
+                    <div class="section-header-wrap">
+                        <span class="section-title">
+                            <i class="fas fa-circle-info text-info"></i>
+                            Privacy &amp; Tracking Notes
                         </span>
                     </div>
+
                     <div class="p-3">
-                        <p class="text-muted small mb-2" style="font-size: 11px; line-height: 1.45;">
-                            &bull; <strong>Apple Mail Privacy Protection (MPP):</strong> Apple pre-fetches images via proxies. IP logging helps identify proxy traffic vs genuine customer store clicks.
+                        <p class="info-copy">
+                            <i class="fas fa-shield-halved text-primary me-1"></i>
+                            <strong class="text-dark">Apple Mail Privacy Protection:</strong>
+                            Some email clients preload tracking images through proxy servers. As a result, open tracking may not accurately reflect individual user activity.
                         </p>
-                        <p class="text-muted small mb-0" style="font-size: 11px; line-height: 1.45;">
-                            &bull; <strong>Deliverability Protection:</strong> Always keep the mandatory unsubscribe notice active to minimize spam button clicks in Gmail and Yahoo Mail.
+
+                        <p class="info-copy">
+                            <i class="fas fa-envelope-circle-check text-success me-1"></i>
+                            <strong class="text-dark">Email Deliverability:</strong>
+                            Provide clear unsubscribe instructions and promptly honor opt-out requests to maintain responsible email marketing practices.
+                        </p>
+
+                        <p class="info-copy">
+                            <i class="fas fa-user-lock text-info me-1"></i>
+                            <strong class="text-dark">Data Privacy:</strong>
+                            Collect only the information necessary for your business purposes and apply suitable access controls and retention policies.
                         </p>
                     </div>
                 </div>

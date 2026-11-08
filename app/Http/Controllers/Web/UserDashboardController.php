@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\Auth\AuthenticationSettingsService;
 use App\Services\DiscountEngineService;
+use App\Services\Sms\OtpService;
+use App\Services\Sms\SmsService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +19,24 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Throwable;
 
 class UserDashboardController extends Controller
 {
+    protected OtpService $otpService;
+    protected SmsService $smsService;
+    protected AuthenticationSettingsService $authSettings;
+
+    public function __construct(
+        OtpService $otpService,
+        SmsService $smsService,
+        AuthenticationSettingsService $authSettings
+    ) {
+        $this->otpService = $otpService;
+        $this->smsService = $smsService;
+        $this->authSettings = $authSettings;
+    }
+
     /**
      * Display user dashboard overview.
      */
@@ -139,36 +159,42 @@ class UserDashboardController extends Controller
     }
 
     /**
-     * Display customer profile.
+     * Display customer profile, verification status, and security settings.
      */
     public function profile()
     {
         $user = auth()->user();
-        return view('frontend.user.profile', compact('user'));
+        $twoFaConfig = $this->authSettings->getTwoFactorConfig();
+
+        $activeSessions = collect();
+        if (Schema::hasTable('active_user_sessions')) {
+            $activeSessions = DB::table('active_user_sessions')
+                ->where('user_id', $user->id)
+                ->where('is_revoked', false)
+                ->latest('last_activity')
+                ->take(6)
+                ->get();
+        }
+
+        return view('frontend.user.profile', compact('user', 'twoFaConfig', 'activeSessions'));
     }
 
     /**
-     * Update customer profile data.
+     * Update customer basic profile data.
      */
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
 
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'name'   => 'required|string|max:255',
+            'gender' => 'nullable|string|in:male,female,other',
         ]);
 
         $updateData = [
-            'name'       => $request->name,
-            'email'      => $request->email,
+            'name'       => trim($request->name),
             'updated_at' => now(),
         ];
-
-        if (Schema::hasColumn('users', 'phone')) {
-            $updateData['phone'] = $request->phone;
-        }
 
         if (Schema::hasColumn('users', 'gender') && $request->filled('gender')) {
             $updateData['gender'] = $request->gender;
@@ -176,11 +202,11 @@ class UserDashboardController extends Controller
 
         DB::table('users')->where('id', $user->id)->update($updateData);
 
-        return back()->with('success', 'Profile updated successfully.');
+        return back()->with('success', 'Profile information updated successfully.');
     }
 
     /**
-     * Update customer password.
+     * Update customer password with session preservation.
      */
     public function updatePassword(Request $request)
     {
@@ -192,7 +218,7 @@ class UserDashboardController extends Controller
         $user = auth()->user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'Current password is not correct.']);
+            return back()->withErrors(['current_password' => 'Current password does not match our records.']);
         }
 
         DB::table('users')->where('id', $user->id)->update([
@@ -201,6 +227,289 @@ class UserDashboardController extends Controller
         ]);
 
         return back()->with('success', 'Password changed successfully.');
+    }
+
+    /**
+     * Step A: Request OTP to verify and update to a new phone number.
+     */
+    public function requestPhoneChangeOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_phone'        => 'required|string|max:25',
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password verification failed.',
+            ], 422);
+        }
+
+        $formattedPhone = $this->smsService->formatNumber(trim($request->new_phone));
+        $localPhone = preg_replace('/^880/', '0', $formattedPhone);
+
+        // Check if phone already registered to another account
+        $alreadyUsed = User::where('id', '!=', $user->id)
+            ->where(function ($q) use ($formattedPhone, $localPhone) {
+                $q->where('phone', $formattedPhone)
+                  ->orWhere('phone', $localPhone);
+            })->exists();
+
+        if ($alreadyUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This mobile number is already linked to another account.',
+            ], 422);
+        }
+
+        $res = $this->otpService->sendOtp(
+            $formattedPhone,
+            'phone_change',
+            $user->id,
+            $request->ip(),
+            $request->userAgent()
+        );
+
+        if (!$res['status']) {
+            return response()->json([
+                'success'          => false,
+                'message'          => $res['message'],
+                'cooldown_seconds' => $res['cooldown_seconds'] ?? 0,
+            ], 422);
+        }
+
+        return response()->json([
+            'success'          => true,
+            'message'          => "Verification code dispatched to {$formattedPhone}.",
+            'cooldown_seconds' => $res['cooldown_seconds'],
+        ]);
+    }
+
+    /**
+     * Step B: Verify OTP and commit new phone number to account.
+     */
+    public function confirmPhoneChange(Request $request): JsonResponse
+    {
+        $request->validate([
+            'new_phone' => 'required|string',
+            'otp_code'  => 'required|string|min:4|max:10',
+        ]);
+
+        $user = auth()->user();
+        $formattedPhone = $this->smsService->formatNumber(trim($request->new_phone));
+
+        $verify = $this->otpService->verifyOtp($formattedPhone, trim($request->otp_code), 'phone_change');
+
+        if (!$verify['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $verify['message'],
+            ], 422);
+        }
+
+        $userModel = User::find($user->id);
+        $userModel->phone = $formattedPhone;
+        $userModel->phone_verified_at = now();
+        $userModel->save();
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Phone number updated and verified successfully.',
+            'new_phone' => $formattedPhone,
+        ]);
+    }
+
+    /**
+     * Step A: Request OTP to verify and update to a new email address.
+     */
+    public function requestEmailChangeOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_email'        => 'required|email|max:255',
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Current password verification failed.',
+            ], 422);
+        }
+
+        $newEmail = strtolower(trim($request->new_email));
+
+        $alreadyUsed = User::where('id', '!=', $user->id)
+            ->where('email', $newEmail)
+            ->exists();
+
+        if ($alreadyUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This email address is already linked to another account.',
+            ], 422);
+        }
+
+        $res = $this->otpService->sendEmailOtp($newEmail, 'email_change', $user->id, $request->ip());
+
+        if (!$res['status']) {
+            return response()->json([
+                'success'          => false,
+                'message'          => $res['message'],
+                'cooldown_seconds' => $res['cooldown_seconds'] ?? 0,
+            ], 422);
+        }
+
+        return response()->json([
+            'success'          => true,
+            'message'          => "Verification passcode dispatched to {$newEmail}.",
+            'cooldown_seconds' => $res['cooldown_seconds'],
+        ]);
+    }
+
+    /**
+     * Step B: Verify Email OTP and commit new email address to account.
+     */
+    public function confirmEmailChange(Request $request): JsonResponse
+    {
+        $request->validate([
+            'new_email' => 'required|email',
+            'otp_code'  => 'required|string|min:4|max:10',
+        ]);
+
+        $user = auth()->user();
+        $newEmail = strtolower(trim($request->new_email));
+
+        $verify = $this->otpService->verifyEmailOtp($newEmail, trim($request->otp_code), 'email_change');
+
+        if (!$verify['status']) {
+            return response()->json([
+                'success' => false,
+                'message' => $verify['message'],
+            ], 422);
+        }
+
+        $userModel = User::find($user->id);
+        $userModel->email = $newEmail;
+        $userModel->email_verified_at = now();
+        $userModel->save();
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Email address updated and verified successfully.',
+            'new_email' => $newEmail,
+        ]);
+    }
+
+    /**
+     * Enable, Update Channel, or Disable Two-Factor Authentication (2FA).
+     * Honors individual user choice (Personal Security) and respects mandatory global policy.
+     */
+    public function toggleTwoFactor(Request $request): JsonResponse|RedirectResponse
+    {
+        $user = auth()->user();
+        $enable = $request->boolean('enable');
+        $channel = $request->input('two_factor_type', 'sms');
+
+        $userModel = User::find($user->id);
+
+        if ($enable) {
+            $request->validate([
+                'two_factor_type' => 'required|string|in:sms,email,both',
+            ]);
+
+            // Channel integrity verification
+            if ($channel === 'both') {
+                if (empty($userModel->phone) || empty($userModel->email)) {
+                    $msg = 'To activate 2FA for Both SMS and Email, you must have both a phone number and an email linked.';
+                    return $request->expectsJson() ? response()->json(['success' => false, 'message' => $msg], 422) : back()->with('error', $msg);
+                }
+            } elseif ($channel === 'sms' && empty($userModel->phone)) {
+                $msg = 'Please link a verified mobile number before enabling SMS 2FA.';
+                return $request->expectsJson() ? response()->json(['success' => false, 'message' => $msg], 422) : back()->with('error', $msg);
+            } elseif ($channel === 'email' && empty($userModel->email)) {
+                $msg = 'Please link a verified email address before enabling Email 2FA.';
+                return $request->expectsJson() ? response()->json(['success' => false, 'message' => $msg], 422) : back()->with('error', $msg);
+            }
+
+            $userModel->two_factor_enabled = true;
+            $userModel->two_factor_type = $channel;
+            $userModel->two_factor_confirmed_at = now();
+            $userModel->save();
+
+            $msg = 'Two-factor authentication has been successfully updated (' . strtoupper($channel) . ').';
+            return $request->expectsJson() ? response()->json(['success' => true, 'message' => $msg]) : back()->with('success', $msg);
+        }
+
+        // --- DISABLING 2FA ---
+
+        // 1. Check if Globally Mandatory for this specific user's role
+        $twoFaConfig = $this->authSettings->getTwoFactorConfig();
+        if ($twoFaConfig['global_enabled'] && ($twoFaConfig['mode'] === 'mandatory')) {
+            $role = str_replace(['-', ' '], '_', strtolower(trim((string)($user->role ?? ''))));
+            $userType = str_replace(['-', ' '], '_', strtolower(trim((string)($user->user_type ?? ''))));
+
+            $isSuperOrAdmin = !empty($user->is_super_admin) || in_array($role, ['super_admin', 'admin']) || $userType === 'admin';
+            $staffRoles = ['branch_manager', 'staff', 'manager', 'cashier', 'pos_operator', 'operator', 'moderator', 'order_manager', 'courier_manager', 'inventory_manager', 'accounts'];
+            $isStaff = in_array($role, $staffRoles) || $userType === 'staff';
+
+            $strictlyEnforced = false;
+            if ($isSuperOrAdmin && $twoFaConfig['for_admin']) $strictlyEnforced = true;
+            elseif ($isStaff && $twoFaConfig['for_staff']) $strictlyEnforced = true;
+            elseif (!$isSuperOrAdmin && !$isStaff && $twoFaConfig['for_customer']) $strictlyEnforced = true;
+
+            if ($strictlyEnforced) {
+                $msg = 'Two-factor authentication is mandatory by company security policy and cannot be disabled.';
+                return $request->expectsJson() ? response()->json(['success' => false, 'message' => $msg], 403) : back()->with('error', $msg);
+            }
+        }
+
+        // 2. Disabling 2FA requires password confirmation
+        $request->validate(['current_password' => 'required|string']);
+        if (!Hash::check($request->current_password, $user->password)) {
+            $msg = 'Incorrect password entered. 2FA setting unchanged.';
+            return $request->expectsJson() ? response()->json(['success' => false, 'message' => $msg], 422) : back()->withErrors(['current_password' => $msg]);
+        }
+
+        $userModel->two_factor_enabled = false;
+        $userModel->two_factor_confirmed_at = null;
+        $userModel->save();
+
+        $msg = 'Two-factor authentication has been turned off.';
+        return $request->expectsJson() ? response()->json(['success' => true, 'message' => $msg]) : back()->with('success', $msg);
+    }
+
+    /**
+     * Terminate all active sessions on other devices.
+     */
+    public function logoutOtherDevices(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password entered. Action cancelled.']);
+        }
+
+        // Built-in Laravel logout other devices
+        Auth::logoutOtherDevices($request->password);
+
+        // Terminate database active user sessions if table exists
+        if (Schema::hasTable('active_user_sessions')) {
+            DB::table('active_user_sessions')
+                ->where('user_id', $user->id)
+                ->where('session_id', '!=', session()->getId())
+                ->update(['is_revoked' => true]);
+        }
+
+        return back()->with('success', 'All other active device sessions have been successfully terminated.');
     }
 
     /**
@@ -271,7 +580,6 @@ class UserDashboardController extends Controller
         $identity = trim($request->username_or_phone);
         $email = strtolower(trim($request->email));
 
-        // Find user by Email AND (Name or Phone)
         $targetUser = User::where('email', $email)
             ->where(function ($q) use ($identity) {
                 $q->where('phone', $identity)
@@ -540,7 +848,6 @@ class UserDashboardController extends Controller
         $userId = auth()->id();
         $now = Carbon::now();
 
-        // ১. কাস্টমারের নিজস্ব ক্লেইম করা ভাউচার
         $myVouchers = collect();
         if ($userId && Schema::hasTable('customer_vouchers') && Schema::hasTable('vouchers')) {
             $myVouchers = DB::table('customer_vouchers')
@@ -559,7 +866,6 @@ class UserDashboardController extends Controller
                 ->get();
         }
 
-        // ২. ক্লেইম করার জন্য উন্মুক্ত লাইভ ভাউচার ক্যাম্পেইন (Excluding guest_only vouchers for logged-in user)
         $claimableVouchers = collect();
         if (Schema::hasTable('vouchers')) {
             $claimedVoucherIds = ($userId && Schema::hasTable('customer_vouchers'))
@@ -575,7 +881,6 @@ class UserDashboardController extends Controller
                     $q->whereNull('claim_end')->orWhere('claim_end', '>=', $now);
                 });
 
-            // Target user type filter: Logged-in user will see 'all' or 'registered_only' (not 'guest_only')
             if (Schema::hasColumn('vouchers', 'target_user_type')) {
                 $vQuery->where(function ($q) {
                     $q->whereNull('target_user_type')
@@ -590,7 +895,6 @@ class UserDashboardController extends Controller
             });
         }
 
-        // ৩. সক্রিয় পাবলিক কুপন কোড (Excluding guest_only coupons for logged-in user)
         $publicCoupons = collect();
         if (Schema::hasTable('coupons')) {
             $cQuery = DB::table('coupons')
@@ -633,7 +937,6 @@ class UserDashboardController extends Controller
             ], 401);
         }
 
-        // Target User Group Safety Check for Voucher Claiming
         if (Schema::hasTable('vouchers') && Schema::hasColumn('vouchers', 'target_user_type')) {
             $vRecord = DB::table('vouchers')->where('id', (int)$request->voucher_id)->first();
             if ($vRecord && ($vRecord->target_user_type ?? '') === 'guest_only') {

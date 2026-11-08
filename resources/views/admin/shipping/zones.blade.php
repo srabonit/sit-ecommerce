@@ -3,9 +3,20 @@
 
 @section('admin_content')
 <style>
-    /* Global Strict 5px Element Radius */
+    /* Theme Variables */
+    #shippingZonesRoot {
+        --zone-primary: var(--bs-primary, #1572e8);
+        --zone-text: var(--bs-body-color, #2a2f5b);
+        --zone-muted: var(--bs-secondary-color, #6c757d);
+        --zone-border: var(--bs-border-color, #ebedf2);
+        --zone-surface: var(--bs-white, #fff);
+        --zone-soft: var(--bs-tertiary-bg, #f8f9fa);
+        min-width: 0;
+        color: var(--zone-text);
+    }
+
+    /* Consistent Radius */
     #shippingZonesRoot .btn,
-    #shippingZonesRoot .btn-sm,
     #shippingZonesRoot button,
     #shippingZonesRoot .form-control,
     #shippingZonesRoot .form-select,
@@ -23,217 +34,363 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #shippingZonesRoot .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Compact & Sleek Button Sizing */
+    /* Compact Buttons */
     #shippingZonesRoot .btn-compact,
     #deleteShippingZoneModal .btn-compact {
+        min-height: 32px;
+        padding: 6px 12px !important;
         font-size: 11.5px !important;
-        padding: 5px 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: all .18s ease;
     }
 
-    .zone-action-sq-btn {
-        width: 27px !important;
-        height: 27px !important;
-        min-width: 27px !important;
+    #shippingZonesRoot .btn-compact:hover {
+        transform: translateY(-1px);
+    }
+
+    #shippingZonesRoot .zone-action-sq-btn {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
         padding: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         font-size: 11px !important;
         border-radius: 5px !important;
-        transition: all 0.15s ease;
+        transition: all .15s ease;
     }
 
-    /* Enterprise Main Card */
-    .shipping-panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    /* Main Panel */
+    #shippingZonesRoot .shipping-panel-card {
+        min-width: 0;
+        background: var(--zone-surface);
+        border: 1px solid var(--zone-border);
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
         overflow: hidden;
     }
 
-    /* Segmented Sub-Navigation Bar */
-    .shipping-subnav-wrap {
+    /* Sub Navigation */
+    #shippingZonesRoot .shipping-subnav-wrap {
+        min-width: 0;
         overflow-x: auto;
         white-space: nowrap;
         scrollbar-width: none;
         -ms-overflow-style: none;
         -webkit-overflow-scrolling: touch;
     }
-    .shipping-subnav-wrap::-webkit-scrollbar {
+
+    #shippingZonesRoot .shipping-subnav-wrap::-webkit-scrollbar {
         display: none;
     }
-    .shipping-nav-pills {
-        background: #f1f5f9;
-        padding: 4px;
-        border-radius: 6px !important;
+
+    #shippingZonesRoot .shipping-nav-pills {
         display: inline-flex;
         gap: 4px;
-    }
-    .shipping-nav-pills .nav-link {
-        color: #475569;
-        font-weight: 600;
-        font-size: 12px;
-        padding: 6px 14px;
-        transition: all 0.15s ease;
-        background: transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .shipping-nav-pills .nav-link:hover {
-        color: #0f172a;
-        background-color: rgba(255, 255, 255, 0.6);
-    }
-    .shipping-nav-pills .nav-link.active {
-        background-color: #2563eb !important;
-        color: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
-    }
-
-    /* Filter Controls */
-    .zone-filter-bar {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 12px 16px;
-    }
-    .zone-filter-control {
-        font-size: 12px !important;
-        height: 33px !important;
-        padding: 4px 10px !important;
-        border: 1px solid #cbd5e1 !important;
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: none !important;
-    }
-    .zone-filter-control:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-        outline: none;
-    }
-
-    /* Desktop Table Styling */
-    .custom-zone-table th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 10px 16px;
-        white-space: nowrap;
-    }
-    .custom-zone-table td {
-        padding: 11px 16px;
-        vertical-align: middle;
-        font-size: 12.5px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .custom-zone-table tbody tr:hover {
-        background-color: #fafbfc;
-    }
-
-    /* Collapsible Mobile Zone Cards */
-    .zone-mobile-card {
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        overflow: hidden;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .zone-mobile-card.active-open {
-        border-color: #2563eb !important;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
-    }
-    .zone-mobile-header {
-        padding: 10px 12px;
-        background: #f8fafc;
-        cursor: pointer;
-        user-select: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-    }
-    .zone-mobile-card.active-open .zone-mobile-header {
-        background: #eff6ff;
-        border-bottom: 1px solid #dbeafe;
-    }
-    .zone-chevron {
-        width: 24px;
-        height: 24px;
+        padding: 4px;
+        background: var(--zone-soft);
+        border: 1px solid var(--zone-border);
         border-radius: 5px;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
+    }
+
+    #shippingZonesRoot .shipping-nav-pills .nav-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
-        color: #475569;
-        transition: transform 0.2s ease, background-color 0.15s ease, color 0.15s ease;
-    }
-    .zone-mobile-card.active-open .zone-chevron {
-        transform: rotate(180deg);
-        background: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-    .zone-mobile-body {
-        padding: 12px;
-        background: #ffffff;
+        gap: 6px;
+        padding: 7px 14px;
+        color: var(--zone-muted);
+        font-size: 12px;
+        font-weight: 600;
+        background: transparent;
+        transition: all .15s ease;
     }
 
-    .bn-digit,
-    .font-monospace {
+    #shippingZonesRoot .shipping-nav-pills .nav-link:hover {
+        color: var(--zone-primary);
+        background: var(--zone-surface);
+    }
+
+    #shippingZonesRoot .shipping-nav-pills .nav-link.active {
+        color: #fff !important;
+        background: var(--zone-primary) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+    }
+
+    /* Filter Toolbar */
+    #shippingZonesRoot .zone-filter-bar {
+        min-width: 0;
+        padding: 14px 16px;
+        background: var(--zone-soft);
+        border-bottom: 1px solid var(--zone-border);
+    }
+
+    #shippingZonesRoot .zone-filter-control {
+        height: 36px !important;
+        padding: 5px 10px !important;
+        color: var(--zone-text) !important;
+        background: var(--zone-surface) !important;
+        border: 1px solid var(--zone-border) !important;
+        box-shadow: none !important;
+        font-size: 12px !important;
+    }
+
+    #shippingZonesRoot .zone-filter-control:focus {
+        border-color: var(--zone-primary) !important;
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10) !important;
+        outline: none;
+    }
+
+    #shippingZonesRoot .zone-filter-control::placeholder {
+        color: var(--zone-muted);
+        opacity: .8;
+    }
+
+    #shippingZonesRoot .zone-filter-bar .input-group-text {
+        height: 36px !important;
+        color: var(--zone-muted);
+        background: var(--zone-surface);
+        border-color: var(--zone-border) !important;
+    }
+
+    /* Desktop Table */
+    #shippingZonesRoot .table-responsive {
+        min-width: 0;
+        scrollbar-width: thin;
+    }
+
+    #shippingZonesRoot .custom-zone-table {
+        min-width: 710px;
+        margin-bottom: 0;
+    }
+
+    #shippingZonesRoot .custom-zone-table th {
+        padding: 11px 15px;
+        color: var(--zone-muted);
+        background: var(--zone-soft);
+        border-bottom: 1px solid var(--zone-border);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        white-space: nowrap;
+    }
+
+    #shippingZonesRoot .custom-zone-table td {
+        padding: 12px 15px;
+        color: var(--zone-text);
+        border-bottom: 1px solid var(--zone-border);
+        vertical-align: middle;
+        font-size: 12.5px;
+    }
+
+    #shippingZonesRoot .custom-zone-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #shippingZonesRoot .custom-zone-table tbody tr {
+        transition: background-color .15s ease;
+    }
+
+    #shippingZonesRoot .custom-zone-table tbody tr:hover {
+        background: var(--zone-soft);
+    }
+
+    /* Mobile Zone Cards */
+    #shippingZonesRoot .zone-mobile-card {
+        min-width: 0;
+        overflow: hidden;
+        background: var(--zone-surface);
+        border: 1px solid var(--zone-border);
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #shippingZonesRoot .zone-mobile-card.active-open {
+        border-color: var(--zone-primary) !important;
+        box-shadow: 0 2px 7px rgba(21, 114, 232, .08);
+    }
+
+    #shippingZonesRoot .zone-mobile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-width: 0;
+        padding: 11px 12px;
+        background: var(--zone-soft);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    #shippingZonesRoot .zone-mobile-card.active-open .zone-mobile-header {
+        background: rgba(21, 114, 232, .06);
+        border-bottom: 1px solid var(--zone-border);
+    }
+
+    #shippingZonesRoot .zone-mobile-header > div {
+        min-width: 0;
+    }
+
+    #shippingZonesRoot .zone-chevron {
+        width: 25px;
+        height: 25px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--zone-muted);
+        background: var(--zone-surface);
+        border: 1px solid var(--zone-border);
+        border-radius: 5px;
+        font-size: 10px;
+        transition: all .2s ease;
+    }
+
+    #shippingZonesRoot .zone-mobile-card.active-open .zone-chevron {
+        color: #fff;
+        background: var(--zone-primary);
+        border-color: var(--zone-primary);
+        transform: rotate(180deg);
+    }
+
+    #shippingZonesRoot .zone-mobile-body {
+        min-width: 0;
+        padding: 13px;
+        background: var(--zone-surface);
+    }
+
+    #shippingZonesRoot .zone-mobile-body .border-top {
+        border-color: var(--zone-border) !important;
+    }
+
+    /* Typography */
+    #shippingZonesRoot .bn-digit,
+    #shippingZonesRoot .font-monospace {
         font-weight: 700 !important;
     }
 
+    #shippingZonesRoot .top-add-zone-wrap {
+        flex-shrink: 0;
+    }
+
+    /* Tablet & Mobile */
     @media (max-width: 767.98px) {
-        .shipping-nav-pills {
+        #shippingZonesRoot {
+            padding-left: .5rem !important;
+            padding-right: .5rem !important;
+        }
+
+        #shippingZonesRoot .shipping-nav-pills {
             display: flex;
             min-width: max-content;
         }
-        .shipping-nav-pills .nav-link {
-            padding: 6px 12px;
+
+        #shippingZonesRoot .shipping-nav-pills .nav-link {
+            padding: 7px 12px;
             font-size: 11.5px;
         }
-        .top-add-zone-wrap {
+
+        #shippingZonesRoot .top-add-zone-wrap {
             width: 100%;
         }
-        .top-add-zone-wrap .btn-compact {
+
+        #shippingZonesRoot .top-add-zone-wrap .btn {
             width: 100%;
-            padding: 7px 14px !important;
+            min-height: 36px;
         }
+
+        #shippingZonesRoot .zone-filter-bar {
+            padding: 11px;
+        }
+
+        #shippingZonesRoot .shipping-subnav-wrap {
+            margin-bottom: .75rem !important;
+        }
+
+        #shippingZonesRoot .zone-mobile-header {
+            padding: 10px;
+        }
+
+        #shippingZonesRoot .zone-mobile-body {
+            padding: 11px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #shippingZonesRoot .shipping-nav-pills .nav-link {
+            padding: 6px 10px;
+        }
+
+        #shippingZonesRoot .zone-filter-control {
+            font-size: 11.5px !important;
+        }
+
+        #shippingZonesRoot .zone-mobile-header strong {
+            max-width: 45vw;
+        }
+
+        #shippingZonesRoot .zone-mobile-body .btn-compact {
+            padding: 7px 8px !important;
+        }
+
+        #deleteShippingZoneModal .modal-dialog {
+            margin: .75rem;
+        }
+    }
+
+    @media (max-width: 359.98px) {
+        #shippingZonesRoot .zone-mobile-header {
+            gap: 6px;
+        }
+
+        #shippingZonesRoot .zone-mobile-header strong {
+            max-width: 38vw;
+            font-size: 12px !important;
+        }
+
+        #shippingZonesRoot .zone-mobile-body {
+            padding: 9px;
+        }
+    }
+
+    /* Delete Modal */
+    #deleteShippingZoneModal .modal-content {
+        border: 1px solid var(--bs-border-color, #ebedf2) !important;
+        box-shadow: 0 10px 35px rgba(15, 23, 42, .12);
+    }
+
+    #deleteShippingZoneModal .modal-body {
+        overflow-wrap: anywhere;
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3" id="shippingZonesRoot">
-    <!-- Sub-Menu Navigation (Mobile Scrollable) -->
+    <!-- Sub-Menu Navigation -->
     <div class="shipping-subnav-wrap mb-3 pb-2 border-bottom">
         <ul class="nav nav-pills shipping-nav-pills flex-nowrap text-nowrap">
             <li class="nav-item">
                 <a class="nav-link active" href="{{ route('admin.shipping.index') }}">
                     <i class="fas fa-globe-asia" style="font-size: 11px;"></i>
-                    <span>Shipping zones</span>
+                    <span>Zones</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.shipping.settings') }}">
                     <i class="fas fa-sliders-h" style="font-size: 11px;"></i>
-                    <span>Shipping settings</span>
+                    <span>Settings</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -245,25 +402,25 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.shipping.pickup') }}">
                     <i class="fas fa-store" style="font-size: 11px;"></i>
-                    <span>Local pickup</span>
+                    <span>Pickup</span>
                 </a>
             </li>
         </ul>
     </div>
 
-    <!-- Top Header & Add Zone Button -->
+    <!-- Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
                     <i class="fas fa-map-location-dot text-primary"></i>
-                    <span>Shipping zones</span>
+                    <span>Zones</span>
                 </h5>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 bn-digit font-monospace" style="font-size: 11px;">
                     {{ count($zones) }} Zones
                 </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage geographic delivery zones and their assigned shipping methods.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Manage delivery areas and methods.</small>
         </div>
         <div class="top-add-zone-wrap">
             <a href="{{ route('admin.shipping.zone.create') }}" class="btn btn-primary btn-compact px-3 py-2 shadow-xs gap-1">
@@ -284,12 +441,12 @@
     @endif
 
     <div class="shipping-panel-card">
-        <!-- Quick Zone Dropdown Selector & Search Toolbar -->
+        <!-- Filters -->
         <div class="zone-filter-bar">
             <div class="row g-2 align-items-center">
                 <div class="col-12 col-md-5">
                     <select id="zoneQuickDropdown" class="form-select zone-filter-control fw-semibold" onchange="filterShippingZones()">
-                        <option value="all">-- Select Shipping Zone (Show All {{ count($zones) }} Zones) --</option>
+                        <option value="all">-- All zones ({{ count($zones) }}) --</option>
                         @foreach($zones as $zone)
                             <option value="{{ $zone->id }}">{{ $zone->name }} ({{ count($zone->methods) }} methods)</option>
                         @endforeach
@@ -298,7 +455,7 @@
                 <div class="col-12 col-md-5">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-white border-end-0" style="height: 33px; border-color: #cbd5e1;"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                        <input type="text" id="zoneSearchInput" class="form-control border-start-0 zone-filter-control" placeholder="Search by zone name, region or method..." oninput="filterShippingZones()">
+                        <input type="text" id="zoneSearchInput" class="form-control border-start-0 zone-filter-control" placeholder="Search zones, regions, methods..." oninput="filterShippingZones()">
                     </div>
                 </div>
                 <div class="col-12 col-md-2 text-md-end">
@@ -310,14 +467,14 @@
             </div>
         </div>
 
-        <!-- 1. Desktop Table View -->
+        <!-- Desktop Table -->
         <div class="table-responsive d-none d-md-block">
             <table class="table custom-zone-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="min-width: 160px;">Zone name</th>
-                        <th style="min-width: 200px;">Region(s)</th>
-                        <th style="min-width: 240px;">Shipping method(s)</th>
+                        <th style="min-width: 160px;">Zone</th>
+                        <th style="min-width: 200px;">Regions</th>
+                        <th style="min-width: 240px;">Methods</th>
                         <th class="text-end" style="min-width: 110px;">Actions</th>
                     </tr>
                 </thead>
@@ -350,13 +507,13 @@
                                             <i class="fas fa-truck-fast text-primary me-1" style="font-size: 9.5px;"></i>{{ $method->title }} ({{ ucfirst(str_replace('_', ' ', $method->method_type)) }})
                                         </span>
                                     @empty
-                                        <span class="text-muted small" style="font-size: 11.5px;">No shipping methods added</span>
+                                        <span class="text-muted small" style="font-size: 11.5px;">No methods</span>
                                     @endforelse
                                 </div>
                             </td>
                             <td class="text-end text-nowrap">
                                 <div class="d-inline-flex align-items-center gap-1">
-                                    <a href="{{ route('admin.shipping.zone.edit', $zone->id) }}" class="btn btn-light border text-dark btn-compact shadow-xs" title="Edit Zone">
+                                    <a href="{{ route('admin.shipping.zone.edit', $zone->id) }}" class="btn btn-light border text-dark btn-compact shadow-xs" title="Edit">
                                         <i class="fas fa-edit text-primary me-1" style="font-size: 10px;"></i>
                                         <span>Edit</span>
                                     </a>
@@ -370,7 +527,7 @@
                         <tr>
                             <td colspan="4" class="text-center py-5 text-muted small">
                                 <i class="fas fa-map-location-dot fa-2x mb-2 d-block opacity-25"></i>
-                                <span class="fw-semibold">No shipping zones found.</span>
+                                <span class="fw-semibold">No zones found.</span>
                             </td>
                         </tr>
                     @endforelse
@@ -378,7 +535,7 @@
             </table>
         </div>
 
-        <!-- 2. Mobile Collapsible Accordion Stack View -->
+        <!-- Mobile Accordion -->
         <div class="d-block d-md-none p-2">
             <div class="d-flex flex-column gap-2" id="mobileZoneStack">
                 @forelse($zones as $index => $zone)
@@ -412,7 +569,7 @@
                                             <i class="fas fa-truck-fast text-primary me-1" style="font-size: 9.5px;"></i>{{ $method->title }} ({{ ucfirst(str_replace('_', ' ', $method->method_type)) }})
                                         </span>
                                     @empty
-                                        <span class="text-muted small" style="font-size: 11px;">No methods configured</span>
+                                        <span class="text-muted small" style="font-size: 11px;">No methods</span>
                                     @endforelse
                                 </div>
                             </div>
@@ -420,7 +577,7 @@
                             <div class="d-flex align-items-center gap-2 pt-2 border-top">
                                 <a href="{{ route('admin.shipping.zone.edit', $zone->id) }}" class="btn btn-outline-primary btn-compact flex-grow-1">
                                     <i class="fas fa-edit me-1"></i>
-                                    <span>Edit Zone</span>
+                                    <span>Edit</span>
                                 </a>
                                 <button type="button" class="btn btn-outline-danger btn-compact flex-grow-1" onclick="openDeleteZoneModal('{{ route('admin.shipping.zone.destroy', $zone->id) }}', '{{ addslashes($zone->name) }}')">
                                     <i class="fas fa-trash-alt me-1"></i>
@@ -432,7 +589,7 @@
                 @empty
                     <div class="text-center py-4 text-muted small">
                         <i class="fas fa-map-location-dot fa-2x mb-2 d-block opacity-25"></i>
-                        <span class="fw-semibold">No shipping zones found.</span>
+                        <span class="fw-semibold">No zones found.</span>
                     </div>
                 @endforelse
             </div>
@@ -440,7 +597,7 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal (Replaces native confirm()) -->
+<!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteShippingZoneModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
@@ -448,9 +605,9 @@
                 <div class="rounded-circle bg-danger-subtle text-danger d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 46px; height: 46px;">
                     <i class="fas fa-trash-alt fs-5"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" style="font-size: 14.5px;">Delete Shipping Zone?</h6>
+                <h6 class="fw-bold text-dark mb-1" style="font-size: 14.5px;">Delete zone?</h6>
                 <p class="text-muted small mb-3" style="font-size: 12px; line-height: 1.45;">
-                    Are you sure you want to permanently delete <strong id="deleteZoneNameText" class="text-dark"></strong> and all its methods?
+                    Delete <strong id="deleteZoneNameText" class="text-dark"></strong> and its methods?
                 </p>
                 <div class="d-flex justify-content-center gap-2">
                     <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">Cancel</button>

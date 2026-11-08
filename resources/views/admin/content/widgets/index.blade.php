@@ -169,7 +169,7 @@
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3 widget-index-header">
         <div>
             <h5 class="fw-bold text-dark mb-1" style="font-size: 18px;">Widgets Management</h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">Control sidebar and footer dynamic widgets, custom HTML/JS, and banners.</small>
+            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">Manage sidebar, footer, HTML/JS & banners.</small>
         </div>
         <button type="button" class="btn btn-primary btn-compact shadow-xs align-self-start align-self-sm-auto btn-add-widget" data-bs-toggle="modal" data-bs-target="#addWidgetModal">
             <i class="fas fa-plus me-1" style="font-size: 10px;"></i>

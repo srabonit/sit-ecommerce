@@ -1,190 +1,686 @@
+
 @extends('layouts.admin')
 
 @section('title', 'A/B Testing - Email Marketing')
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       KAIADMIN LITE v1.2.0 — CLASSIC / WHITE CLASSIC
+       Page: Email Marketing A/B Testing
+       Scoped CSS — Existing Functionality Preserved
+    ========================================================= */
+
+    #email-marketing-ab-testing-root {
+        --ab-primary: var(--bs-primary, #1572e8);
+        --ab-primary-soft: #eaf2ff;
+        --ab-success: #31ce77;
+        --ab-success-soft: #eaf9f0;
+        --ab-warning: #ffad46;
+        --ab-warning-soft: #fff6e8;
+        --ab-indigo: #6861ce;
+        --ab-indigo-soft: #f0efff;
+        --ab-danger: #f25961;
+        --ab-info: #48abf7;
+
+        --ab-body-bg: #f5f7fd;
+        --ab-card-bg: #ffffff;
+        --ab-heading: #2a2f5b;
+        --ab-text: #575962;
+        --ab-muted: #8d9498;
+        --ab-border: #ebedf2;
+
+        --ab-radius: 5px;
+        --ab-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
+
+        color: var(--ab-text);
+        font-size: 13px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    #email-marketing-ab-testing-root *,
+    #email-marketing-ab-testing-root *::before,
+    #email-marketing-ab-testing-root *::after {
+        box-sizing: border-box;
+    }
+
+    /* =========================
+       GLOBAL ELEMENTS
+    ========================= */
+
+    #email-marketing-ab-testing-root .card,
     #email-marketing-ab-testing-root .btn,
-    #email-marketing-ab-testing-root .btn-sm,
-    #email-marketing-ab-testing-root button,
     #email-marketing-ab-testing-root .badge,
     #email-marketing-ab-testing-root .alert,
-    #email-marketing-ab-testing-root .card,
-    #email-marketing-ab-testing-root .metric-card,
     #email-marketing-ab-testing-root .progress,
     #email-marketing-ab-testing-root .progress-bar,
-    #email-marketing-ab-testing-root .collapse-toggle-btn {
-        border-radius: 5px !important;
+    #email-marketing-ab-testing-root .collapse-toggle-btn,
+    #email-marketing-ab-testing-root .variant-sim-box {
+        border-radius: var(--ab-radius) !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #email-marketing-ab-testing-root .card {
+        background: var(--ab-card-bg);
+        border: 1px solid var(--ab-border) !important;
+        box-shadow: var(--ab-shadow) !important;
+        margin-bottom: 16px;
+        overflow: hidden;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    #email-marketing-ab-testing-root .text-dark {
+        color: var(--ab-heading) !important;
+    }
+
+    #email-marketing-ab-testing-root .text-muted {
+        color: var(--ab-muted) !important;
+    }
+
+    #email-marketing-ab-testing-root .font-monospace,
+    #email-marketing-ab-testing-root .bn-digit {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* =========================
+       PAGE HEADER
+    ========================= */
+
+    #email-marketing-ab-testing-root .ab-header-wrap {
+        margin-bottom: 20px !important;
+    }
+
+    #email-marketing-ab-testing-root .ab-header-wrap h5 {
+        color: var(--ab-heading);
+        font-size: clamp(17px, 1.5vw, 20px) !important;
+        font-weight: 700;
+        letter-spacing: -0.35px;
+    }
+
+    #email-marketing-ab-testing-root .ab-header-wrap > div:first-child > small {
+        color: var(--ab-muted) !important;
+        font-size: 12px !important;
+        line-height: 1.6 !important;
+    }
+
+    /* =========================
+       BUTTONS
+    ========================= */
+
+    #email-marketing-ab-testing-root .btn-compact {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
+        min-height: 34px;
+        padding: 7px 13px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        border-radius: var(--ab-radius) !important;
+        transition: all 0.18s ease;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #email-marketing-ab-testing-root .btn-primary {
+        background-color: var(--ab-primary);
+        border-color: var(--ab-primary);
+    }
+
+    #email-marketing-ab-testing-root .btn-primary:hover {
+        filter: brightness(0.94);
+        box-shadow: 0 3px 8px rgba(21, 114, 232, 0.16);
+    }
+
+    #email-marketing-ab-testing-root .btn-outline-secondary {
+        border-color: #dce0e8;
+        color: #575962;
+        background: #ffffff;
+    }
+
+    #email-marketing-ab-testing-root .btn-outline-secondary:hover {
+        background: #f5f7fd;
+        border-color: #cbd1dc;
+        color: var(--ab-heading);
+    }
+
+    #email-marketing-ab-testing-root .btn-light {
+        background: #ffffff;
+        border-color: var(--ab-border) !important;
+        color: var(--ab-text) !important;
+    }
+
+    #email-marketing-ab-testing-root .btn-light:hover {
+        background: #f5f7fd;
+    }
+
+    #email-marketing-ab-testing-root .top-action-btns {
+        flex-shrink: 0;
+    }
+
+    /* =========================
+       SECTION HEADER
+    ========================= */
+
+    #email-marketing-ab-testing-root .section-header-wrap {
+        min-height: 47px;
+        padding: 11px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--ab-border);
+        gap: 10px;
+    }
+
+    #email-marketing-ab-testing-root .section-header-wrap > span {
+        color: var(--ab-heading) !important;
+        font-size: 12.5px !important;
+        font-weight: 700 !important;
+        line-height: 1.5;
+    }
+
+    #email-marketing-ab-testing-root .section-header-wrap > span i {
+        font-size: 13px;
+    }
+
+    /* =========================
+       COLLAPSE BUTTON
+    ========================= */
+
+    #email-marketing-ab-testing-root .collapse-toggle-btn {
+        width: 27px;
+        height: 27px;
+        min-width: 27px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
+        background: #ffffff;
+        border: 1px solid #e1e5ec;
+        color: #7b8190;
+        cursor: pointer;
         transition: all 0.2s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #email-marketing-ab-testing-root .collapse-toggle-btn:hover {
+        background: var(--ab-primary-soft);
+        border-color: var(--ab-primary);
+        color: var(--ab-primary);
     }
+
+    #email-marketing-ab-testing-root .collapse-icon {
+        font-size: 10px;
+        transition: transform 0.25s ease;
+    }
+
+    #email-marketing-ab-testing-root
     .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-ab-testing-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
+    /* =========================
+       KPI / METRIC CARDS
+    ========================= */
 
-    /* Metric Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
+    #email-marketing-ab-testing-root .metric-card {
         position: relative;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        min-width: 0;
+        padding: 14px !important;
+        background: #ffffff;
+        border: 1px solid var(--ab-border) !important;
+        border-left: 3px solid var(--ab-primary) !important;
+        box-shadow: none !important;
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+
+    #email-marketing-ab-testing-root .metric-card:hover {
+        border-color: #d5dce8 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.045) !important;
     }
-    .stat-label-title {
+
+    #email-marketing-ab-testing-root .metric-card-blue {
+        border-left-color: var(--ab-primary) !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-indigo {
+        border-left-color: var(--ab-indigo) !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-amber {
+        border-left-color: var(--ab-warning) !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-green {
+        border-left-color: var(--ab-success) !important;
+    }
+
+    #email-marketing-ab-testing-root .stat-label-title {
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        font-weight: 600;
+        line-height: 1.4;
+        color: var(--ab-muted) !important;
+        letter-spacing: 0.1px;
     }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+
+    #email-marketing-ab-testing-root .stat-val-num {
+        font-size: clamp(17px, 1.5vw, 21px);
+        line-height: 1.4;
+        letter-spacing: -0.5px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: var(--ab-heading) !important;
     }
-    .stat-sub-text {
+
+    #email-marketing-ab-testing-root .stat-val-num > span {
+        font-size: 11px !important;
+        letter-spacing: 0;
+    }
+
+    #email-marketing-ab-testing-root .stat-sub-text {
+        display: block;
+        margin-top: 4px;
         font-size: 10px;
-        margin-top: 2px;
+        line-height: 1.5;
+        color: var(--ab-muted) !important;
     }
-    .metric-icon-square {
-        width: 32px;
-        height: 32px;
+
+    #email-marketing-ab-testing-root .metric-icon-square {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--ab-radius) !important;
         font-size: 13px;
         flex-shrink: 0;
-        border-radius: 5px !important;
     }
 
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-indigo { background: linear-gradient(180deg, #ffffff 0%, #eef2ff 100%); border-left: 3.5px solid #6366f1 !important; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
+    #email-marketing-ab-testing-root .metric-card-blue .metric-icon-square {
+        background: var(--ab-primary-soft) !important;
+        color: var(--ab-primary) !important;
+    }
 
-    /* Variant Simulation Box */
-    .variant-sim-box {
-        border: 1px solid #e2e8f0;
+    #email-marketing-ab-testing-root .metric-card-indigo .metric-icon-square {
+        background: var(--ab-indigo-soft) !important;
+        color: var(--ab-indigo) !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-amber .metric-icon-square {
+        background: var(--ab-warning-soft) !important;
+        color: #d58b20 !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-green .metric-icon-square {
+        background: var(--ab-success-soft) !important;
+        color: #20a65b !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-amber .stat-val-num {
+        color: #c58a27 !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-green .stat-val-num {
+        color: #20a65b !important;
+    }
+
+    #email-marketing-ab-testing-root .progress {
+        height: 5px !important;
+        background: #edf0f5;
+        overflow: hidden;
+    }
+
+    #email-marketing-ab-testing-root .progress-bar {
+        border-radius: 0 !important;
+    }
+
+    #email-marketing-ab-testing-root .metric-card-indigo .progress-bar {
+        background-color: var(--ab-indigo) !important;
+    }
+
+    /* =========================
+       VARIANT COMPARISON
+    ========================= */
+
+    #email-marketing-ab-testing-root .variant-sim-box {
+        height: 100%;
+        min-width: 0;
+        padding: 14px !important;
         background: #ffffff;
-        padding: 12px;
-        transition: all 0.2s ease;
-    }
-    .variant-sim-box:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-    }
-    .variant-sim-box.winner-box {
-        border-color: #86efac;
-        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+        border: 1px solid var(--ab-border) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    /* Mobile Responsiveness Tuning (< 768px) */
+    #email-marketing-ab-testing-root .variant-sim-box:hover {
+        border-color: #d4dce8 !important;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.035);
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box.winner-box {
+        background: #ffffff;
+        border-color: #bce8ce !important;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 4px 8px !important;
+        font-size: 9.5px !important;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box strong {
+        line-height: 1.5;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .p-2.bg-light,
+    #email-marketing-ab-testing-root .variant-sim-box .p-2.bg-white {
+        padding: 11px !important;
+        border-radius: var(--ab-radius) !important;
+        overflow-wrap: anywhere;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .p-2 small {
+        font-size: 10px !important;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        margin-bottom: 4px;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .p-2 span {
+        display: block;
+        font-size: 12px !important;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .border-top {
+        border-color: var(--ab-border) !important;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .border-end {
+        border-color: var(--ab-border) !important;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .row {
+        margin-top: 8px;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .row small {
+        font-size: 10px !important;
+        letter-spacing: 0.2px;
+        margin-bottom: 3px;
+    }
+
+    #email-marketing-ab-testing-root .variant-sim-box .row span {
+        font-size: 15px !important;
+    }
+
+    /* =========================
+       SUCCESS ALERT
+    ========================= */
+
+    #email-marketing-ab-testing-root .alert-success {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px !important;
+        background: var(--ab-success-soft);
+        border: 1px solid #d5f0df !important;
+        color: #267c4b;
+        font-size: 11px !important;
+        line-height: 1.65;
+    }
+
+    #email-marketing-ab-testing-root .alert-success strong {
+        font-weight: 700;
+    }
+
+    #email-marketing-ab-testing-root .alert-success i {
+        margin-top: 1px;
+    }
+
+    /* =========================
+       LAUNCH CTA
+    ========================= */
+
+    #email-marketing-ab-testing-root #collapseLaunchCta .p-4 {
+        padding: clamp(20px, 4vw, 34px) 16px !important;
+    }
+
+    #email-marketing-ab-testing-root #collapseLaunchCta .bg-primary-subtle {
+        background: var(--ab-primary-soft) !important;
+        color: var(--ab-primary) !important;
+    }
+
+    #email-marketing-ab-testing-root #collapseLaunchCta h6 {
+        color: var(--ab-heading) !important;
+        font-size: 15px !important;
+        line-height: 1.5;
+    }
+
+    #email-marketing-ab-testing-root #collapseLaunchCta p {
+        color: var(--ab-muted) !important;
+        font-size: 12px !important;
+        line-height: 1.7 !important;
+    }
+
+    /* =========================
+       BEST PRACTICES
+    ========================= */
+
+    #email-marketing-ab-testing-root > .card:last-child {
+        padding: 17px !important;
+        background: #ffffff;
+        border: 1px solid var(--ab-border) !important;
+    }
+
+    #email-marketing-ab-testing-root > .card:last-child h6 {
+        color: var(--ab-heading) !important;
+        font-size: 12.5px !important;
+        margin-bottom: 12px !important;
+    }
+
+    #email-marketing-ab-testing-root > .card:last-child p {
+        color: var(--ab-text) !important;
+        font-size: 11px !important;
+        line-height: 1.7 !important;
+        padding-left: 2px;
+    }
+
+    #email-marketing-ab-testing-root > .card:last-child p strong {
+        color: var(--ab-heading);
+        font-weight: 700;
+    }
+
+    /* =========================
+       TABLET RESPONSIVENESS
+    ========================= */
+
+    @media (max-width: 991.98px) {
+        #email-marketing-ab-testing-root .metric-card {
+            padding: 12px !important;
+        }
+
+        #email-marketing-ab-testing-root .section-header-wrap {
+            padding: 10px 13px;
+        }
+    }
+
+    /* =========================
+       MOBILE RESPONSIVENESS
+    ========================= */
+
     @media (max-width: 767.98px) {
-        .ab-header-wrap h5 {
-            font-size: 16px !important;
+        #email-marketing-ab-testing-root {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
-        .top-action-btns {
+
+        #email-marketing-ab-testing-root .ab-header-wrap {
+            align-items: flex-start !important;
+            gap: 12px !important;
+            margin-bottom: 15px !important;
+        }
+
+        #email-marketing-ab-testing-root .ab-header-wrap h5 {
+            font-size: 17px !important;
+        }
+
+        #email-marketing-ab-testing-root .top-action-btns {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            gap: 8px !important;
         }
-        .top-action-btns .btn {
+
+        #email-marketing-ab-testing-root .top-action-btns .btn {
             width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
+            min-width: 0;
+            min-height: 38px;
+            padding: 7px 5px !important;
+            font-size: 10.5px !important;
+            white-space: normal;
+            text-align: center;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-        .stat-label-title {
-            font-size: 10px !important;
-        }
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
-        }
+
         #email-marketing-ab-testing-root .card {
             margin-bottom: 12px !important;
+        }
+
+        #email-marketing-ab-testing-root .section-header-wrap {
+            min-height: 45px;
+            padding: 9px 11px;
+        }
+
+        #email-marketing-ab-testing-root .section-header-wrap > span {
+            font-size: 11.5px !important;
+        }
+
+        #email-marketing-ab-testing-root .section-header-wrap > span i {
+            font-size: 12px;
+        }
+
+        #email-marketing-ab-testing-root .metric-card {
+            min-height: 105px;
+            padding: 11px !important;
+        }
+
+        #email-marketing-ab-testing-root .stat-label-title {
+            font-size: 10px;
+        }
+
+        #email-marketing-ab-testing-root .stat-val-num {
+            font-size: 17px;
+        }
+
+        #email-marketing-ab-testing-root .stat-sub-text {
+            font-size: 9.5px;
+        }
+
+        #email-marketing-ab-testing-root .metric-icon-square {
+            width: 29px;
+            height: 29px;
+            min-width: 29px;
+            font-size: 11px;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box {
+            padding: 12px !important;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box .d-flex.justify-content-between {
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box .d-flex.align-items-center.gap-2 {
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box .d-flex.align-items-center strong {
+            font-size: 11px !important;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box .badge {
+            font-size: 9px !important;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box .p-2 span {
+            font-size: 11.5px !important;
+        }
+
+        #email-marketing-ab-testing-root .alert-success {
+            padding: 10px !important;
+            font-size: 10.5px !important;
+        }
+
+        #email-marketing-ab-testing-root > .card:last-child {
+            padding: 13px !important;
+        }
+    }
+
+    /* =========================
+       SMALL MOBILE
+    ========================= */
+
+    @media (max-width: 374.98px) {
+        #email-marketing-ab-testing-root .container-fluid {
+            padding-left: 7px !important;
+            padding-right: 7px !important;
+        }
+
+        #email-marketing-ab-testing-root .metric-card {
+            padding: 9px !important;
+            min-height: 100px;
+        }
+
+        #email-marketing-ab-testing-root .stat-val-num {
+            font-size: 15px;
+        }
+
+        #email-marketing-ab-testing-root .stat-val-num > span {
+            font-size: 9px !important;
+        }
+
+        #email-marketing-ab-testing-root .metric-icon-square {
+            width: 25px;
+            height: 25px;
+            min-width: 25px;
+        }
+
+        #email-marketing-ab-testing-root .top-action-btns .btn {
+            font-size: 9.5px !important;
+        }
+    }
+
+    /* =========================
+       LARGE DESKTOP
+    ========================= */
+
+    @media (min-width: 1400px) {
+        #email-marketing-ab-testing-root .metric-card {
+            padding: 16px !important;
+        }
+
+        #email-marketing-ab-testing-root .variant-sim-box {
+            padding: 16px !important;
         }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-ab-testing-root">
 
-    {{-- 1. Header & Quick Actions (Original Clean Light Theme) --}}
+    {{-- 1. Header & Quick Actions --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 ab-header-wrap">
         <div>
             <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
@@ -206,7 +702,7 @@
         </div>
     </div>
 
-    {{-- 2. A/B Split Delivery Architecture KPI Cards (Collapsible Section) --}}
+    {{-- 2. A/B Split Delivery Architecture KPI Cards --}}
     <div class="card border-0 shadow-sm mb-3">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12px;">
@@ -216,9 +712,11 @@
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseSplitArchitecture">
             <div class="p-3">
                 <div class="row g-2">
+
                     {{-- Variant A Slice --}}
                     <div class="col-6 col-xl-3">
                         <div class="card metric-card metric-card-blue h-100 mb-0">
@@ -299,12 +797,13 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 3. Live Demonstration Matrix: Variant A vs Variant B Simulation (Collapsible) --}}
+    {{-- 3. Variant A vs Variant B Simulation --}}
     <div class="card border-0 shadow-sm mb-3">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12.5px;">
@@ -314,9 +813,11 @@
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseVariantDemo">
             <div class="p-3">
                 <div class="row g-2">
+
                     {{-- Variant A Card --}}
                     <div class="col-12 col-md-6">
                         <div class="variant-sim-box h-100" style="border-radius: 5px;">
@@ -329,10 +830,12 @@
                                 </div>
                                 <span class="badge bg-light text-muted border font-monospace" style="font-size: 9.5px;">20% Senders</span>
                             </div>
+
                             <div class="p-2 bg-light border mb-2" style="border-radius: 5px;">
                                 <small class="text-muted d-block font-monospace" style="font-size: 10px;">SUBJECT LINE:</small>
                                 <span class="text-dark fw-semibold" style="font-size: 12px;">"Did you see our latest collection drop?"</span>
                             </div>
+
                             <div class="row g-2 text-center pt-1 border-top">
                                 <div class="col-6 border-end">
                                     <small class="text-muted d-block font-monospace" style="font-size: 10px;">OPEN RATE</small>
@@ -360,10 +863,12 @@
                                     <i class="fas fa-crown me-1"></i> WINNER
                                 </span>
                             </div>
+
                             <div class="p-2 bg-white border border-success border-opacity-50 mb-2" style="border-radius: 5px;">
                                 <small class="text-muted d-block font-monospace" style="font-size: 10px;">SUBJECT LINE:</small>
                                 <span class="text-dark fw-bold" style="font-size: 12px;">"🔥 Flat 30% Off Everything - Today Only!"</span>
                             </div>
+
                             <div class="row g-2 text-center pt-1 border-top">
                                 <div class="col-6 border-end">
                                     <small class="text-muted d-block font-monospace" style="font-size: 10px;">OPEN RATE</small>
@@ -376,6 +881,7 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="alert alert-success border-0 shadow-xs mt-3 mb-0 py-2 px-3 small d-flex align-items-center gap-2" style="border-radius: 5px; font-size: 11px;">
@@ -388,7 +894,7 @@
         </div>
     </div>
 
-    {{-- 4. Value Proposition & Launch CTA Card (Collapsible) --}}
+    {{-- 4. Launch Campaign CTA --}}
     <div class="card border-0 shadow-sm mb-3">
         <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
             <span class="fw-bold text-dark small" style="font-size: 12.5px;">
@@ -398,19 +904,24 @@
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseLaunchCta">
             <div class="p-4 text-center">
                 <div class="bg-primary-subtle text-primary p-3 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 56px; height: 56px; border-radius: 50% !important;">
                     <i class="fas fa-flask-vial fs-3"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" style="font-size: 15px;">Automated A/B Variant Optimization</h6>
+
                 <p class="text-muted mx-auto mb-3" style="max-width: 540px; font-size: 12px; line-height: 1.55;">
                     Eliminate guesswork from your marketing strategy. Test multiple subject lines, sender names, or email designs to discover what resonates best with your verified shoppers.
                 </p>
+
                 <div class="d-flex justify-content-center gap-2 flex-wrap">
                     <a href="{{ route('admin.email_marketing.campaigns.create') }}" class="btn btn-primary btn-compact shadow-xs fw-bold px-4 py-2" style="font-size: 12px !important;">
                         <i class="fas fa-plus-circle me-1"></i> Launch A/B Test Campaign
                     </a>
+
                     <a href="{{ route('admin.email_marketing.campaigns.index') }}" class="btn btn-light border btn-compact shadow-xs text-secondary px-3 py-2">
                         View Active Broadcasts
                     </a>
@@ -419,14 +930,17 @@
         </div>
     </div>
 
-    {{-- 5. Operational Guidance Card --}}
+    {{-- 5. Operational Guidance --}}
     <div class="card p-3 shadow-xs">
         <h6 class="fw-bold text-dark mb-1 small d-flex align-items-center gap-1">
-            <i class="fas fa-circle-info text-primary"></i> <span>A/B Split Testing Best Practices</span>
+            <i class="fas fa-circle-info text-primary"></i>
+            <span>A/B Split Testing Best Practices</span>
         </h6>
+
         <p class="text-muted small mb-1" style="font-size: 11px; line-height: 1.4;">
             &bull; <strong>Test One Variable at a Time:</strong> Test either two different subject lines OR two different template layouts, not both simultaneously.
         </p>
+
         <p class="text-muted small mb-0" style="font-size: 11px; line-height: 1.4;">
             &bull; <strong>Sufficient Sample Size:</strong> A/B split testing is most effective with audience segments containing at least <strong>500+ subscribers</strong> for statistically significant results.
         </p>

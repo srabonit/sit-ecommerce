@@ -4,21 +4,21 @@
     $hasDiscount = !empty($product->sale_price) && ($finalPrice < $regularPrice);
     $discountPercentage = ($hasDiscount && $regularPrice > 0) ? (int) round((($regularPrice - $finalPrice) / $regularPrice) * 100) : 0;
 
-    // Universal Image Resolver (Connected to Central ImagePathService)
-    $resolveQvImg = function($path, $fallback = 'https://placehold.co/600x600?text=No+Image') {
+    // ১. লাইটওয়েট অফলাইন এসভিজি প্লেসহোল্ডার (জিরো ল্যাগ)
+    $svgPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'><rect fill='%23f8fafc' width='600' height='600'/><text fill='%2394a3b8' font-family='sans-serif' font-size='16' dy='6' font-weight='bold' x='50%' y='50%' text-anchor='middle'>No Image</text></svg>";
+
+    // ২. ইউনিভার্সাল অন-দ্য-ফ্লাই ৫৫০x৫৫০ রেজলভার (লোকাল ও লাইভ সার্ভার সিঙ্কড)
+    $resolveQvImg = function($path, $fallback = null) use ($svgPlaceholder) {
+        $defFallback = $fallback ?: $svgPlaceholder;
         if (empty($path)) {
-            return $fallback;
+            return $defFallback;
         }
-        if (class_exists(\App\Services\ImagePathService::class)) {
-            return \App\Services\ImagePathService::resolveUrl($path, $fallback ?? '');
+        $clean = ltrim(str_replace('\\', '/', (string)$path), '/');
+        if (str_starts_with($clean, 'http://') || str_starts_with($clean, 'https://')) {
+            return $clean;
         }
-        if (function_exists('show_image')) {
-            return show_image($path, $fallback);
-        }
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            return $path;
-        }
-        return asset(ltrim($path, '/'));
+        // কুইক-ভিউ মোডালের জন্য রেটিনা শার্প ৫৫০x৫৫০ ক্রিস্প থাম্বনেইল
+        return url('thumb/' . $clean . '?w=550&h=550');
     };
 
     $mainImg = $resolveQvImg($product->thumbnail);
@@ -122,14 +122,14 @@
     foreach ($variants as $vRow) {
         $cKey = strtolower(trim((string)($vRow->color ?? '')));
         if ($cKey !== '' && !empty($vRow->image) && !isset($qvColorImageMap[$cKey])) {
-            $qvColorImageMap[$cKey] = $resolveQvImg($vRow->image, '');
+            $qvColorImageMap[$cKey] = $resolveQvImg($vRow->image);
         }
     }
 
     $variantsJson = $variants->map(function($v) use ($resolveQvImg, $qvColorImageMap, $regularPrice, $finalPrice) {
         $cKey = strtolower(trim((string)($v->color ?? '')));
         $vImg = !empty($v->image)
-            ? $resolveQvImg($v->image, '')
+            ? $resolveQvImg($v->image)
             : ($qvColorImageMap[$cKey] ?? null);
 
         $vRegPrice  = (float)(!empty($v->regular_price) && $v->regular_price > 0 ? $v->regular_price : $regularPrice);
@@ -152,7 +152,7 @@
         foreach($product->galleries as $gallery) {
             $gPath = $gallery->image_path ?? ($gallery->image ?? '');
             if (!empty($gPath)) {
-                $gResolved = $resolveQvImg($gPath, '');
+                $gResolved = $resolveQvImg($gPath);
                 if (!empty($gResolved) && !$allThumbnails->contains($gResolved) && $gResolved !== $mainImg) {
                     $allThumbnails->push($gResolved);
                 }
@@ -161,7 +161,7 @@
     }
     foreach($variants as $varItem) {
         if (!empty($varItem->image)) {
-            $vPath = $resolveQvImg($varItem->image, '');
+            $vPath = $resolveQvImg($varItem->image);
             if (!empty($vPath) && !$allThumbnails->contains($vPath) && $vPath !== $mainImg) {
                 $allThumbnails->push($vPath);
             }
@@ -344,9 +344,10 @@
         }
     }
     .qv-zoom-box img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        image-rendering: -webkit-optimize-contrast;
         display: block;
         transition: transform 0.2s ease;
     }
@@ -387,7 +388,7 @@
         border-radius: 8px;
         border: 2px solid var(--qv-thumb-border) !important;
         padding: 2px;
-        object-fit: contain;
+        object-fit: cover;
         background: #ffffff;
         cursor: pointer;
         flex-shrink: 0;
@@ -712,7 +713,7 @@
                     @if($hasDiscount)
                         <span class="badge qv-discount-badge position-absolute top-0 start-0 m-2 px-2 py-1 z-2 small" id="qv-badge-discount">-{{ $discountPercentage }}%</span>
                     @endif
-                    <img id="qv-main-display-image" src="{{ $mainImg }}" class="img-fluid object-fit-contain w-100 h-100 rounded" alt="{{ $product->title }}" onerror="this.src='https://placehold.co/600x600?text=No+Image'">
+                    <img id="qv-main-display-image" src="{{ $mainImg }}" class="img-fluid object-fit-cover w-100 h-100 rounded" alt="{{ $product->title ?? $product->name }}" onerror="this.onerror=null; this.src='{{ $svgPlaceholder }}';">
                 </div>
 
                 <div class="qv-thumb-scroll" id="qv-thumb-container">

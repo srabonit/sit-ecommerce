@@ -4,91 +4,84 @@
 
 @section('admin_content')
 <div class="container-fluid px-2 px-md-3 py-2 tax-reports-page">
-    <!-- Header & Action Controls -->
-    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-3">
-        <div>
-            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-                <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4 d-flex align-items-center gap-2">
-                    <i class="fas fa-chart-line text-primary"></i> Tax &amp; VAT Reports
-                </h4>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-medium" style="font-size: 11px;">
-                    {{ ucwords(str_replace('_', ' ', $reportType)) }}
-                </span>
+  <!-- Header & Action Controls -->
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-3">
+    <div class="d-flex align-items-center gap-3" style="max-width: 100%;">
+        <span class="d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: #e0f2fe; color: #0284c7; border-radius: 8px; font-size: 16px;">
+            <i class="fas fa-chart-line"></i>
+        </span>
+        <div class="min-w-0 lh-sm">
+            <h4 class="fw-bold mb-1 text-dark text-truncate" style="font-size: 16px;">
+                Tax &amp; VAT Reports
+            </h4>
+            <div class="text-secondary text-truncate m-0 p-0" style="font-size: 11.5px;">
+                VAT Returns &amp; Audit Reports.
             </div>
-            <p class="text-secondary small mb-0">Comprehensive tax return, audit logs, and sales-based VAT statements.</p>
-        </div>
-
-        <div class="d-flex align-items-center flex-wrap gap-2 w-100 w-md-auto justify-content-start justify-content-md-end">
-            <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
-                <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
-            </a>
-            <a href="{{ route('admin.tax.reports.print', request()->all()) }}" target="_blank" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
-                <i class="fas fa-print"></i> <span>Print</span>
-            </a>
-            <a href="{{ route('admin.tax.reports.export', request()->all()) }}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1">
-                <i class="fas fa-file-csv"></i> <span>Export CSV</span>
-            </a>
         </div>
     </div>
 
-    <!-- Summary Metrics Strip -->
-    <div class="row g-2 mb-3">
-        <!-- 1. Taxable Sales -->
+    <div class="d-flex align-items-center flex-wrap gap-2 flex-shrink-0">
+        <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 text-nowrap" style="height: 34px;">
+            <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
+        </a>
+        <a href="{{ route('admin.tax.reports.print', request()->all()) }}" target="_blank" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1 text-nowrap" style="height: 34px;">
+            <i class="fas fa-print"></i> <span>Print</span>
+        </a>
+        <a href="{{ route('admin.tax.reports.export', request()->all()) }}" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 text-nowrap" style="height: 34px;">
+            <i class="fas fa-file-csv"></i> <span>Export CSV</span>
+        </a>
+    </div>
+</div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-2 g-xl-3 mb-3">
         <div class="col-6 col-xl-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
-                <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
+            <div class="card report-metric-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
-                        <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Taxable Sales</span>
+                        <span class="metric-label">Taxable Sales</span>
                         <div class="fw-bold text-dark metric-value font-monospace text-truncate mt-1">৳{{ number_format($summary['total_taxable_amount'] ?? 0, 2) }}</div>
                     </div>
-                    <div class="p-2 bg-light text-primary flex-shrink-0 rounded-1">
-                        <i class="fas fa-coins fs-5"></i>
-                    </div>
+                    <div class="metric-icon metric-icon-primary"><i class="fas fa-coins"></i></div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. Total Tax Collected -->
         <div class="col-6 col-xl-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
-                <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
+            <div class="card report-metric-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
-                        <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Total Tax</span>
+                        <span class="metric-label">Total Tax</span>
                         <div class="fw-bold text-success metric-value font-monospace text-truncate mt-1">৳{{ number_format($summary['total_tax_amount'] ?? 0, 2) }}</div>
                     </div>
-                    <div class="p-2 bg-success-subtle text-success flex-shrink-0 rounded-1">
-                        <i class="fas fa-hand-holding-dollar fs-5"></i>
-                    </div>
+                    <div class="metric-icon metric-icon-success"><i class="fas fa-hand-holding-dollar"></i></div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. Product / Shipping Tax or Rate -->
         @if(isset($summary['product_tax_amount']) && isset($summary['shipping_tax_amount']))
             <div class="col-6 col-xl-3">
-                <div class="card border border-light-subtle shadow-sm bg-white h-100">
-                    <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
+                <div class="card report-metric-card h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div class="overflow-hidden">
-                            <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Product / Delivery Tax</span>
-                            <div class="fw-bold text-dark text-truncate mt-1 font-monospace" style="font-size: 12px;">
+                            <span class="metric-label">Product / Delivery Tax</span>
+                            <div class="fw-bold text-dark text-truncate mt-1 metric-detail">
                                 Item: <span class="text-primary">৳{{ number_format($summary['product_tax_amount'], 2) }}</span>
                             </div>
-                            <span class="text-secondary small text-truncate d-block font-monospace" style="font-size: 11px;">
+                            <span class="text-secondary small text-truncate d-block font-monospace metric-subdetail">
                                 Delivery: ৳{{ number_format($summary['shipping_tax_amount'], 2) }}
                             </span>
                         </div>
-                        <div class="p-2 bg-info-subtle text-info flex-shrink-0 rounded-1">
-                            <i class="fas fa-boxes-packing fs-5"></i>
-                        </div>
+                        <div class="metric-icon metric-icon-info"><i class="fas fa-boxes-packing"></i></div>
                     </div>
                 </div>
             </div>
         @else
             <div class="col-6 col-xl-3">
-                <div class="card border border-light-subtle shadow-sm bg-white h-100">
-                    <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
+                <div class="card report-metric-card h-100">
+                    <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div class="overflow-hidden">
-                            <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Average Tax Rate</span>
+                            <span class="metric-label">Average Tax Rate</span>
                             <div class="fw-bold text-primary metric-value font-monospace text-truncate mt-1">
                                 @php
                                     $taxable = $summary['total_taxable_amount'] ?? 0;
@@ -98,189 +91,174 @@
                                 {{ number_format($effectiveRate, 2) }}%
                             </div>
                         </div>
-                        <div class="p-2 bg-primary-subtle text-primary flex-shrink-0 rounded-1">
-                            <i class="fas fa-percent fs-5"></i>
-                        </div>
+                        <div class="metric-icon metric-icon-primary"><i class="fas fa-percent"></i></div>
                     </div>
                 </div>
             </div>
         @endif
 
-        <!-- 4. Total Records -->
         <div class="col-6 col-xl-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
-                <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
+            <div class="card report-metric-card h-100">
+                <div class="card-body d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
-                        <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Total Records</span>
+                        <span class="metric-label">Total Records</span>
                         <div class="fw-bold text-dark metric-value font-monospace text-truncate mt-1">{{ number_format($summary['total_records'] ?? 0) }} Rows</div>
                     </div>
-                    <div class="p-2 bg-secondary-subtle text-secondary flex-shrink-0 rounded-1">
-                        <i class="fas fa-list-check fs-5"></i>
-                    </div>
+                    <div class="metric-icon metric-icon-secondary"><i class="fas fa-list-check"></i></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Filters Panel -->
-    <div class="card border border-light-subtle shadow-sm bg-white mb-3">
-        <div class="card-header bg-white border-0 pt-3 px-3 pb-1 d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                <i class="fas fa-filter text-primary"></i> Report Filters
-            </h6>
-            <span class="badge bg-light text-secondary border px-2 py-1 fw-normal" style="font-size: 11px;">
-                {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
-            </span>
-        </div>
-        <div class="card-body p-2 p-md-3">
-            <form action="{{ route('admin.tax.reports.index') }}" method="GET" id="taxReportFilterForm">
-                <div class="row g-2 align-items-end">
-                    <!-- Report Type -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Report Type</label>
-                        <select name="report_type" class="form-select form-select-sm" id="reportTypeSelect">
-                            <option value="all_transactions" {{ $reportType === 'all_transactions' ? 'selected' : '' }}>All Transactions</option>
-                            <option value="product_wise" {{ $reportType === 'product_wise' ? 'selected' : '' }}>Product-wise</option>
-                            <option value="variant_wise" {{ $reportType === 'variant_wise' ? 'selected' : '' }}>Variant-wise</option>
-                            <option value="category_wise" {{ $reportType === 'category_wise' ? 'selected' : '' }}>Category-wise</option>
-                            <option value="brand_wise" {{ $reportType === 'brand_wise' ? 'selected' : '' }}>Brand-wise</option>
-                            <option value="branch_wise" {{ $reportType === 'branch_wise' ? 'selected' : '' }}>Branch-wise</option>
-                            <option value="pos_wise" {{ $reportType === 'pos_wise' ? 'selected' : '' }}>POS Orders</option>
-                            <option value="order_wise" {{ $reportType === 'order_wise' ? 'selected' : '' }}>Order-wise</option>
-                            <option value="customer_wise" {{ $reportType === 'customer_wise' ? 'selected' : '' }}>Customer-wise</option>
-                            <option value="shipping_tax" {{ $reportType === 'shipping_tax' ? 'selected' : '' }}>Shipping Tax</option>
-                            <option value="collection_history" {{ $reportType === 'collection_history' ? 'selected' : '' }}>Collection History</option>
-                            <option value="payment_history" {{ $reportType === 'payment_history' ? 'selected' : '' }}>Govt. Payments</option>
-                            <option value="refund_history" {{ $reportType === 'refund_history' ? 'selected' : '' }}>Refund History</option>
-                            <option value="adjustment_history" {{ $reportType === 'adjustment_history' ? 'selected' : '' }}>Adjustment History</option>
-                        </select>
-                    </div>
+<div class="card report-panel mb-3">
+    <div class="card-header report-panel-header d-flex flex-wrap align-items-center justify-content-between gap-2 py-3 px-3 bg-white border-0">
+        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 15px;">
+            <i class="fas fa-filter text-primary"></i> Report Filters
+        </h6>
+        <span class="badge bg-light text-secondary border px-2.5 py-1.5 fw-normal report-date-badge" style="font-size: 11.5px;">
+            {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
+        </span>
+    </div>
+    <div class="card-body report-filter-body pt-0 pb-3 px-3">
+        <form action="{{ route('admin.tax.reports.index') }}" method="GET" id="taxReportFilterForm">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Report Type</label>
+                    <select name="report_type" class="form-select form-select-sm" id="reportTypeSelect" style="height: 34px;">
+                        <option value="all_transactions" {{ $reportType === 'all_transactions' ? 'selected' : '' }}>All Transactions</option>
+                        <option value="product_wise" {{ $reportType === 'product_wise' ? 'selected' : '' }}>Product-wise</option>
+                        <option value="variant_wise" {{ $reportType === 'variant_wise' ? 'selected' : '' }}>Variant-wise</option>
+                        <option value="category_wise" {{ $reportType === 'category_wise' ? 'selected' : '' }}>Category-wise</option>
+                        <option value="brand_wise" {{ $reportType === 'brand_wise' ? 'selected' : '' }}>Brand-wise</option>
+                        <option value="branch_wise" {{ $reportType === 'branch_wise' ? 'selected' : '' }}>Branch-wise</option>
+                        <option value="pos_wise" {{ $reportType === 'pos_wise' ? 'selected' : '' }}>POS Orders</option>
+                        <option value="order_wise" {{ $reportType === 'order_wise' ? 'selected' : '' }}>Order-wise</option>
+                        <option value="customer_wise" {{ $reportType === 'customer_wise' ? 'selected' : '' }}>Customer-wise</option>
+                        <option value="shipping_tax" {{ $reportType === 'shipping_tax' ? 'selected' : '' }}>Shipping Tax</option>
+                        <option value="collection_history" {{ $reportType === 'collection_history' ? 'selected' : '' }}>Collection History</option>
+                        <option value="payment_history" {{ $reportType === 'payment_history' ? 'selected' : '' }}>Govt. Payments</option>
+                        <option value="refund_history" {{ $reportType === 'refund_history' ? 'selected' : '' }}>Refund History</option>
+                        <option value="adjustment_history" {{ $reportType === 'adjustment_history' ? 'selected' : '' }}>Adjustment History</option>
+                    </select>
+                </div>
 
-                    <!-- Date Filter Range -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Time Period</label>
-                        <select name="date_filter" class="form-select form-select-sm" id="dateFilterSelect" onchange="handleDateFilterChange(this.value)">
-                            <option value="today" {{ $dateFilter === 'today' ? 'selected' : '' }}>Today</option>
-                            <option value="yesterday" {{ $dateFilter === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
-                            <option value="last_7_days" {{ $dateFilter === 'last_7_days' ? 'selected' : '' }}>Last 7 Days</option>
-                            <option value="this_week" {{ $dateFilter === 'this_week' ? 'selected' : '' }}>This Week</option>
-                            <option value="previous_week" {{ $dateFilter === 'previous_week' ? 'selected' : '' }}>Previous Week</option>
-                            <option value="last_30_days" {{ $dateFilter === 'last_30_days' ? 'selected' : '' }}>Last 30 Days</option>
-                            <option value="this_month" {{ $dateFilter === 'this_month' ? 'selected' : '' }}>This Month</option>
-                            <option value="previous_month" {{ $dateFilter === 'previous_month' ? 'selected' : '' }}>Previous Month</option>
-                            <option value="all_time" {{ in_array($dateFilter, ['all', 'all_time']) ? 'selected' : '' }}>All Time</option>
-                            <option value="specific_date" {{ $dateFilter === 'specific_date' ? 'selected' : '' }}>Specific Date</option>
-                            <option value="custom_range" {{ $dateFilter === 'custom_range' ? 'selected' : '' }}>Custom Range</option>
-                            <option value="specific_month" {{ $dateFilter === 'specific_month' ? 'selected' : '' }}>Specific Month</option>
-                            <option value="specific_year" {{ $dateFilter === 'specific_year' ? 'selected' : '' }}>Specific Year</option>
-                        </select>
-                    </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Time Period</label>
+                    <select name="date_filter" class="form-select form-select-sm" id="dateFilterSelect" onchange="handleDateFilterChange(this.value)" style="height: 34px;">
+                        <option value="today" {{ $dateFilter === 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="yesterday" {{ $dateFilter === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                        <option value="last_7_days" {{ $dateFilter === 'last_7_days' ? 'selected' : '' }}>Last 7 Days</option>
+                        <option value="this_week" {{ $dateFilter === 'this_week' ? 'selected' : '' }}>This Week</option>
+                        <option value="previous_week" {{ $dateFilter === 'previous_week' ? 'selected' : '' }}>Previous Week</option>
+                        <option value="last_30_days" {{ $dateFilter === 'last_30_days' ? 'selected' : '' }}>Last 30 Days</option>
+                        <option value="this_month" {{ $dateFilter === 'this_month' ? 'selected' : '' }}>This Month</option>
+                        <option value="previous_month" {{ $dateFilter === 'previous_month' ? 'selected' : '' }}>Previous Month</option>
+                        <option value="all_time" {{ in_array($dateFilter, ['all', 'all_time']) ? 'selected' : '' }}>All Time</option>
+                        <option value="specific_date" {{ $dateFilter === 'specific_date' ? 'selected' : '' }}>Specific Date</option>
+                        <option value="custom_range" {{ $dateFilter === 'custom_range' ? 'selected' : '' }}>Custom Range</option>
+                        <option value="specific_month" {{ $dateFilter === 'specific_month' ? 'selected' : '' }}>Specific Month</option>
+                        <option value="specific_year" {{ $dateFilter === 'specific_year' ? 'selected' : '' }}>Specific Year</option>
+                    </select>
+                </div>
 
-                    <!-- Dynamic Date Controls -->
-                    <div class="col-12 col-sm-6 col-lg-3" id="dateParamBox">
-                        <div id="boxSpecificDate" class="{{ $dateFilter === 'specific_date' ? '' : 'd-none' }}">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Pick Date</label>
-                            <input type="date" name="specific_date" class="form-control form-control-sm" value="{{ request('specific_date', date('Y-m-d')) }}">
-                        </div>
-                        <div id="boxCustomRange" class="{{ $dateFilter === 'custom_range' ? '' : 'd-none' }}">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Date Range</label>
-                            <div class="input-group input-group-sm">
-                                <input type="date" name="start_date" class="form-control" value="{{ $startDate }}">
-                                <span class="input-group-text bg-light text-secondary">-</span>
-                                <input type="date" name="end_date" class="form-control" value="{{ $endDate }}">
-                            </div>
-                        </div>
-                        <div id="boxSpecificMonth" class="{{ $dateFilter === 'specific_month' ? '' : 'd-none' }}">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Pick Month</label>
-                            <input type="month" name="month_year" class="form-control form-control-sm" value="{{ request('month_year', date('Y-m')) }}">
-                        </div>
-                        <div id="boxSpecificYear" class="{{ $dateFilter === 'specific_year' ? '' : 'd-none' }}">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Select Year</label>
-                            <select name="year" class="form-select form-select-sm">
-                                @for($y = date('Y'); $y >= 2020; $y--)
-                                    <option value="{{ $y }}" {{ request('year', date('Y')) == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
+                <div class="col-12 col-sm-6 col-lg-3" id="dateParamBox">
+                    <div id="boxSpecificDate" class="{{ $dateFilter === 'specific_date' ? '' : 'd-none' }}">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Pick Date</label>
+                        <input type="date" name="specific_date" class="form-control form-control-sm" value="{{ request('specific_date', date('Y-m-d')) }}" style="height: 34px;">
                     </div>
-
-                    <!-- Search Input -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Search Keywords</label>
+                    <div id="boxCustomRange" class="{{ $dateFilter === 'custom_range' ? '' : 'd-none' }}">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Date Range</label>
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-search"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0" placeholder="Invoice, name, phone..." value="{{ request('search') }}">
+                            <input type="date" name="start_date" class="form-control" value="{{ $startDate }}" style="height: 34px;">
+                            <span class="input-group-text bg-light text-secondary" style="height: 34px;">-</span>
+                            <input type="date" name="end_date" class="form-control" value="{{ $endDate }}" style="height: 34px;">
                         </div>
                     </div>
-
-                    <!-- Conditional Filter: Branches -->
-                    @if(isset($branches) && $branches->count() > 0)
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Branch</label>
-                            <select name="branch_id" class="form-select form-select-sm">
-                                <option value="">All Branches</option>
-                                @foreach($branches as $b)
-                                    <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <!-- Conditional Filter: Categories -->
-                    @if($reportType === 'category_wise' && isset($categories) && $categories->count() > 0)
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Category</label>
-                            <select name="category_id" class="form-select form-select-sm">
-                                <option value="">All Categories</option>
-                                @foreach($categories as $c)
-                                    <option value="{{ $c->id }}" {{ request('category_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <!-- Conditional Filter: Brands -->
-                    @if($reportType === 'brand_wise' && isset($brands) && $brands->count() > 0)
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Brand</label>
-                            <select name="brand_id" class="form-select form-select-sm">
-                                <option value="">All Brands</option>
-                                @foreach($brands as $br)
-                                    <option value="{{ $br->id }}" {{ request('brand_id') == $br->id ? 'selected' : '' }}>{{ $br->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-
-                    <!-- Per Page Option -->
-                    <div class="col-6 col-sm-3 col-lg-2">
-                        <label class="form-label small fw-semibold text-secondary mb-1">Page Limit</label>
-                        <select name="per_page" class="form-select form-select-sm">
-                            <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 Rows</option>
-                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 Rows</option>
-                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 Rows</option>
-                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100 Rows</option>
+                    <div id="boxSpecificMonth" class="{{ $dateFilter === 'specific_month' ? '' : 'd-none' }}">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Pick Month</label>
+                        <input type="month" name="month_year" class="form-control form-control-sm" value="{{ request('month_year', date('Y-m')) }}" style="height: 34px;">
+                    </div>
+                    <div id="boxSpecificYear" class="{{ $dateFilter === 'specific_year' ? '' : 'd-none' }}">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Select Year</label>
+                        <select name="year" class="form-select form-select-sm" style="height: 34px;">
+                            @for($y = date('Y'); $y >= 2020; $y--)
+                                <option value="{{ $y }}" {{ request('year', date('Y')) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endfor
                         </select>
-                    </div>
-
-                    <!-- Actions Buttons -->
-                    <div class="col-6 col-sm-3 col-lg-2 d-flex align-items-center gap-1">
-                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1">
-                            <i class="fas fa-filter"></i> <span>Apply</span>
-                        </button>
-                        <a href="{{ route('admin.tax.reports.index') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filters">
-                            <i class="fas fa-redo"></i>
-                        </a>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
 
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Search Keywords</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-secondary" style="height: 34px;"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="Invoice, name, phone..." value="{{ request('search') }}" style="height: 34px;">
+                    </div>
+                </div>
+
+                @if(isset($branches) && $branches->count() > 0)
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Branch</label>
+                        <select name="branch_id" class="form-select form-select-sm" style="height: 34px;">
+                            <option value="">All Branches</option>
+                            @foreach($branches as $b)
+                                <option value="{{ $b->id }}" {{ request('branch_id') == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
+                @if($reportType === 'category_wise' && isset($categories) && $categories->count() > 0)
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Category</label>
+                        <select name="category_id" class="form-select form-select-sm" style="height: 34px;">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $c)
+                                <option value="{{ $c->id }}" {{ request('category_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
+                @if($reportType === 'brand_wise' && isset($brands) && $brands->count() > 0)
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Brand</label>
+                        <select name="brand_id" class="form-select form-select-sm" style="height: 34px;">
+                            <option value="">All Brands</option>
+                            @foreach($brands as $br)
+                                <option value="{{ $br->id }}" {{ request('brand_id') == $br->id ? 'selected' : '' }}>{{ $br->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
+                <div class="col-6 col-sm-6 col-lg-2">
+                    <label class="form-label report-form-label small text-muted mb-1" style="font-size: 11.5px;">Page Limit</label>
+                    <select name="per_page" class="form-select form-select-sm" style="height: 34px;">
+                        <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15 Rows</option>
+                        <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25 Rows</option>
+                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50 Rows</option>
+                        <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100 Rows</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-sm-6 col-lg-2 d-flex align-items-end gap-2 report-filter-actions">
+                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1 d-inline-flex align-items-center justify-content-center gap-1 text-nowrap" style="height: 34px;">
+                        <i class="fas fa-filter"></i> <span>Apply</span>
+                    </button>
+                    <a href="{{ route('admin.tax.reports.index') }}" class="btn btn-sm btn-outline-secondary report-reset-btn d-inline-flex align-items-center justify-content-center" title="Reset Filters" style="height: 34px; width: 34px; flex-shrink: 0;">
+                        <i class="fas fa-redo"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
     <!-- Main Report Data Table -->
-    <div class="card border border-light-subtle shadow-sm bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-nowrap" id="taxReportDataTable" style="font-size: 12.5px;">
+    <div class="card report-panel report-table-panel">
+        <div class="table-responsive report-table-wrap">
+            <table class="table table-hover align-middle mb-0 text-nowrap" id="taxReportDataTable">
                 <thead class="table-light text-secondary">
                     @if($reportType === 'product_wise')
                         <tr>
@@ -467,7 +445,7 @@
                                 <td>{{ !empty($row->created_at) ? \Carbon\Carbon::parse($row->created_at)->format('d M Y, h:i A') : 'N/A' }}</td>
                                 <td>
                                     <div class="fw-semibold text-dark">{{ $row->customer_name ?: 'Guest' }}</div>
-                                    <small class="text-secondary font-monospace" style="font-size: 11px;">{{ $row->customer_phone ?: '' }}</small>
+                                    <small class="text-secondary font-monospace metric-subdetail">{{ $row->customer_phone ?: '' }}</small>
                                 </td>
                                 <td class="text-end font-monospace">৳{{ number_format($row->taxable_amount ?? 0, 2) }}</td>
                                 <td class="text-end text-secondary font-monospace">৳{{ number_format($row->product_tax_amount ?? 0, 2) }}</td>
@@ -509,7 +487,14 @@
 </div>
 
 <style>
-    /* Strict 5px Radius Rule */
+    .tax-reports-page {
+        --report-primary: var(--bs-primary, #2563eb);
+        --report-border: #e9edf3;
+        --report-muted: #6c757d;
+        --report-radius: 5px;
+        color: #344054;
+    }
+
     .tax-reports-page .card,
     .tax-reports-page .btn,
     .tax-reports-page .form-control,
@@ -518,39 +503,274 @@
     .tax-reports-page .badge,
     .tax-reports-page .rounded,
     .tax-reports-page .rounded-1 {
-        border-radius: 5px !important;
+        border-radius: var(--report-radius) !important;
     }
 
-    /* Fluid Typography for Metric Numbers */
+    .tax-reports-page .report-metric-card,
+    .tax-reports-page .report-panel {
+        border: 1px solid var(--report-border) !important;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(16, 24, 40, .045);
+    }
+
+    .tax-reports-page .report-metric-card {
+        transition: box-shadow .18s ease, transform .18s ease;
+    }
+
+    .tax-reports-page .report-metric-card:hover {
+        box-shadow: 0 5px 16px rgba(16, 24, 40, .075);
+        transform: translateY(-1px);
+    }
+
+    .tax-reports-page .report-metric-card .card-body {
+        min-height: 88px;
+        padding: 14px 15px;
+    }
+
+    .tax-reports-page .metric-label {
+        display: block;
+        color: #667085;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .065em;
+        line-height: 1.35;
+        text-transform: uppercase;
+    }
+
     .tax-reports-page .metric-value {
-        font-size: clamp(1.1rem, 1.8vw, 1.45rem);
-        line-height: 1.2;
+        font-size: clamp(1.05rem, 1.55vw, 1.4rem);
+        line-height: 1.25;
+        letter-spacing: -.025em;
     }
 
-    /* Focus States */
+    .tax-reports-page .metric-detail {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .tax-reports-page .metric-subdetail {
+        font-size: 10.5px;
+    }
+
+    .tax-reports-page .metric-icon {
+        display: inline-flex;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        font-size: 18px;
+    }
+
+    .tax-reports-page .metric-icon-primary {
+        color: var(--report-primary);
+        background: rgba(37, 99, 235, .09);
+    }
+
+    .tax-reports-page .metric-icon-success {
+        color: #198754;
+        background: rgba(25, 135, 84, .09);
+    }
+
+    .tax-reports-page .metric-icon-info {
+        color: #0dcaf0;
+        background: rgba(13, 202, 240, .10);
+    }
+
+    .tax-reports-page .metric-icon-secondary {
+        color: #667085;
+        background: #f1f3f5;
+    }
+
+    .tax-reports-page .report-panel-header {
+        padding: 15px 16px 8px;
+        background: #fff;
+        border: 0;
+    }
+
+    .tax-reports-page .report-filter-body {
+        padding: 12px 16px 16px;
+    }
+
+    .tax-reports-page .report-form-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #667085;
+        font-size: 11px;
+        font-weight: 650;
+    }
+
+    .tax-reports-page .form-control,
+    .tax-reports-page .form-select {
+        min-height: 34px;
+        border-color: #dfe3e8;
+        color: #344054;
+        font-size: 12px;
+        box-shadow: none;
+    }
+
+    .tax-reports-page .form-control::placeholder {
+        color: #98a2b3;
+    }
+
     .tax-reports-page .form-control:focus,
     .tax-reports-page .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+        border-color: var(--report-primary);
+        box-shadow: 0 0 0 .18rem rgba(37, 99, 235, .13);
     }
 
-    /* Mobile Protection */
+    .tax-reports-page .input-group-text {
+        border-color: #dfe3e8;
+        font-size: 12px;
+    }
+
+    .tax-reports-page .btn {
+        min-height: 32px;
+        padding: 6px 11px;
+        font-size: 11.5px;
+        font-weight: 600;
+        transition: all .15s ease-in-out;
+    }
+
+    .tax-reports-page .btn-primary {
+        box-shadow: 0 2px 4px rgba(37, 99, 235, .12);
+    }
+
+    .tax-reports-page .report-reset-btn {
+        min-width: 34px;
+    }
+
+    .tax-reports-page .report-type-badge,
+    .tax-reports-page .report-date-badge {
+        font-size: 10.5px;
+        font-weight: 600;
+    }
+
+    .tax-reports-page .report-table-panel {
+        overflow: hidden;
+    }
+
+    .tax-reports-page .report-table-wrap {
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tax-reports-page #taxReportDataTable {
+        min-width: 760px;
+        width: 100%;
+        font-size: 12px;
+    }
+
+    .tax-reports-page #taxReportDataTable thead th {
+        padding-top: 11px !important;
+        padding-bottom: 11px !important;
+        background: #f8f9fb;
+        border-bottom: 1px solid #e7ebf0;
+        color: #667085;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        vertical-align: middle;
+    }
+
+    .tax-reports-page #taxReportDataTable tbody td {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border-color: #eef0f3;
+        color: #475467;
+        vertical-align: middle;
+    }
+
+    .tax-reports-page #taxReportDataTable tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .tax-reports-page #taxReportDataTable tbody tr:hover {
+        background: #fafbfc;
+    }
+
+    .tax-reports-page #taxReportDataTable .badge {
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .tax-reports-page #paginationWrapper {
+        border-top: 1px solid #eef0f3 !important;
+    }
+
+    .tax-reports-page #paginationWrapper .pagination {
+        margin-bottom: 0;
+        gap: 3px;
+    }
+
+    .tax-reports-page #paginationWrapper .page-link {
+        border-radius: 5px !important;
+        font-size: 11px;
+    }
+
     @media (max-width: 767.98px) {
         .tax-reports-page {
             padding-left: 6px !important;
             padding-right: 6px !important;
         }
 
-        .tax-reports-page .card-body {
-            padding: 0.75rem !important;
+        .tax-reports-page .report-actions {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .tax-reports-page .table-responsive {
-            -webkit-overflow-scrolling: touch;
+        .tax-reports-page .report-actions .btn {
+            justify-content: center;
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+
+        .tax-reports-page .report-metric-card .card-body {
+            min-height: 78px;
+            padding: 10px !important;
         }
 
         .tax-reports-page .metric-value {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
+        }
+
+        .tax-reports-page .metric-icon {
+            width: 34px;
+            height: 34px;
+            flex-basis: 34px;
+            font-size: 15px;
+        }
+
+        .tax-reports-page .report-panel-header {
+            padding: 12px 12px 7px;
+        }
+
+        .tax-reports-page .report-filter-body {
+            padding: 10px 12px 13px;
+        }
+
+        .tax-reports-page .report-table-wrap {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tax-reports-page #taxReportDataTable {
+            min-width: 760px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .tax-reports-page .report-actions .btn {
+            font-size: 10px;
+        }
+
+        .tax-reports-page .metric-value {
+            font-size: .96rem;
+        }
+
+        .tax-reports-page .metric-icon {
+            display: none;
         }
     }
 </style>

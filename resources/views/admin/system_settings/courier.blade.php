@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Courier Configuration - ' . config('app.name'))
@@ -17,415 +18,1102 @@
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       KAIADMIN LITE - CLASSIC WHITE DESIGN
+       Courier Configuration - Page Scoped Styles
+    ========================================================= */
+
+    #courierConfigRoot {
+        --courier-primary: var(--bs-primary, #1572e8);
+        --courier-primary-soft: rgba(21, 114, 232, .08);
+        --courier-success: #31ce36;
+        --courier-warning: #ffad46;
+        --courier-danger: #f25961;
+        --courier-info: #48abf7;
+
+        --courier-body: #f8f9fa;
+        --courier-surface: #ffffff;
+        --courier-soft: #f8f9fc;
+        --courier-heading: #2a2f5b;
+        --courier-text: #495057;
+        --courier-muted: #8d9498;
+        --courier-border: #e6e8eb;
+
+        color: var(--courier-text);
+        font-size: 13px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    #courierConfigRoot *,
+    #courierNoticeModal * {
+        box-sizing: border-box;
+    }
+
+    /* Consistent Radius */
+
     #courierConfigRoot .btn,
-    #courierConfigRoot .btn-sm,
-    #courierConfigRoot .btn-xs,
-    #courierConfigRoot button,
     #courierConfigRoot .form-control,
     #courierConfigRoot .form-select,
     #courierConfigRoot .badge,
     #courierConfigRoot .alert,
     #courierConfigRoot .courier-collapsible-card,
+    #courierConfigRoot .courier-media-chooser-surface,
     #courierNoticeModal .btn,
     #courierNoticeModal .modal-content {
         border-radius: 5px !important;
     }
 
     #courierConfigRoot .input-group > .input-group-text {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    #courierConfigRoot .input-group > .form-control {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
+        border-radius: 5px 0 0 5px !important;
     }
 
-    /* Compact & Sleek Button Sizing */
+    #courierConfigRoot .input-group > .form-control {
+        border-radius: 0 !important;
+    }
+
+    #courierConfigRoot .input-group > .btn {
+        border-radius: 0 5px 5px 0 !important;
+    }
+
+    /* Main Container */
+
+    #courierConfigRoot {
+        padding-top: 12px !important;
+        padding-bottom: 20px !important;
+    }
+
+    /* =========================================================
+       PAGE HEADER
+    ========================================================= */
+
+    #courierConfigRoot .courier-hero-header {
+        background: var(--courier-surface);
+        border: 1px solid var(--courier-border);
+        border-radius: 5px !important;
+        padding: 15px 18px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .025);
+        min-width: 0;
+    }
+
+    #courierConfigRoot .courier-page-title {
+        color: var(--courier-heading);
+        font-size: clamp(16px, 1.5vw, 19px);
+        font-weight: 700;
+        line-height: 1.35;
+        letter-spacing: -.25px;
+    }
+
+    #courierConfigRoot .courier-page-description {
+        color: var(--courier-muted);
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    #courierConfigRoot .courier-count-badge {
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 5px 9px !important;
+        white-space: nowrap;
+    }
+
+    /* Compact Buttons */
+
     #courierConfigRoot .btn-compact,
     #courierNoticeModal .btn-compact {
+        min-height: 32px;
+        padding: 6px 12px !important;
         font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
         font-weight: 600 !important;
+        line-height: 1.35 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 3px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
     }
 
-    /* Main Surface Header */
-    .courier-hero-header {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #courierConfigRoot .btn-compact:focus-visible,
+    #courierNoticeModal .btn-compact:focus-visible {
+        outline: 2px solid var(--courier-primary);
+        outline-offset: 2px;
     }
 
-    /* Collapsible Gateway Accordion Cards */
-    .courier-collapsible-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+    #courierConfigRoot .btn-primary {
+        background-color: var(--courier-primary);
+        border-color: var(--courier-primary);
+    }
+
+    #courierConfigRoot .btn-primary:hover {
+        filter: brightness(.94);
+    }
+
+    /* =========================================================
+       QUICK SELECTOR
+    ========================================================= */
+
+    #courierConfigRoot .courier-quick-panel {
+        background: var(--courier-surface);
+        border: 1px solid var(--courier-border);
+        border-radius: 5px;
+        padding: 11px 13px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .02);
+    }
+
+    #courierConfigRoot .courier-quick-panel .form-select {
+        min-height: 36px;
+    }
+
+    /* =========================================================
+       COURIER ACCORDION CARD
+    ========================================================= */
+
+    #courierConfigRoot .courier-collapsible-card {
+        background: var(--courier-surface);
+        border: 1px solid var(--courier-border);
         overflow: hidden;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        min-width: 0;
+        height: 100%;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .courier-collapsible-card:hover {
-        border-color: #cbd5e1;
+
+    #courierConfigRoot .courier-collapsible-card:hover {
+        border-color: #d4d9e0;
     }
-    .courier-collapsible-card.active-open {
-        border-color: #2563eb !important;
-        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.08);
+
+    #courierConfigRoot .courier-collapsible-card.active-open {
+        border-color: var(--courier-primary);
+        box-shadow: 0 2px 8px rgba(21, 114, 232, .055);
     }
-    .courier-card-header {
-        padding: 12px 16px;
-        background: #f8fafc;
+
+    #courierConfigRoot .courier-card-header {
+        min-height: 66px;
+        padding: 12px 15px;
+        background: #ffffff;
         cursor: pointer;
         user-select: none;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        transition: background-color 0.15s ease;
+        transition: background-color .15s ease;
     }
-    .courier-card-header:hover {
-        background: #f1f5f9;
+
+    #courierConfigRoot .courier-card-header:hover {
+        background: #fafbfd;
     }
-    .courier-collapsible-card.active-open .courier-card-header {
-        background: #eff6ff;
-        border-bottom: 1px solid #dbeafe;
+
+    #courierConfigRoot .courier-collapsible-card.active-open .courier-card-header {
+        background: #f8faff;
+        border-bottom: 1px solid var(--courier-border);
     }
-    .courier-chevron-icon {
-        width: 24px;
-        height: 24px;
+
+    #courierConfigRoot .courier-card-header > div:first-child {
+        min-width: 0;
+    }
+
+    #courierConfigRoot .courier-card-header h6 {
+        color: var(--courier-heading) !important;
+        font-size: 13px !important;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    #courierConfigRoot .courier-card-header small {
+        color: var(--courier-muted);
+        font-size: 10.5px !important;
+    }
+
+    #courierConfigRoot .courier-chevron-icon {
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
         border-radius: 5px;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
+        background: #f5f6fa;
+        border: 1px solid var(--courier-border);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-size: 10px;
-        color: #475569;
-        transition: transform 0.2s ease, background-color 0.15s ease, color 0.15s ease;
+        color: #6c757d;
+        transition: transform .2s ease, background-color .15s ease, color .15s ease;
     }
-    .courier-collapsible-card.active-open .courier-chevron-icon {
+
+    #courierConfigRoot .active-open .courier-chevron-icon {
         transform: rotate(180deg);
-        background: #2563eb;
-        border-color: #2563eb;
+        background: var(--courier-primary);
+        border-color: var(--courier-primary);
         color: #ffffff;
     }
-    .courier-card-body {
+
+    #courierConfigRoot .courier-card-body {
         padding: 16px;
         background: #ffffff;
+        min-width: 0;
     }
 
-    /* Form Controls */
-    #courierConfigRoot .form-label {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 4px;
-        display: block;
-    }
-    #courierConfigRoot .form-control,
-    #courierConfigRoot .form-select {
-        font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #courierConfigRoot .form-control:focus,
-    #courierConfigRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
+    #courierConfigRoot .courier-card-footer {
+        padding-top: 13px !important;
+        margin-top: 3px;
     }
 
-    /* Global Media Chooser Surface Box inside Gateway Card */
-    .courier-media-chooser-surface {
-        background: #f8fafc;
-        border: 1.5px dashed #cbd5e1;
-        border-radius: 5px !important;
-        padding: 10px 12px;
-        transition: border-color 0.15s ease;
-    }
-    .courier-media-chooser-surface:hover {
-        border-color: #2563eb;
-    }
-    .courier-logo-preview-box {
-        width: 52px;
-        height: 38px;
+    /* Courier Logo */
+
+    #courierConfigRoot .courier-logo-preview-box {
+        width: 54px;
+        height: 40px;
+        flex-shrink: 0;
         background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
+        border: 1px solid var(--courier-border);
+        border-radius: 5px;
         overflow: hidden;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 2px;
-        flex-shrink: 0;
+        padding: 3px;
     }
-    .courier-logo-preview-box img {
+
+    #courierConfigRoot .courier-logo-preview-box img {
         max-width: 100%;
         max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
     }
 
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    /* Status Badges */
+
+    #courierConfigRoot .courier-card-header .badge {
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: .1px;
+        padding: 4px 8px !important;
+        border: 1px solid transparent;
     }
 
-    /* 100/100 Mobile Responsive Tuning */
+    /* =========================================================
+       FORM CONTROLS
+    ========================================================= */
+
+    #courierConfigRoot .form-label {
+        display: block;
+        color: #495057;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.4;
+        margin-bottom: 6px;
+    }
+
+    #courierConfigRoot .form-control,
+    #courierConfigRoot .form-select {
+        min-height: 36px;
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: 400;
+        color: #495057;
+        background-color: #ffffff;
+        border: 1px solid #ebedf2;
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #courierConfigRoot .form-control::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+    }
+
+    #courierConfigRoot .form-control:focus,
+    #courierConfigRoot .form-select:focus {
+        border-color: var(--courier-primary);
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .10);
+        outline: none;
+    }
+
+    #courierConfigRoot .form-control.font-monospace {
+        font-size: 11.5px;
+        font-weight: 500 !important;
+    }
+
+    #courierConfigRoot .input-group .btn {
+        min-width: 39px;
+        border-color: #ebedf2;
+        background: #f8f9fc;
+    }
+
+    #courierConfigRoot .input-group .btn:hover {
+        background: #eef1f5;
+    }
+
+    #courierConfigRoot .form-check-input {
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+
+    #courierConfigRoot .form-check-input:checked {
+        background-color: var(--courier-primary);
+        border-color: var(--courier-primary);
+    }
+
+    #courierConfigRoot .form-check-input:focus {
+        border-color: var(--courier-primary);
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .12);
+    }
+
+    /* =========================================================
+       MEDIA LIBRARY
+    ========================================================= */
+
+    #courierConfigRoot .courier-media-chooser-surface {
+        background: #fafbfd;
+        border: 1px dashed #d5dbe3;
+        border-radius: 5px;
+        padding: 12px;
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+
+    #courierConfigRoot .courier-media-chooser-surface:hover {
+        border-color: var(--courier-primary);
+        background: #f8faff;
+    }
+
+    #courierConfigRoot .media-chooser-actions {
+        gap: 8px !important;
+    }
+
+    #courierConfigRoot .courier-logo-preview-wrap {
+        min-width: 0;
+        border: 1px solid var(--courier-border);
+        border-radius: 5px;
+        background: #ffffff;
+        padding: 8px;
+    }
+
+    #courierConfigRoot .courier-logo-path {
+        display: block;
+        max-width: 250px;
+        overflow-wrap: anywhere;
+        font-size: 10px;
+    }
+
+    /* =========================================================
+       ENABLE GATEWAY
+    ========================================================= */
+
+    #courierConfigRoot .courier-enable-control {
+        min-height: 48px;
+        padding: 10px 13px !important;
+        background: #f8f9fc !important;
+        border: 1px solid var(--courier-border) !important;
+        border-radius: 5px !important;
+    }
+
+    #courierConfigRoot .courier-enable-control .form-check-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    /* =========================================================
+       WEBHOOK INFORMATION
+    ========================================================= */
+
+    #courierConfigRoot .courier-webhook-panel {
+        background: #f8faff !important;
+        border: 1px solid #e4eaf5 !important;
+        border-radius: 5px !important;
+        padding: 11px 13px !important;
+    }
+
+    #courierConfigRoot .courier-webhook-panel strong {
+        font-size: 11.5px !important;
+        font-weight: 700;
+    }
+
+    #courierConfigRoot .courier-webhook-url {
+        font-size: 11px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    /* =========================================================
+       BALANCE INFORMATION
+    ========================================================= */
+
+    #courierConfigRoot .courier-balance-box {
+        border: 1px solid #d8eaf8 !important;
+        border-radius: 5px !important;
+        background: #f1f8fe;
+        min-height: 42px;
+    }
+
+    #courierConfigRoot .courier-balance-box strong {
+        font-size: 13px;
+    }
+
+    /* =========================================================
+       ALERTS
+    ========================================================= */
+
+    #courierConfigRoot .alert {
+        border-radius: 5px !important;
+        font-size: 12px;
+    }
+
+    /* =========================================================
+       NOTICE MODAL
+    ========================================================= */
+
+    #courierNoticeModal .modal-content {
+        border: 1px solid var(--courier-border) !important;
+        border-radius: 6px !important;
+        background: #ffffff;
+    }
+
+    #courierNoticeModal .modal-body {
+        padding: 8px;
+    }
+
+    #courierNoticeModal #courierNoticeTitle {
+        color: #2a2f5b;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    #courierNoticeModal #courierNoticeMsg {
+        color: #7d8389;
+        font-size: 12px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    /* =========================================================
+       UTILITY
+    ========================================================= */
+
+    #courierConfigRoot .bn-digit,
+    #courierConfigRoot .font-monospace {
+        font-weight: 600;
+    }
+
+    #courierConfigRoot .min-width-0 {
+        min-width: 0;
+    }
+
+    #courierConfigRoot .courier-col-item {
+        min-width: 0;
+    }
+
+    #courierConfigRoot .courier-card-header button {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* =========================================================
+       TABLET
+    ========================================================= */
+
+    @media (max-width: 991.98px) {
+        #courierConfigRoot .courier-card-body {
+            padding: 14px;
+        }
+
+        #courierConfigRoot .courier-hero-header {
+            padding: 13px 15px;
+        }
+    }
+
+    /* =========================================================
+       MOBILE
+    ========================================================= */
+
     @media (max-width: 767.98px) {
-        .courier-hero-header {
+        #courierConfigRoot {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            padding-top: 10px !important;
+        }
+
+        #courierConfigRoot .courier-hero-header {
+            padding: 12px;
+            gap: 12px !important;
+        }
+
+        #courierConfigRoot .courier-page-title {
+            font-size: 16px;
+        }
+
+        #courierConfigRoot .courier-page-description {
+            font-size: 11.5px;
+        }
+
+        #courierConfigRoot .courier-card-body {
             padding: 12px;
         }
-        .courier-card-body {
-            padding: 12px;
+
+        #courierConfigRoot .courier-card-header {
+            padding: 10px 11px;
+            gap: 7px;
         }
-        .media-chooser-actions {
+
+        #courierConfigRoot .courier-logo-preview-box {
+            width: 47px;
+            height: 36px;
+        }
+
+        #courierConfigRoot .courier-card-header h6 {
+            font-size: 12px !important;
+        }
+
+        #courierConfigRoot .courier-card-header small {
+            font-size: 10px !important;
+        }
+
+        #courierConfigRoot .media-chooser-actions {
             flex-direction: column;
             align-items: stretch !important;
         }
-        .media-chooser-actions .btn-compact {
+
+        #courierConfigRoot .media-chooser-actions .btn-compact {
             width: 100%;
+            min-height: 36px;
         }
-        .courier-card-footer {
+
+        #courierConfigRoot .courier-logo-preview-wrap {
+            flex-wrap: wrap;
+        }
+
+        #courierConfigRoot .courier-logo-preview-wrap .text-truncate {
+            flex: 1;
+            min-width: 0;
+        }
+
+        #courierConfigRoot .courier-logo-path {
+            max-width: 100%;
+        }
+
+        #courierConfigRoot .courier-card-footer {
             flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: center !important;
+            justify-content: stretch !important;
+            align-items: stretch !important;
+        }
+
+        #courierConfigRoot .courier-card-footer .btn {
+            width: 100% !important;
+            min-height: 38px;
+        }
+
+        #courierConfigRoot .courier-quick-panel {
+            padding: 10px;
+        }
+
+        #courierConfigRoot .courier-quick-panel .btn {
+            min-height: 36px;
+        }
+    }
+
+    /* =========================================================
+       SMALL MOBILE
+    ========================================================= */
+
+    @media (max-width: 400px) {
+        #courierConfigRoot .courier-card-header {
+            align-items: flex-start;
+        }
+
+        #courierConfigRoot .courier-card-header > div:first-child {
+            flex-wrap: wrap;
+        }
+
+        #courierConfigRoot .courier-card-header .courier-chevron-icon {
+            width: 23px;
+            height: 23px;
+        }
+
+        #courierConfigRoot .courier-card-header .btn-compact {
+            padding: 4px 7px !important;
+            font-size: 10px !important;
+        }
+
+        #courierConfigRoot .courier-count-badge {
+            font-size: 9px;
+            padding: 4px 6px !important;
+        }
+
+        #courierConfigRoot .courier-page-title {
+            font-size: 15px;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3" id="courierConfigRoot">
-    <!-- Top Header -->
-    <div class="courier-hero-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
-                    <i class="fas fa-truck-ramp-box text-primary"></i>
-                    <span>Courier Gateway Integration</span>
-                </h5>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 bn-digit font-monospace" style="font-size: 11px;">
-                    {{ count($couriers) }} Gateways
-                </span>
-            </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Configure Steadfast, Pathao &amp; other API courier gateways with automated parcel booking.</small>
+
+ <!-- Page Header -->
+<div class="courier-hero-header d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-center gap-3 mb-3 bg-white p-3 border rounded-3 shadow-xs" style="width: 100% !important;">
+    <div class="d-flex align-items-center gap-2 min-w-0">
+        <div class="fs-3 text-primary">
+            <i class="fas fa-truck-ramp-box"></i>
         </div>
-        <div class="d-flex gap-2 w-100 w-sm-auto">
-            <button type="button" class="btn btn-light border btn-compact px-3 flex-grow-1 flex-sm-grow-0" onclick="toggleAllCouriers(true)">
-                <i class="fas fa-expand-alt me-1"></i>
-                <span>Expand All</span>
-            </button>
-            <button type="button" class="btn btn-light border btn-compact px-3 flex-grow-1 flex-sm-grow-0" onclick="toggleAllCouriers(false)">
-                <i class="fas fa-compress-alt me-1"></i>
-                <span>Collapse All</span>
-            </button>
+        <div class="min-w-0">
+            <h5 class="courier-page-title mb-1 fw-bold text-dark text-truncate" style="font-size: 16px;">
+                Courier Integration
+            </h5>
+            <small class="courier-page-description text-secondary d-block mt-0 text-truncate" style="font-size: 11.5px; line-height: 1.35;">
+                API &amp; Booking Automation
+            </small>
         </div>
     </div>
 
+    <div class="d-flex gap-2 flex-shrink-0 align-self-stretch align-self-md-center">
+        <button type="button" class="btn btn-light border btn-compact px-3 flex-fill flex-md-grow-0 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap shadow-xs" style="height: 34px; font-size: 11.5px; font-weight: 600;"
+                onclick="toggleAllCouriers(true)">
+            <i class="fas fa-expand-alt"></i>
+            <span>Expand All</span>
+        </button>
+
+        <button type="button" class="btn btn-light border btn-compact px-3 flex-fill flex-md-grow-0 d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap shadow-xs" style="height: 34px; font-size: 11.5px; font-weight: 600;"
+                onclick="toggleAllCouriers(false)">
+            <i class="fas fa-compress-alt"></i>
+            <span>Collapse All</span>
+        </button>
+    </div>
+</div>
+    <!-- Success Notification -->
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-xs py-2 px-3 mb-3 small d-flex align-items-center justify-content-between" role="alert">
+        <div class="alert alert-success alert-dismissible fade show border py-2 px-3 mb-3 small d-flex align-items-center justify-content-between"
+             role="alert">
+
             <div>
                 <i class="fas fa-check-circle text-success me-2"></i>
                 <span class="fw-semibold text-dark">{{ session('success') }}</span>
             </div>
+
             <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <!-- Quick Jump Dropdown Selector -->
-    <div class="bg-white border p-2 px-3 mb-3 d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between gap-2 shadow-xs" style="border-radius: 6px;">
-        <div class="flex-grow-1">
-            <select id="courierQuickDropdown" class="form-select form-select-sm fw-semibold" onchange="handleCourierDropdownSelect(this.value)">
-                <option value="all">-- Select Courier Gateway to Configure (Show All {{ count($couriers) }} Gateways) --</option>
+    <!-- Quick Gateway Selector -->
+    <div class="courier-quick-panel mb-3 d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between gap-2">
+
+        <div class="flex-grow-1 min-width-0">
+
+            <select id="courierQuickDropdown"
+                    class="form-select form-select-sm fw-semibold"
+                    onchange="handleCourierDropdownSelect(this.value)">
+
+                <option value="all">All {{ count($couriers) }} Couriers</option>
+
                 @foreach($couriers as $c)
                     <option value="{{ $c->id }}">
                         {{ $c->courier_name }} — {{ $c->is_active ? 'Active' : 'Disabled' }}
                     </option>
                 @endforeach
+
             </select>
+
         </div>
-        <button type="button" class="btn btn-light border btn-compact px-3 text-secondary" onclick="resetCourierSelector()">
+
+        <button type="button"
+                class="btn btn-light border btn-compact px-3 text-secondary"
+                onclick="resetCourierSelector()">
+
             <i class="fas fa-rotate-left me-1"></i>
             <span>Reset View</span>
+
         </button>
+
     </div>
 
-    <!-- Collapsible Courier Gateways List -->
+    <!-- Courier Gateway Cards -->
     <div class="row g-3" id="courierAccordionList">
+
         @foreach($couriers as $index => $c)
+
             @php
                 $isSteadfast = str_contains(strtolower($c->courier_name), 'steadfast');
                 $isPathao    = str_contains(strtolower($c->courier_name), 'pathao');
                 $logoPath    = $c->logo ?? ($c->image ?? null);
                 $logoUrl     = $resolveCourierLogo($logoPath, 'https://placehold.co/120x60?text=' . urlencode($c->courier_name));
             @endphp
-            <div class="col-12 col-md-6 courier-col-item" data-courier-id="{{ $c->id }}">
-                <div class="courier-collapsible-card {{ $index === 0 ? 'active-open' : '' }}" id="courierCard_{{ $c->id }}">
-                    <!-- Collapsible Trigger Header -->
-                    <div class="courier-card-header" onclick="toggleCourierPanel({{ $c->id }})">
+
+            <div class="col-12 courier-col-item" data-courier-id="{{ $c->id }}">
+
+                <div class="courier-collapsible-card"
+                     id="courierCard_{{ $c->id }}">
+
+                    <!-- Gateway Header -->
+                    <div class="courier-card-header"
+                         onclick="toggleCourierPanel({{ $c->id }})">
+
                         <div class="d-flex align-items-center gap-2 min-width-0 flex-wrap">
-                            <div class="courier-logo-preview-box shadow-xs">
-                                <img src="{{ $logoUrl }}" id="courierHeaderLogoImg_{{ $c->id }}" alt="{{ $c->courier_name }}" onerror="this.src='https://placehold.co/120x60?text=Logo';">
+
+                            <div class="courier-logo-preview-box">
+                                <img src="{{ $logoUrl }}"
+                                     id="courierHeaderLogoImg_{{ $c->id }}"
+                                     alt="{{ $c->courier_name }}"
+                                     onerror="this.src='https://placehold.co/120x60?text=Logo';">
                             </div>
 
                             <div class="min-width-0">
-                                <h6 class="fw-bold text-dark mb-0 text-truncate" style="font-size: 13.5px;">{{ $c->courier_name }}</h6>
-                                <small class="text-muted" style="font-size: 10.5px;">Automated API Booking</small>
+
+                                <h6 class="mb-0 text-truncate">
+                                    {{ $c->courier_name }}
+                                </h6>
+
+                                <small>Automated Booking</small>
+
                             </div>
 
-                            <span class="badge {{ $c->is_active ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} px-2 py-0.5 ms-1" style="font-size: 9.5px;">
+                            <span class="badge {{ $c->is_active ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} ms-1">
+
                                 {{ $c->is_active ? 'Active' : 'Disabled' }}
+
                             </span>
+
                         </div>
 
                         <div class="d-flex align-items-center gap-2 flex-shrink-0">
+
                             @if($isSteadfast && $c->is_active)
-                                <button type="button" class="btn btn-outline-primary btn-compact py-0 px-2 shadow-xs" onclick="event.stopPropagation(); checkCourierBalance({{ $c->id }})" title="Check live API wallet balance" style="font-size: 10.5px !important; height: 24px;">
+
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-compact py-0 px-2"
+                                        onclick="event.stopPropagation(); checkCourierBalance({{ $c->id }})"
+                                        title="Check live API wallet balance"
+                                        style="font-size: 10.5px !important; height: 26px;">
+
                                     <i class="fas fa-wallet me-1"></i>
                                     <span>Balance</span>
+
                                 </button>
+
                             @endif
+
                             <span class="courier-chevron-icon">
                                 <i class="fas fa-chevron-down"></i>
                             </span>
+
                         </div>
+
                     </div>
 
-                    <!-- Collapsible Form Body -->
-                    <div class="courier-card-body {{ $index === 0 ? '' : 'd-none' }}" id="courierBody_{{ $c->id }}">
-                        <!-- Live Balance Container for Steadfast -->
-                        <div id="balance_box_{{ $c->id }}" class="alert alert-info py-2 px-3 small mb-3 d-none align-items-center justify-content-between" style="border-radius: 5px;">
+                    <!-- Gateway Configuration Body -->
+                    <div class="courier-card-body d-none"
+                         id="courierBody_{{ $c->id }}">
+
+                        <!-- Live Balance -->
+                        <div id="balance_box_{{ $c->id }}"
+                             class="alert alert-info courier-balance-box py-2 px-3 small mb-3 d-none align-items-center justify-content-between">
+
                             <div>
                                 <i class="fas fa-coins text-warning me-1"></i>
-                                <span>Current Balance:</span> <strong id="balance_val_{{ $c->id }}" class="font-monospace bn-digit">৳0.00</strong>
+                                <span>Current Balance:</span>
+
+                                <strong id="balance_val_{{ $c->id }}"
+                                        class="font-monospace bn-digit">
+                                    ৳0.00
+                                </strong>
                             </div>
-                            <button type="button" class="btn btn-link text-primary text-decoration-none p-0 fw-bold small" onclick="checkCourierBalance({{ $c->id }})">
+
+                            <button type="button"
+                                    class="btn btn-link text-primary text-decoration-none p-0 fw-bold small"
+                                    onclick="checkCourierBalance({{ $c->id }})">
+
                                 <i class="fas fa-sync-alt me-1"></i>Refresh
+
                             </button>
+
                         </div>
 
-                        <form action="{{ route('admin.system.setting.courier.update', $c->id) }}" method="POST" enctype="multipart/form-data" id="courierForm_{{ $c->id }}">
+                        <form action="{{ route('admin.system.setting.courier.update', $c->id) }}"
+                              method="POST"
+                              enctype="multipart/form-data"
+                              id="courierForm_{{ $c->id }}">
+
                             @csrf
-                            <!-- Hidden inputs for Global Media Chooser -->
-                            <input type="hidden" name="courier_logo_media" id="courierLogoMediaInput_{{ $c->id }}" value="">
-                            <input type="hidden" name="remove_courier_logo" id="removeCourierLogoFlag_{{ $c->id }}" value="0">
 
-                            <!-- Global Media Chooser for Courier Logo -->
+                            <!-- Hidden Media Inputs -->
+                            <input type="hidden"
+                                   name="courier_logo_media"
+                                   id="courierLogoMediaInput_{{ $c->id }}"
+                                   value="">
+
+                            <input type="hidden"
+                                   name="remove_courier_logo"
+                                   id="removeCourierLogoFlag_{{ $c->id }}"
+                                   value="0">
+
+                            <!-- Courier Logo Management -->
                             <div class="mb-3">
-                                <label class="form-label">Courier Branding Logo (Global Media Chooser)</label>
+
+                                <label class="form-label">
+                                    Courier Branding Logo
+                                </label>
+
                                 <div class="courier-media-chooser-surface">
+
                                     <div class="media-chooser-actions d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                        <button type="button" class="btn btn-primary btn-compact shadow-xs" onclick="chooseCourierLogoMedia({{ $c->id }})">
+
+                                        <button type="button"
+                                                class="btn btn-primary btn-compact"
+                                                onclick="chooseCourierLogoMedia({{ $c->id }})">
+
                                             <i class="fas fa-photo-video me-1"></i>
-                                            <span>Choose from Media Library</span>
+                                            <span>Media Library</span>
+
                                         </button>
-                                        <label class="btn btn-outline-secondary btn-compact shadow-xs mb-0" style="cursor: pointer;">
+
+                                        <label class="btn btn-outline-secondary btn-compact mb-0"
+                                               style="cursor: pointer;">
+
                                             <i class="fas fa-upload me-1"></i>
-                                            <span>Upload Local File</span>
-                                            <input type="file" name="courier_logo_file" id="courierLogoFileInput_{{ $c->id }}" class="d-none" accept="image/*" onchange="previewCourierLocalLogo(this, {{ $c->id }})">
+                                            <span>Upload Logo</span>
+
+                                            <input type="file"
+                                                   name="courier_logo_file"
+                                                   id="courierLogoFileInput_{{ $c->id }}"
+                                                   class="d-none"
+                                                   accept="image/*"
+                                                   onchange="previewCourierLocalLogo(this, {{ $c->id }})">
+
                                         </label>
+
                                     </div>
 
-                                    <div id="courierLogoPreviewWrap_{{ $c->id }}" class="d-flex align-items-center gap-2 bg-white border p-2" style="border-radius: 5px;">
+                                    <!-- Logo Preview -->
+                                    <div id="courierLogoPreviewWrap_{{ $c->id }}"
+                                         class="courier-logo-preview-wrap d-flex align-items-center gap-2">
+
                                         <div class="courier-logo-preview-box">
-                                            <img id="courierLogoPreviewImg_{{ $c->id }}" src="{{ $logoUrl }}" onerror="this.src='https://placehold.co/120x60?text=Logo';">
+
+                                            <img id="courierLogoPreviewImg_{{ $c->id }}"
+                                                 src="{{ $logoUrl }}"
+                                                 onerror="this.src='https://placehold.co/120x60?text=Logo';">
+
                                         </div>
+
                                         <div class="text-truncate">
-                                            <span class="small text-success fw-bold d-block" style="font-size: 11.5px;"><i class="fas fa-check-circle me-1"></i>Active Brand Logo</span>
-                                            <small class="text-muted text-truncate d-block font-monospace" id="courierLogoPathText_{{ $c->id }}" style="font-size: 10px; max-width: 220px;">{{ $logoPath ?: 'Default' }}</small>
+
+                                            <span class="small text-success fw-bold d-block">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                Active Brand Logo
+                                            </span>
+
+                                            <small class="text-muted font-monospace courier-logo-path"
+                                                   id="courierLogoPathText_{{ $c->id }}">
+                                                {{ $logoPath ?: 'Default' }}
+                                            </small>
+
                                         </div>
-                                        <button type="button" class="btn btn-outline-danger btn-compact py-1 px-2 ms-auto" style="font-size: 10.5px !important;" onclick="clearCourierLogo({{ $c->id }})" title="Remove logo">
-                                            <i class="fas fa-trash-alt me-1"></i>Clear
+
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-compact py-1 px-2 ms-auto"
+                                                onclick="clearCourierLogo({{ $c->id }})"
+                                                title="Remove logo">
+
+                                            <i class="fas fa-trash-alt me-1"></i>
+                                            Clear
+
                                         </button>
+
                                     </div>
+
                                 </div>
+
                             </div>
 
-                            <!-- API Key / Client ID -->
+                            <!-- API Key -->
                             <div class="mb-3">
+
                                 <label class="form-label" for="api_key_{{ $c->id }}">
+
                                     <span>API Key / Client ID</span>
                                     <span class="text-danger">*</span>
+
                                 </label>
-                                <input type="text" name="api_key" id="api_key_{{ $c->id }}" class="form-control font-monospace" value="{{ $c->api_key }}" placeholder="Enter API Key / Client ID" required>
+
+                                <input type="text"
+                                       name="api_key"
+                                       id="api_key_{{ $c->id }}"
+                                       class="form-control font-monospace"
+                                       value="{{ $c->api_key }}"
+                                       placeholder="Enter API Key / Client ID"
+                                       required>
+
                             </div>
 
                             <!-- Secret Key -->
                             <div class="mb-3">
+
                                 <label class="form-label" for="secret_key_{{ $c->id }}">
+
                                     <span>Secret Key</span>
                                     <span class="text-danger">*</span>
+
                                 </label>
+
                                 <div class="input-group input-group-sm">
-                                    <input type="password" name="secret_key" id="secret_key_{{ $c->id }}" class="form-control font-monospace" value="{{ $c->secret_key }}" placeholder="Enter Secret Key" required>
-                                    <button class="btn btn-light border" type="button" onclick="togglePasswordVisibility('secret_key_{{ $c->id }}', this)">
-                                        <i class="fas fa-eye text-muted" style="font-size: 11px;"></i>
+
+                                    <input type="password"
+                                           name="secret_key"
+                                           id="secret_key_{{ $c->id }}"
+                                           class="form-control font-monospace"
+                                           value="{{ $c->secret_key }}"
+                                           placeholder="Enter Secret Key"
+                                           required>
+
+                                    <button class="btn btn-light border"
+                                            type="button"
+                                            onclick="togglePasswordVisibility('secret_key_{{ $c->id }}', this)">
+
+                                        <i class="fas fa-eye text-muted" style="font-size: 12px;"></i>
+
                                     </button>
+
                                 </div>
+
                             </div>
 
                             <!-- API Base URL -->
                             <div class="mb-3">
-                                <label class="form-label" for="api_url_{{ $c->id }}">API Base URL</label>
-                                <input type="text" name="api_url" id="api_url_{{ $c->id }}" class="form-control font-monospace" value="{{ $c->api_url }}" placeholder="https://portal.steadfast.com.bd/api/v1">
+
+                                <label class="form-label" for="api_url_{{ $c->id }}">
+                                    API Base URL
+                                </label>
+
+                                <input type="text"
+                                       name="api_url"
+                                       id="api_url_{{ $c->id }}"
+                                       class="form-control font-monospace"
+                                       value="{{ $c->api_url }}"
+                                       placeholder="https://portal.steadfast.com.bd/api/v1">
+
                             </div>
 
-                            <!-- Enable Switch -->
-                            <div class="form-check form-switch p-2 px-3 bg-light border d-flex align-items-center justify-content-between mb-3" style="border-radius: 5px;">
-                                <label class="form-check-label fw-bold small text-dark mb-0 ms-1" for="active_{{ $c->id }}" style="font-size: 12px; cursor: pointer;">Enable Automated Gateway</label>
-                                <input class="form-check-input m-0" type="checkbox" name="is_active" id="active_{{ $c->id }}" value="1" {{ $c->is_active ? 'checked' : '' }} style="width: 38px; height: 19px; cursor: pointer;">
+                            <!-- Enable Gateway -->
+                            <div class="form-check form-switch courier-enable-control d-flex align-items-center justify-content-between mb-3">
+
+                                <label class="form-check-label mb-0 ms-1"
+                                       for="active_{{ $c->id }}"
+                                       style="cursor: pointer;">
+
+                                    Enable Automated Gateway
+
+                                </label>
+
+                                <input class="form-check-input m-0"
+                                       type="checkbox"
+                                       name="is_active"
+                                       id="active_{{ $c->id }}"
+                                       value="1"
+                                       {{ $c->is_active ? 'checked' : '' }}
+                                       style="width: 38px; height: 20px; cursor: pointer;">
+
                             </div>
 
-                            <!-- Webhook URL Info for Steadfast -->
+                            <!-- Steadfast Webhook -->
                             @if($isSteadfast)
-                                <div class="p-2 px-3 bg-light rounded-3 border mb-3" style="border-radius: 5px !important;">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <strong class="text-dark d-block" style="font-size: 11px;"><i class="fas fa-link me-1 text-primary"></i> Webhook Callback URL:</strong>
-                                        <button type="button" class="btn btn-link text-primary text-decoration-none p-0 fw-bold" style="font-size: 10.5px;" onclick="copyWebhookToClipboard('{{ url('/webhook/courier/steadfast') }}')">
-                                            <i class="fas fa-copy me-1"></i>Copy
+
+                                {{-- <div class="courier-webhook-panel mb-3">
+
+                                    {{-- <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+
+                                        <strong class="text-dark d-block">
+
+                                            <i class="fas fa-link me-1 text-primary"></i>
+                                            Webhook Callback URL
+
+                                        </strong>
+
+                                        <button type="button"
+                                                class="btn btn-link text-primary text-decoration-none p-0 fw-bold"
+                                                onclick="copyWebhookToClipboard('{{ url('/webhook/courier/steadfast') }}')">
+
+                                            <i class="fas fa-copy me-1"></i>
+                                            Copy
+
                                         </button>
+
                                     </div>
-                                    <span class="text-muted font-monospace user-select-all d-block text-truncate" style="font-size: 10.5px;">{{ url('/webhook/courier/steadfast') }}</span>
-                                </div>
+
+                                    <span class="text-muted font-monospace user-select-all d-block courier-webhook-url">
+                                        {{ url('/webhook/courier/steadfast') }}
+                                    </span> 
+
+                                </div> --}}
+
                             @endif
 
-                            <div class="courier-card-footer d-flex justify-content-end align-items-center pt-2 border-top">
-                                <button type="submit" class="btn btn-primary btn-compact px-4 py-2 shadow-xs w-100 w-sm-auto">
+                            <!-- Save Settings -->
+                            <div class="courier-card-footer d-flex justify-content-end align-items-center border-top">
+
+                                <button type="submit"
+                                        class="btn btn-primary btn-compact px-4 py-2 w-100 w-sm-auto">
+
                                     <i class="fas fa-save me-1"></i>
-                                    <span>Save {{ $c->courier_name }} Settings</span>
+                                    <span>Save API Settings</span>
+
                                 </button>
+
                             </div>
+
                         </form>
+
                     </div>
+
                 </div>
+
             </div>
+
         @endforeach
+
     </div>
+
 </div>
 
-<!-- Modal: Notice Dialog (Replaces native browser alert()) -->
-<div class="modal fade" id="courierNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+<!-- Notice Modal -->
+<div class="modal fade"
+     id="courierNoticeModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
+
         <div class="modal-content border-0 shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
-                <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 44px; height: 44px;">
+
+                <div class="rounded-circle bg-warning-subtle text-warning d-inline-flex align-items-center justify-content-center mx-auto mb-2"
+                     style="width: 44px; height: 44px;">
+
                     <i class="fas fa-circle-info fs-4"></i>
+
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="courierNoticeTitle" style="font-size: 14px;">Notification</h6>
-                <p class="text-muted small mb-3" id="courierNoticeMsg" style="font-size: 12px; line-height: 1.45;"></p>
-                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">OK</button>
+
+                <h6 class="fw-bold text-dark mb-1"
+                    id="courierNoticeTitle">
+                    Notification
+                </h6>
+
+                <p class="text-muted small mb-3"
+                   id="courierNoticeMsg"
+                   style="line-height: 1.5;"></p>
+
+                <button type="button"
+                        class="btn btn-dark btn-compact px-4"
+                        data-bs-dismiss="modal">
+                    OK
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <script>
@@ -602,7 +1290,7 @@
         const box = document.getElementById('balance_box_' + courierId);
         const val = document.getElementById('balance_val_' + courierId);
         if (!box || !val) return;
-        
+
         val.innerText = 'Checking...';
         box.classList.remove('d-none');
         box.classList.add('d-flex');
@@ -627,4 +1315,5 @@
         });
     }
 </script>
+
 @endsection

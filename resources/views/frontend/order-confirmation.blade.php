@@ -83,9 +83,8 @@
 @section('content')
 <!-- JsBarcode Script -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<!-- Direct html2canvas & jsPDF Scripts for Reliable Execution -->
+<!-- Direct html2canvas Script for Image Generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
     :root {
@@ -352,8 +351,8 @@
 
             <!-- 3. Action Buttons -->
             <div class="token-buttons-group print-hide">
-                <button type="button" id="btn-download-memo" onclick="downloadThermalMemoPDF()" class="btn token-action-btn token-btn-download shadow-sm">
-                    <i class="fas fa-download me-1"></i> Download Order Token
+                <button type="button" id="btn-download-memo" onclick="downloadThermalMemoJPG()" class="btn token-action-btn token-btn-download shadow-sm">
+                    <i class="fas fa-download me-1"></i> Save Order Token
                 </button>
                 <a href="{{ route('shop') }}" class="btn token-action-btn token-btn-continue">
                     <i class="fas fa-shopping-bag me-1"></i> Continue Shopping
@@ -371,12 +370,6 @@
                     <div class="text-muted fw-semibold" style="font-size: 9.5px; text-transform: uppercase;">
                         Order Confirmation Slip
                     </div>
-                    <div class="mushak-badge-pill">
-                        Mushak 6.3 / Tax Receipt
-                    </div>
-                    <div style="font-size: 9px; margin-top: 1px;">
-                        BIN: <strong class="font-monospace">{{ $companyBin }}</strong>
-                    </div>
                     @if(!empty($sitePhone) || !empty($siteEmail))
                         <div class="text-secondary" style="font-size: 9px; margin-top: 1px;">
                             @if(!empty($sitePhone)) Hotline: {{ $sitePhone }} @endif
@@ -389,7 +382,6 @@
                 <!-- Barcode At The Top -->
                 <div class="system-barcode-box">
                     <svg id="order-official-barcode"></svg>
-                    <span style="font-size: 7.5px; color: #64748b; margin-top: 1px;">NBR GO-05/VAT/2026</span>
                 </div>
 
                 <!-- Invoice & Date Info -->
@@ -578,7 +570,6 @@
                 <!-- Footer Note -->
                 <div class="text-center text-muted" style="font-size: 8.5px; line-height: 1.3;">
                     <div>Thank You for Shopping with <strong>{{ $siteName }}</strong>!</div>
-                    <div style="margin-top: 2px; font-size: 8px;">Compliant with NBR GO-05/VAT/2026. Keep slip for reference.</div>
                 </div>
 
             </div>
@@ -610,49 +601,43 @@
         }
     });
 
-    // 1-Click Direct Dynamic Thermal PDF Download (Exact Proportional Height)
-    function downloadThermalMemoPDF() {
+    // 1-Click Direct Crisp JPG Image Download
+    function downloadThermalMemoJPG() {
         const btn = document.getElementById('btn-download-memo');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memo downloading...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Token downloading...';
         btn.disabled = true;
 
         const element = document.getElementById('printable-memo-card');
-        const filename = '{{ $cleanInvoiceNo }}.pdf';
+        const filename = '{{ $cleanInvoiceNo }}.jpg';
 
-        if (typeof html2canvas === 'undefined' || !window.jspdf || !window.jspdf.jsPDF) {
-            alert('PDF library is loading, please try again in 2 seconds.');
+        if (typeof html2canvas === 'undefined') {
+            alert('Image library is loading, please try again in 2 seconds.');
             btn.innerHTML = originalText;
             btn.disabled = false;
             return;
         }
 
         html2canvas(element, {
-            scale: 2.5,
+            scale: 3, // High quality crisp resolution
             useCORS: true,
             backgroundColor: '#ffffff',
             logging: false,
             windowWidth: element.scrollWidth
         }).then(function(canvas) {
-            const pdfWidth = 80; // 80mm thermal receipt width
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: [pdfWidth, pdfHeight]
-            });
-
-            const imgData = canvas.toDataURL('image/jpeg', 0.98);
-            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(filename);
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = imgData;
+            downloadLink.download = filename;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
 
             btn.innerHTML = originalText;
             btn.disabled = false;
         }).catch(function(err) {
-            console.error('PDF generation error:', err);
-            alert('PDF download error: ' + err.message);
+            console.error('JPG generation error:', err);
+            alert('JPG download error: ' + err.message);
             btn.innerHTML = originalText;
             btn.disabled = false;
         });

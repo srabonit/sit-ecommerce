@@ -17,9 +17,28 @@
 
 @section('admin_content')
 <style>
-    /* Global Strict 5px Element Radius */
+    /* Local Pickup Theme */
+    #localPickupRoot {
+        --pickup-primary: var(--bs-primary, #1572e8);
+        --pickup-primary-soft: #eef5ff;
+        --pickup-text: #344054;
+        --pickup-heading: #1d2939;
+        --pickup-muted: #667085;
+        --pickup-border: #e4e7ec;
+        --pickup-surface: #ffffff;
+        --pickup-soft: #f8fafc;
+        --pickup-success: #12b76a;
+        color: var(--pickup-text);
+        min-width: 0;
+    }
+
+    #localPickupRoot *,
+    #pickupNoticeModal * {
+        box-sizing: border-box;
+    }
+
+    /* Consistent Radius */
     #localPickupRoot .btn,
-    #localPickupRoot .btn-sm,
     #localPickupRoot button,
     #localPickupRoot .form-control,
     #localPickupRoot .form-select,
@@ -39,195 +58,406 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #localPickupRoot .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Compact & Sleek Button Sizing */
+    /* Buttons */
     #localPickupRoot .btn-compact,
     #pickupNoticeModal .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
+        min-height: 32px;
+        padding: 6px 13px !important;
+        font-size: 12px !important;
         line-height: 1.3 !important;
         font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 5px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: all 0.18s ease;
     }
 
-    /* Enterprise Surface Cards */
-    .pickup-panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
+    #localPickupRoot .btn-primary {
+        background: var(--pickup-primary);
+        border-color: var(--pickup-primary);
+    }
+
+    #localPickupRoot .btn-primary:hover {
+        filter: brightness(.94);
+    }
+
+    #localPickupRoot .btn:focus-visible,
+    #localPickupRoot button:focus-visible {
+        outline: 2px solid var(--pickup-primary);
+        outline-offset: 2px;
+    }
+
+    /* Cards */
+    #localPickupRoot .pickup-panel-card {
+        background: var(--pickup-surface);
+        border: 1px solid var(--pickup-border);
         border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 1px 3px rgba(16, 24, 40, .05);
         overflow: hidden;
-    }
-    .pickup-panel-header {
-        padding: 12px 16px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
+        min-width: 0;
     }
 
-    /* Segmented Sub-Navigation Bar */
-    .shipping-subnav-wrap {
+    #localPickupRoot .pickup-panel-header {
+        min-height: 46px;
+        padding: 11px 16px;
+        background: var(--pickup-surface);
+        border-bottom: 1px solid var(--pickup-border);
+    }
+
+    #localPickupRoot .pickup-panel-header span,
+    #localPickupRoot .pickup-panel-header h6 {
+        color: var(--pickup-heading);
+    }
+
+    /* Shipping Navigation */
+    #localPickupRoot .shipping-subnav-wrap {
         overflow-x: auto;
         white-space: nowrap;
         scrollbar-width: none;
         -ms-overflow-style: none;
         -webkit-overflow-scrolling: touch;
     }
-    .shipping-subnav-wrap::-webkit-scrollbar {
+
+    #localPickupRoot .shipping-subnav-wrap::-webkit-scrollbar {
         display: none;
     }
-    .shipping-nav-pills {
-        background: #f1f5f9;
+
+    #localPickupRoot .shipping-nav-pills {
+        background: #f2f4f7;
         padding: 4px;
         border-radius: 6px !important;
         display: inline-flex;
         gap: 4px;
-    }
-    .shipping-nav-pills .nav-link {
-        color: #475569;
-        font-weight: 600;
-        font-size: 12px;
-        padding: 6px 14px;
-        transition: all 0.15s ease;
-        background: transparent;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .shipping-nav-pills .nav-link:hover {
-        color: #0f172a;
-        background-color: rgba(255, 255, 255, 0.6);
-    }
-    .shipping-nav-pills .nav-link.active {
-        background-color: #2563eb !important;
-        color: #ffffff !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+        min-width: max-content;
     }
 
-    /* Interactive Enable Toggle Card */
-    .pickup-toggle-card {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        padding: 12px 14px;
+    #localPickupRoot .shipping-nav-pills .nav-link {
+        color: #475467;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: transparent;
+        transition: all .18s ease;
+    }
+
+    #localPickupRoot .shipping-nav-pills .nav-link:hover {
+        color: var(--pickup-primary);
+        background: #ffffff;
+    }
+
+    #localPickupRoot .shipping-nav-pills .nav-link.active {
+        color: #ffffff !important;
+        background: var(--pickup-primary) !important;
+        box-shadow: 0 1px 3px rgba(16, 24, 40, .12);
+    }
+
+    /* Enable Toggle */
+    #localPickupRoot .pickup-toggle-card {
+        background: var(--pickup-soft);
+        border: 1px solid var(--pickup-border);
+        padding: 13px 15px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        transition: all 0.15s ease;
+        transition: all .18s ease;
     }
-    .pickup-toggle-card:hover {
-        border-color: #93c5fd;
+
+    #localPickupRoot .pickup-toggle-card:hover {
+        border-color: #b2ccff;
         background: #ffffff;
     }
-    .pickup-toggle-card:has(input:checked) {
-        border-color: #2563eb;
-        background-color: #eff6ff;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+
+    #localPickupRoot .pickup-toggle-card:has(input:checked) {
+        border-color: var(--pickup-primary);
+        background: var(--pickup-primary-soft);
+    }
+
+    #localPickupRoot .pickup-toggle-card .form-check-input {
+        width: 40px;
+        height: 21px;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    #localPickupRoot .pickup-toggle-card .form-check-input:checked {
+        background-color: var(--pickup-primary);
+        border-color: var(--pickup-primary);
     }
 
     /* Form Controls */
     #localPickupRoot .form-label {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: #334155;
-        margin-bottom: 4px;
         display: block;
+        margin-bottom: 5px;
+        color: var(--pickup-text);
+        font-size: 12px;
+        font-weight: 600;
     }
-    #localPickupRoot .form-control {
-        font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        height: 34px;
-        color: #0f172a;
+
+    #localPickupRoot .form-control,
+    #localPickupRoot .form-select {
+        min-height: 36px;
+        padding: 7px 10px;
+        color: var(--pickup-heading);
         background-color: #ffffff;
+        border: 1px solid #d0d5dd;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 12.5px;
+        transition: border-color .18s ease, box-shadow .18s ease;
     }
-    #localPickupRoot .form-control:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+
+    #localPickupRoot .form-control:focus,
+    #localPickupRoot .form-select:focus {
+        border-color: var(--pickup-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
         outline: none;
     }
 
-    /* Global Media Chooser Surface Box */
-    .pickup-media-chooser-surface {
-        background: #f8fafc;
-        border: 1.5px dashed #cbd5e1;
+    #localPickupRoot .form-control::placeholder {
+        color: #98a2b3;
+        opacity: 1;
+    }
+
+    #localPickupRoot .input-group-text {
+        min-height: 36px;
+        padding: 6px 11px;
+        color: var(--pickup-muted);
+        background: var(--pickup-soft);
+        border-color: #d0d5dd;
+        font-size: 12px;
+    }
+
+    #localPickupRoot .form-label + .input-group {
+        width: 100%;
+    }
+
+    /* Quick Fee Buttons */
+    #localPickupRoot .pickup-panel-card .btn-light {
+        border-color: var(--pickup-border) !important;
+        background: #f9fafb;
+    }
+
+    #localPickupRoot .pickup-panel-card .btn-light:hover {
+        background: var(--pickup-primary-soft);
+        border-color: #b2ccff !important;
+    }
+
+    /* Media Chooser */
+    #localPickupRoot .pickup-media-chooser-surface {
+        padding: 13px;
+        background: var(--pickup-soft);
+        border: 1px dashed #cbd5e1;
+        transition: border-color .18s ease, background .18s ease;
+    }
+
+    #localPickupRoot .pickup-media-chooser-surface:hover {
+        border-color: var(--pickup-primary);
+        background: #f5f9ff;
+    }
+
+    #localPickupRoot .media-chooser-actions {
+        flex-wrap: wrap;
+    }
+
+    #localPickupRoot #pickupImagePreviewContainer {
+        min-width: 0;
+        max-width: 100%;
+        border-color: var(--pickup-border) !important;
+    }
+
+    #localPickupRoot #pickupImagePreviewTag {
+        flex-shrink: 0;
         border-radius: 5px !important;
-        padding: 12px;
-        transition: border-color 0.15s ease;
-    }
-    .pickup-media-chooser-surface:hover {
-        border-color: #2563eb;
     }
 
-    /* Live Checkout Preview Card */
-    .checkout-preview-box {
-        border: 1.5px solid #2563eb;
-        background: #eff6ff;
-        padding: 12px 14px;
-        transition: all 0.15s ease;
-    }
-    .checkout-preview-box.disabled-preview {
-        border-color: #cbd5e1;
-        background: #f8fafc;
-        opacity: 0.65;
+    #localPickupRoot #pickupImagePreviewPath {
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .bn-digit,
-    .font-monospace {
+    /* Checkout Preview */
+    #localPickupRoot .checkout-preview-box {
+        padding: 13px;
+        background: var(--pickup-primary-soft);
+        border: 1px solid #b2ccff;
+        transition: all .18s ease;
+    }
+
+    #localPickupRoot .checkout-preview-box.disabled-preview {
+        border-color: var(--pickup-border);
+        background: var(--pickup-soft);
+        opacity: .65;
+    }
+
+    #localPickupRoot #previewTitleText,
+    #localPickupRoot #previewSubText {
+        overflow-wrap: anywhere;
+    }
+
+    #localPickupRoot .min-width-0 {
+        min-width: 0;
+    }
+
+    /* Typography */
+    #localPickupRoot h5,
+    #localPickupRoot h6,
+    #localPickupRoot strong {
+        color: var(--pickup-heading);
+    }
+
+    #localPickupRoot .text-muted {
+        color: var(--pickup-muted) !important;
+    }
+
+    #localPickupRoot .bn-digit,
+    #localPickupRoot .font-monospace {
         font-weight: 700 !important;
     }
 
-    /* 100/100 Mobile Responsive Tuning */
+    #localPickupRoot small {
+        line-height: 1.5;
+    }
+
+    /* Alerts */
+    #localPickupRoot .alert {
+        border: 1px solid transparent;
+    }
+
+    /* Modal */
+    #pickupNoticeModal .modal-content {
+        border: 1px solid var(--pickup-border) !important;
+        box-shadow: 0 12px 32px rgba(16, 24, 40, .16);
+    }
+
+    #pickupNoticeModal .modal-dialog {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Responsive */
+    @media (min-width: 1200px) {
+        #localPickupRoot {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        #localPickupRoot .pickup-panel-card {
+            height: auto;
+        }
+    }
+
     @media (max-width: 767.98px) {
-        .shipping-nav-pills {
+        #localPickupRoot .shipping-nav-pills {
             display: flex;
             min-width: max-content;
         }
-        .shipping-nav-pills .nav-link {
-            padding: 6px 12px;
+
+        #localPickupRoot .shipping-nav-pills .nav-link {
+            padding: 7px 12px;
             font-size: 11.5px;
         }
-        .top-save-btn-wrap {
+
+        #localPickupRoot .top-save-btn-wrap {
             width: 100%;
         }
-        .top-save-btn-wrap .btn-compact {
+
+        #localPickupRoot .top-save-btn-wrap .btn-compact {
             width: 100%;
-            padding: 7px 14px !important;
+            min-height: 36px;
         }
-        .media-chooser-actions {
+
+        #localPickupRoot .media-chooser-actions {
             flex-direction: column;
             align-items: stretch !important;
         }
-        .media-chooser-actions .btn-compact {
+
+        #localPickupRoot .media-chooser-actions .btn-compact {
             width: 100%;
+            min-height: 36px;
+        }
+
+        #localPickupRoot .pickup-panel-header {
+            padding: 11px 13px;
+        }
+
+        #localPickupRoot .pickup-toggle-card {
+            padding: 11px 12px;
+        }
+
+        #localPickupRoot .row.g-3 {
+            --bs-gutter-x: 12px;
+            --bs-gutter-y: 12px;
+        }
+
+        #localPickupRoot .pickup-panel-card > .p-3,
+        #localPickupRoot .pickup-panel-card > .p-3.p-md-4 {
+            padding: 13px !important;
+        }
+
+        #localPickupRoot .checkout-preview-box {
+            padding: 11px;
+        }
+
+        #localPickupRoot #pickupImagePreviewContainer {
+            flex-wrap: wrap;
+        }
+
+        #localPickupRoot #pickupImagePreviewContainer .ms-auto {
+            margin-left: 0 !important;
+        }
+
+        #localPickupRoot .w-sm-auto {
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 400px) {
+        #localPickupRoot .pickup-panel-header {
+            padding: 10px 11px;
+        }
+
+        #localPickupRoot .pickup-media-chooser-surface {
+            padding: 10px;
+        }
+
+        #localPickupRoot .btn-compact {
+            white-space: normal;
+        }
+
+        #pickupNoticeModal .modal-dialog {
+            margin: 12px;
         }
     }
 </style>
 
 <div class="container-fluid px-2 px-md-4 py-3" id="localPickupRoot">
-    <!-- Sub-Menu Navigation (Mobile Scrollable) -->
+    <!-- Shipping Navigation -->
     <div class="shipping-subnav-wrap mb-3 pb-2 border-bottom">
         <ul class="nav nav-pills shipping-nav-pills flex-nowrap text-nowrap">
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.shipping.index') }}">
                     <i class="fas fa-globe-asia" style="font-size: 11px;"></i>
-                    <span>Shipping zones</span>
+                    <span>Zones</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('admin.shipping.settings') }}">
                     <i class="fas fa-sliders-h" style="font-size: 11px;"></i>
-                    <span>Shipping settings</span>
+                    <span>Settings</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -239,7 +469,7 @@
             <li class="nav-item">
                 <a class="nav-link active" href="{{ route('admin.shipping.pickup') }}">
                     <i class="fas fa-store" style="font-size: 11px;"></i>
-                    <span>Local pickup</span>
+                    <span>Pickup</span>
                 </a>
             </li>
         </ul>
@@ -266,49 +496,49 @@
             $pickupImgSrc    = $resolvePickupMedia($pickupImgRaw, '');
         @endphp
 
-        <!-- Hidden Flags for Global Media Chooser -->
+        <!-- Hidden Media Fields -->
         <input type="hidden" name="local_pickup_image_media" id="pickupImageMediaInput" value="">
         <input type="hidden" name="remove_pickup_image" id="removePickupImageFlag" value="0">
 
-        <!-- Top Page Header & Quick Save -->
+        <!-- Page Header -->
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-3">
             <div>
                 <div class="d-flex align-items-center gap-2">
                     <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
                         <i class="fas fa-store text-primary"></i>
-                        <span>Local Pickup Configuration</span>
+                        <span>Local Pickup</span>
                     </h5>
                     <span id="headerStatusBadge" class="badge {{ $isPickupEnabled ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-secondary-subtle text-secondary border' }} px-2 py-1" style="font-size: 10.5px;">
-                        {{ $isPickupEnabled ? 'Active' : 'Disabled' }}
+                        {{ $isPickupEnabled ? 'Active' : 'Off' }}
                     </span>
                 </div>
-                <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Allow customers to collect orders directly from your store or hub location.</small>
+                <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Allow customers to collect orders in-store.</small>
             </div>
             <div class="top-save-btn-wrap">
                 <button type="submit" class="btn btn-primary btn-compact px-3 py-2 shadow-xs gap-1">
                     <i class="fas fa-save"></i>
-                    <span>Save changes</span>
+                    <span>Save</span>
                 </button>
             </div>
         </div>
 
         <div class="row g-3 g-md-4">
-            <!-- Left Column: Configuration Form -->
+            <!-- Pickup Settings -->
             <div class="col-12 col-lg-8">
                 <div class="pickup-panel-card mb-3">
                     <div class="pickup-panel-header d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-dark" style="font-size: 13.5px;">
-                            <i class="fas fa-sliders-h text-primary me-1"></i> Pickup Method Settings
+                            <i class="fas fa-sliders-h text-primary me-1"></i> Pickup Settings
                         </span>
-                        <small class="text-muted" style="font-size: 11px;">Storefront Checkout Option</small>
+                        <small class="text-muted" style="font-size: 11px;">Checkout</small>
                     </div>
 
                     <div class="p-3 p-md-4">
-                        <!-- Enable Switch Card -->
+                        <!-- Enable Pickup -->
                         <label class="pickup-toggle-card mb-3" for="localPickupEnableSwitch">
                             <div>
-                                <span class="fw-bold text-dark d-block" style="font-size: 13px;">Enable local pickup</span>
-                                <small class="text-muted" style="font-size: 11.5px;">When enabled, customers can choose Local Pickup as a delivery option during checkout.</small>
+                                <span class="fw-bold text-dark d-block" style="font-size: 13px;">Enable Pickup</span>
+                                <small class="text-muted" style="font-size: 11.5px;">Show this option at checkout.</small>
                             </div>
                             <div class="form-check form-switch m-0">
                                 <input class="form-check-input m-0" type="checkbox" id="localPickupEnableSwitch" name="local_pickup_enabled" value="1" {{ $isPickupEnabled ? 'checked' : '' }} onchange="syncPickupLivePreview()" style="width: 40px; height: 20px; cursor: pointer;">
@@ -316,22 +546,22 @@
                         </label>
 
                         <div class="row g-3 mb-3">
-                            <!-- Pickup Title -->
+                            <!-- Pickup Name -->
                             <div class="col-12 col-md-6">
-                                <label class="form-label" for="pickupTitleInput">Pickup Title <span class="text-danger">*</span></label>
+                                <label class="form-label" for="pickupTitleInput">Pickup Name <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text bg-light text-muted"><i class="fas fa-tag" style="font-size: 11px;"></i></span>
-                                    <input type="text" name="local_pickup_title" id="pickupTitleInput" class="form-control fw-semibold" value="{{ $pickupTitleVal }}" placeholder=" Store Pickup" oninput="syncPickupLivePreview()" required>
+                                    <input type="text" name="local_pickup_title" id="pickupTitleInput" class="form-control fw-semibold" value="{{ $pickupTitleVal }}" placeholder="Store Pickup" oninput="syncPickupLivePreview()" required>
                                 </div>
-                                <small class="text-muted d-block mt-1" style="font-size: 11px;">Label shown to customers on checkout and invoices.</small>
+                                <small class="text-muted d-block mt-1" style="font-size: 11px;">Shown at checkout and on invoices.</small>
                             </div>
 
-                            <!-- Pickup Cost -->
+                            <!-- Pickup Fee -->
                             <div class="col-12 col-md-6">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label mb-0" for="pickupCostInput">Pickup Cost (৳)</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                    <label class="form-label mb-0" for="pickupCostInput">Pickup Fee (৳)</label>
                                     <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-light border py-0 px-2 fw-bold text-success bn-digit" style="font-size: 10px;" onclick="setQuickPickupCost(0)">Free (৳0)</button>
+                                        <button type="button" class="btn btn-light border py-0 px-2 fw-bold text-success bn-digit" style="font-size: 10px;" onclick="setQuickPickupCost(0)">Free</button>
                                         <button type="button" class="btn btn-light border py-0 px-2 fw-semibold text-secondary bn-digit" style="font-size: 10px;" onclick="setQuickPickupCost(30)">৳30</button>
                                         <button type="button" class="btn btn-light border py-0 px-2 fw-semibold text-secondary bn-digit" style="font-size: 10px;" onclick="setQuickPickupCost(50)">৳50</button>
                                     </div>
@@ -340,35 +570,35 @@
                                     <span class="input-group-text bg-light text-dark fw-bold bn-digit">৳</span>
                                     <input type="number" step="0.01" name="local_pickup_cost" id="pickupCostInput" class="form-control font-monospace bn-digit fw-bold" value="{{ $pickupCostVal }}" oninput="syncPickupLivePreview()">
                                 </div>
-                                <small class="text-muted d-block mt-1" style="font-size: 11px;">Set <code>0</code> to offer free in-store pickup.</small>
+                                <small class="text-muted d-block mt-1" style="font-size: 11px;">Enter 0 for free pickup.</small>
                             </div>
                         </div>
 
-                        <!-- Global Media Chooser for Store / Pickup Hub Badge -->
+                        <!-- Store Image -->
                         <div class="mb-2">
-                            <label class="form-label mb-1">Store / Hub Location Image (Global Media Chooser)</label>
+                            <label class="form-label mb-1">Store Image</label>
                             <div class="pickup-media-chooser-surface">
                                 <div class="media-chooser-actions d-flex align-items-center gap-2 mb-2 flex-wrap">
                                     <button type="button" class="btn btn-primary btn-compact shadow-xs" onclick="choosePickupLocationMedia()">
                                         <i class="fas fa-photo-video me-1"></i>
-                                        <span>Choose from Media Library</span>
+                                        <span>Media Library</span>
                                     </button>
                                     <label class="btn btn-outline-secondary btn-compact shadow-xs mb-0" style="cursor: pointer;">
                                         <i class="fas fa-upload me-1"></i>
-                                        <span>Upload Local File</span>
+                                        <span>Upload</span>
                                         <input type="file" name="local_pickup_image_file" id="pickupFileInput" class="d-none" accept="image/*" onchange="previewPickupLocalImage(this)">
                                     </label>
                                 </div>
-                                <small class="text-muted d-block mb-2" style="font-size: 10.5px;">Select an outlet photo or store badge icon from the Global Media Library.</small>
+                                <small class="text-muted d-block mb-2" style="font-size: 10.5px;">Add a store photo or logo.</small>
 
                                 <div id="pickupImagePreviewContainer" class="{{ !empty($pickupImgSrc) ? 'd-flex' : 'd-none' }} align-items-center gap-2 bg-white border p-2" style="border-radius: 5px;">
                                     <img id="pickupImagePreviewTag" src="{{ $pickupImgSrc }}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 4px;" onerror="this.src='https://placehold.co/100x100?text=Store';">
                                     <div class="text-truncate">
-                                        <span class="small text-success fw-bold d-block" style="font-size: 11.5px;"><i class="fas fa-check-circle me-1"></i>Image Attached</span>
+                                        <span class="small text-success fw-bold d-block" style="font-size: 11.5px;"><i class="fas fa-check-circle me-1"></i>Image Added</span>
                                         <small class="text-muted text-truncate d-block font-monospace" id="pickupImagePreviewPath" style="font-size: 10px; max-width: 220px;">{{ $pickupImgRaw ?: 'Attached Media' }}</small>
                                     </div>
                                     <button type="button" class="btn btn-outline-danger btn-compact py-1 px-2 ms-auto" style="font-size: 10.5px !important;" onclick="clearPickupMedia()">
-                                        <i class="fas fa-trash-alt me-1"></i>Clear
+                                        <i class="fas fa-trash-alt me-1"></i>Remove
                                     </button>
                                 </div>
                             </div>
@@ -379,20 +609,20 @@
                 <div class="text-end mb-2">
                     <button type="submit" class="btn btn-primary btn-compact px-4 py-2 shadow-sm w-100 w-sm-auto" style="font-size: 13px !important;">
                         <i class="fas fa-save me-2"></i>
-                        <span>Save changes</span>
+                        <span>Save</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Right Column: Live Checkout Preview & Guide -->
+            <!-- Live Preview -->
             <div class="col-12 col-lg-4">
                 <div class="pickup-panel-card">
                     <div class="pickup-panel-header d-flex justify-content-between align-items-center">
                         <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 13px;">
                             <i class="fas fa-eye text-primary"></i>
-                            <span>Live Checkout Preview</span>
+                            <span>Live Preview</span>
                         </h6>
-                        <span class="badge bg-white text-secondary border px-2 py-0" style="font-size: 9.5px;">Customer View</span>
+                        <span class="badge bg-white text-secondary border px-2 py-0" style="font-size: 9.5px;">Checkout</span>
                     </div>
 
                     <div class="p-3">
@@ -400,8 +630,8 @@
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <div class="d-flex align-items-center gap-2 min-width-0">
                                     <input type="radio" class="form-check-input m-0 flex-shrink-0" checked disabled>
-                                    
-                                    <!-- Store/Hub Thumbnail in Checkout Option -->
+
+                                    <!-- Store Thumbnail -->
                                     <div id="previewStoreThumbWrap" class="{{ !empty($pickupImgSrc) ? '' : 'd-none' }} flex-shrink-0 border bg-white p-0.5" style="width: 32px; height: 32px; border-radius: 4px; overflow: hidden;">
                                         <img id="previewStoreThumbImg" src="{{ $pickupImgSrc }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/40x40?text=S';">
                                     </div>
@@ -409,7 +639,7 @@
                                     <div class="text-truncate">
                                         <strong class="text-dark d-block text-truncate" id="previewTitleText" style="font-size: 13px;">{{ $pickupTitleVal ?: 'Pickup' }}</strong>
                                         <small class="text-muted d-block text-truncate" id="previewSubText" style="font-size: 10.5px;">
-                                            {{ $isPickupEnabled ? 'Collect in store' : 'Currently disabled on checkout' }}
+                                            {{ $isPickupEnabled ? 'Collect in store' : 'Unavailable' }}
                                         </small>
                                     </div>
                                 </div>
@@ -420,10 +650,10 @@
                         </div>
 
                         <div class="text-secondary" style="font-size: 12px; line-height: 1.5;">
-                            <strong class="text-dark d-block mb-1"><i class="fas fa-circle-info text-primary me-1"></i> Quick Tips:</strong>
+                            <strong class="text-dark d-block mb-1"><i class="fas fa-circle-info text-primary me-1"></i> Tips</strong>
                             <ul class="ps-3 mb-0 d-flex flex-column gap-1">
-                                <li>Offering <strong>Free (৳0)</strong> local pickup encourages nearby customers to collect orders directly.</li>
-                                <li>Attaching a store logo or outlet photo helps customers easily identify your pickup station at checkout.</li>
+                                <li>Free pickup can attract nearby customers.</li>
+                                <li>Add a store photo or logo.</li>
                             </ul>
                         </div>
                     </div>
@@ -433,7 +663,7 @@
     </form>
 </div>
 
-<!-- Modal: Notice (Replaces raw alert()) -->
+<!-- Notice Modal -->
 <div class="modal fade" id="pickupNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3">
@@ -506,7 +736,7 @@
                 }
             });
         } else {
-            showPickupNotice('Media Library is loading, please try again.');
+            showPickupNotice('Media Library unavailable. Try again.');
         }
     }
 
@@ -579,7 +809,7 @@
             headerBadge.className = isEnabled
                 ? 'badge bg-success-subtle text-success border border-success-subtle px-2 py-1'
                 : 'badge bg-secondary-subtle text-secondary border px-2 py-1';
-            headerBadge.innerText = isEnabled ? 'Active' : 'Disabled';
+            headerBadge.innerText = isEnabled ? 'Active' : 'Off';
         }
 
         if (previewCard) {
@@ -589,7 +819,7 @@
             previewTitle.innerText = titleVal;
         }
         if (previewSub) {
-            previewSub.innerText = isEnabled ? 'Collect in store' : 'Currently disabled on checkout';
+            previewSub.innerText = isEnabled ? 'Collect in store' : 'Unavailable';
         }
         if (previewCost) {
             if (costVal <= 0) {

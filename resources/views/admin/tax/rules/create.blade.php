@@ -1,33 +1,34 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Create Tax Rule')
 
 @section('admin_content')
-<div class="container-fluid px-2 px-md-3 py-2 tax-rule-page">
-    <!-- Header & Navigation -->
-    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
+<div class="container-fluid px-2 px-md-3 py-3 tax-rule-page">
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-3 mb-4">
         <div>
-            <h4 class="fw-bold mb-1 text-dark fs-5 fs-md-4 d-flex align-items-center gap-2">
+            <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
                 <i class="fas fa-plus-circle text-primary"></i> Create Tax Rule
             </h4>
-            <p class="text-secondary small mb-0">ট্যাক্স রেট, অগ্রাধিকার ক্রম (Priority) এবং ব্রাঞ্চ/ক্যাটাগরি কন্ডিশন নির্ধারণ করুন।</p>
+            <p class="text-muted small mb-0">Configure tax rates, priority levels, and branch or category conditions.</p>
         </div>
 
         <div class="d-flex align-items-center gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end">
-            <a href="{{ route('admin.tax.rules.index') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+            <a href="{{ route('admin.tax.rules.index') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2">
                 <i class="fas fa-arrow-left"></i> <span>Back to Rules</span>
             </a>
         </div>
     </div>
 
-    <!-- Error Validation Feedback -->
+    <!-- Validation Feedback -->
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show border border-danger-subtle shadow-sm mb-3 py-2 px-3" role="alert">
-            <div class="d-flex align-items-center gap-2 mb-1">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4 py-3 px-3" role="alert">
+            <div class="d-flex align-items-center gap-2 mb-2">
                 <i class="fas fa-triangle-exclamation text-danger"></i>
                 <span class="fw-semibold small">Please resolve the following errors:</span>
             </div>
-            <ul class="mb-0 ps-3 small text-secondary">
+            <ul class="mb-0 ps-4 small">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -39,31 +40,31 @@
     <form action="{{ route('admin.tax.rules.store') }}" method="POST" id="taxRuleForm">
         @csrf
 
-        <div class="row g-2 g-md-3">
+        <div class="row g-3">
             <!-- Left Column: Core Parameters & Rates -->
             <div class="col-12 col-lg-7">
-                <!-- 1. Basic Identification -->
-                <div class="card border border-light-subtle shadow-sm bg-white mb-2 mb-md-3">
-                    <div class="card-header bg-white border-0 pt-3 px-3 pb-1">
+                <!-- 1. General Information -->
+                <div class="card tax-rule-card mb-3">
+                    <div class="card-header">
                         <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                             <i class="fas fa-sliders text-primary"></i> General Information
                         </h6>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2 g-md-3">
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Rule Name <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control form-control-sm" id="ruleNameInput" placeholder="e.g. Lakshmipur Branch 0% VAT" value="{{ old('name') }}" required>
+                                <label class="form-label fw-semibold text-dark small">Rule Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control form-control-sm" id="ruleNameInput" placeholder="Lakshmipur Branch 0% VAT" value="{{ old('name') }}" required>
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Rule Code <span class="text-danger">*</span></label>
-                                <input type="text" name="code" class="form-control form-control-sm font-monospace text-uppercase" id="ruleCodeInput" placeholder="e.g. LAKSHMIPUR_ZERO_VAT" value="{{ old('code') }}" required>
-                                <span class="text-secondary d-block mt-1" style="font-size: 11px;">Unique identifier (auto-generated from rule name).</span>
+                                <label class="form-label fw-semibold text-dark small">Rule Code <span class="text-danger">*</span></label>
+                                <input type="text" name="code" class="form-control form-control-sm font-monospace text-uppercase" id="ruleCodeInput" placeholder="LAKSHMIPUR_ZERO_VAT" value="{{ old('code') }}" required>
+                                <span class="text-muted d-block mt-1 tax-rule-hint">Unique identifier (auto-generated from the rule name).</span>
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Tax Class</label>
+                                <label class="form-label fw-semibold text-dark small">Tax Class</label>
                                 <select name="tax_class_id" class="form-select form-select-sm">
                                     <option value="">None (Standalone Rule)</option>
                                     @foreach($taxClasses as $tc)
@@ -75,28 +76,28 @@
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Tax Status <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Tax Status <span class="text-danger">*</span></label>
                                 <select name="status_type" class="form-select form-select-sm" id="statusTypeSelect" required>
-                                    <option value="taxable" {{ old('status_type', 'taxable') === 'taxable' ? 'selected' : '' }}>Taxable (করযোগ্য)</option>
-                                    <option value="exempt" {{ old('status_type') === 'exempt' ? 'selected' : '' }}>Exempt (করমুক্ত)</option>
-                                    <option value="zero_rated" {{ old('status_type') === 'zero_rated' ? 'selected' : '' }}>Zero-Rated (০% কর)</option>
+                                    <option value="taxable" {{ old('status_type', 'taxable') === 'taxable' ? 'selected' : '' }}>Taxable</option>
+                                    <option value="exempt" {{ old('status_type') === 'exempt' ? 'selected' : '' }}>Exempt</option>
+                                    <option value="zero_rated" {{ old('status_type') === 'zero_rated' ? 'selected' : '' }}>Zero-Rated (0% Tax)</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. Rate & Assessment Mode -->
-                <div class="card border border-light-subtle shadow-sm bg-white mb-2 mb-md-3">
-                    <div class="card-header bg-white border-0 pt-3 px-3 pb-1">
+                <!-- 2. Tax Calculation -->
+                <div class="card tax-rule-card mb-3">
+                    <div class="card-header">
                         <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                             <i class="fas fa-calculator text-primary"></i> Tax Calculation
                         </h6>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2 g-md-3">
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Calculation Mode <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Calculation Mode <span class="text-danger">*</span></label>
                                 <select name="calculation_type" class="form-select form-select-sm" required>
                                     <option value="exclusive" {{ old('calculation_type', 'exclusive') === 'exclusive' ? 'selected' : '' }}>
                                         Exclusive (Added on top of price)
@@ -108,7 +109,7 @@
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Tax Method <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Tax Method <span class="text-danger">*</span></label>
                                 <select name="tax_type" class="form-select form-select-sm" id="taxTypeSelect" required>
                                     <option value="percentage" {{ old('tax_type', 'percentage') === 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
                                     <option value="fixed" {{ old('tax_type') === 'fixed' ? 'selected' : '' }}>Fixed Amount (BDT)</option>
@@ -116,40 +117,40 @@
                             </div>
 
                             <div class="col-12 col-sm-6" id="percentageRateBox">
-                                <label class="form-label fw-semibold text-dark small mb-1">Tax Rate (%) <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Tax Rate (%) <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <input type="number" step="0.0001" min="0" max="100" name="rate" class="form-control font-monospace" id="rateInput" placeholder="5.0000" value="{{ old('rate', '5.00') }}">
-                                    <span class="input-group-text bg-light text-secondary">%</span>
+                                    <span class="input-group-text">%</span>
                                 </div>
                             </div>
 
                             <div class="col-12 col-sm-6 d-none" id="fixedAmountBox">
-                                <label class="form-label fw-semibold text-dark small mb-1">Fixed Amount (BDT) <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Fixed Amount (BDT) <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light text-secondary">৳</span>
+                                    <span class="input-group-text">৳</span>
                                     <input type="number" step="0.01" min="0" name="fixed_amount" class="form-control font-monospace" id="fixedAmountInput" placeholder="0.00" value="{{ old('fixed_amount', '0.00') }}">
                                 </div>
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Priority Order <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold text-dark small">Priority Order <span class="text-danger">*</span></label>
                                 <input type="number" min="1" max="999" name="priority" class="form-control form-control-sm font-monospace" value="{{ old('priority', '10') }}" required>
-                                <span class="text-secondary d-block mt-1" style="font-size: 11px;">বড় নম্বর = বেশি অগ্রাধিকার (যেমন: ব্রাঞ্চে ০% কার্যকর করতে প্রায়োরিটি ৫০ বা ১০০ দিন)।</span>
+                                <span class="text-muted d-block mt-1 tax-rule-hint">Higher numbers have higher priority. Use 50 or 100 to prioritize a branch-specific 0% rule.</span>
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Min. Taxable Base (BDT)</label>
+                                <label class="form-label fw-semibold text-dark small">Minimum Taxable Base (BDT)</label>
                                 <input type="number" step="0.01" min="0" name="min_taxable_amount" class="form-control form-control-sm font-monospace" placeholder="0.00" value="{{ old('min_taxable_amount', '0.00') }}">
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Max. Taxable Base (BDT)</label>
+                                <label class="form-label fw-semibold text-dark small">Maximum Taxable Base (BDT)</label>
                                 <input type="number" step="0.01" min="0" name="max_taxable_amount" class="form-control form-control-sm font-monospace" placeholder="Leave blank for no upper limit" value="{{ old('max_taxable_amount') }}">
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label fw-semibold text-dark small mb-1">Legal Reference / Admin Note</label>
-                                <textarea name="admin_note" class="form-control form-control-sm" rows="2" placeholder="NBR SRO, মূসক বিধিমালা অথবা অভ্যন্তরীণ নোট...">{{ old('admin_note') }}</textarea>
+                                <label class="form-label fw-semibold text-dark small">Legal Reference / Admin Note</label>
+                                <textarea name="admin_note" class="form-control form-control-sm" rows="2" placeholder="NBR SRO, VAT regulations, or internal notes...">{{ old('admin_note') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -158,20 +159,20 @@
 
             <!-- Right Column: Conditions, Scopes & Validity -->
             <div class="col-12 col-lg-5">
-                <!-- 3. Target Scope & Cascading Conditions -->
-                <div class="card border border-light-subtle shadow-sm bg-white mb-2 mb-md-3">
-                    <div class="card-header bg-white border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <!-- 3. Scope Conditions -->
+                <div class="card tax-rule-card mb-3">
+                    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                             <i class="fas fa-diagram-project text-primary"></i> Scope Conditions
                         </h6>
-                        <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1" id="addConditionBtn">
+                        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2" id="addConditionBtn">
                             <i class="fas fa-plus"></i> <span>Add Scope</span>
                         </button>
                     </div>
-                    <div class="card-body p-3">
-                        <span class="text-secondary small d-block mb-3" style="font-size: 11.5px;">
-                            কোনো স্কোপ না দিলে রুলটি গ্লোবালি সব পণ্যের ওপর প্রযোজ্য হবে। নির্দিষ্ট ব্রাঞ্চ বা ক্যাটাগরির জন্য স্কোপ যোগ করুন।
-                        </span>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3 tax-rule-description">
+                            If no scope is added, this rule applies globally to all products. Add a scope to target a specific branch or category.
+                        </p>
 
                         <div id="conditionsContainer" class="d-flex flex-column gap-2">
                             <!-- Dynamic Conditions Inserted via JS -->
@@ -179,30 +180,30 @@
                     </div>
                 </div>
 
-                <!-- 4. Rule Validity & Status Switch -->
-                <div class="card border border-light-subtle shadow-sm bg-white mb-2 mb-md-3">
-                    <div class="card-header bg-white border-0 pt-3 px-3 pb-1">
+                <!-- 4. Validity & Status -->
+                <div class="card tax-rule-card mb-3">
+                    <div class="card-header">
                         <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                             <i class="fas fa-calendar-check text-primary"></i> Validity &amp; Status
                         </h6>
                     </div>
-                    <div class="card-body p-3">
-                        <div class="row g-2 g-md-3">
+                    <div class="card-body">
+                        <div class="row g-3">
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Valid From</label>
+                                <label class="form-label fw-semibold text-dark small">Valid From</label>
                                 <input type="date" name="valid_from" class="form-control form-control-sm" value="{{ old('valid_from') }}">
                             </div>
 
                             <div class="col-12 col-sm-6">
-                                <label class="form-label fw-semibold text-dark small mb-1">Valid To</label>
+                                <label class="form-label fw-semibold text-dark small">Valid To</label>
                                 <input type="date" name="valid_to" class="form-control form-control-sm" value="{{ old('valid_to') }}">
                             </div>
 
                             <div class="col-12">
-                                <div class="form-check form-switch p-2 border rounded-1 bg-light mt-1">
+                                <div class="form-check form-switch tax-rule-status-switch">
                                     <input class="form-check-input ms-0 me-2" type="checkbox" name="is_active" value="1" id="isRuleActive" {{ old('is_active', true) ? 'checked' : '' }}>
                                     <label class="form-check-label fw-semibold text-dark small" for="isRuleActive">
-                                        Activate Rule Immediately (অবিলম্বে কার্যকর করুন)
+                                        Activate Rule Immediately
                                     </label>
                                 </div>
                             </div>
@@ -210,11 +211,11 @@
                     </div>
                 </div>
 
-                <!-- Save Action Card -->
-                <div class="card border border-light-subtle shadow-sm bg-white">
-                    <div class="card-body p-3">
+                <!-- Save Action -->
+                <div class="card tax-rule-card">
+                    <div class="card-body">
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
-                            <i class="fas fa-save"></i> <span>Save Tax Rule (রুল সংরক্ষণ করুন)</span>
+                            <i class="fas fa-save"></i> <span>Save Tax Rule</span>
                         </button>
                     </div>
                 </div>
@@ -224,8 +225,17 @@
 </div>
 
 <style>
-    /* Strict 5px Radius Rule */
-    .tax-rule-page .card,
+    /* Kaiadmin Classic / White Classic - page-scoped styling */
+    .tax-rule-page {
+        --tax-rule-primary: var(--bs-primary, #1572e8);
+        --tax-rule-border: #e6e9ef;
+        --tax-rule-muted: #7b8190;
+        --tax-rule-surface: #ffffff;
+        --tax-rule-soft: #f7f8fa;
+        color: #2a2f5b;
+    }
+
+    .tax-rule-page .tax-rule-card,
     .tax-rule-page .btn,
     .tax-rule-page .form-control,
     .tax-rule-page .form-select,
@@ -239,36 +249,139 @@
         border-radius: 5px !important;
     }
 
-    /* Switch Styling */
+    .tax-rule-page .tax-rule-card {
+        border: 1px solid var(--tax-rule-border);
+        background: var(--tax-rule-surface);
+        box-shadow: 0 1px 3px rgba(25, 35, 58, 0.045);
+        overflow: visible;
+    }
+
+    .tax-rule-page .tax-rule-card > .card-header {
+        padding: 1rem 1.125rem 0.25rem;
+        background: var(--tax-rule-surface);
+        border: 0;
+    }
+
+    .tax-rule-page .tax-rule-card > .card-body {
+        padding: 1.125rem;
+    }
+
+    .tax-rule-page .tax-rule-card h6 {
+        font-size: 0.9rem;
+        letter-spacing: 0.01em;
+    }
+
+    .tax-rule-page .form-label {
+        margin-bottom: 0.4rem;
+    }
+
+    .tax-rule-page .form-control,
+    .tax-rule-page .form-select {
+        min-height: 36px;
+        border-color: #dfe3e8;
+        color: #2a2f5b;
+        background-color: #fff;
+    }
+
+    .tax-rule-page textarea.form-control {
+        min-height: auto;
+    }
+
+    .tax-rule-page .input-group-text {
+        border-color: #dfe3e8;
+        background: var(--tax-rule-soft);
+        color: #6c757d;
+    }
+
+    .tax-rule-page .form-control:focus,
+    .tax-rule-page .form-select:focus {
+        border-color: var(--tax-rule-primary);
+        box-shadow: 0 0 0 0.15rem rgba(21, 114, 232, 0.13);
+    }
+
+    .tax-rule-page .btn {
+        font-weight: 600;
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .tax-rule-page .btn-primary {
+        background-color: var(--tax-rule-primary);
+        border-color: var(--tax-rule-primary);
+    }
+
+    .tax-rule-page .btn-primary:hover {
+        filter: brightness(0.95);
+    }
+
+    .tax-rule-page .tax-rule-hint {
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .tax-rule-page .tax-rule-description {
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    .tax-rule-page .tax-rule-status-switch {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        margin: 0;
+        border: 1px solid var(--tax-rule-border);
+        border-radius: 5px;
+        background: var(--tax-rule-soft);
+    }
+
     .tax-rule-page .form-check-input:checked {
         background-color: #198754;
         border-color: #198754;
     }
 
-    /* Focus States */
-    .tax-rule-page .form-control:focus,
-    .tax-rule-page .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    .tax-rule-page .condition-row {
+        padding: 0.75rem;
+        border: 1px solid var(--tax-rule-border) !important;
+        background: var(--tax-rule-soft) !important;
     }
 
-    /* Responsive Mobile Optimization */
+    .tax-rule-page .condition-row .form-check {
+        margin-bottom: 0;
+    }
+
+    .tax-rule-page .list-group {
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .tax-rule-page .alert {
+        border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
     @media (max-width: 575.98px) {
         .tax-rule-page {
             padding-left: 6px !important;
             padding-right: 6px !important;
         }
 
-        .tax-rule-page .card-body {
-            padding: 0.75rem !important;
+        .tax-rule-page .tax-rule-card > .card-header {
+            padding: 0.875rem 0.875rem 0.25rem;
+        }
+
+        .tax-rule-page .tax-rule-card > .card-body {
+            padding: 0.875rem;
         }
 
         .tax-rule-page .form-label {
-            font-size: 0.8rem !important;
+            font-size: 0.8rem;
         }
 
         .tax-rule-page .condition-row {
-            padding: 0.65rem !important;
+            padding: 0.65rem;
+        }
+
+        .tax-rule-page .btn {
+            white-space: normal;
         }
     }
 </style>
@@ -369,7 +482,7 @@
                     <div class="col-12 mt-1">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="conditions[${conditionIndex}][is_ex]" value="1" id="is_ex_${conditionIndex}" ${isExcluded ? 'checked' : ''}>
-                            <label class="form-check-label small text-secondary" for="is_ex_${conditionIndex}">Exclude this scope from rule</label>
+                            <label class="form-check-label small text-muted" for="is_ex_${conditionIndex}">Exclude this scope from the rule</label>
                         </div>
                     </div>
                 </div>

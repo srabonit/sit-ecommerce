@@ -207,19 +207,12 @@
                     <i class="fas fa-shield-alt text-primary"></i>
                     <span>Fraud Checker</span>
                 </h5>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5" style="font-size: 10px;">
-                    Courier Risk Radar
-                </span>
             </div>
             <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">
-                Nationwide real-time courier performance, delivery success ratio, and parcel return risk verification.
+                Courier Performance & Delivery Risk Monitoring
             </small>
         </div>
-        <div class="header-action-btns d-flex gap-2">
-            <a href="{{ route('admin.system.setting.fraud') }}" class="btn btn-outline-dark btn-compact shadow-xs">
-                <i class="fas fa-sliders me-1"></i>
-                <span>API Settings</span>
-            </a>
+        <div class="header-action-btns d-flex gap-2"> 
             <a href="{{ route('admin.order.online') }}" class="btn btn-outline-secondary btn-compact shadow-xs">
                 <i class="fas fa-arrow-left me-1"></i>
                 <span>Back to Orders</span>
@@ -245,9 +238,6 @@
                             <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
                         </button>
                     </div>
-                    <small class="text-muted d-block text-center mt-1.5" style="font-size: 10.5px;">
-                        Supports all Bangladesh operators.
-                    </small>
                 </div>
             </div>
         </form>
@@ -427,7 +417,7 @@
                 <!-- Integrated Global Media Chooser for Suspect Evidence / Fraud Proof -->
                 <div class="border-top pt-3 mt-auto">
                     <label class="form-label mb-1">
-                        <i class="fas fa-paperclip text-primary me-1"></i> Suspect Evidence / Fraud Proof
+                        <i class="fas fa-paperclip text-primary me-1"></i> Suspected Fraud Evidence
                     </label>
                     <div class="proof-media-surface">
                         <div class="proof-actions-wrap d-flex align-items-center gap-2 mb-2 flex-wrap">

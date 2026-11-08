@@ -13,7 +13,7 @@ class InventoryService
     /**
      * Atomically deduct stock for either a product variant or a simple product.
      * Prevents negative stock / overselling via row-level database locking (lockForUpdate).
-     * Automatically captures the purchase cost snapshot for order items and logs movement.
+     * Automatically captures the purchase cost snapshot for order items, updates warehouse stock, and logs movement.
      *
      * @throws Exception
      */
@@ -27,7 +27,9 @@ class InventoryService
         string $source = 'web_checkout',
         ?int $userId = null,
         ?string $notes = null,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null
     ): array {
         if ($quantity <= 0) {
             throw new Exception("Invalid deduction quantity: {$quantity}. Quantity must be greater than zero.");
@@ -51,7 +53,20 @@ class InventoryService
             }
         }
 
-        $execute = function () use ($productId, $variantId, $quantity, $movementType, $referenceId, $unitPrice, $source, $userId, $notes, $idempotencyToken) {
+        $execute = function () use (
+            $productId,
+            $variantId,
+            $quantity,
+            $movementType,
+            $referenceId,
+            $unitPrice,
+            $source,
+            $userId,
+            $notes,
+            $idempotencyToken,
+            $warehouseId,
+            $branchId
+        ) {
             $isCostEstimated = false;
             $purchaseCost = 0.00;
             $sku = null;
@@ -161,12 +176,17 @@ class InventoryService
                 }
             }
 
+            // Sync warehouse/branch-specific stock table (product_stocks)
+            self::syncWarehouseStock($productId, $warehouseId, $branchId, -$quantity);
+
             // =========================================================================
             // AUDIT: Record Inventory Movement Log
             // =========================================================================
             self::logMovement([
                 'product_id'        => $productId,
                 'variant_id'        => $variantId,
+                'warehouse_id'      => $warehouseId,
+                'branch_id'         => $branchId,
                 'sku'               => $sku,
                 'movement_type'     => $movementType,
                 'quantity_before'   => $qtyBefore,
@@ -260,6 +280,8 @@ class InventoryService
         $orderObj = is_array($order) ? (object) $order : $order;
         $orderId = $orderObj->id;
         $invoiceNo = $orderObj->invoice_no ?? ($orderObj->order_number ?? "ORD-{$orderId}");
+        $warehouseId = !empty($orderObj->warehouse_id) ? (int) $orderObj->warehouse_id : null;
+        $branchId = !empty($orderObj->branch_id) ? (int) $orderObj->branch_id : null;
 
         if (!empty($orderObj->is_stock_deducted)) {
             return [
@@ -269,7 +291,7 @@ class InventoryService
             ];
         }
 
-        return DB::transaction(function () use ($orderId, $invoiceNo, $userId) {
+        return DB::transaction(function () use ($orderId, $invoiceNo, $userId, $warehouseId, $branchId) {
             $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
             $items = DB::table($itemsTable)->where('order_id', $orderId)->get();
 
@@ -298,7 +320,9 @@ class InventoryService
                     'order_processing',
                     $userId,
                     "Physical stock deducted upon order packing #{$invoiceNo}",
-                    $idempotencyToken
+                    $idempotencyToken,
+                    $warehouseId,
+                    $branchId
                 );
 
                 $updateFields = [];
@@ -338,8 +362,10 @@ class InventoryService
         $orderObj = is_array($order) ? (object) $order : $order;
         $orderId = $orderObj->id;
         $invoiceNo = $orderObj->invoice_no ?? ($orderObj->order_number ?? "ORD-{$orderId}");
+        $warehouseId = !empty($orderObj->warehouse_id) ? (int) $orderObj->warehouse_id : null;
+        $branchId = !empty($orderObj->branch_id) ? (int) $orderObj->branch_id : null;
 
-        return DB::transaction(function () use ($orderObj, $orderId, $invoiceNo, $userId, $reason) {
+        return DB::transaction(function () use ($orderObj, $orderId, $invoiceNo, $userId, $reason, $warehouseId, $branchId) {
             $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
             $items = DB::table($itemsTable)->where('order_id', $orderId)->get();
 
@@ -365,7 +391,9 @@ class InventoryService
                         'order_cancel',
                         $userId,
                         "Stock restored on cancel for Order #{$invoiceNo}: {$reason}",
-                        "ORD-RESTORE-CANCEL-{$orderId}-{$item->id}"
+                        "ORD-RESTORE-CANCEL-{$orderId}-{$item->id}",
+                        $warehouseId,
+                        $branchId
                     );
                 } else {
                     self::releaseOrderEstimate($pId, $vId, $qty, $invoiceNo);
@@ -378,10 +406,10 @@ class InventoryService
             ]);
 
             return [
-                'success'       => true,
-                'order_id'      => $orderId,
+                'success'           => true,
+                'order_id'          => $orderId,
                 'physical_restored' => $wasDeducted,
-                'message'       => $wasDeducted ? 'Physical stock restored successfully.' : 'Estimated reservation released.',
+                'message'           => $wasDeducted ? 'Physical stock restored successfully.' : 'Estimated reservation released.',
             ];
         });
     }
@@ -398,8 +426,10 @@ class InventoryService
         $orderObj = is_array($order) ? (object) $order : $order;
         $orderId = $orderObj->id;
         $invoiceNo = $orderObj->invoice_no ?? ($orderObj->order_number ?? "ORD-{$orderId}");
+        $warehouseId = !empty($orderObj->warehouse_id) ? (int) $orderObj->warehouse_id : null;
+        $branchId = !empty($orderObj->branch_id) ? (int) $orderObj->branch_id : null;
 
-        return DB::transaction(function () use ($orderObj, $orderId, $invoiceNo, $inspectedItems, $userId, $notes) {
+        return DB::transaction(function () use ($orderObj, $orderId, $invoiceNo, $inspectedItems, $userId, $notes, $warehouseId, $branchId) {
             $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
             $items = DB::table($itemsTable)->where('order_id', $orderId)->get();
 
@@ -433,7 +463,9 @@ class InventoryService
                             'order_return_sellable',
                             $userId,
                             "Sellable stock restored on return #{$invoiceNo}. " . ($notes ?? ''),
-                            "RET-SELLABLE-{$orderId}-{$item->id}"
+                            "RET-SELLABLE-{$orderId}-{$item->id}",
+                            $warehouseId,
+                            $branchId
                         );
                         $restockedItems[] = ['item_id' => $item->id, 'status' => 'sellable_restocked', 'qty' => $qty];
                     } else {
@@ -445,7 +477,9 @@ class InventoryService
                             $invoiceNo,
                             $unitCost,
                             $userId,
-                            "Returned item damaged / unsellable for Order #{$invoiceNo}. Loss recorded."
+                            "Returned item damaged / unsellable for Order #{$invoiceNo}. Loss recorded.",
+                            $warehouseId,
+                            $branchId
                         );
                         $restockedItems[] = ['item_id' => $item->id, 'status' => 'damaged_loss_logged', 'qty' => $qty];
                     }
@@ -485,7 +519,11 @@ class InventoryService
         ?int $userId = null,
         ?string $notes = null,
         bool $updateWac = true,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null,
+        ?string $batchNo = null,
+        ?string $expiryDate = null
     ): array {
         if ($quantity <= 0) {
             throw new Exception("Invalid inbound quantity: {$quantity}. Quantity must be greater than zero.");
@@ -507,7 +545,25 @@ class InventoryService
             }
         }
 
-        $execute = function () use ($productId, $variantId, $quantity, $purchaseCost, $movementType, $referenceId, $source, $sellingPrice, $supplierId, $userId, $notes, $updateWac, $idempotencyToken) {
+        $execute = function () use (
+            $productId,
+            $variantId,
+            $quantity,
+            $purchaseCost,
+            $movementType,
+            $referenceId,
+            $source,
+            $sellingPrice,
+            $supplierId,
+            $userId,
+            $notes,
+            $updateWac,
+            $idempotencyToken,
+            $warehouseId,
+            $branchId,
+            $batchNo,
+            $expiryDate
+        ) {
             $sku = null;
             $qtyBefore = 0;
             $qtyAfter = 0;
@@ -593,10 +649,18 @@ class InventoryService
                 DB::table('products')->where('id', $productId)->update($updateData);
             }
 
+            // Sync warehouse/branch stock
+            self::syncWarehouseStock($productId, $warehouseId, $branchId, +$quantity);
+
             self::logMovement([
                 'product_id'        => $productId,
                 'variant_id'        => $variantId,
+                'warehouse_id'      => $warehouseId,
+                'branch_id'         => $branchId,
+                'supplier_id'       => $supplierId,
                 'sku'               => $sku,
+                'batch_no'          => $batchNo,
+                'expiry_date'       => $expiryDate,
                 'movement_type'     => $movementType,
                 'quantity_before'   => $qtyBefore,
                 'quantity_change'   => +$quantity,
@@ -638,7 +702,10 @@ class InventoryService
         string $source = 'stock_out_form',
         ?int $userId = null,
         ?string $notes = null,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null,
+        ?string $batchNo = null
     ): array {
         if ($quantity <= 0) {
             throw new Exception("Invalid outbound quantity: {$quantity}. Must be greater than zero.");
@@ -659,7 +726,20 @@ class InventoryService
             }
         }
 
-        $execute = function () use ($productId, $variantId, $quantity, $movementType, $referenceId, $source, $userId, $notes, $idempotencyToken) {
+        $execute = function () use (
+            $productId,
+            $variantId,
+            $quantity,
+            $movementType,
+            $referenceId,
+            $source,
+            $userId,
+            $notes,
+            $idempotencyToken,
+            $warehouseId,
+            $branchId,
+            $batchNo
+        ) {
             $sku = null;
             $unitCost = 0.00;
             $qtyBefore = 0;
@@ -718,10 +798,16 @@ class InventoryService
                     ]);
             }
 
+            // Sync warehouse/branch stock
+            self::syncWarehouseStock($productId, $warehouseId, $branchId, -$quantity);
+
             self::logMovement([
                 'product_id'        => $productId,
                 'variant_id'        => $variantId,
+                'warehouse_id'      => $warehouseId,
+                'branch_id'         => $branchId,
                 'sku'               => $sku,
+                'batch_no'          => $batchNo,
                 'movement_type'     => $movementType,
                 'quantity_before'   => $qtyBefore,
                 'quantity_change'   => -$quantity,
@@ -763,7 +849,9 @@ class InventoryService
         string $source = 'order_cancel',
         ?int $userId = null,
         ?string $notes = null,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null
     ): array {
         if ($quantity <= 0) {
             throw new Exception("Invalid restore quantity: {$quantity}. Must be greater than zero.");
@@ -784,7 +872,19 @@ class InventoryService
             }
         }
 
-        $execute = function () use ($productId, $variantId, $quantity, $movementType, $referenceId, $source, $userId, $notes, $idempotencyToken) {
+        $execute = function () use (
+            $productId,
+            $variantId,
+            $quantity,
+            $movementType,
+            $referenceId,
+            $source,
+            $userId,
+            $notes,
+            $idempotencyToken,
+            $warehouseId,
+            $branchId
+        ) {
             $sku = null;
             $unitCost = 0.00;
             $qtyBefore = 0;
@@ -837,9 +937,14 @@ class InventoryService
                     ]);
             }
 
+            // Sync warehouse/branch stock
+            self::syncWarehouseStock($productId, $warehouseId, $branchId, +$quantity);
+
             self::logMovement([
                 'product_id'        => $productId,
                 'variant_id'        => $variantId,
+                'warehouse_id'      => $warehouseId,
+                'branch_id'         => $branchId,
                 'sku'               => $sku,
                 'movement_type'     => $movementType,
                 'quantity_before'   => $qtyBefore,
@@ -881,7 +986,9 @@ class InventoryService
         string $source = 'order_return',
         ?int $userId = null,
         ?string $notes = null,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null
     ): array {
         return self::restoreStock(
             $productId,
@@ -892,13 +999,14 @@ class InventoryService
             $source,
             $userId,
             $notes,
-            $idempotencyToken
+            $idempotencyToken,
+            $warehouseId,
+            $branchId
         );
     }
 
     /**
      * Record a damaged item returned from an order without adding it back to sellable stock.
-     * Uses row object property fallback to eliminate SQL 'Column not found' errors.
      */
     public static function recordDamagedReturn(
         int $productId,
@@ -907,7 +1015,9 @@ class InventoryService
         string $referenceId,
         ?float $unitCost = null,
         ?int $userId = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null
     ): void {
         $sku = null;
         if (!empty($variantId) && Schema::hasTable('product_variants')) {
@@ -926,6 +1036,8 @@ class InventoryService
         self::logMovement([
             'product_id'        => $productId,
             'variant_id'        => $variantId,
+            'warehouse_id'      => $warehouseId,
+            'branch_id'         => $branchId,
             'sku'               => $sku ?? '',
             'movement_type'     => 'damage_out',
             'quantity_before'   => 0,
@@ -955,13 +1067,29 @@ class InventoryService
         string $source = 'manual_adjustment',
         ?int $userId = null,
         ?string $notes = null,
-        ?string $idempotencyToken = null
+        ?string $idempotencyToken = null,
+        ?int $warehouseId = null,
+        ?int $branchId = null
     ): array {
         if ($newStock < 0) {
             throw new Exception("Stock cannot be negative.");
         }
 
-        $execute = function () use ($productId, $variantId, $newStock, $newCost, $applyWac, $movementType, $referenceId, $source, $userId, $notes, $idempotencyToken) {
+        $execute = function () use (
+            $productId,
+            $variantId,
+            $newStock,
+            $newCost,
+            $applyWac,
+            $movementType,
+            $referenceId,
+            $source,
+            $userId,
+            $notes,
+            $idempotencyToken,
+            $warehouseId,
+            $branchId
+        ) {
             $sku = null;
             $qtyBefore = 0;
             $finalCost = 0.00;
@@ -1032,9 +1160,15 @@ class InventoryService
 
             $diff = $newStock - $qtyBefore;
 
+            if ($diff !== 0) {
+                self::syncWarehouseStock($productId, $warehouseId, $branchId, $diff);
+            }
+
             self::logMovement([
                 'product_id'        => $productId,
                 'variant_id'        => $variantId,
+                'warehouse_id'      => $warehouseId,
+                'branch_id'         => $branchId,
                 'sku'               => $sku,
                 'movement_type'     => $movementType,
                 'quantity_before'   => $qtyBefore,
@@ -1065,7 +1199,7 @@ class InventoryService
     }
 
     /**
-     * WAC Calculator
+     * WAC (Weighted Average Cost) Calculator
      */
     public static function calculateWAC(int $currentStock, float $currentCost, int $incomingQty, float $incomingCost): float
     {
@@ -1081,6 +1215,63 @@ class InventoryService
         $totalValuation = ($currentStock * $currentCost) + ($incomingQty * $incomingCost);
 
         return round($totalValuation / $totalUnits, 2);
+    }
+
+    /**
+     * Automatic sync for warehouse / branch-specific inventory records (product_stocks).
+     * Prevents stock drift between products table and warehouse inventory tables.
+     */
+    public static function syncWarehouseStock(
+        int $productId,
+        ?int $warehouseId = null,
+        ?int $branchId = null,
+        int $quantityChange = 0
+    ): void {
+        if (!Schema::hasTable('product_stocks') || $quantityChange === 0) {
+            return;
+        }
+
+        try {
+            if (!$warehouseId && !$branchId) {
+                $firstStock = DB::table('product_stocks')->where('product_id', $productId)->first();
+                if ($firstStock) {
+                    $warehouseId = $firstStock->warehouse_id;
+                    $branchId = $firstStock->branch_id;
+                } else {
+                    $warehouseId = Schema::hasTable('warehouses') ? DB::table('warehouses')->value('id') : 1;
+                }
+            }
+
+            $query = DB::table('product_stocks')->where('product_id', $productId);
+            if ($warehouseId) {
+                $query->where('warehouse_id', $warehouseId);
+            }
+            if ($branchId) {
+                $query->where('branch_id', $branchId);
+            }
+
+            $stockRecord = $query->lockForUpdate()->first();
+
+            if ($stockRecord) {
+                $newQty = max(0, (int) $stockRecord->quantity + $quantityChange);
+                DB::table('product_stocks')->where('id', $stockRecord->id)->update([
+                    'quantity'   => $newQty,
+                    'updated_at' => now(),
+                ]);
+            } else {
+                DB::table('product_stocks')->insert([
+                    'product_id'     => $productId,
+                    'warehouse_id'   => $warehouseId,
+                    'branch_id'      => $branchId,
+                    'quantity'       => max(0, $quantityChange),
+                    'alert_quantity' => 5,
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Could not sync product_stocks table for Product #{$productId}: " . $e->getMessage());
+        }
     }
 
     /**

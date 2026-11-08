@@ -412,6 +412,280 @@
             padding: 20px 20px !important;
         }
     }
+
+
+    /* ================================================================
+       KAIADMIN LITE v1.2.0 — CLASSIC / WHITE UI OVERRIDES
+       Scoped to this page; backend, Blade bindings and JS are untouched.
+       ================================================================ */
+    #security-settings-wrapper {
+        --sec-primary: var(--bs-primary, #2563eb);
+        --sec-primary-soft: #eff6ff;
+        --sec-border: #e5e7eb;
+        --sec-surface: #ffffff;
+        --sec-page: #f7f8fa;
+        --sec-heading: #1f2937;
+        --sec-muted: #6b7280;
+        background: var(--sec-page) !important;
+        color: var(--sec-heading);
+        min-height: auto;
+    }
+
+    #security-settings-wrapper *,
+    #security-settings-wrapper *::before,
+    #security-settings-wrapper *::after,
+    .sec-settings-modal-scope *,
+    .sec-settings-modal-scope *::before,
+    .sec-settings-modal-scope *::after {
+        border-radius: 5px !important;
+    }
+
+    #security-settings-wrapper .sec-card {
+        background: var(--sec-surface) !important;
+        border: 1px solid var(--sec-border) !important;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, .035) !important;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    #security-settings-wrapper .sec-card:hover {
+        border-color: #d5dbe5 !important;
+        box-shadow: 0 3px 10px rgba(16, 24, 40, .055) !important;
+    }
+
+    #security-settings-wrapper .sec-header-icon-box {
+        background: var(--sec-primary-soft) !important;
+        border: 1px solid #dbeafe !important;
+        color: var(--sec-primary) !important;
+    }
+    #security-settings-wrapper .sec-page-title {
+        color: #1f2937 !important;
+        font-size: 17px !important;
+        letter-spacing: -.025em;
+    }
+    #security-settings-wrapper .sec-page-subtitle {
+        color: var(--sec-muted) !important;
+        font-size: 11.5px !important;
+    }
+
+    #security-settings-wrapper .sec-nav-tabs-wrapper {
+        border-bottom: 1px solid var(--sec-border);
+        margin-bottom: 14px;
+        padding-bottom: 1px;
+    }
+    #security-settings-wrapper .sec-nav-tabs {
+        gap: 5px;
+        padding-bottom: 0;
+    }
+    #security-settings-wrapper .sec-nav-tabs .nav-link {
+        min-height: 35px;
+        padding: 7px 12px;
+        color: #596579;
+        background: #fff;
+        border: 1px solid transparent;
+        font-size: 11.5px;
+        font-weight: 600;
+        box-shadow: none;
+    }
+    #security-settings-wrapper .sec-nav-tabs .nav-link:hover {
+        color: var(--sec-primary);
+        background: #f8fafc;
+        border-color: #e5eaf2;
+    }
+    #security-settings-wrapper .sec-nav-tabs .nav-link.active {
+        color: var(--sec-primary) !important;
+        background: var(--sec-primary-soft) !important;
+        border-color: #dbeafe !important;
+        box-shadow: none !important;
+    }
+
+    #security-settings-wrapper .card-title-icon {
+        border-width: 1px !important;
+    }
+    #security-settings-wrapper .settings-toggle-card {
+        background: #fff;
+        border: 1px solid #e7eaf0;
+        padding: 11px 13px;
+        gap: 14px;
+    }
+    #security-settings-wrapper .settings-toggle-card:hover {
+        background: #fbfcfe;
+        border-color: #d8dee8;
+    }
+    #security-settings-wrapper .settings-toggle-card h6 {
+        color: #273449 !important;
+        line-height: 1.45;
+    }
+    #security-settings-wrapper .settings-toggle-card p {
+        line-height: 1.55;
+    }
+    #security-settings-wrapper .settings-toggle-card .form-check-input {
+        width: 34px;
+        height: 18px;
+        margin-top: 0;
+        box-shadow: none;
+    }
+
+    #security-settings-wrapper .form-label {
+        color: #475467;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+    #security-settings-wrapper .form-control,
+    #security-settings-wrapper .form-select,
+    .sec-settings-modal-scope .form-control,
+    .sec-settings-modal-scope .form-select {
+        min-height: 35px;
+        border: 1px solid #d8dee8 !important;
+        background-color: #fff !important;
+        color: #344054 !important;
+        font-size: 12px !important;
+        box-shadow: none !important;
+    }
+    #security-settings-wrapper textarea.form-control,
+    .sec-settings-modal-scope textarea.form-control {
+        min-height: auto;
+        line-height: 1.55;
+    }
+    #security-settings-wrapper .form-control:focus,
+    #security-settings-wrapper .form-select:focus,
+    .sec-settings-modal-scope .form-control:focus,
+    .sec-settings-modal-scope .form-select:focus {
+        border-color: var(--sec-primary, #2563eb) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10) !important;
+    }
+
+    #security-settings-wrapper .btn,
+    #security-settings-wrapper .btn-compact,
+    .sec-settings-modal-scope .btn {
+        min-height: 32px;
+        font-weight: 600;
+        box-shadow: none;
+    }
+    #security-settings-wrapper .btn-primary {
+        background: var(--sec-primary, #2563eb) !important;
+        border-color: var(--sec-primary, #2563eb) !important;
+    }
+    #security-settings-wrapper .btn-primary:hover {
+        filter: brightness(.94);
+    }
+    #security-settings-wrapper .sec-action-btn {
+        min-height: 28px;
+    }
+
+    #security-settings-wrapper .sec-table-container {
+        border-radius: 0 !important;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f8fafc;
+    }
+    #security-settings-wrapper .sec-table {
+        min-width: 680px;
+    }
+    #security-settings-wrapper .sec-table thead th {
+        background: #f8fafc !important;
+        color: #667085 !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        font-size: 10px !important;
+        letter-spacing: .045em !important;
+        padding: 10px 11px !important;
+    }
+    #security-settings-wrapper .sec-table tbody td {
+        color: #344054;
+        border-bottom: 1px solid #f0f2f5 !important;
+        font-size: 11.5px !important;
+        padding: 9px 11px !important;
+    }
+    #security-settings-wrapper .sec-table tbody tr:last-child td {
+        border-bottom: 0 !important;
+    }
+
+    .sec-settings-modal-scope .modal-content,
+    .sec-settings-modal-scope .minimal-modal-card {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 5px !important;
+        box-shadow: 0 12px 32px rgba(16, 24, 40, .14) !important;
+    }
+    .sec-settings-modal-scope .modal-header,
+    .sec-settings-modal-scope .modal-footer {
+        background: #f8fafc !important;
+        border-color: #eaecf0 !important;
+    }
+    .sec-settings-modal-scope .minimal-modal-card {
+        padding: 22px !important;
+    }
+    .sec-settings-modal-scope .minimal-modal-title {
+        color: #1f2937 !important;
+        font-size: 15px !important;
+    }
+    .sec-settings-modal-scope .minimal-modal-subtext {
+        color: #667085 !important;
+        font-size: 12px !important;
+        line-height: 1.6 !important;
+    }
+    .sec-settings-modal-scope .btn-minimal-action,
+    .sec-settings-modal-scope .btn-minimal-cancel {
+        border-radius: 5px !important;
+        box-shadow: none !important;
+    }
+
+    @media (min-width: 1400px) {
+        #security-settings-wrapper > .mx-auto {
+            max-width: 1600px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        #security-settings-wrapper {
+            padding-top: 10px !important;
+        }
+        #security-settings-wrapper .sec-card.p-3 {
+            padding: 12px !important;
+        }
+        #security-settings-wrapper .header-top-wrap {
+            align-items: stretch !important;
+        }
+        #security-settings-wrapper .header-action-btns-wrap {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+        }
+        #security-settings-wrapper .header-action-btns-wrap .btn {
+            min-height: 36px;
+            padding-inline: 8px !important;
+            font-size: 11px !important;
+        }
+        #security-settings-wrapper .sec-nav-tabs-wrapper {
+            margin-inline: -2px;
+        }
+        #security-settings-wrapper .sec-nav-tabs .nav-link {
+            min-height: 36px;
+            padding-inline: 10px;
+        }
+        #security-settings-wrapper .settings-toggle-card {
+            align-items: flex-start;
+            padding: 10px;
+        }
+        #security-settings-wrapper .settings-toggle-card .form-check {
+            padding-top: 2px;
+        }
+        #security-settings-wrapper .sec-table {
+            min-width: 680px;
+        }
+        .sec-settings-modal-scope .modal-dialog {
+            width: calc(100% - 24px);
+            max-width: 420px;
+            margin: 12px auto;
+        }
+        .sec-settings-modal-scope .minimal-modal-card {
+            padding: 18px !important;
+        }
+    }
+    @media (max-width: 380px) {
+        #security-settings-wrapper .header-action-btns-wrap {
+            grid-template-columns: 1fr;
+        }
+        #security-settings-wrapper .sec-page-title {
+            font-size: 15px !important;
+        }
+    }
+
 </style>
 
 <div class="container-fluid px-2 px-sm-3 px-md-4 py-3" id="security-settings-wrapper">
@@ -863,7 +1137,7 @@
                         </div>
                         <div class="col-7">
                             <label class="form-label small fw-bold text-dark mb-1">Target Value <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm bn-digit font-tabular" id="allowlist_value" name="value" required placeholder="e.g. 103.204.120.15">
+                            <input type="text" class="form-control form-control-sm bn-digit font-tabular" id="allowlist_value" name="value" required placeholder="103.204.120.15">
                         </div>
                     </div>
 

@@ -1,10 +1,33 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Stock Balance & Inventory Valuation Sheet - ' . config('app.name', 'Shop Now BD'))
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       STOCK BALANCE — MODERN ADMIN UI
+       Scoped styles | Strict 5px radius | Responsive layout
+    ========================================================= */
+
+    #stockBalanceRoot {
+        --sb-primary: #2563eb;
+        --sb-primary-soft: #eff6ff;
+        --sb-success: #16a34a;
+        --sb-danger: #dc2626;
+        --sb-warning: #d97706;
+        --sb-purple: #7c3aed;
+        --sb-text: #0f172a;
+        --sb-muted: #64748b;
+        --sb-border: #e2e8f0;
+        --sb-surface: #ffffff;
+        --sb-soft: #f8fafc;
+        color: var(--sb-text);
+        font-size: 13px;
+    }
+
+    /* Global radius enforcement */
     #stockBalanceRoot .btn,
     #stockBalanceRoot .btn-sm,
     #stockBalanceRoot button,
@@ -21,6 +44,7 @@
     #stockBalanceRoot .page-item span,
     #stockBalanceRoot .proof-thumb-box,
     #stockBalanceRoot .collapse-toggle-btn,
+    #stockBalanceRoot .section-header-wrap,
     .balance-modal-scope .modal-content,
     .balance-modal-scope .btn,
     .balance-modal-scope .form-control,
@@ -32,107 +56,215 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #stockBalanceRoot .input-group > .form-control {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
+    #stockBalanceRoot .font-monospace,
+    #stockBalanceRoot .font-monospace * {
         font-weight: 700 !important;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    #stockBalanceRoot .min-w-0 {
+        min-width: 0;
+    }
+
+    /* Header */
+    #stockBalanceRoot .balance-header-wrap {
+        gap: 12px;
+    }
+
+    #stockBalanceRoot .balance-title-icon {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
+        background: var(--sb-primary-soft);
+        color: var(--sb-primary);
+        border: 1px solid #dbeafe;
+        border-radius: 5px;
+        font-size: 16px;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
-    .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+    #stockBalanceRoot .balance-page-title {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.35px;
+        color: var(--sb-text);
+        line-height: 1.3;
+    }
+
+    #stockBalanceRoot .balance-page-subtitle {
+        color: var(--sb-muted);
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+
+    #stockBalanceRoot .top-action-btns {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 7px;
+    }
+
+    #stockBalanceRoot .btn-compact {
+        min-height: 32px;
+        padding: 6px 12px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        transition: all .18s ease;
+    }
+
+    #stockBalanceRoot .btn-compact:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Cards and section headers */
+    #stockBalanceRoot .card,
+    #stockBalanceRoot .metric-card,
+    #stockBalanceRoot .filter-toolbar-card {
+        border: 1px solid var(--sb-border);
+        background: var(--sb-surface);
+        box-shadow: 0 2px 7px rgba(15, 23, 42, .035);
+        margin-bottom: 16px;
+    }
+
+    #stockBalanceRoot .section-header-wrap {
+        min-height: 43px;
+        padding: 9px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: #fff;
+        border-bottom: 1px solid var(--sb-border);
+    }
+
+    #stockBalanceRoot .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--sb-text);
+        font-size: 12px;
+        font-weight: 800;
+        min-width: 0;
+    }
+
+    #stockBalanceRoot .section-heading > i {
+        color: var(--sb-primary);
+        font-size: 13px;
+    }
+
+    #stockBalanceRoot .collapse-toggle-btn {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
+        background: #fff;
         border: 1px solid #cbd5e1;
         color: #475569;
-        transition: all 0.2s ease;
+        transition: all .2s ease;
     }
-    .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+
+    #stockBalanceRoot .collapse-toggle-btn:hover {
+        background: var(--sb-primary);
+        border-color: var(--sb-primary);
+        color: #fff;
     }
-    .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
+
+    #stockBalanceRoot .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    #stockBalanceRoot .collapse-icon {
         font-size: 10px;
+        transition: transform .25s ease;
     }
 
-    /* Enterprise Surface Cards */
-    #stockBalanceRoot .card,
-    #stockBalanceRoot .metric-card,
-    #stockBalanceRoot .filter-toolbar-card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    /* KPI Summary Cards - Zero Overflow Architecture */
-    .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
+    /* KPI cards */
+    #stockBalanceRoot .metric-card {
+        min-width: 0;
+        min-height: 112px;
+        height: 100%;
+        padding: 13px 14px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        transition: transform .18s ease, box-shadow .18s ease;
     }
-    .metric-card:hover {
+
+    #stockBalanceRoot .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
     }
-    .stat-label-title {
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+
+    #stockBalanceRoot .metric-card-blue {
+        background: linear-gradient(145deg, #fff 0%, #f0f7ff 100%);
+        border-color: #bfdbfe;
     }
-    .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+
+    #stockBalanceRoot .metric-card-amber {
+        background: linear-gradient(145deg, #fff 0%, #fffbeb 100%);
+        border-color: #fde68a;
+    }
+
+    #stockBalanceRoot .metric-card-purple {
+        background: linear-gradient(145deg, #fff 0%, #faf5ff 100%);
+        border-color: #e9d5ff;
+    }
+
+    #stockBalanceRoot .metric-card-green {
+        background: linear-gradient(145deg, #fff 0%, #f0fdf4 100%);
+        border-color: #bbf7d0;
+    }
+
+    #stockBalanceRoot .stat-label-title {
+        color: var(--sb-muted);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .025em;
+        line-height: 1.35;
+        text-transform: uppercase;
+    }
+
+    #stockBalanceRoot .stat-val-num {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.3;
+        letter-spacing: -.45px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    .stat-sub-text {
-        font-size: 10px;
-        margin-top: 2px;
+
+    #stockBalanceRoot .stat-val-num span {
+        font-size: 10px !important;
+        letter-spacing: 0;
     }
-    .metric-icon-box {
-        width: 32px;
-        height: 32px;
+
+    #stockBalanceRoot .stat-sub-text {
+        margin-top: 3px;
+        font-size: 10px;
+        line-height: 1.4;
+    }
+
+    #stockBalanceRoot .metric-icon-box {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -140,466 +272,734 @@
         flex-shrink: 0;
     }
 
-    .metric-card-purple { background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%); border-color: #e9d5ff; }
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-color: #bae6fd; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-color: #bbf7d0; }
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-color: #fde68a; }
-
-    /* Form Controls */
+    /* Filters */
     #stockBalanceRoot .form-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 4px;
         display: block;
+        margin-bottom: 5px;
+        color: #334155;
+        font-size: 11px;
+        font-weight: 800;
     }
+
     #stockBalanceRoot .form-control,
     #stockBalanceRoot .form-select {
-        min-height: 32px;
-        font-size: 12px;
+        min-height: 35px;
+        padding: 6px 10px;
+        color: var(--sb-text);
+        background-color: #fff;
         border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 12px;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
+
+    #stockBalanceRoot .form-control::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
     #stockBalanceRoot .form-control:focus,
     #stockBalanceRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        border-color: var(--sb-primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
         outline: none;
     }
 
-    /* Desktop View Optimization: 100% Fit Screen with Zero Horizontal Scroll */
-    .custom-balance-table {
+    #stockBalanceRoot .input-group-text {
+        min-width: 36px;
+        justify-content: center;
+        border-color: #cbd5e1;
+        font-size: 11px;
+    }
+
+    #stockBalanceRoot .filter-toolbar-card {
+        overflow: hidden;
+    }
+
+    /* Table */
+    #stockBalanceRoot .balance-table-wrap {
+        width: 100%;
+    }
+
+    #stockBalanceRoot .custom-balance-table {
         width: 100%;
         margin-bottom: 0;
     }
-    .custom-balance-table th {
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+
+    #stockBalanceRoot .custom-balance-table thead th {
+        padding: 10px 7px;
         color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 8px 6px;
+        background: #f8fafc;
+        border-bottom: 1px solid #dbe3ee;
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: .035em;
+        text-transform: uppercase;
         white-space: nowrap;
     }
-    .custom-balance-table td {
-        padding: 8px 6px;
-        vertical-align: middle;
-        font-size: 11px;
+
+    #stockBalanceRoot .custom-balance-table tbody td {
+        padding: 9px 7px;
         color: #1e293b;
         border-bottom: 1px solid #f1f5f9;
+        font-size: 11px;
+        vertical-align: middle;
         white-space: nowrap;
     }
-    .custom-balance-table tbody tr:hover {
-        background-color: #fafbfc;
+
+    #stockBalanceRoot .custom-balance-table tbody tr {
+        transition: background-color .15s ease;
+    }
+
+    #stockBalanceRoot .custom-balance-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    #stockBalanceRoot .custom-balance-table tbody tr:last-child td {
+        border-bottom: 0;
     }
 
     @media (min-width: 992px) {
-        .custom-balance-table {
+        #stockBalanceRoot .custom-balance-table {
             table-layout: fixed !important;
             width: 100% !important;
         }
-        .pc-fit-container {
+
+        #stockBalanceRoot .pc-fit-container {
             overflow-x: hidden !important;
         }
-        .custom-balance-table th,
-        .custom-balance-table td {
+
+        #stockBalanceRoot .custom-balance-table th,
+        #stockBalanceRoot .custom-balance-table td {
             overflow: hidden !important;
             text-overflow: ellipsis !important;
         }
 
-        /* 10 Columns Proportional Distribution Summing to Exactly 100% */
-        .col-b-id    { width: 4% !important; }
-        .col-b-prod  { width: 23% !important; }
-        .col-b-type  { width: 8% !important; }
-        .col-b-sku   { width: 11% !important; }
-        .col-b-stock { width: 10% !important; }
-        .col-b-cost  { width: 9% !important; }
-        .col-b-price { width: 9% !important; }
-        .col-b-val   { width: 11% !important; }
-        .col-b-stat  { width: 8% !important; }
-        .col-b-act   { width: 7% !important; }
+        #stockBalanceRoot .col-b-id    { width: 4% !important; }
+        #stockBalanceRoot .col-b-prod  { width: 23% !important; }
+        #stockBalanceRoot .col-b-type  { width: 8% !important; }
+        #stockBalanceRoot .col-b-sku   { width: 11% !important; }
+        #stockBalanceRoot .col-b-stock { width: 10% !important; }
+        #stockBalanceRoot .col-b-cost  { width: 9% !important; }
+        #stockBalanceRoot .col-b-price { width: 9% !important; }
+        #stockBalanceRoot .col-b-val   { width: 11% !important; }
+        #stockBalanceRoot .col-b-stat  { width: 8% !important; }
+        #stockBalanceRoot .col-b-act   { width: 7% !important; }
     }
 
-    /* Global Media Chooser Thumbnail Box */
-    .proof-thumb-box {
-        width: 26px;
-        height: 26px;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        overflow: hidden;
+    /* Product thumbnail */
+    #stockBalanceRoot .proof-thumb-box {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
+        overflow: hidden;
         flex-shrink: 0;
-        position: relative;
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #dbe3ee;
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .proof-thumb-box img {
+
+    #stockBalanceRoot .proof-thumb-box:hover {
+        border-color: var(--sb-primary);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, .08);
+    }
+
+    #stockBalanceRoot .proof-thumb-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    .proof-thumb-hover-overlay {
+
+    #stockBalanceRoot .proof-thumb-hover-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(15, 23, 42, 0.45);
         display: flex;
         align-items: center;
         justify-content: center;
+        background: rgba(15, 23, 42, .52);
         opacity: 0;
-        transition: opacity 0.15s ease;
-        border-radius: 5px !important;
+        transition: opacity .15s ease;
     }
-    .proof-thumb-box:hover .proof-thumb-hover-overlay {
+
+    #stockBalanceRoot .proof-thumb-box:hover .proof-thumb-hover-overlay {
         opacity: 1;
     }
 
-    /* Bulletproof Responsive Pagination */
-    #balancePaginationLinks {
+    /* Pagination */
+    #stockBalanceRoot #balancePaginationLinks {
         display: flex;
         align-items: center;
     }
-    #balancePaginationLinks nav {
+
+    #stockBalanceRoot #balancePaginationLinks nav {
         display: flex !important;
         align-items: center !important;
         justify-content: flex-end !important;
         width: auto !important;
         margin: 0 !important;
     }
-    #balancePaginationLinks nav > div.d-sm-none,
-    #balancePaginationLinks nav > .d-sm-none {
+
+    #stockBalanceRoot #balancePaginationLinks nav > div.d-sm-none,
+    #stockBalanceRoot #balancePaginationLinks nav > .d-sm-none {
         display: none !important;
     }
-    #balancePaginationLinks nav > div.d-none,
-    #balancePaginationLinks nav > .d-none.flex-sm-fill {
+
+    #stockBalanceRoot #balancePaginationLinks nav > div.d-none,
+    #stockBalanceRoot #balancePaginationLinks nav > .d-none.flex-sm-fill {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
-    #balancePaginationLinks nav p,
-    #balancePaginationLinks nav .small.text-muted,
-    #balancePaginationLinks nav div:has(> p),
-    #balancePaginationLinks nav > div.d-none > div:first-child,
-    #balancePaginationLinks nav .d-none.flex-sm-fill > div:first-child {
+
+    #stockBalanceRoot #balancePaginationLinks nav p,
+    #stockBalanceRoot #balancePaginationLinks nav .small.text-muted,
+    #stockBalanceRoot #balancePaginationLinks nav div:has(> p),
+    #stockBalanceRoot #balancePaginationLinks nav > div.d-none > div:first-child,
+    #stockBalanceRoot #balancePaginationLinks nav .d-none.flex-sm-fill > div:first-child {
         display: none !important;
     }
-    #balancePaginationLinks .pagination {
-        margin: 0 !important;
+
+    #stockBalanceRoot #balancePaginationLinks .pagination {
         display: flex !important;
         flex-wrap: wrap !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 3px !important;
+        gap: 4px !important;
+        margin: 0 !important;
         padding: 0 !important;
         list-style: none !important;
     }
-    #balancePaginationLinks .page-item {
+
+    #stockBalanceRoot #balancePaginationLinks .page-item {
         display: inline-flex !important;
     }
-    #balancePaginationLinks .page-item .page-link,
-    #balancePaginationLinks .page-item span {
+
+    #stockBalanceRoot #balancePaginationLinks .page-item .page-link,
+    #stockBalanceRoot #balancePaginationLinks .page-item span {
+        min-width: 27px !important;
+        height: 27px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
         color: #475569 !important;
-        background-color: #ffffff !important;
+        background: #fff !important;
         border: 1px solid #cbd5e1 !important;
         border-radius: 5px !important;
-        text-decoration: none !important;
-        line-height: 1 !important;
-        transition: all 0.12s ease !important;
-    }
-    #balancePaginationLinks .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
-    }
-    #balancePaginationLinks .page-item.active .page-link,
-    #balancePaginationLinks .page-item.active span {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: #ffffff !important;
+        font-size: 10.5px !important;
         font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25) !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+        transition: all .15s ease !important;
     }
-    #balancePaginationLinks .page-item.disabled .page-link,
-    #balancePaginationLinks .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
+
+    #stockBalanceRoot #balancePaginationLinks .page-item .page-link:hover {
+        color: var(--sb-primary) !important;
+        background: #eff6ff !important;
+        border-color: #93c5fd !important;
+    }
+
+    #stockBalanceRoot #balancePaginationLinks .page-item.active .page-link,
+    #stockBalanceRoot #balancePaginationLinks .page-item.active span {
+        color: #fff !important;
+        background: var(--sb-primary) !important;
+        border-color: var(--sb-primary) !important;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, .2) !important;
+    }
+
+    #stockBalanceRoot #balancePaginationLinks .page-item.disabled .page-link,
+    #stockBalanceRoot #balancePaginationLinks .page-item.disabled span {
+        opacity: .45 !important;
+        background: #f8fafc !important;
         border-color: #e2e8f0 !important;
         cursor: not-allowed !important;
     }
-    #balancePaginationLinks nav svg {
-        width: 10px !important;
-        height: 10px !important;
+
+    #stockBalanceRoot #balancePaginationLinks nav svg {
+        width: 11px !important;
+        height: 11px !important;
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
-    @media (max-width: 767.98px) {
-        .balance-header-wrap h5 {
-            font-size: 16px !important;
-        }
-        .top-action-btns {
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .top-action-btns .btn {
-            flex: 1 1 calc(33.333% - 6px);
-            min-width: 95px;
-            padding: 7px 4px !important;
-            font-size: 10px !important;
-            justify-content: center;
-        }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-        .stat-label-title {
-            font-size: 10px !important;
-        }
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-        .metric-icon-box {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
-        }
-        .pc-fit-container {
-            width: 100%;
+    /* Footer */
+    #stockBalanceRoot .balance-table-footer {
+        min-height: 47px;
+        background: #fafbfc;
+        border-top: 1px solid var(--sb-border);
+    }
+
+    /* Loading overlay */
+    #stockBalanceRoot #balanceLoadingCover {
+        z-index: 50;
+        border-radius: 5px;
+        backdrop-filter: blur(1px);
+    }
+
+    /* Image modal */
+    .balance-modal-scope .modal-content {
+        border: 1px solid #e2e8f0 !important;
+        overflow: hidden;
+    }
+
+    .balance-modal-scope .modal-header {
+        padding: 12px 14px;
+    }
+
+    .balance-modal-scope .modal-body {
+        padding: 12px;
+    }
+
+    .balance-modal-scope .modal-body img {
+        max-width: 100%;
+        border-radius: 5px !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        #stockBalanceRoot .pc-fit-container {
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }
-        .custom-balance-table {
-            min-width: 820px !important;
+
+        #stockBalanceRoot .custom-balance-table {
+            min-width: 900px !important;
             table-layout: auto !important;
         }
-        #balancePaginationLinks {
-            width: 100% !important;
-            justify-content: center !important;
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            padding: 4px 0 !important;
+    }
+
+    @media (max-width: 767.98px) {
+        #stockBalanceRoot {
+            padding-top: 10px !important;
         }
-        #balancePaginationLinks nav {
+
+        #stockBalanceRoot .balance-header-wrap {
+            align-items: stretch !important;
+        }
+
+        #stockBalanceRoot .balance-page-title {
+            font-size: 15px !important;
+        }
+
+        #stockBalanceRoot .balance-page-subtitle {
+            font-size: 10.5px;
+        }
+
+        #stockBalanceRoot .top-action-btns {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        #stockBalanceRoot .top-action-btns .btn {
+            width: 100%;
+            min-width: 0;
+            min-height: 34px;
+            padding: 6px 4px !important;
+            font-size: 10px !important;
+        }
+
+        #stockBalanceRoot .section-header-wrap {
+            padding: 9px 11px;
+        }
+
+        #stockBalanceRoot .section-heading {
+            font-size: 11px;
+        }
+
+        #stockBalanceRoot .metric-card {
+            min-height: 91px;
+            padding: 10px !important;
+        }
+
+        #stockBalanceRoot .stat-label-title {
+            font-size: 9px;
+        }
+
+        #stockBalanceRoot .stat-val-num {
+            font-size: 14px;
+        }
+
+        #stockBalanceRoot .stat-sub-text {
+            font-size: 9px;
+        }
+
+        #stockBalanceRoot .metric-icon-box {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            font-size: 11px;
+        }
+
+        #stockBalanceRoot .filter-toolbar-card .p-3 {
+            padding: 11px !important;
+        }
+
+        #stockBalanceRoot .form-label {
+            font-size: 10px;
+        }
+
+        #stockBalanceRoot .form-control,
+        #stockBalanceRoot .form-select {
+            min-height: 34px;
+            font-size: 11px;
+        }
+
+        #stockBalanceRoot .balance-table-heading {
+            font-size: 12px !important;
+        }
+
+        #stockBalanceRoot .balance-table-footer {
+            align-items: center !important;
+            padding: 9px 10px !important;
+        }
+
+        #stockBalanceRoot #balancePaginationLinks {
+            width: 100%;
+            justify-content: center;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 4px 0;
+        }
+
+        #stockBalanceRoot #balancePaginationLinks nav {
             justify-content: center !important;
             width: 100% !important;
         }
-        #balancePaginationLinks .pagination {
+
+        #stockBalanceRoot #balancePaginationLinks .pagination {
             flex-wrap: nowrap !important;
             gap: 3px !important;
         }
-        #balancePaginationLinks .page-item .page-link,
-        #balancePaginationLinks .page-item span {
-            min-width: 24px !important;
-            height: 24px !important;
-            font-size: 10px !important;
-            padding: 0 5px !important;
+    }
+
+    @media (max-width: 380px) {
+        #stockBalanceRoot .top-action-btns {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #stockBalanceRoot .top-action-btns .btn:last-child {
+            grid-column: 1 / -1;
+        }
+
+        #stockBalanceRoot .stat-val-num {
+            font-size: 12px;
         }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4 position-relative" id="stockBalanceRoot">
-    <!-- AJAX Loading Spinner Overlay -->
-    <div id="balanceLoadingCover" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-none justify-content-center align-items-center" style="z-index: 50; border-radius: 5px;">
-        <div class="spinner-border text-primary" style="width: 2.2rem; height: 2.2rem;" role="status"></div>
+
+    <!-- AJAX Loading Overlay -->
+    <div id="balanceLoadingCover"
+         class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-none justify-content-center align-items-center">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 2.2rem; height: 2.2rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="small text-muted fw-semibold mt-2">Updating inventory...</div>
+        </div>
     </div>
 
-    <!-- 1. Header & Actions (Original Clean Light Theme) -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 balance-header-wrap">
-        <div>
-            <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-scale-balanced text-primary"></i>
-                <span>Stock Balance &amp; Current Inventory Sheet</span>
-            </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Real-time SKU-level stock positions, purchase valuation, selling value, and stock status.
-            </small>
+    <!-- =====================================================
+         1. PAGE HEADER & ACTIONS
+    ====================================================== -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 balance-header-wrap">
+
+        <div class="d-flex align-items-center gap-2 min-w-0">
+            <div class="balance-title-icon">
+                <i class="fas fa-scale-balanced"></i>
+            </div>
+
+            <div class="min-w-0">
+                <h5 class="balance-page-title mb-1">
+                    Stock Balance &amp; Current Inventory Sheet
+                </h5>
+                <p class="balance-page-subtitle mb-0">
+                    Real-time SKU-level stock positions, purchase valuation, selling value, and stock status.
+                </p>
+            </div>
         </div>
-        <div class="d-flex gap-2 top-action-btns">
-            <a href="{{ route('admin.inventory.stock_in') }}" class="btn btn-sm btn-success btn-compact shadow-xs fw-bold">
-                <i class="fas fa-arrow-down-long me-1"></i> <span>Stock In</span>
+
+        <div class="top-action-btns">
+            <a href="{{ route('admin.inventory.stock_in') }}"
+               class="btn btn-sm btn-success btn-compact shadow-sm">
+                <i class="fas fa-arrow-down-long"></i>
+                <span>Stock In</span>
             </a>
-            <a href="{{ route('admin.inventory.stock_out') }}" class="btn btn-sm btn-danger btn-compact shadow-xs fw-bold">
-                <i class="fas fa-arrow-up-long me-1"></i> <span>Stock Out</span>
+
+            <a href="{{ route('admin.inventory.stock_out') }}"
+               class="btn btn-sm btn-danger btn-compact shadow-sm">
+                <i class="fas fa-arrow-up-long"></i>
+                <span>Stock Out</span>
             </a>
-            <button type="button" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-bold" onclick="exportBalanceCsv()">
-                <i class="fas fa-file-excel text-success me-1"></i> <span>Export (CSV)</span>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-success btn-compact bg-white shadow-sm"
+                    onclick="exportBalanceCsv()">
+                <i class="fas fa-file-excel text-success"></i>
+                <span>Export CSV</span>
             </button>
         </div>
     </div>
 
-    <!-- 2. KPI Summary Cards (Collapsible Section) -->
-    <div class="card border-0 shadow-sm mb-3" style="border: 1px solid #e2e8f0; background: #ffffff;">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-primary me-1"></i> Inventory Portfolio &amp; Valuation Summary
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseBalanceKpis" aria-expanded="true" aria-controls="collapseBalanceKpis" title="Toggle Section">
+    <!-- =====================================================
+         2. INVENTORY KPI SUMMARY
+    ====================================================== -->
+    <div class="card border-0 shadow-sm mb-3">
+
+        <div class="section-header-wrap">
+            <div class="section-heading">
+                <i class="fas fa-chart-pie"></i>
+                <span>Inventory Portfolio &amp; Valuation Summary</span>
+            </div>
+
+            <button type="button"
+                    class="collapse-toggle-btn shadow-sm no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseBalanceKpis"
+                    aria-expanded="true"
+                    aria-controls="collapseBalanceKpis"
+                    title="Toggle Summary">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseBalanceKpis">
             <div class="p-3">
                 <div class="row g-2">
-                    <!-- Total Distinct Items -->
+
+                    <!-- Total Items -->
                     <div class="col-6 col-xl-3">
                         <div class="metric-card metric-card-blue h-100">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Line Items</span>
-                                <div class="metric-icon-box bg-primary text-white shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Total Line Items</span>
+                                <div class="metric-icon-box bg-primary text-white shadow-sm">
                                     <i class="fas fa-boxes-stacked"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-primary bn-digit font-monospace stat-val-num" id="val-total-items">
+                                <h4 class="fw-bold my-0 text-primary font-monospace stat-val-num"
+                                    id="val-total-items">
                                     {{ number_format($summary->total_items ?? 0) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Active line items</small>
+                                <small class="text-muted d-block text-truncate stat-sub-text">
+                                    Active line items
+                                </small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Total Stock Units -->
+                    <!-- Available Stock -->
                     <div class="col-6 col-xl-3">
                         <div class="metric-card metric-card-amber h-100">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Available Stock</span>
-                                <div class="metric-icon-box text-dark shadow-xs" style="background-color: #f59e0b;">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Available Stock</span>
+                                <div class="metric-icon-box text-dark shadow-sm" style="background-color: #f59e0b;">
                                     <i class="fas fa-cubes"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="val-total-units">
-                                    {{ number_format($summary->total_units ?? 0) }} <span style="font-size: 11px;">Units</span>
+                                <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num"
+                                    id="val-total-units">
+                                    {{ number_format($summary->total_units ?? 0) }}
+                                    <span>Units</span>
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Cumulative units</small>
+                                <small class="text-muted d-block text-truncate stat-sub-text">
+                                    Cumulative units
+                                </small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Inventory Purchase Valuation -->
+                    <!-- Purchase Valuation -->
                     <div class="col-6 col-xl-3">
                         <div class="metric-card metric-card-purple h-100">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Purchase Valuation</span>
-                                <div class="metric-icon-box text-white shadow-xs" style="background-color: #7c3aed;">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Purchase Valuation</span>
+                                <div class="metric-icon-box text-white shadow-sm" style="background-color: #7c3aed;">
                                     <i class="fas fa-vault"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="val-total-purchase">
+                                <h4 class="fw-bold my-0 text-dark font-monospace stat-val-num"
+                                    id="val-total-purchase">
                                     ৳ {{ number_format($summary->total_purchase_value ?? 0, 2) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Weighted Cost</small>
+                                <small class="text-muted d-block text-truncate stat-sub-text">
+                                    Weighted Cost
+                                </small>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Total Retail Selling Value -->
+                    <!-- Retail Value -->
                     <div class="col-6 col-xl-3">
                         <div class="metric-card metric-card-green h-100">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Retail Value</span>
-                                <div class="metric-icon-box bg-success text-white shadow-xs">
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="stat-label-title text-truncate">Retail Value</span>
+                                <div class="metric-icon-box bg-success text-white shadow-sm">
                                     <i class="fas fa-tag"></i>
                                 </div>
                             </div>
+
                             <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="val-total-selling">
+                                <h4 class="fw-bold my-0 text-success font-monospace stat-val-num"
+                                    id="val-total-selling">
                                     ৳ {{ number_format($summary->total_selling_value ?? 0, 2) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Selling Price</small>
+                                <small class="text-muted d-block text-truncate stat-sub-text">
+                                    Selling Price
+                                </small>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 3. Filter Toolbar (Collapsible) -->
-    <div class="filter-toolbar-card overflow-hidden">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Filter Stock Positions
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseBalanceFilter" aria-expanded="true" aria-controls="collapseBalanceFilter" title="Toggle Filters">
+    <!-- =====================================================
+         3. FILTER TOOLBAR
+    ====================================================== -->
+    <div class="filter-toolbar-card mb-3">
+
+        <div class="section-header-wrap">
+            <div class="section-heading">
+                <i class="fas fa-filter"></i>
+                <span>Filter Stock Positions</span>
+            </div>
+
+            <button type="button"
+                    class="collapse-toggle-btn shadow-sm no-print"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseBalanceFilter"
+                    aria-expanded="true"
+                    aria-controls="collapseBalanceFilter"
+                    title="Toggle Filters">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
         </div>
+
         <div class="collapse show" id="collapseBalanceFilter">
             <div class="p-3">
                 <form id="balance-filter-form" onsubmit="return false;">
                     <div class="row g-2 align-items-end">
-                        <!-- Search Input -->
+
+                        <!-- Search -->
                         <div class="col-12 col-md-5">
                             <label class="form-label" for="balance-search">
-                                <i class="fas fa-search me-1 text-primary"></i> Search Product / Variant
+                                <i class="fas fa-search text-primary me-1"></i>
+                                Search Product / Variant
                             </label>
+
                             <div class="input-group">
-                                <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                                <input type="text" name="search" id="balance-search" class="form-control border-start-0 ps-0 shadow-none" placeholder="Product title, SKU, ID, color, or size..." value="{{ request('search') }}" onkeyup="handleSearchKeyup(event)">
+                                <span class="input-group-text bg-light text-muted border-end-0">
+                                    <i class="fas fa-search"></i>
+                                </span>
+
+                                <input type="text"
+                                       name="search"
+                                       id="balance-search"
+                                       class="form-control border-start-0 ps-0 shadow-none"
+                                       placeholder="Product title, SKU, ID, color, or size..."
+                                       value="{{ request('search') }}"
+                                       onkeyup="handleSearchKeyup(event)">
                             </div>
                         </div>
 
-                        <!-- Stock Status Filter -->
+                        <!-- Stock Status -->
                         <div class="col-6 col-md-4">
                             <label class="form-label" for="balance-stock-status">
-                                <i class="fas fa-filter me-1 text-warning"></i> Stock Status Filter
+                                <i class="fas fa-layer-group text-warning me-1"></i>
+                                Stock Status Filter
                             </label>
-                            <select name="stock_status" id="balance-stock-status" class="form-select shadow-none font-monospace" onchange="applyBalanceFilter()">
-                                <option value="all" {{ !request()->filled('stock_status') || request('stock_status') === 'all' ? 'selected' : '' }}>All Items</option>
-                                <option value="in_stock" {{ request('stock_status') === 'in_stock' ? 'selected' : '' }}>In Stock (Healthy)</option>
-                                <option value="low_stock" {{ request('stock_status') === 'low_stock' ? 'selected' : '' }}>Low Stock (&le; Alert Level)</option>
-                                <option value="out_of_stock" {{ request('stock_status') === 'out_of_stock' ? 'selected' : '' }}>Out of Stock (Zero / Negative)</option>
+
+                            <select name="stock_status"
+                                    id="balance-stock-status"
+                                    class="form-select shadow-none font-monospace"
+                                    onchange="applyBalanceFilter()">
+
+                                <option value="all"
+                                    {{ !request()->filled('stock_status') || request('stock_status') === 'all' ? 'selected' : '' }}>
+                                    All Items
+                                </option>
+
+                                <option value="in_stock"
+                                    {{ request('stock_status') === 'in_stock' ? 'selected' : '' }}>
+                                    In Stock (Healthy)
+                                </option>
+
+                                <option value="low_stock"
+                                    {{ request('stock_status') === 'low_stock' ? 'selected' : '' }}>
+                                    Low Stock (&le; Alert Level)
+                                </option>
+
+                                <option value="out_of_stock"
+                                    {{ request('stock_status') === 'out_of_stock' ? 'selected' : '' }}>
+                                    Out of Stock (Zero / Negative)
+                                </option>
                             </select>
                         </div>
 
-                        <!-- Filter Button -->
+                        <!-- Apply -->
                         <div class="col-6 col-md-3">
-                            <button type="button" class="btn btn-dark btn-compact w-100 fw-bold shadow-xs" onclick="applyBalanceFilter()">
-                                <i class="fas fa-sync-alt me-1" style="font-size: 10px;"></i>
+                            <button type="button"
+                                    class="btn btn-dark btn-compact w-100 fw-bold shadow-sm"
+                                    onclick="applyBalanceFilter()">
+                                <i class="fas fa-filter"></i>
                                 <span>Apply Filter</span>
                             </button>
                         </div>
+
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- 4. Stock Balance Sheet Table (Desktop 100% Fit Screen with Zero Horizontal Scroll) -->
-    <div class="card p-0 mb-3 overflow-hidden shadow-xs">
-        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-light bg-opacity-25">
-            <div>
-                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13px;">
+    <!-- =====================================================
+         4. STOCK BALANCE TABLE
+    ====================================================== -->
+    <div class="card p-0 mb-3 overflow-hidden shadow-sm">
+
+        <!-- Table Header -->
+        <div class="p-2 px-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 bg-white">
+
+            <div class="min-w-0">
+                <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2 balance-table-heading">
                     <i class="fas fa-table-list text-primary"></i>
                     <span>Real-Time Stock Balance Sheet</span>
                 </h6>
-                <small class="text-muted font-monospace bn-digit" style="font-size: 10px;" id="balance-entries-text">
-                    Showing {{ $items->firstItem() ?? 0 }} to {{ $items->lastItem() ?? 0 }} of {{$items->total() }} items
+
+                <small class="text-muted font-monospace" style="font-size: 10px;" id="balance-entries-text">
+                    Showing {{ $items->firstItem() ?? 0 }}
+                    to {{ $items->lastItem() ?? 0 }}
+                    of {{ $items->total() }} items
                 </small>
             </div>
+
             <div class="d-flex align-items-center gap-2">
-                <label class="small text-muted mb-0 font-monospace" style="font-size: 11px;">Show:</label>
-                <select name="per_page" id="balance-per-page" class="form-select shadow-none bn-digit font-monospace" style="width: 75px; font-size: 11px;" onchange="applyBalanceFilter()">
+                <label class="small text-muted mb-0 font-monospace"
+                       for="balance-per-page"
+                       style="font-size: 10px;">
+                    Show:
+                </label>
+
+                <select name="per_page"
+                        id="balance-per-page"
+                        class="form-select shadow-none font-monospace"
+                        style="width: 78px; min-height: 31px; font-size: 11px;"
+                        onchange="applyBalanceFilter()">
+
                     <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
                     <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
                     <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
@@ -608,11 +1008,13 @@
             </div>
         </div>
 
-        <div class="table-responsive pc-fit-container">
+        <!-- Table -->
+        <div class="table-responsive pc-fit-container balance-table-wrap">
             <table class="table align-middle mb-0 custom-balance-table" id="balance-table">
+
                 <thead>
                     <tr>
-                        <th class="ps-3 col-b-id bn-digit">ID</th>
+                        <th class="ps-3 col-b-id">ID</th>
                         <th class="col-b-prod">Product &amp; Attributes</th>
                         <th class="col-b-type">Type</th>
                         <th class="col-b-sku">SKU / Code</th>
@@ -624,115 +1026,200 @@
                         <th class="text-end pe-3 col-b-act">Action</th>
                     </tr>
                 </thead>
+
                 <tbody id="balance-tbody">
                     @include('admin.inventory.partials.balance_rows', ['items' => $items])
                 </tbody>
+
             </table>
         </div>
 
-        <!-- Pagination & Footer (Exact Transaction Standard) -->
-        <div class="p-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50" id="balance-pagination-container">
-            <div class="small text-muted font-monospace bn-digit" style="font-size: 11px;">
+        <!-- Pagination Footer -->
+        <div class="balance-table-footer p-2 px-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2"
+             id="balance-pagination-container">
+
+            <div class="small text-muted font-monospace text-center text-sm-start"
+                 style="font-size: 10.5px;">
                 Total <strong>{{ $items->total() }}</strong> records matching filter
             </div>
+
             <div id="balancePaginationLinks">
                 {{ $items->links('pagination::bootstrap-5') }}
             </div>
         </div>
+
     </div>
 </div>
 
-<!-- Modal: Lightbox Zoom Modal for Product & Variant Images -->
-<div class="modal fade balance-modal-scope" id="balanceImageZoomModal" tabindex="-1" aria-hidden="true" style="z-index: 108000;">
+<!-- =========================================================
+     IMAGE ZOOM MODAL
+========================================================== -->
+<div class="modal fade balance-modal-scope"
+     id="balanceImageZoomModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 108000;">
+
     <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content border-0 shadow-lg text-center p-2">
+        <div class="modal-content shadow-lg text-center p-2">
+
             <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
                 <span class="fw-bold text-dark small" style="font-size: 12px;" id="balanceZoomModalTitle">
-                    <i class="fas fa-image text-primary me-1"></i> Product / Variant Preview
+                    <i class="fas fa-image text-primary me-1"></i>
+                    Product / Variant Preview
                 </span>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
+
+                <button type="button"
+                        class="btn-close btn-sm shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
             </div>
+
             <div class="modal-body p-2">
-                <img id="balanceZoomModalImgTag" src="" alt="Product Photo" class="img-fluid border" style="max-height: 480px; object-fit: contain; border-radius: 5px;">
+                <img id="balanceZoomModalImgTag"
+                     src=""
+                     alt="Product Photo"
+                     class="img-fluid border"
+                     style="max-height: 480px; width: 100%; object-fit: contain; border-radius: 5px;">
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
+    /* =========================================================
+       STOCK BALANCE — JAVASCRIPT
+       Existing AJAX, media picker, pagination and CSV behavior
+    ========================================================= */
+
+    /**
+     * Search on Enter key.
+     */
     function handleSearchKeyup(e) {
         if (e.key === 'Enter') {
+            e.preventDefault();
             applyBalanceFilter();
         }
     }
 
+    /**
+     * Product / Variant image zoom.
+     */
     function zoomBalanceImage(url, title = 'Product Image') {
         const titleEl = document.getElementById('balanceZoomModalTitle');
-        const imgTag  = document.getElementById('balanceZoomModalImgTag');
-        if (url && imgTag) {
-            if (titleEl) titleEl.innerText = title;
+        const imgTag = document.getElementById('balanceZoomModalImgTag');
+        const modalEl = document.getElementById('balanceImageZoomModal');
+
+        if (url && imgTag && modalEl && typeof bootstrap !== 'undefined') {
+            if (titleEl) {
+                titleEl.innerText = title;
+            }
+
             imgTag.src = url;
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('balanceImageZoomModal')).show();
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
         }
     }
 
+    /**
+     * Normalize Media Library response.
+     */
     function extractMediaItem(mediaInput) {
         if (!mediaInput) return null;
+
         const item = Array.isArray(mediaInput) ? mediaInput[0] : mediaInput;
+
         if (!item || typeof item !== 'object') return null;
+
         const rawPath = item.file_path || item.path || item.url || '';
-        const rawUrl  = item.url || item.file_path || item.path || '';
+        const rawUrl = item.url || item.file_path || item.path || '';
+
         if (!rawPath || rawPath === 'undefined') return null;
+
         return {
             path: String(rawPath).trim(),
-            url:  String(rawUrl).trim()
+            url: String(rawUrl).trim()
         };
     }
 
+    /**
+     * Select and update product image using Global Media Picker.
+     */
     function chooseBalanceProductMedia(productId) {
         if (typeof window.openMediaPicker === 'function') {
+
             window.openMediaPicker({
                 multiple: false,
+
                 onSelect: function(media) {
                     const picked = extractMediaItem(media);
+
                     if (picked && picked.path) {
+
                         fetch("{{ url('admin/product/quick-update-image') }}/" + productId, {
                             method: 'POST',
+
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: JSON.stringify({ image_path: picked.path })
+
+                            body: JSON.stringify({
+                                image_path: picked.path
+                            })
                         })
-                        .then(res => res.json())
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error('Unable to update product image.');
+                            }
+
+                            return res.json();
+                        })
                         .then(res => {
                             applyBalanceFilter();
                         })
-                        .catch(() => {
+                        .catch(error => {
+                            console.error('Product image update error:', error);
                             applyBalanceFilter();
                         });
                     }
                 }
             });
+
         } else {
             alert('Global Media Library is loading, please try again.');
         }
     }
 
+    /**
+     * Apply stock balance filters using AJAX.
+     */
     function applyBalanceFilter(targetUrl = null) {
         const form = document.getElementById('balance-filter-form');
+
+        if (!form) return;
+
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        params.append('per_page', document.getElementById('balance-per-page').value);
+
+        const perPageElement = document.getElementById('balance-per-page');
+
+        if (perPageElement) {
+            params.set('per_page', perPageElement.value);
+        }
 
         const cover = document.getElementById('balanceLoadingCover');
+
         if (cover) {
             cover.classList.remove('d-none');
             cover.classList.add('d-flex');
         }
 
-        const url = targetUrl || ("{{ route('admin.inventory.balance') }}?" + params.toString());
+        const url = targetUrl || (
+            "{{ route('admin.inventory.balance') }}?" + params.toString()
+        );
 
         fetch(url, {
             headers: {
@@ -740,26 +1227,86 @@
                 'Accept': 'application/json'
             }
         })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('balance-tbody').innerHTML = data.table_html;
-                document.getElementById('balance-pagination-container').innerHTML = `
-                    <div class="small text-muted font-monospace bn-digit" style="font-size: 11px;">
-                        Total <strong>${data.total_count}</strong> records matching filter
-                    </div>
-                    <div id="balancePaginationLinks">${data.pagination_html}</div>
-                `;
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Unable to load stock balance data.');
+            }
 
+            return res.json();
+        })
+        .then(data => {
+
+            if (data.success) {
+
+                const tbody = document.getElementById('balance-tbody');
+
+                if (tbody) {
+                    tbody.innerHTML = data.table_html;
+                }
+
+                const paginationContainer = document.getElementById('balance-pagination-container');
+
+                if (paginationContainer) {
+                    paginationContainer.innerHTML = `
+                        <div class="small text-muted font-monospace text-center text-sm-start"
+                             style="font-size: 10.5px;">
+                            Total <strong>${Number(data.total_count ?? 0).toLocaleString()}</strong>
+                            records matching filter
+                        </div>
+
+                        <div id="balancePaginationLinks">
+                            ${data.pagination_html ?? ''}
+                        </div>
+                    `;
+                }
+
+                /* Update KPI summary */
                 if (data.summary) {
-                    document.getElementById('val-total-items').innerText = data.summary.total_items;
-                    document.getElementById('val-total-units').innerHTML = `${data.summary.total_units} <span style="font-size: 11px;">Units</span>`;
-                    document.getElementById('val-total-purchase').innerText = `৳ ${data.summary.total_purchase_value}`;
-                    document.getElementById('val-total-selling').innerText = `৳ ${data.summary.total_selling_value}`;
+                    const summary = data.summary;
+
+                    const totalItems = document.getElementById('val-total-items');
+                    const totalUnits = document.getElementById('val-total-units');
+                    const totalPurchase = document.getElementById('val-total-purchase');
+                    const totalSelling = document.getElementById('val-total-selling');
+
+                    if (totalItems) {
+                        totalItems.innerText = Number(summary.total_items ?? 0).toLocaleString();
+                    }
+
+                    if (totalUnits) {
+                        totalUnits.innerHTML = `
+                            ${Number(summary.total_units ?? 0).toLocaleString()}
+                            <span>Units</span>
+                        `;
+                    }
+
+                    if (totalPurchase) {
+                        totalPurchase.innerText = `৳ ${Number(summary.total_purchase_value ?? 0).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}`;
+                    }
+
+                    if (totalSelling) {
+                        totalSelling.innerText = `৳ ${Number(summary.total_selling_value ?? 0).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}`;
+                    }
+                }
+
+                /* Update showing text if provided by server */
+                const entriesText = document.getElementById('balance-entries-text');
+
+                if (entriesText && data.first_item !== undefined) {
+                    entriesText.innerText =
+                        `Showing ${data.first_item ?? 0} to ${data.last_item ?? 0} of ${data.total_count ?? 0} items`;
                 }
             }
         })
-        .catch(err => console.error('Balance filter error:', err))
+        .catch(error => {
+            console.error('Balance filter error:', error);
+        })
         .finally(() => {
             if (cover) {
                 cover.classList.add('d-none');
@@ -768,23 +1315,45 @@
         });
     }
 
+    /**
+     * AJAX pagination.
+     * Delegated event keeps working after pagination HTML replacement.
+     */
     document.addEventListener('click', function(e) {
         const pageLink = e.target.closest('#balancePaginationLinks a');
+
         if (pageLink) {
             e.preventDefault();
+
             const href = pageLink.getAttribute('href');
-            if (href && href !== '#' && !href.startsWith('javascript:')) {
+
+            if (
+                href &&
+                href !== '#' &&
+                !href.startsWith('javascript:')
+            ) {
                 applyBalanceFilter(href);
             }
         }
     });
 
+    /**
+     * Export current filtered stock balance as CSV.
+     */
     function exportBalanceCsv() {
         const form = document.getElementById('balance-filter-form');
+
+        if (!form) return;
+
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
+
         params.append('export', 'csv');
-        window.open("{{ route('admin.inventory.balance') }}?" + params.toString(), '_blank');
+
+        const url = "{{ route('admin.inventory.balance') }}?" + params.toString();
+
+        window.open(url, '_blank');
     }
 </script>
+
 @endsection

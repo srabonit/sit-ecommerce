@@ -262,32 +262,29 @@
     <div class="container-fluid px-2 px-md-4 py-2" id="themeColorsRoot">
 
         <!-- Header & Quick Action Card -->
-        <div
-            class="theme-header-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 header-top-wrap">
-            <div>
-                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2" style="font-size: 17px;">
-                    <i class="fas fa-palette text-warning"></i>
-                    <span>Theme Colors</span>
-                </h5>
-                <small class="text-white-50 d-block mt-1" style="font-size: 11.5px; line-height: 1.35;">
-                   Customize colors for each storefront section.
-                </small>
-            </div>
+     <div class="theme-header-card d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 mb-3 bg-white p-3 border rounded-3 shadow-xs">
+    <div class="min-w-0">
+        <h5 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2 text-nowrap" style="font-size: 16px;">
+            <i class="fas fa-palette text-warning"></i>
+            <span>Theme Colors</span>
+        </h5>
+        <small class="text-secondary d-block mt-0 text-nowrap" style="font-size: 11.5px; line-height: 1.35;">
+            Customize colors for each storefront section.
+        </small>
+    </div>
 
-            <div class="top-action-btns d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-compact text-white border-white-50 shadow-xs col-6"
-                    onclick="toggleAllColorSections()">
-                    <i class="fas fa-arrows-up-down me-1"></i>
-                    <span id="expandAllBtnText">Expand All</span>
-                </button>
-                <a href="{{ route('admin.theme.setting.extended_colors') }}" class="btn btn-warning btn-compact shadow-xs fw-bold text-dark col-6">
-    <i class="fas fa-swatchbook me-1"></i>
-    <span>Advance Color</span>
-</a>
-            
-            </div>
-        </div>
-
+    <div class="top-action-btns d-flex flex-wrap flex-sm-nowrap gap-2 align-items-center justify-content-start justify-content-lg-end w-100 w-lg-auto">
+        <button type="button" class="btn btn-outline-secondary btn-compact text-dark border shadow-xs d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap px-3 flex-fill flex-sm-grow-0" style="height: 34px; font-size: 11.5px; font-weight: 600;"
+            onclick="toggleAllColorSections()">
+            <i class="fas fa-arrows-up-down me-1"></i>
+            <span id="expandAllBtnText">Expand All</span>
+        </button>
+        <a href="{{ route('admin.theme.setting.extended_colors') }}" class="btn btn-primary btn-compact shadow-xs fw-bold d-inline-flex align-items-center justify-content-center gap-1.5 text-nowrap px-3 flex-fill flex-sm-grow-0" style="height: 34px; font-size: 11.5px; font-weight: 600;">
+            <i class="fas fa-swatchbook me-1"></i>
+            <span>Advance Color</span>
+        </a>
+    </div>
+</div>
         @if(session('success'))
             <div class="alert alert-success border-0 shadow-xs py-2 px-3 mb-2 small d-flex align-items-center justify-content-between"
                 style="border-radius: 5px;">
@@ -1086,8 +1083,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-shoe-prints text-success"></i>
                                 <span>Footer &amp; Bottom Bar Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                    style="font-size: 10px;">PC &amp; Mobile Footer, Payments, Social &amp; Copyright</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -1766,9 +1761,6 @@
                             <div class="section-title-text">
                                 <i class="fas fa-box-open text-warning"></i>
                                 <span>Product Card, Details &amp; Quick View Colors</span>
-                                <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                    style="font-size: 10px;">Grid Cards, Details Page, Swatches, Buttons &amp; Quick
-                                    View</span>
                             </div>
                             <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                 <i class="fas fa-chevron-down collapse-icon"></i>
@@ -2679,9 +2671,6 @@
                                 <div class="section-title-text">
                                     <i class="fas fa-desktop text-primary"></i>
                                     <span>App Master Layout &amp; Floating Widgets</span>
-                                    <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                        style="font-size: 10px;">Global BG, Sticky Bar, Bottom Search &amp; Drawer
-                                        Cart</span>
                                 </div>
                                 <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -2966,9 +2955,6 @@
                                 <div class="section-title-text">
                                     <i class="fas fa-home text-info"></i>
                                     <span>Home Page Sections &amp; Widgets</span>
-                                    <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                        style="font-size: 10px;">Category Sidebar, Deals Timer, Popular Slider &amp;
-                                        Featured</span>
                                 </div>
                                 <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -3170,8 +3156,6 @@
                                 <div class="section-title-text">
                                     <i class="fas fa-store text-success"></i>
                                     <span>Shop Page &amp; Catalog Styles</span>
-                                    <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                        style="font-size: 10px;">Top Filter Bar, Sort Dropdown &amp; Pagination</span>
                                 </div>
                                 <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -3319,8 +3303,6 @@
                                 <div class="section-title-text">
                                     <i class="fas fa-file-alt text-secondary"></i>
                                     <span>Custom Dynamic Pages</span>
-                                    <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                        style="font-size: 10px;">Page Content Card, Title, Sidebars &amp; Breadcrumb</span>
                                 </div>
                                 <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -3411,9 +3393,6 @@
                                 <div class="section-title-text">
                                     <i class="fas fa-newspaper text-danger"></i>
                                     <span>Blog Pages &amp; Discussion</span>
-                                    <span class="badge bg-secondary-subtle text-secondary small fw-normal ms-2"
-                                        style="font-size: 10px;">Hero Banner, Category Chips, Cards &amp; Facebook
-                                        Comments</span>
                                 </div>
                                 <button type="button" class="collapse-toggle-btn shadow-xs" aria-expanded="false">
                                     <i class="fas fa-chevron-down collapse-icon"></i>

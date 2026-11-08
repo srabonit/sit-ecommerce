@@ -2,6 +2,18 @@
 
 @section('title', 'Edit Branch - ' . config('app.name'))
 
+@php
+    $currentCatalogMode = 'all_catalog';
+    if (!empty($branch->catalog_access_mode)) {
+        $currentCatalogMode = $branch->catalog_access_mode;
+    } elseif (!empty($branch->settings)) {
+        $settingsArr = is_array($branch->settings) ? $branch->settings : json_decode((string)$branch->settings, true);
+        if (!empty($settingsArr['catalog_access_mode'])) {
+            $currentCatalogMode = $settingsArr['catalog_access_mode'];
+        }
+    }
+@endphp
+
 @section('admin_content')
 <div class="container-fluid py-3 px-2 px-md-3">
     <div class="card border-0 shadow-sm rounded-4">
@@ -34,6 +46,24 @@
                     <div class="col-12 col-md-6">
                         <label class="form-label small fw-bold text-muted">Branch Email</label>
                         <input type="email" name="email" class="form-control rounded-2" value="{{ old('email', $branch->email) }}">
+                    </div>
+                </div>
+
+                <!-- Catalog Access Policy (Strict vs All Catalog) -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold text-muted">Branch Catalog Policy <span class="text-danger">*</span></label>
+                        <select name="catalog_access_mode" class="form-select rounded-2" required>
+                            <option value="all_catalog" {{ old('catalog_access_mode', $currentCatalogMode) === 'all_catalog' ? 'selected' : '' }}>
+                                All Central Catalog (Default - Can sell central & assigned products)
+                            </option>
+                            <option value="assigned_only" {{ old('catalog_access_mode', $currentCatalogMode) === 'assigned_only' ? 'selected' : '' }}>
+                                Assigned Products Only (Strict - Only Head Office assigned products)
+                            </option>
+                        </select>
+                        <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                            "Assigned Products Only" দিলে এই ব্রাঞ্চের পিওএস টার্মিনালে শুধুমাত্র হেড অফিস থেকে পাঠানো বা নির্দিষ্ট করে দেওয়া পণ্যই প্রদর্শিত ও বিক্রি হবে।
+                        </small>
                     </div>
                 </div>
 

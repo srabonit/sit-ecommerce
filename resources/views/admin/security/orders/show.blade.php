@@ -29,54 +29,455 @@
     };
 @endphp
 
+<style>
+    /* Security Order Review — Kaiadmin Classic / White */
+    #security-order-details-wrapper {
+        --security-primary: var(--bs-primary, #1572e8);
+        --security-border: var(--bs-border-color, #e8edf3);
+        --security-muted: #7d8795;
+        --security-heading: #263445;
+        --security-surface: #ffffff;
+        --security-soft: #f7f9fc;
+        color: var(--security-heading);
+        min-width: 0;
+    }
+
+    #security-order-details-wrapper *,
+    #security-order-details-wrapper *::before,
+    #security-order-details-wrapper *::after,
+    #security-order-details-wrapper .card,
+    #security-order-details-wrapper .btn,
+    #security-order-details-wrapper .form-control,
+    #security-order-details-wrapper .form-select,
+    #modalDecisionNote .modal-content,
+    #modalEnforceQuickBlock .modal-content,
+    #modalDecisionNote .btn,
+    #modalEnforceQuickBlock .btn,
+    #modalDecisionNote .form-control,
+    #modalEnforceQuickBlock .form-control,
+    #modalEnforceQuickBlock .form-select {
+        border-radius: 5px !important;
+    }
+
+    #security-order-details-wrapper {
+        padding: 1.25rem !important;
+    }
+
+    #security-order-details-wrapper .page-heading {
+        min-width: 0;
+    }
+
+    #security-order-details-wrapper .order-title-line {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .55rem;
+    }
+
+    #security-order-details-wrapper h4 {
+        color: var(--security-heading) !important;
+        font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+        letter-spacing: -.025em;
+        line-height: 1.35;
+    }
+
+    #security-order-details-wrapper .page-meta {
+        color: var(--security-muted);
+        font-size: .78rem;
+        line-height: 1.65;
+    }
+
+    #security-order-details-wrapper .card {
+        border: 1px solid var(--security-border) !important;
+        background: var(--security-surface);
+        box-shadow: 0 2px 8px rgba(31, 45, 61, .045) !important;
+        min-width: 0;
+    }
+
+    #security-order-details-wrapper .card-header {
+        padding: .85rem 1rem !important;
+        border-bottom: 1px solid var(--security-border) !important;
+        background: #fff !important;
+    }
+
+    #security-order-details-wrapper .card-header h6 {
+        color: var(--security-heading) !important;
+        font-size: .86rem;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    #security-order-details-wrapper .card-body {
+        min-width: 0;
+    }
+
+    #security-order-details-wrapper .btn {
+        min-height: 34px;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .42rem .72rem;
+        box-shadow: none !important;
+        white-space: normal;
+    }
+
+    #security-order-details-wrapper .btn-sm {
+        min-height: 31px;
+        padding: .35rem .62rem;
+    }
+
+    #security-order-details-wrapper .btn-group {
+        display: inline-flex;
+        flex-wrap: nowrap;
+    }
+
+    #security-order-details-wrapper .badge {
+        border-radius: 5px !important;
+        font-weight: 650;
+        letter-spacing: .01em;
+        line-height: 1.35;
+        white-space: normal;
+        vertical-align: middle;
+    }
+
+    #security-order-details-wrapper .table {
+        --bs-table-color: #465365;
+        --bs-table-hover-bg: #f8faff;
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+
+    #security-order-details-wrapper .table > :not(caption) > * > * {
+        padding: .62rem .7rem;
+        border-bottom-color: #edf0f4;
+    }
+
+    #security-order-details-wrapper .table thead th {
+        color: #687587;
+        background: #f7f9fc;
+        font-size: .69rem;
+        font-weight: 700;
+        letter-spacing: .035em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--security-border);
+    }
+
+    #security-order-details-wrapper .table tbody td {
+        font-size: .77rem;
+        line-height: 1.5;
+    }
+
+    #security-order-details-wrapper .table-borderless > :not(caption) > * > * {
+        border-bottom: 1px solid #f0f2f5;
+        padding: .55rem .35rem;
+    }
+
+    #security-order-details-wrapper .table-borderless tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #security-order-details-wrapper .table-borderless td:first-child {
+        color: var(--security-muted);
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    #security-order-details-wrapper .table-borderless td:last-child {
+        color: #344054;
+        overflow-wrap: anywhere;
+    }
+
+    #security-order-details-wrapper .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #security-order-details-wrapper .table-responsive > .table {
+        min-width: 650px;
+    }
+
+    #security-order-details-wrapper .security-summary {
+        border-left-width: 4px !important;
+    }
+
+    #security-order-details-wrapper .security-summary .card-body {
+        padding: 1rem !important;
+    }
+
+    #security-order-details-wrapper .security-icon {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px !important;
+    }
+
+    #security-order-details-wrapper .security-summary h6 {
+        color: var(--security-heading);
+        font-size: .9rem;
+    }
+
+    #security-order-details-wrapper .security-summary p {
+        overflow-wrap: anywhere;
+        line-height: 1.55;
+    }
+
+    #security-order-details-wrapper .financial-total {
+        background: var(--security-soft);
+        border-radius: 5px !important;
+        padding: .7rem .75rem;
+    }
+
+    #security-order-details-wrapper .audit-note {
+        overflow-wrap: anywhere;
+        border: 1px solid var(--security-border);
+    }
+
+    #security-order-details-wrapper .section-caption {
+        color: var(--security-muted);
+        font-size: .73rem;
+        line-height: 1.5;
+    }
+
+    #security-order-details-wrapper .font-monospace {
+        overflow-wrap: anywhere;
+    }
+
+    #security-order-details-wrapper .text-truncate {
+        display: inline-block;
+        max-width: 200px;
+        vertical-align: middle;
+    }
+
+    #modalDecisionNote .modal-content,
+    #modalEnforceQuickBlock .modal-content {
+        border: 1px solid var(--security-border) !important;
+        overflow: hidden;
+    }
+
+    #modalDecisionNote .modal-header,
+    #modalDecisionNote .modal-footer,
+    #modalEnforceQuickBlock .modal-header,
+    #modalEnforceQuickBlock .modal-footer {
+        background: #f7f9fc !important;
+        border-color: var(--security-border);
+    }
+
+    #modalDecisionNote .modal-title,
+    #modalEnforceQuickBlock .modal-title {
+        font-size: .9rem;
+    }
+
+    #modalDecisionNote .form-control,
+    #modalEnforceQuickBlock .form-control,
+    #modalEnforceQuickBlock .form-select {
+        min-height: 38px;
+        border-color: #dfe4ec;
+        font-size: .82rem;
+    }
+
+    #modalDecisionNote textarea.form-control {
+        min-height: 76px;
+    }
+
+    @media (min-width: 1400px) {
+        #security-order-details-wrapper {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        #security-order-details-wrapper {
+            padding: 1rem !important;
+        }
+
+        #security-order-details-wrapper .row.g-4 {
+            --bs-gutter-x: 1rem;
+            --bs-gutter-y: 1rem;
+        }
+
+        #security-order-details-wrapper .page-actions {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #security-order-details-wrapper {
+            padding: .75rem !important;
+        }
+
+        #security-order-details-wrapper .page-topbar {
+            align-items: flex-start !important;
+        }
+
+        #security-order-details-wrapper .page-topbar > div:first-child {
+            width: 100%;
+        }
+
+        #security-order-details-wrapper .page-actions {
+            display: flex;
+            width: 100%;
+            gap: .45rem !important;
+        }
+
+        #security-order-details-wrapper .page-actions > * {
+            flex: 1 1 auto;
+        }
+
+        #security-order-details-wrapper .page-actions .btn-group {
+            flex: 1 1 100%;
+        }
+
+        #security-order-details-wrapper .page-actions .btn-group .btn {
+            flex: 1 1 50%;
+        }
+
+        #security-order-details-wrapper .security-summary .card-body > .d-flex {
+            align-items: flex-start !important;
+        }
+
+        #security-order-details-wrapper .security-summary .card-body > .d-flex > .d-flex:last-child {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        #security-order-details-wrapper .security-summary .card-body > .d-flex > .d-flex:last-child .btn {
+            flex: 1 1 auto;
+        }
+
+        #security-order-details-wrapper .card-header {
+            padding: .75rem !important;
+        }
+
+        #security-order-details-wrapper .card-body {
+            padding: .75rem !important;
+        }
+
+        #security-order-details-wrapper .table-borderless td:first-child {
+            width: 42% !important;
+            white-space: normal;
+        }
+
+        #security-order-details-wrapper .table-responsive > .table {
+            min-width: 680px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #security-order-details-wrapper .order-title-line {
+            gap: .4rem;
+        }
+
+        #security-order-details-wrapper h4 {
+            font-size: 1rem;
+        }
+
+        #security-order-details-wrapper .page-meta {
+            font-size: .72rem;
+        }
+
+        #security-order-details-wrapper .page-actions {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        #security-order-details-wrapper .page-actions > *,
+        #security-order-details-wrapper .page-actions .btn-group {
+            width: 100%;
+        }
+
+        #security-order-details-wrapper .page-actions > .btn {
+            text-align: center;
+        }
+
+        #security-order-details-wrapper .security-summary .card-body > .d-flex:first-child {
+            gap: .65rem !important;
+        }
+
+        #security-order-details-wrapper .security-icon {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+        }
+
+        #security-order-details-wrapper .table-borderless tbody td {
+            font-size: .74rem;
+        }
+
+        #security-order-details-wrapper .financial-total {
+            gap: .5rem;
+            align-items: flex-start !important;
+        }
+
+        #modalDecisionNote .modal-dialog,
+        #modalEnforceQuickBlock .modal-dialog {
+            margin: .6rem;
+        }
+
+        #modalDecisionNote .modal-footer,
+        #modalEnforceQuickBlock .modal-footer {
+            gap: .4rem;
+        }
+
+        #modalDecisionNote .modal-footer .btn,
+        #modalEnforceQuickBlock .modal-footer .btn {
+            flex: 1 1 auto;
+        }
+    }
+</style>
+
 <div class="container-fluid px-4 py-3" id="security-order-details-wrapper">
     <!-- Top Breadcrumb & Action Bar -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('admin.security.orders.index') }}" class="btn btn-sm btn-light border text-secondary shadow-sm" title="Back to Suspicious Orders">
+    <div class="page-topbar d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+        <div class="page-heading">
+            <div class="order-title-line">
+                <a href="{{ route('admin.security.orders.index') }}" class="btn btn-sm btn-light border text-secondary" title="Back to Suspicious Orders">
                     <i class="fas fa-arrow-left"></i>
                 </a>
                 <h4 class="fw-bold mb-0 text-dark d-flex align-items-center font-monospace">
                     <i class="fas fa-shield-halved text-danger me-2"></i> Order #{{ $order->order_number ?? $order->id }}
                 </h4>
-                <span class="badge {{ $statusBadge }} px-2.5 py-1" style="font-size: 11px;">
+                <span class="badge {{ $statusBadge }} px-2 py-1" style="font-size: 11px;">
                     {{ str_replace('_', ' ', ucfirst($secStatus)) }}
                 </span>
-                <span class="badge {{ $riskBadgeClass }} font-monospace px-2.5 py-1" style="font-size: 11px;">
+                <span class="badge {{ $riskBadgeClass }} font-monospace px-2 py-1" style="font-size: 11px;">
                     Risk: {{ $riskScore }}/100
                 </span>
             </div>
-            <p class="text-muted small mb-0 mt-1">
+            <p class="page-meta mb-0 mt-2">
                 Placed on <strong>{{ $order->created_at ? $order->created_at->format('M d, Y h:i A') : 'N/A' }}</strong> | Channel: <strong>{{ strtoupper($order->order_source ?? 'online') }}</strong> | Status: <strong>{{ ucfirst($order->order_status ?? ($order->status ?? 'pending')) }}</strong>
             </p>
         </div>
 
         <!-- Decision & Action Buttons -->
-        <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="page-actions d-flex flex-wrap align-items-center gap-2">
             <!-- Core Order View Link -->
             @if(Route::has('admin.order.view'))
-                <a href="{{ route('admin.order.view', $order->id) }}" class="btn btn-sm btn-light border shadow-sm text-secondary" target="_blank" title="View Full Order Invoice">
+                <a href="{{ route('admin.order.view', $order->id) }}" class="btn btn-sm btn-light border text-secondary" target="_blank" title="View Full Order Invoice">
                     <i class="fas fa-receipt me-1"></i> Order Details
                 </a>
             @endif
 
             <!-- Approve Clean -->
-            <button type="button" class="btn btn-sm btn-success shadow-sm px-3 btn-decision-action" data-status="approved_by_admin" data-order-status="processing">
+            <button type="button" class="btn btn-sm btn-success px-3 btn-decision-action" data-status="approved_by_admin" data-order-status="processing">
                 <i class="fas fa-check-circle me-1"></i> Approve Clean
             </button>
 
             <!-- Hold for Verification -->
-            <button type="button" class="btn btn-sm btn-warning shadow-sm px-3 btn-decision-action" data-status="under_review" data-order-status="on_hold">
+            <button type="button" class="btn btn-sm btn-warning px-3 btn-decision-action" data-status="under_review" data-order-status="on_hold">
                 <i class="fas fa-pause-circle me-1"></i> Hold on Review
             </button>
 
             <!-- Mark as Spam / Cancel Fraud -->
             <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-danger shadow-sm btn-decision-action" data-status="flagged_spam" data-order-status="on_hold">
+                <button type="button" class="btn btn-danger btn-decision-action" data-status="flagged_spam" data-order-status="on_hold">
                     <i class="fas fa-flag me-1"></i> Flag Spam
                 </button>
-                <button type="button" class="btn btn-dark shadow-sm btn-decision-action" data-status="cancelled_fraud" data-order-status="cancelled">
+                <button type="button" class="btn btn-dark btn-decision-action" data-status="cancelled_fraud" data-order-status="cancelled">
                     <i class="fas fa-ban me-1"></i> Cancel Fraud
                 </button>
             </div>
@@ -84,15 +485,15 @@
     </div>
 
     <!-- FORENSIC RISK & SECURITY VIOLATION SUMMARY BANNER -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 {{ $riskScore >= 50 ? 'border-start border-danger border-4' : 'border-start border-warning border-4' }} bg-white">
+    <div class="card security-summary mb-4 {{ $riskScore >= 50 ? 'border-start border-danger border-4' : 'border-start border-warning border-4' }} bg-white">
         <div class="card-body p-3">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div class="d-flex align-items-start gap-3">
-                    <div class="rounded-circle p-2.5 {{ $riskScore >= 50 ? 'bg-danger bg-opacity-10 text-danger' : 'bg-warning bg-opacity-15 text-warning-emphasis' }}">
+                    <div class="security-icon p-2 {{ $riskScore >= 50 ? 'bg-danger bg-opacity-10 text-danger' : 'bg-warning bg-opacity-15 text-warning-emphasis' }}">
                         <i class="fas fa-triangle-exclamation fa-lg"></i>
                     </div>
-                    <div>
-                        <h6 class="fw-bold mb-1 text-dark">Security Risk Engine Diagnostic</h6>
+                    <div class="min-w-0">
+                        <h6 class="fw-bold mb-1">Security Risk Diagnostic</h6>
                         <p class="text-danger fw-semibold mb-1 small">
                             {{ $order->suspicious_reason ?? 'Multiple rapid checkout requests or anomalous velocity detected.' }}
                         </p>
@@ -109,14 +510,14 @@
                                 <i class="fas fa-ban me-1"></i> Client IP Restricted
                             </span>
                         @else
-                            <button type="button" class="btn btn-sm btn-outline-danger shadow-sm" id="btn-block-client-ip" data-ip="{{ $order->client_ip }}">
+                            <button type="button" class="btn btn-sm btn-outline-danger" id="btn-block-client-ip" data-ip="{{ $order->client_ip }}">
                                 <i class="fas fa-shield-virus me-1"></i> Block Client IP
                             </button>
                         @endif
                     @endif
 
                     @if(!empty($order->user_id))
-                        <button type="button" class="btn btn-sm btn-outline-dark shadow-sm" id="btn-restrict-customer-user" data-user-id="{{ $order->user_id }}">
+                        <button type="button" class="btn btn-sm btn-outline-dark" id="btn-restrict-customer-user" data-user-id="{{ $order->user_id }}">
                             <i class="fas fa-user-xmark me-1"></i> Restrict Account
                         </button>
                     @endif
@@ -124,9 +525,9 @@
             </div>
 
             @if(!empty($order->security_note))
-                <div class="mt-3 pt-2 border-top border-light">
-                    <span class="fw-bold text-secondary small d-block mb-1"><i class="fas fa-clipboard-list me-1"></i> Admin Audit Log:</span>
-                    <pre class="bg-light p-2 rounded-2 small mb-0 font-monospace text-dark text-break" style="white-space: pre-wrap; font-size: 11px;">{{ $order->security_note }}</pre>
+                <div class="mt-3 pt-3 border-top">
+                    <span class="fw-bold text-secondary small d-block mb-2"><i class="fas fa-clipboard-list me-1"></i> Admin Audit Log</span>
+                    <pre class="audit-note bg-light p-3 small mb-0 font-monospace text-dark text-break" style="white-space: pre-wrap; font-size: 11px;">{{ $order->security_note }}</pre>
                 </div>
             @endif
         </div>
@@ -136,9 +537,9 @@
     <div class="row g-4 mb-4">
         <!-- Customer & Delivery Telemetry -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
-                <div class="card-header bg-white py-3 border-bottom border-light">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-user-shield text-primary me-2"></i> Customer Identity &amp; Contact</h6>
+            <div class="card h-100 bg-white">
+                <div class="card-header">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-user-shield text-primary me-2"></i> Customer Identity &amp; Contact</h6>
                 </div>
                 <div class="card-body p-3">
                     <table class="table table-sm table-borderless mb-0" style="font-size: 12.5px;">
@@ -184,9 +585,9 @@
 
         <!-- Network & Device Telemetry -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
-                <div class="card-header bg-white py-3 border-bottom border-light">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-network-wired text-primary me-2"></i> Client Network Telemetry</h6>
+            <div class="card h-100 bg-white">
+                <div class="card-header">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-network-wired text-primary me-2"></i> Client Network Telemetry</h6>
                 </div>
                 <div class="card-body p-3">
                     <table class="table table-sm table-borderless mb-0" style="font-size: 12.5px;">
@@ -207,9 +608,9 @@
                                 <td class="text-muted">Firewall State:</td>
                                 <td>
                                     @if($isBlocked)
-                                        <span class="badge bg-danger px-2 py-0.5">Firewall Blocked</span>
+                                        <span class="badge bg-danger px-2 py-1">Firewall Blocked</span>
                                     @else
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-0.5">Normal Traffic</span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Normal Traffic</span>
                                     @endif
                                 </td>
                             </tr>
@@ -247,27 +648,27 @@
 
         <!-- Financial Summary -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
-                <div class="card-header bg-white py-3 border-bottom border-light">
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> Financial Valuation</h6>
+            <div class="card h-100 bg-white">
+                <div class="card-header">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> Financial Summary</h6>
                 </div>
                 <div class="card-body p-3">
-                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                    <div class="d-flex justify-content-between mb-3 small text-muted">
                         <span>Subtotal:</span>
                         <span class="text-dark fw-semibold">Tk {{ number_format((float) ($order->subtotal ?? ($orderAmount - ($order->shipping_charge ?? 0))), 2) }}</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                    <div class="d-flex justify-content-between mb-3 small text-muted">
                         <span>Delivery Charge:</span>
                         <span class="text-dark fw-semibold">Tk {{ number_format((float) ($order->shipping_charge ?? 0), 2) }}</span>
                     </div>
                     @if(!empty($order->discount_amount) && $order->discount_amount > 0)
-                        <div class="d-flex justify-content-between mb-2 small text-danger">
+                        <div class="d-flex justify-content-between mb-3 small text-danger">
                             <span>Discount / Coupon:</span>
                             <span class="fw-semibold">- Tk {{ number_format((float) $order->discount_amount, 2) }}</span>
                         </div>
                     @endif
-                    <div class="d-flex justify-content-between pt-2 border-top border-light mb-3">
-                        <span class="fw-bold text-dark fs-6">Total Amount:</span>
+                    <div class="financial-total d-flex justify-content-between align-items-center border-top mb-3">
+                        <span class="fw-bold text-dark">Total Amount:</span>
                         <span class="fw-bold text-dark fs-5">Tk {{ number_format($orderAmount, 2) }}</span>
                     </div>
                     <div class="alert alert-light border small text-muted mb-0 py-2">
@@ -280,9 +681,9 @@
     </div>
 
     <!-- ORDER ITEMS TABLE -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white overflow-hidden">
-        <div class="card-header bg-white py-3 border-bottom border-light">
-            <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-boxes-stacked text-primary me-2"></i> Ordered Cart Products ({{ $order->items?->count() ?? 0 }})</h6>
+    <div class="card mb-4 bg-white overflow-hidden">
+        <div class="card-header">
+            <h6 class="fw-bold mb-0"><i class="fas fa-boxes-stacked text-primary me-2"></i> Ordered Products ({{ $order->items?->count() ?? 0 }})</h6>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
@@ -306,7 +707,7 @@
                                 {{ $item->product_name ?? ($item->product?->name ?? 'Product Item') }}
                             </td>
                             <td>
-                                <span class="badge bg-light text-secondary border font-monospace px-2 py-0.5" style="font-size: 10px;">
+                                <span class="badge bg-light text-secondary border font-monospace px-2 py-1" style="font-size: 10px;">
                                     {{ $item->sku ?? ($item->variant?->sku ?? 'STANDARD') }}
                                 </span>
                             </td>
@@ -328,14 +729,14 @@
 
     <!-- RELATED ORDERS CREATED FROM IDENTICAL IP -->
     @if(!empty($relatedOrders) && $relatedOrders->isNotEmpty())
-        <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white overflow-hidden">
-            <div class="card-header bg-white py-3 border-bottom border-light d-flex align-items-center justify-content-between">
+        <div class="card mb-4 bg-white overflow-hidden">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div>
-                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-layer-group text-danger me-2"></i> Other Orders from IP: {{ $order->client_ip }} ({{ $relatedOrders->count() }})</h6>
-                    <small class="text-muted" style="font-size: 11px;">Examine customer names and phones across repeated order attempts</small>
+                    <h6 class="fw-bold mb-1"><i class="fas fa-layer-group text-danger me-2"></i> Other Orders from IP: {{ $order->client_ip }} ({{ $relatedOrders->count() }})</h6>
+                    <small class="section-caption">Compare customer details across repeated order attempts</small>
                 </div>
-                <a href="{{ route('admin.security.orders.clusters', ['search' => $order->client_ip]) }}" class="btn btn-sm btn-link text-primary text-decoration-none fw-semibold" style="font-size: 11px;">
-                    Open Cluster &rarr;
+                <a href="{{ route('admin.security.orders.clusters', ['search' => $order->client_ip]) }}" class="btn btn-sm btn-link text-primary text-decoration-none fw-semibold">
+                    Open Cluster <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
             <div class="table-responsive">
@@ -369,7 +770,7 @@
                                 <td class="font-monospace text-secondary">
                                     {{ $relPhone }}
                                     @if($relPhone !== 'N/A' && $customerPhone !== 'N/A' && $relPhone !== $customerPhone)
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-1 py-0 ms-1" style="font-size: 9px;" title="Different phone than current order">Different Phone</span>
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-1 py-1 ms-1" style="font-size: 9px;" title="Different phone than current order">Different Phone</span>
                                     @endif
                                 </td>
                                 <td class="fw-bold">Tk {{ number_format($relAmount, 2) }}</td>
@@ -379,13 +780,13 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border px-2 py-0.5" style="font-size: 10px;">
+                                    <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 10px;">
                                         {{ str_replace('_', ' ', ucfirst($rel->security_review_status ?? 'clean')) }}
                                     </span>
                                 </td>
                                 <td class="text-muted small">{{ $rel->created_at ? $rel->created_at->format('M d, H:i') : 'N/A' }}</td>
                                 <td class="pe-3 text-end">
-                                    <a href="{{ route('admin.security.orders.show', $rel->id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 11px;">
+                                    <a href="{{ route('admin.security.orders.show', $rel->id) }}" class="btn btn-sm btn-outline-secondary py-1 px-2">
                                         Review
                                     </a>
                                 </td>
@@ -399,9 +800,9 @@
 
     <!-- RECENT ACTIVITY LOGS FROM THIS IP -->
     @if(!empty($ipLogs) && $ipLogs->isNotEmpty())
-        <div class="card border-0 shadow-sm rounded-3 bg-white overflow-hidden mb-4">
-            <div class="card-header bg-white py-3 border-bottom border-light">
-                <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-timeline text-primary me-2"></i> Recent Network Hits from IP (Last 15 Requests)</h6>
+        <div class="card bg-white overflow-hidden mb-4">
+            <div class="card-header">
+                <h6 class="fw-bold mb-0"><i class="fas fa-timeline text-primary me-2"></i> Recent IP Activity <span class="section-caption">(Last 15 Requests)</span></h6>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" style="font-size: 11.5px;">
@@ -420,14 +821,14 @@
                         @foreach($ipLogs as $log)
                             <tr class="{{ ($log->security_status ?? '') === 'blocked' ? 'table-danger bg-opacity-25' : '' }}">
                                 <td class="ps-3 font-monospace text-muted">{{ $log->created_at ? $log->created_at->format('H:i:s') : 'N/A' }}</td>
-                                <td><span class="badge bg-light text-dark border px-1.5 py-0.5" style="font-size: 9.5px;">{{ $log->request_method ?? 'GET' }}</span></td>
+                                <td><span class="badge bg-light text-dark border px-2 py-1" style="font-size: 9.5px;">{{ $log->request_method ?? 'GET' }}</span></td>
                                 <td class="font-monospace text-dark text-break" style="max-width: 250px;">{{ $log->url_path ?? '/' }}</td>
                                 <td class="text-center">
-                                    <span class="badge {{ ($log->response_status ?? 200) >= 400 ? 'bg-danger text-white' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' }} px-1.5 py-0.5" style="font-size: 9.5px;">
+                                    <span class="badge {{ ($log->response_status ?? 200) >= 400 ? 'bg-danger text-white' : 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' }} px-2 py-1" style="font-size: 9.5px;">
                                         {{ $log->response_status ?? 200 }}
                                     </span>
                                 </td>
-                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary border px-1.5 py-0.5" style="font-size: 9.5px;">{{ $log->activity_type ?? 'traffic' }}</span></td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1" style="font-size: 9.5px;">{{ $log->activity_type ?? 'traffic' }}</span></td>
                                 <td class="text-center font-monospace">{{ $log->risk_score ?: 0 }}</td>
                                 <td class="pe-3 text-muted text-truncate" style="max-width: 200px;" title="{{ $log->user_agent }}">{{ $log->user_agent ?? 'N/A' }}</td>
                             </tr>
@@ -443,7 +844,7 @@
 <div class="modal fade" id="modalDecisionNote" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header py-2.5 px-3 bg-light">
+            <div class="modal-header py-2 px-3">
                 <h6 class="modal-title fw-bold text-dark"><i class="fas fa-pen-to-square me-2 text-primary"></i> Review Reason</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -452,11 +853,11 @@
                 <input type="hidden" id="decision_target_order">
 
                 <div class="modal-body p-3">
-                    <p class="small text-muted mb-2" id="decision_modal_prompt">Apply decision to order?</p>
+                    <p class="small text-muted mb-3" id="decision_modal_prompt">Apply decision to order?</p>
                     <label class="form-label small fw-semibold text-secondary">Audit Note (Optional)</label>
-                    <textarea class="form-control form-control-sm" id="decision_admin_note" rows="2" placeholder="Audit reasoning visible in order log..."></textarea>
+                    <textarea class="form-control form-control-sm" id="decision_admin_note" rows="2" placeholder="Add a reason for the audit log..."></textarea>
                 </div>
-                <div class="modal-footer py-2 px-3 bg-light">
+                <div class="modal-footer py-2 px-3">
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3" id="btn-submit-decision-confirm">Confirm Decision</button>
                 </div>
@@ -469,7 +870,7 @@
 <div class="modal fade" id="modalEnforceQuickBlock" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header py-2.5 px-3 bg-light">
+            <div class="modal-header py-2 px-3">
                 <h6 class="modal-title fw-bold text-danger" id="enforceModalTitle">
                     <i class="fas fa-shield-virus me-2"></i> Enforcement Action
                 </h6>
@@ -501,7 +902,7 @@
                         <input type="text" class="form-control form-control-sm" id="enforce_reason" name="reason" required value="Fraudulent multiple order attempt on order #{{ $order->order_number ?? $order->id }}">
                     </div>
                 </div>
-                <div class="modal-footer py-2 px-3 bg-light">
+                <div class="modal-footer py-2 px-3">
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-danger px-3" id="btn-submit-enforce">Enforce Restriction</button>
                 </div>

@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Auth\AuthController;
+use App\Models\User;
+use App\Services\Auth\AuthenticationSettingsService;
 use App\Services\InventoryService;
+use App\Services\Sms\SmsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardController extends Controller
@@ -81,81 +86,115 @@ class AdminDashboardController extends Controller
     }
 
     /**
-     * Admin Login Process (Branch Manager, Super Admin & Staff supported)
+     * Admin Login Process (Supports Email, Mobile Phone, Zero-Permission Guard & 2FA)
      */
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email'    => 'required|string', // Accepts both email or phone number
             'password' => 'required|min:6',
         ]);
 
-        $credentials = $request->only('email', 'password');
-        $remember = $request->boolean('remember');
+        $loginInput = trim((string) ($request->input('login') ?: $request->input('email')));
+        $isEmail = filter_var($loginInput, FILTER_VALIDATE_EMAIL);
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+        $smsService = app(SmsService::class);
 
-            // ১. Account locked ba inactive check
-            if (!empty($user->is_locked) || (isset($user->is_active) && !$user->is_active)) {
-                $reason = $user->locked_reason ?: 'Your account is deactivated or locked.';
-                Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
+        $cleanPhone = null;
+        $localPhone = null;
+        $last10 = null;
 
-                return back()->withErrors(['email' => $reason]);
+        if (!$isEmail) {
+            $cleanDigits = preg_replace('/[^0-9]/', '', $loginInput);
+            $last10 = strlen($cleanDigits) >= 10 ? substr($cleanDigits, -10) : $cleanDigits;
+            $cleanPhone = $smsService->formatNumber($loginInput);
+            $localPhone = '0' . $last10;
+        }
+
+        // Search Admin/Staff User by Email OR Phone
+        $targetUserQuery = User::withTrashed();
+        if ($isEmail) {
+            $targetUserQuery->where('email', strtolower($loginInput));
+        } else {
+            $targetUserQuery->where(function ($q) use ($cleanPhone, $localPhone, $loginInput, $last10) {
+                $q->where('phone', $cleanPhone)
+                  ->orWhere('phone', $localPhone)
+                  ->orWhere('phone', $loginInput)
+                  ->orWhere('phone', 'like', '%' . $last10);
+            });
+        }
+        $user = $targetUserQuery->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return back()
+                ->withErrors(['email' => 'These credentials do not match our administrative records.'])
+                ->withInput();
+        }
+
+        // 30 din purono trashed account check
+        if ($user->trashed()) {
+            if ($user->deleted_at <= now()->subDays(30)) {
+                $user->forceDelete();
+                return back()->withErrors(['email' => 'Account permanently deleted.']);
             }
+            $user->restore();
+            $user->update(['is_active' => 1]);
+        }
 
-            // ২. Staff, Branch Manager, Admin ba Super Admin verification
-            if ($this->isStaffOrAdminUser($user)) {
-                $role = str_replace(['-', ' '], '_', strtolower(trim((string)$user->role)));
+        // ১. Account locked ba inactive check
+        if (!empty($user->is_locked) || (isset($user->is_active) && !$user->is_active)) {
+            $reason = $user->locked_reason ?: 'Your account is deactivated or locked.';
+            return back()->withErrors(['email' => $reason]);
+        }
 
-                // Zero permission kick-out guard
-                if (!$user->isSuperAdmin() && $role !== 'admin' && Schema::hasTable('role_route_permissions')) {
-                    $hasAnyPerm = DB::table('role_route_permissions')
-                        ->where(function ($q) use ($user, $role) {
-                            $q->where('role_name', $user->role)
-                              ->orWhere('role_name', $role)
-                              ->orWhere('role_name', str_replace('_', '-', $role))
-                              ->orWhere('role_name', str_replace('_', ' ', $role));
-                        })
-                        ->where(function ($q) {
-                            $q->where('can_read', 1)
-                              ->orWhere('can_create', 1)
-                              ->orWhere('can_update', 1)
-                              ->orWhere('can_delete', 1);
-                        })
-                        ->exists();
-
-                    if (!$hasAnyPerm) {
-                        Auth::logout();
-                        $request->session()->invalidate();
-                        $request->session()->regenerateToken();
-
-                        return back()->withErrors([
-                            'email' => 'Access Revoked: Your assigned role currently has no active permissions.'
-                        ]);
-                    }
-                }
-
-                session()->forget('url.intended');
-                return redirect()->route('admin.dashboard');
-            }
-
-            // ৩. Shudhumatro sadharon customer hole block kora
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
+        // ২. Shudhumatro sadharon customer hole block kora (Internal staff/admin access only)
+        if (!$this->isStaffOrAdminUser($user)) {
             return back()->withErrors([
                 'email' => 'Unauthorized account. Administrative staff access only.'
             ]);
         }
 
-        return back()
-            ->withErrors(['email' => 'Invalid email or password.'])
-            ->withInput();
+        $role = str_replace(['-', ' '], '_', strtolower(trim((string)$user->role)));
+
+        // Zero permission kick-out guard
+        if (!$user->isSuperAdmin() && $role !== 'admin' && Schema::hasTable('role_route_permissions')) {
+            $hasAnyPerm = DB::table('role_route_permissions')
+                ->where(function ($q) use ($user, $role) {
+                    $q->where('role_name', $user->role)
+                      ->orWhere('role_name', $role)
+                      ->orWhere('role_name', str_replace('_', '-', $role))
+                      ->orWhere('role_name', str_replace('_', ' ', $role));
+                })
+                ->where(function ($q) {
+                    $q->where('can_read', 1)
+                      ->orWhere('can_create', 1)
+                      ->orWhere('can_update', 1)
+                      ->orWhere('can_delete', 1);
+                })
+                ->exists();
+
+            if (!$hasAnyPerm) {
+                return back()->withErrors([
+                    'email' => 'Access Revoked: Your assigned role currently has no active permissions.'
+                ]);
+            }
+        }
+
+        $remember = $request->boolean('remember');
+
+        // ৩. Two-Factor Authentication Check & Dispatch (Main Security Engine)
+        $authController = app(AuthController::class);
+        if ($authController->shouldChallengeTwoFactor($user)) {
+            $request->session()->put('auth_2fa_source', 'admin');
+            return $authController->initiateTwoFactorChallenge($request, $user, $remember);
+        }
+
+        // ৪. Standard Login Completion
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+        session()->forget('url.intended');
+
+        return redirect()->route('admin.dashboard');
     }
 
     /**
@@ -404,9 +443,7 @@ class AdminDashboardController extends Controller
             $onlineSales = $periodSales; $onlineOrdersCount = $periodTotalOrders;
         }
 
-        // =========================================================================
-        // ৪. COGS ও নিট গ্রস প্রফিট অডিট (Order Items Cost Snapshotting)
-        // =========================================================================
+        // ৪. COGS ও নিট গ্রস প্রফিট অডিট
         $estimatedCogs = 0.00;
         if (Schema::hasTable('order_items')) {
             $qtyColName = Schema::hasColumn('order_items', 'quantity') ? 'order_items.quantity' : (Schema::hasColumn('order_items', 'qty') ? 'order_items.qty' : '1');
@@ -488,9 +525,7 @@ class AdminDashboardController extends Controller
             $newUsersGrowth = 100;
         }
 
-        // =========================================================================
-        // ৭. ফেইল-সেফ প্রোডাক্ট সেলস লেজার (স্ন্যাপশট কস্ট ও মার্জিন সহ)
-        // =========================================================================
+        // ৭. ফেইল-সেফ প্রোডাক্ট সেলস লেজার
         $productSalesLedger = collect();
         if (Schema::hasTable('order_items') && Schema::hasTable('products')) {
             $hasSubtotal   = Schema::hasColumn('order_items', 'subtotal');
@@ -511,7 +546,6 @@ class AdminDashboardController extends Controller
                 $revenueExpr = "COALESCE({$itemQtyCol}, 1) * COALESCE(products.sale_price, products.regular_price, 0)";
             }
 
-            // আইটেম কস্ট রেজোলিউশন (Snapshot First -> Fallback to Product Cost)
             $cogsParts = [];
             if (Schema::hasColumn('order_items', 'cogs')) {
                 $cogsParts[] = "NULLIF(order_items.cogs, 0)";
@@ -610,10 +644,9 @@ class AdminDashboardController extends Controller
                 ->get();
         }
 
-        // টপ বেস্ট সেলিং প্রোডাক্ট
         $bestSellingProduct = $productSalesLedger->first();
 
-        // ৮. কাস্টমার পারফরম্যান্স ও শীর্ষ ক্রেতা অডিট (User ID সহ)
+        // ৮. কাস্টমার পারফরম্যান্স ও শীর্ষ ক্রেতা অডিট
         $customerSalesLedger = collect();
         if (Schema::hasTable('orders')) {
             $hasPaidCol = Schema::hasColumn('orders', 'paid_amount');
@@ -651,7 +684,6 @@ class AdminDashboardController extends Controller
                 ->get();
         }
 
-        // শীর্ষ ক্রেতা (Top Spender Customer)
         $bestCustomer = $customerSalesLedger->first();
 
         // ৯. অর্ডার স্ট্যাটাস ও পেমেন্ট গেটওয়ে ডিস্ট্রিবিউশন
@@ -673,7 +705,7 @@ class AdminDashboardController extends Controller
             ->groupBy('method_name')
             ->get();
 
-        // ১০. ডায়নামিক ট্রেন্ড চার্ট ডেটা (ঘণ্টা / দিন / মাস ভিত্তিক)
+        // ১০. ট্রেন্ড চার্ট ডেটা
         $diffInDays = $startDate->diffInDays($endDate);
         $chartLabels = [];
         $chartCounts = [];
@@ -735,9 +767,7 @@ class AdminDashboardController extends Controller
             }
         }
 
-        // =========================================================================
-        // ১১. ইনভেন্টরি গ্লোবাল ডেটা (Single Source of Truth - No Double Counting)
-        // =========================================================================
+        // ১১. ইনভেন্টরি ডেটা
         $valuationData = InventoryService::getInventoryValuation();
         $activeProductsValue = (float) $valuationData['total_valuation'];
 
@@ -750,7 +780,6 @@ class AdminDashboardController extends Controller
             ? DB::table('product_variants')->distinct()->pluck('product_id')->toArray() 
             : [];
 
-        // Simple products stock status (Safe Schema Check for alert_quantity)
         $outOfStockSimple = 0;
         $lowStockSimple = 0;
         if (Schema::hasTable('products')) {
@@ -773,7 +802,6 @@ class AdminDashboardController extends Controller
                 ->count();
         }
 
-        // Variant-wise stock status (Safe Schema Check for alert_quantity)
         $outOfStockVariants = 0;
         $lowStockVariants = 0;
         if ($hasVariantsTable) {
@@ -812,7 +840,7 @@ class AdminDashboardController extends Controller
         $topCustomers = $customerSalesLedger->take(5);
         $recentOrders = (clone $periodOrdersQuery)->latest('id')->take(8)->get();
 
-        // ১২. এক্সেল / CSV এক্সপোর্ট হ্যান্ডলার
+        // ১২. এক্সপোর্ট হ্যান্ডলার
         if ($request->input('export') === 'excel' || $request->input('export') === 'csv') {
             return $this->exportDashboardAnalyticsToCsv(
                 $periodLabel,

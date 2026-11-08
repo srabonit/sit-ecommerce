@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use App\Services\ActivityLogger;
 use App\Services\PaymentTransactionService;
@@ -552,7 +553,7 @@ class PosController extends Controller
             $lineTotal = $unitPrice * $qty;
 
             $lineDiscount = round($lineTotal * $discountRatio, 2);
-            $netLineBase = max(0.0, $lineTotal - $lineDiscount);
+            $netLineBase = max(0.0, lineTotal - $lineDiscount);
 
             $resolvedTax = $this->resolveEffectiveItemTax($productId, $variantId, $branchId);
 
@@ -1057,42 +1058,70 @@ class PosController extends Controller
     /**
      * Customer Registration (AJAX)
      */
-    public function createCustomerAjax(Request $request)
+   public function createCustomerAjax(Request $request)
     {
         $request->validate([
             'name'  => 'required|string|max:100',
             'phone' => 'required|string|max:20',
         ]);
 
-        $email = $request->filled('email') 
-            ? strtolower(trim($request->email)) 
-            : preg_replace('/[^0-9]/', '', $request->phone) . '@customer.local';
+        $phone = trim($request->phone);
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // আগে একই ফোন দিয়ে কাস্টমার থাকলে সেটিই রিটার্ন করা
+        $existing = DB::table('users')->where('phone', $phone)->first();
+        if ($existing) {
+            return response()->json([
+                'success'  => true,
+                'customer' => [
+                    'id'    => $existing->id,
+                    'name'  => $existing->name,
+                    'phone' => $existing->phone,
+                ]
+            ]);
+        }
 
-        $userId = DB::table('users')->insertGetId([
+        $inputEmail = $request->filled('email') ? strtolower(trim($request->email)) : null;
+        if ($inputEmail && !DB::table('users')->where('email', $inputEmail)->exists()) {
+            $email = $inputEmail;
+        } else {
+            $email = 'c_' . $cleanPhone . '_' . substr(uniqid(), -4) . '@customer.local';
+        }
+
+        $userData = [
             'name'           => trim($request->name),
             'email'          => $email,
-            'phone'          => trim($request->phone),
+            'phone'          => $phone,
             'password'       => Hash::make('123456'),
             'role'           => 'customer',
-            'bio'            => $request->address,
-            'monthly_salary' => 0,
             'created_by'     => Auth::id(),
             'created_at'     => now(),
             'updated_at'     => now(),
-        ]);
+        ];
 
-        ActivityLogger::log('create', 'pos_customers', "Walk-in customer registered from POS: {$request->name}", [
-            'record_id'  => $userId,
-            'record_ref' => $request->phone,
-            'new_values' => ['name' => $request->name, 'phone' => $request->phone],
-        ]);
+        if (Schema::hasColumn('users', 'bio')) {
+            $userData['bio'] = $request->address;
+        } elseif (Schema::hasColumn('users', 'address')) {
+            $userData['address'] = $request->address;
+        }
+        if (Schema::hasColumn('users', 'monthly_salary')) {
+            $userData['monthly_salary'] = 0;
+        }
+        if (Schema::hasColumn('users', 'user_type')) {
+            $userData['user_type'] = 'customer';
+        }
+        if (Schema::hasColumn('users', 'is_active')) {
+            $userData['is_active'] = true;
+        }
+
+        $userId = DB::table('users')->insertGetId($userData);
 
         return response()->json([
             'success'  => true,
             'customer' => [
                 'id'    => $userId,
                 'name'  => $request->name,
-                'phone' => $request->phone,
+                'phone' => $phone,
             ]
         ]);
     }
@@ -1419,13 +1448,25 @@ class PosController extends Controller
 
             DB::commit();
 
+            // Multi-Format Direct Print URLs for Seamless Client-Side Autoprint
+            $printUrl58 = Route::has('admin.pos.print.thermal58') ? route('admin.pos.print.thermal58', $orderId) : url("admin/pos/print-pos-receipt-58mm/{$orderId}");
+            $printUrl80 = Route::has('admin.pos.print.thermal') ? route('admin.pos.print.thermal', $orderId) : url("admin/pos/print-pos-receipt/{$orderId}");
+            $printUrlA5 = Route::has('admin.pos.print.a5') ? route('admin.pos.print.a5', $orderId) : url("admin/pos/print-a5-memo/{$orderId}");
+            $printUrlA4 = Route::has('admin.pos.print.a4') ? route('admin.pos.print.a4', $orderId) : url("admin/pos/print-a4-memo/{$orderId}");
+
             return response()->json([
-                'success'    => true,
-                'message'    => 'Order placed successfully.',
-                'invoice_no' => $invoiceNo,
-                'order_id'   => $orderId,
-                'tax_amount' => $totalTaxCalculated,
-                'grand_total'=> $grandTotal
+                'success'       => true,
+                'message'       => 'Order placed successfully.',
+                'invoice_no'    => $invoiceNo,
+                'order_id'      => $orderId,
+                'tax_amount'    => $totalTaxCalculated,
+                'grand_total'   => $grandTotal,
+                'print_url'     => $printUrl80,
+                'memo_url'      => $printUrlA5,
+                'print_url_58'  => $printUrl58,
+                'print_url_80'  => $printUrl80,
+                'print_url_a5'  => $printUrlA5,
+                'print_url_a4'  => $printUrlA4,
             ]);
 
         } catch (\Exception $e) {
@@ -1435,7 +1476,7 @@ class PosController extends Controller
     }
 
     /**
-     * Thermal Receipt Print View (Mushak 6.3 / BIN Supported)
+     * ৩-ইঞ্চি থার্মাল রিসিট প্রিন্ট ভিউ (POS Thermal Receipt 80mm - Mushak 6.3 / BIN Supported)
      */
     public function printPosThermal($id)
     {
@@ -1531,7 +1572,115 @@ class PosController extends Controller
 
         $items = $itemsQuery->where("{$itemsTable}.order_id", $id)->get();
 
-        return view('admin.pos.print_thermal', compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
+        $view = view()->exists('admin.pos.print_thermal_80mm') 
+            ? 'admin.pos.print_thermal_80mm' 
+            : 'admin.pos.print_thermal';
+
+        return view($view, compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
+    }
+
+    /**
+     * ২-ইঞ্চি থার্মাল রিসিট প্রিন্ট ভিউ (POS Thermal Receipt 58mm - Edge-to-Edge Full Width)
+     */
+    public function printPosThermal58($id)
+    {
+        $user = Auth::user();
+
+        $branchSelects = ['orders.*'];
+        if (Schema::hasTable('branches')) {
+            if (Schema::hasColumn('branches', 'name')) $branchSelects[] = 'branches.name as branch_name';
+            if (Schema::hasColumn('branches', 'phone')) $branchSelects[] = 'branches.phone as branch_phone';
+            if (Schema::hasColumn('branches', 'address')) $branchSelects[] = 'branches.address as branch_address';
+            if (Schema::hasColumn('branches', 'bin_number')) {
+                $branchSelects[] = 'branches.bin_number as branch_bin';
+            } elseif (Schema::hasColumn('branches', 'bin')) {
+                $branchSelects[] = 'branches.bin as branch_bin';
+            }
+        }
+        if (Schema::hasTable('users')) {
+            if (Schema::hasColumn('users', 'name')) $branchSelects[] = 'users.name as customer_name';
+            if (Schema::hasColumn('users', 'phone')) $branchSelects[] = 'users.phone as customer_phone';
+        }
+
+        $orderQuery = DB::table('orders');
+        if (Schema::hasTable('branches') && Schema::hasColumn('orders', 'branch_id')) {
+            $orderQuery->leftJoin('branches', 'orders.branch_id', '=', 'branches.id');
+        }
+        if (Schema::hasTable('users') && Schema::hasColumn('orders', 'user_id')) {
+            $orderQuery->leftJoin('users', 'orders.user_id', '=', 'users.id');
+        }
+
+        $order = $orderQuery->where('orders.id', $id)
+            ->select($branchSelects)
+            ->first();
+
+        if (!$order) {
+            abort(404, 'Order not found');
+        }
+
+        if (!$user->isSuperAdmin() && !empty($user->branch_id) && (int)($order->branch_id ?? 0) !== (int)$user->branch_id) {
+            abort(403, 'Unauthorized access to this branch memo.');
+        }
+
+        $globalSettings = [];
+        if (Schema::hasTable('settings')) {
+            $globalSettings = DB::table('settings')->pluck('value', 'key')->toArray();
+        }
+
+        $siteTitle = $globalSettings['site_title'] ?? ($globalSettings['logo_title'] ?? config('app.name', 'Shop Now BD'));
+
+        // Resolution for BIN & VAT Labels
+        $companyBin = !empty($order->branch_bin) 
+            ? $order->branch_bin 
+            : ($globalSettings['company_bin'] ?? ($globalSettings['bin_number'] ?? '001293847-0101'));
+        $vatLabel = $globalSettings['vat_label'] ?? 'VAT';
+
+        $order->subtotal = $order->subtotal ?? ($order->sub_total ?? 0);
+        $order->shipping_charge = $order->shipping_charge ?? ($order->shipping_cost ?? ($order->delivery_charge ?? 0));
+        $order->discount = $order->discount ?? ($order->discount_amount ?? 0);
+        $order->tax_amount = $order->tax_amount ?? 0;
+        $order->grand_total = $order->grand_total ?? ($order->total_amount ?? ($order->total ?? 0));
+
+        // Sync Paid & Due amounts
+        $pStatus = strtolower($order->payment_status ?? '');
+        if (in_array($pStatus, ['paid', 'completed']) || (float)($order->paid_amount ?? 0) >= (float)$order->grand_total) {
+            $order->paid_amount = $order->grand_total;
+            $order->due_amount  = 0.00;
+        } else {
+            $order->paid_amount = (float)($order->paid_amount ?? 0);
+            $order->due_amount  = (float)($order->due_amount ?? max(0, $order->grand_total - $order->paid_amount));
+        }
+
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+
+        $itemsQuery = DB::table($itemsTable)
+            ->leftJoin('products', "{$itemsTable}.product_id", '=', 'products.id');
+
+        if (Schema::hasColumn($itemsTable, 'variant_id')) {
+            $itemsQuery->leftJoin('product_variants', "{$itemsTable}.variant_id", '=', 'product_variants.id')
+                ->select(
+                    "{$itemsTable}.*",
+                    'products.title as main_title', 
+                    'products.product_code as main_sku',
+                    'product_variants.color as pv_color',
+                    'product_variants.size as pv_size',
+                    'product_variants.product_code as pv_sku'
+                );
+        } else {
+            $itemsQuery->select(
+                "{$itemsTable}.*",
+                'products.title as main_title', 
+                'products.product_code as main_sku'
+            );
+        }
+
+        $items = $itemsQuery->where("{$itemsTable}.order_id", $id)->get();
+
+        $view = view()->exists('admin.pos.print_thermal_58mm') 
+            ? 'admin.pos.print_thermal_58mm' 
+            : 'admin.pos.print_thermal';
+
+        return view($view, compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
     }
 
     /**
@@ -1632,6 +1781,151 @@ class PosController extends Controller
 
         $items = $itemsQuery->where("{$itemsTable}.order_id", $id)->get();
 
-        return view('admin.pos.print_a5', compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
+        $view = view()->exists('admin.pos.print_a5') 
+            ? 'admin.pos.print_a5' 
+            : 'admin.pos.print_thermal';
+
+        return view($view, compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
+    }
+
+    /**
+     * A4 Memo Print View (Mushak 6.3 / BIN Supported)
+     */
+    public function printA4Memo($id)
+    {
+        $user = Auth::user();
+
+        $branchSelects = ['orders.*'];
+        if (Schema::hasTable('branches')) {
+            if (Schema::hasColumn('branches', 'name')) $branchSelects[] = 'branches.name as branch_name';
+            if (Schema::hasColumn('branches', 'phone')) $branchSelects[] = 'branches.phone as branch_phone';
+            if (Schema::hasColumn('branches', 'address')) $branchSelects[] = 'branches.address as branch_address';
+            if (Schema::hasColumn('branches', 'bin_number')) {
+                $branchSelects[] = 'branches.bin_number as branch_bin';
+            } elseif (Schema::hasColumn('branches', 'bin')) {
+                $branchSelects[] = 'branches.bin as branch_bin';
+            }
+        }
+        if (Schema::hasTable('users')) {
+            if (Schema::hasColumn('users', 'name')) $branchSelects[] = 'users.name as customer_name';
+            if (Schema::hasColumn('users', 'phone')) $branchSelects[] = 'users.phone as customer_phone';
+            if (Schema::hasColumn('users', 'bio')) $branchSelects[] = 'users.bio as customer_address';
+        }
+
+        $orderQuery = DB::table('orders');
+        if (Schema::hasTable('branches') && Schema::hasColumn('orders', 'branch_id')) {
+            $orderQuery->leftJoin('branches', 'orders.branch_id', '=', 'branches.id');
+        }
+        if (Schema::hasTable('users') && Schema::hasColumn('orders', 'user_id')) {
+            $orderQuery->leftJoin('users', 'orders.user_id', '=', 'users.id');
+        }
+
+        $order = $orderQuery->where('orders.id', $id)
+            ->select($branchSelects)
+            ->first();
+
+        if (!$order) {
+            abort(404, 'Order not found');
+        }
+
+        if (!$user->isSuperAdmin() && !empty($user->branch_id) && (int)($order->branch_id ?? 0) !== (int)$user->branch_id) {
+            abort(403, 'Unauthorized access to this branch memo.');
+        }
+
+        $globalSettings = [];
+        if (Schema::hasTable('settings')) {
+            $globalSettings = DB::table('settings')->pluck('value', 'key')->toArray();
+        }
+
+        $siteTitle = $globalSettings['site_title'] ?? ($globalSettings['logo_title'] ?? config('app.name', 'Shop Now BD'));
+
+        // Resolution for BIN & VAT Labels
+        $companyBin = !empty($order->branch_bin) 
+            ? $order->branch_bin 
+            : ($globalSettings['company_bin'] ?? ($globalSettings['bin_number'] ?? '001293847-0101'));
+        $vatLabel = $globalSettings['vat_label'] ?? 'VAT';
+
+        $order->subtotal = $order->subtotal ?? ($order->sub_total ?? 0);
+        $order->shipping_charge = $order->shipping_charge ?? ($order->shipping_cost ?? ($order->delivery_charge ?? 0));
+        $order->discount = $order->discount ?? ($order->discount_amount ?? 0);
+        $order->tax_amount = $order->tax_amount ?? 0;
+        $order->grand_total = $order->grand_total ?? ($order->total_amount ?? ($order->total ?? 0));
+
+        // Sync Paid & Due amounts
+        $pStatus = strtolower($order->payment_status ?? '');
+        if (in_array($pStatus, ['paid', 'completed']) || (float)($order->paid_amount ?? 0) >= (float)$order->grand_total) {
+            $order->paid_amount = $order->grand_total;
+            $order->due_amount  = 0.00;
+        } else {
+            $order->paid_amount = (float)($order->paid_amount ?? 0);
+            $order->due_amount  = (float)($order->due_amount ?? max(0, $order->grand_total - $order->paid_amount));
+        }
+
+        $itemsTable = Schema::hasTable('order_items') ? 'order_items' : 'order_details';
+
+        $itemsQuery = DB::table($itemsTable)
+            ->leftJoin('products', "{$itemsTable}.product_id", '=', 'products.id');
+
+        if (Schema::hasColumn($itemsTable, 'variant_id')) {
+            $itemsQuery->leftJoin('product_variants', "{$itemsTable}.variant_id", '=', 'product_variants.id')
+                ->select(
+                    "{$itemsTable}.*",
+                    'products.title as main_title', 
+                    'products.product_code as main_sku',
+                    'product_variants.color as pv_color',
+                    'product_variants.size as pv_size',
+                    'product_variants.product_code as pv_sku'
+                );
+        } else {
+            $itemsQuery->select(
+                "{$itemsTable}.*",
+                'products.title as main_title', 
+                'products.product_code as main_sku'
+            );
+        }
+
+        $items = $itemsQuery->where("{$itemsTable}.order_id", $id)->get();
+
+        $view = view()->exists('admin.pos.print_a4') 
+            ? 'admin.pos.print_a4' 
+            : 'admin.pos.print_a5';
+
+        return view($view, compact('order', 'items', 'siteTitle', 'companyBin', 'vatLabel'));
+    }
+
+    /**
+     * সার্বজনীন পেপার ফরম্যাট রাউটার (Dynamic Multi-Format Resolver)
+     */
+    public function printReceipt($id, $format = '80mm')
+    {
+        return match(strtolower((string)$format)) {
+            '58mm', '2inch', '2' => $this->printPosThermal58($id),
+            'a4'                 => $this->printA4Memo($id),
+            'a5'                 => $this->printA5Memo($id),
+            default              => $this->printPosThermal($id),
+        };
+    }
+
+    /**
+     * এলিয়াস মেথডসমূহ (BranchPOSController মেথড সামঞ্জস্যের জন্য)
+     */
+    public function printThermal($id)
+    {
+        return $this->printPosThermal($id);
+    }
+
+    public function printThermal58($id)
+    {
+        return $this->printPosThermal58($id);
+    }
+
+    public function printA5($id)
+    {
+        return $this->printA5Memo($id);
+    }
+
+    public function printA4($id)
+    {
+        return $this->printA4Memo($id);
     }
 }

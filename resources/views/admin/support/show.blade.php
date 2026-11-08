@@ -4,117 +4,225 @@
 
 @section('admin_content')
 <style>
-    /* Global Strict 5px Element Radius */
+    /* Ticket details — Kaiadmin Lite Classic / White */
+    #ticketDetailsRoot {
+        --ticket-border: #e6eaf0;
+        --ticket-muted: #6b7280;
+        --ticket-text: #344054;
+        --ticket-heading: #1f2937;
+        --ticket-surface: #ffffff;
+        --ticket-soft: #f8fafc;
+        --ticket-primary: #1572e8;
+        --ticket-focus: rgba(21, 114, 232, 0.14);
+        color: var(--ticket-text);
+    }
+
     #ticketDetailsRoot .btn,
-    #ticketDetailsRoot .btn-sm,
-    #ticketDetailsRoot button,
     #ticketDetailsRoot .form-control,
     #ticketDetailsRoot .form-select,
     #ticketDetailsRoot .user-msg-box {
-        border-radius: 5px !important;
+        border-radius: 5px;
     }
 
-    /* Enterprise Card Surface */
+    #ticketDetailsRoot .ticket-page-header {
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    #ticketDetailsRoot .ticket-page-title {
+        color: var(--ticket-heading);
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.4;
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    #ticketDetailsRoot .ticket-page-title .ticket-number {
+        color: var(--ticket-primary);
+        overflow-wrap: anywhere;
+    }
+
+    #ticketDetailsRoot .header-back-btn {
+        min-height: 34px;
+        border-color: #d0d5dd;
+        color: #475467;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 12px;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+
+    #ticketDetailsRoot .header-back-btn:hover {
+        background: #f8fafc;
+        border-color: #98a2b3;
+        color: #1d2939;
+    }
+
     #ticketDetailsRoot .ticket-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        height: 100%;
+        background: var(--ticket-surface);
+        border: 1px solid var(--ticket-border);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(16, 24, 40, .045);
         padding: 20px;
     }
 
-    .ticket-section-heading {
-        font-size: 13.5px;
+    #ticketDetailsRoot .ticket-section-heading {
+        align-items: center;
+        border-bottom: 1px solid var(--ticket-border);
+        color: var(--ticket-heading);
+        display: flex;
+        font-size: 13px;
         font-weight: 700;
-        color: #0f172a;
-        padding-bottom: 10px;
-        margin-bottom: 14px;
-        border-bottom: 1px solid #e2e8f0;
+        justify-content: space-between;
+        line-height: 1.4;
+        margin: 0 0 16px;
+        padding-bottom: 11px;
     }
 
-    /* Clean Info Meta Rows */
-    .ticket-meta-item {
-        padding: 8px 10px;
-        background: #f8fafc;
-        border: 1px solid #f1f5f9;
+    #ticketDetailsRoot .ticket-meta-item {
+        background: var(--ticket-soft);
+        border: 1px solid #edf0f4;
         border-radius: 5px;
-        margin-bottom: 8px;
-        font-size: 12.5px;
-        color: #1e293b;
+        color: var(--ticket-text);
         display: flex;
         flex-direction: column;
-        gap: 2px;
-    }
-    .ticket-meta-item strong {
-        font-size: 11px;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        font-weight: 700;
+        font-size: 12.5px;
+        gap: 4px;
+        margin-bottom: 9px;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        padding: 9px 11px;
     }
 
-    .user-msg-box {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
-        padding: 12px 14px;
+    #ticketDetailsRoot .ticket-meta-item strong {
+        color: var(--ticket-muted);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+    }
+
+    #ticketDetailsRoot .ticket-meta-item > span {
+        line-height: 1.5;
+    }
+
+    #ticketDetailsRoot .ticket-message-heading {
+        color: var(--ticket-heading);
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    #ticketDetailsRoot .user-msg-box {
+        background: #f8fafc;
+        border: 1px solid var(--ticket-border);
+        color: #475467;
         font-size: 12.5px;
-        color: #334155;
-        line-height: 1.55;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+        padding: 13px 14px;
         white-space: pre-line;
     }
 
-    /* Form Controls */
     #ticketDetailsRoot .form-label {
+        color: #475467;
         font-size: 11.5px;
         font-weight: 600;
-        color: #475569;
-        margin-bottom: 5px;
+        margin-bottom: 6px;
     }
 
     #ticketDetailsRoot .form-control,
     #ticketDetailsRoot .form-select {
+        background-color: #fff;
+        border: 1px solid #d0d5dd;
+        color: #344054;
         font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 8px 12px;
-        color: #0f172a;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        min-height: 38px;
+        padding: 8px 11px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #ticketDetailsRoot .form-control::placeholder {
+        color: #98a2b3;
+        opacity: 1;
     }
 
     #ticketDetailsRoot .form-control:focus,
     #ticketDetailsRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
+        border-color: var(--ticket-primary);
+        box-shadow: 0 0 0 3px var(--ticket-focus);
+        outline: 0;
     }
 
-    /* Submit Button */
-    .btn-send-reply {
-        font-size: 12.5px;
-        padding: 8px 20px;
-        white-space: nowrap;
-        display: inline-flex;
+    #ticketDetailsRoot textarea.form-control {
+        min-height: 132px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    #ticketDetailsRoot .btn-send-reply {
         align-items: center;
+        display: inline-flex;
+        font-size: 12.5px;
         justify-content: center;
+        min-height: 37px;
+        padding: 8px 16px;
+        white-space: normal;
+        transition: filter .15s ease, box-shadow .15s ease;
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #ticketDetailsRoot .btn-send-reply:hover {
+        filter: brightness(.97);
     }
 
-    /* Mobile Responsive Optimizations */
+    #ticketDetailsRoot .bn-digit,
+    #ticketDetailsRoot .font-monospace {
+        font-weight: 600;
+    }
+
     @media (max-width: 767.98px) {
-        #ticketDetailsRoot .ticket-card {
-            padding: 14px 16px;
+        #ticketDetailsRoot {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
         }
-        .header-back-btn,
-        .btn-send-reply {
-            width: 100%;
+
+        #ticketDetailsRoot .ticket-page-header {
+            align-items: stretch !important;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #ticketDetailsRoot .ticket-page-title {
+            font-size: 16px;
+        }
+
+        #ticketDetailsRoot .header-back-btn,
+        #ticketDetailsRoot .btn-send-reply {
             justify-content: center;
             text-align: center;
-            padding: 8px 14px;
+            width: 100%;
+        }
+
+        #ticketDetailsRoot .ticket-card {
+            padding: 15px;
+        }
+
+        #ticketDetailsRoot .ticket-section-heading {
+            margin-bottom: 13px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #ticketDetailsRoot *,
+        #ticketDetailsRoot *::before,
+        #ticketDetailsRoot *::after {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
         }
     }
 </style>
@@ -122,9 +230,9 @@
 <div class="container-fluid py-3 px-2 px-md-4" id="ticketDetailsRoot">
     <!-- Top Header -->
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2.5 mb-3">
-        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-1.5" style="font-size: 17px;">
+        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center flex-wrap gap-1.5 ticket-page-title">
             <span>Ticket Details:</span>
-            <span class="font-monospace text-primary bn-digit">{{ $ticket->ticket_no }}</span>
+            <span class="font-monospace text-primary bn-digit ticket-number">{{ $ticket->ticket_no }}</span>
         </h5>
         <a href="{{ route('admin.support.index') }}" class="btn btn-sm btn-outline-secondary px-3 py-1.5 fw-semibold d-inline-flex align-items-center text-nowrap shadow-xs header-back-btn">
             <i class="fas fa-arrow-left me-1.5"></i>
@@ -137,7 +245,7 @@
         <div class="col-12 col-md-5">
             <div class="ticket-card h-100">
                 <h6 class="ticket-section-heading">Customer & Query Info</h6>
-                
+
                 <div class="ticket-meta-item">
                     <strong>Customer Name:</strong>
                     <span>{{ $ticket->user_name ?? 'N/A' }}</span>
@@ -157,9 +265,9 @@
                     <strong>Submitted At:</strong>
                     <span class="font-monospace bn-digit">{{ date('d M Y, h:i A', strtotime($ticket->created_at)) }}</span>
                 </div>
-                
+
                 <div class="border-top pt-3">
-                    <strong class="text-dark d-block mb-1.5" style="font-size: 12px;">User Message:</strong>
+                    <strong class="text-dark d-block mb-1.5 ticket-message-heading">User Message:</strong>
                     <div class="user-msg-box">
                         {{ $ticket->message ?? ($ticket->subject ?? 'No detailed description provided.') }}
                     </div>
@@ -171,7 +279,7 @@
         <div class="col-12 col-md-7">
             <div class="ticket-card h-100">
                 <h6 class="ticket-section-heading">Admin Response & Status</h6>
-                
+
                 <form action="{{ route('admin.support.reply', $ticket->id) }}" method="POST">
                     @csrf
                     <div class="mb-3">

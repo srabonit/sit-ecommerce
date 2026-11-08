@@ -288,7 +288,7 @@ class SmsSettingController extends Controller
         if (!preg_match('/^8801[3-9]\d{8}$/', $cleanPhone)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid Bangladeshi mobile number format (e.g. 017XXXXXXXX or 88017XXXXXXXX).',
+                'message' => 'Invalid Bangladeshi mobile number format (017XXXXXXXX or 88017XXXXXXXX).',
             ], 422);
         }
 

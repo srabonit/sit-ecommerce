@@ -3,103 +3,487 @@
 @section('title', 'Suspicious Orders & Multiple Order Detection')
 
 @section('admin_content')
-<div class="container-fluid px-4 py-3" id="security-orders-wrapper">
-    <!-- Header & Action Controls -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <h4 class="fw-bold mb-0 text-dark d-flex align-items-center">
-                    <i class="fas fa-cart-shopping text-danger me-2"></i> Suspicious Orders &amp; Multiple Order Detection
+<style>
+    /* =========================================================
+       SUSPICIOUS ORDERS - KAIADMIN CLASSIC WHITE
+       Scoped UI modernization | Strict 5px radius
+    ========================================================= */
+    #security-orders-wrapper {
+        --orders-radius: 5px;
+        --orders-border: #e5e7eb;
+        --orders-muted: #667085;
+        color: #344054;
+        font-size: 13px;
+    }
+
+    #security-orders-wrapper .card,
+    #security-orders-wrapper .btn,
+    #security-orders-wrapper .form-control,
+    #security-orders-wrapper .form-select,
+    #security-orders-wrapper .input-group-text,
+    #modalOrderStatusUpdate .modal-content,
+    #modalOrderStatusUpdate .btn,
+    #modalOrderStatusUpdate .form-control,
+    #modalQuickBlockTarget .modal-content,
+    #modalQuickBlockTarget .btn,
+    #modalQuickBlockTarget .form-control,
+    #modalQuickBlockTarget .form-select {
+        border-radius: var(--orders-radius, 5px) !important;
+    }
+
+    #security-orders-wrapper .orders-page-header {
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--orders-border);
+    }
+
+    #security-orders-wrapper .orders-page-title {
+        font-size: 19px;
+        line-height: 1.4;
+        letter-spacing: -.35px;
+    }
+
+    #security-orders-wrapper .orders-page-subtitle {
+        max-width: 850px;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    #security-orders-wrapper .orders-counter-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 9px;
+        font-size: 10.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        border-radius: 5px;
+    }
+
+    #security-orders-wrapper .orders-summary-card,
+    #security-orders-wrapper .orders-filter-card,
+    #security-orders-wrapper .orders-table-card {
+        border: 1px solid var(--orders-border) !important;
+        box-shadow: 0 2px 8px rgba(16, 24, 40, .045) !important;
+        background: #fff;
+    }
+
+    #security-orders-wrapper .orders-summary-card {
+        min-height: 116px;
+        padding: 15px;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    #security-orders-wrapper .orders-summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 14px rgba(16, 24, 40, .07) !important;
+    }
+
+    #security-orders-wrapper .orders-summary-label {
+        color: #667085;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    #security-orders-wrapper .orders-summary-value {
+        margin: 5px 0 2px;
+        font-size: 25px;
+        line-height: 1.25;
+        letter-spacing: -.5px;
+    }
+
+    #security-orders-wrapper .orders-summary-caption {
+        color: #98a2b3;
+        font-size: 10.5px;
+    }
+
+    #security-orders-wrapper .orders-summary-icon {
+        width: 31px;
+        height: 31px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        font-size: 13px;
+    }
+
+    #security-orders-wrapper .orders-filter-card .card-body {
+        padding: 15px;
+    }
+
+    #security-orders-wrapper .form-label {
+        color: #667085;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    #security-orders-wrapper .form-control,
+    #security-orders-wrapper .form-select {
+        min-height: 36px;
+        border-color: #dfe3e8;
+        font-size: 12px;
+        box-shadow: none;
+    }
+
+    #security-orders-wrapper .input-group-text {
+        min-width: 36px;
+        justify-content: center;
+        color: #667085;
+        background: #f8fafc;
+        border-color: #dfe3e8;
+    }
+
+    #security-orders-wrapper .form-control:focus,
+    #security-orders-wrapper .form-select:focus,
+    #modalOrderStatusUpdate .form-control:focus,
+    #modalQuickBlockTarget .form-control:focus,
+    #modalQuickBlockTarget .form-select:focus {
+        border-color: var(--bs-primary, #1572e8);
+        box-shadow: 0 0 0 .15rem rgba(21, 114, 232, .10);
+    }
+
+    #security-orders-wrapper .btn {
+        min-height: 33px;
+        font-size: 11.5px;
+        font-weight: 600;
+        transition: all .18s ease;
+    }
+
+    #security-orders-wrapper .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    #security-orders-wrapper .orders-table-card {
+        overflow: hidden;
+    }
+
+    #security-orders-wrapper .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #security-orders-wrapper #main-orders-security-table {
+        min-width: 1050px;
+        font-size: 12px !important;
+    }
+
+    #security-orders-wrapper #main-orders-security-table thead th {
+        padding: 12px 10px;
+        color: #667085;
+        background: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .25px;
+        text-transform: uppercase;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    #security-orders-wrapper #main-orders-security-table tbody td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #edf0f2;
+        vertical-align: middle;
+    }
+
+    #security-orders-wrapper #main-orders-security-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    #security-orders-wrapper #main-orders-security-table tbody tr:hover {
+        background: #f9fbfd;
+    }
+
+    #security-orders-wrapper .orders-table-footer {
+        padding: 13px 15px;
+        border-top: 1px solid var(--orders-border) !important;
+    }
+
+    #security-orders-wrapper #orders-showing-text {
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+
+    #security-orders-wrapper #order-pagination-container .pagination {
+        gap: 3px;
+        margin-bottom: 0;
+    }
+
+    #security-orders-wrapper #order-pagination-container .page-link {
+        min-width: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 8px;
+        border-radius: 5px !important;
+        font-size: 11px;
+        box-shadow: none;
+    }
+
+    /* Modal styling */
+    #modalOrderStatusUpdate .modal-content,
+    #modalQuickBlockTarget .modal-content {
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    #modalOrderStatusUpdate .modal-header,
+    #modalOrderStatusUpdate .modal-footer,
+    #modalQuickBlockTarget .modal-header,
+    #modalQuickBlockTarget .modal-footer {
+        background: #f8fafc;
+        border-color: #e8ebef;
+    }
+
+    #modalOrderStatusUpdate .modal-title,
+    #modalQuickBlockTarget .modal-title {
+        font-size: 14px;
+    }
+
+    #modalOrderStatusUpdate .modal-body,
+    #modalQuickBlockTarget .modal-body {
+        padding: 17px;
+    }
+
+    #modalOrderStatusUpdate .form-control,
+    #modalQuickBlockTarget .form-control,
+    #modalQuickBlockTarget .form-select {
+        min-height: 36px;
+        font-size: 12px;
+    }
+
+    #modalOrderStatusUpdate textarea.form-control {
+        min-height: auto;
+        resize: vertical;
+    }
+
+    #modalOrderStatusUpdate .modal-footer .btn,
+    #modalQuickBlockTarget .modal-footer .btn {
+        min-height: 33px;
+        font-size: 11.5px;
+    }
+
+    @media (max-width: 1199.98px) {
+        #security-orders-wrapper .orders-summary-card {
+            min-height: 110px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #security-orders-wrapper {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+        }
+
+        #security-orders-wrapper .orders-page-header {
+            align-items: flex-start !important;
+        }
+
+        #security-orders-wrapper .orders-page-title {
+            font-size: 16px;
+        }
+
+        #security-orders-wrapper .orders-page-subtitle {
+            font-size: 11.5px;
+        }
+
+        #security-orders-wrapper .orders-header-actions {
+            width: 100%;
+        }
+
+        #security-orders-wrapper .orders-header-actions .btn {
+            flex: 1 1 auto;
+        }
+
+        #security-orders-wrapper .orders-summary-card {
+            min-height: 105px;
+            padding: 13px;
+        }
+
+        #security-orders-wrapper .orders-summary-value {
+            font-size: 22px;
+        }
+
+        #security-orders-wrapper .orders-filter-card .card-body {
+            padding: 12px;
+        }
+
+        #security-orders-wrapper .orders-filter-actions {
+            width: 100%;
+        }
+
+        #security-orders-wrapper .orders-filter-actions .btn {
+            flex: 1 1 0;
+        }
+
+        #security-orders-wrapper .orders-table-footer {
+            align-items: flex-start !important;
+        }
+
+        #security-orders-wrapper #order-pagination-container {
+            max-width: 100%;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        #modalOrderStatusUpdate .modal-dialog,
+        #modalQuickBlockTarget .modal-dialog {
+            margin: 12px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #security-orders-wrapper .orders-counter-badge {
+            font-size: 10px;
+        }
+
+        #security-orders-wrapper .orders-summary-caption {
+            font-size: 10px;
+        }
+
+        #modalOrderStatusUpdate .modal-body,
+        #modalQuickBlockTarget .modal-body {
+            padding: 14px;
+        }
+    }
+</style>
+
+<div class="container-fluid px-3 px-md-4 py-3" id="security-orders-wrapper">
+
+    {{-- Header & Action Controls --}}
+    <div class="orders-page-header d-flex flex-column flex-lg-row align-items-start justify-content-between gap-3 mb-3">
+        <div class="flex-grow-1 min-w-0">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h4 class="orders-page-title fw-bold mb-0 text-dark d-flex align-items-center">
+                    <i class="fas fa-cart-shopping text-danger me-2"></i>
+                    Suspicious Orders &amp; Multiple Order Detection
                 </h4>
-                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2.5 py-1" style="font-size: 11px;">
-                    <i class="fas fa-shield-virus me-1"></i> <span id="orders-total-counter">{{ number_format($orders->total()) }}</span> Orders Flagged
+
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 orders-counter-badge">
+                    <i class="fas fa-shield-virus"></i>
+                    <span id="orders-total-counter">{{ number_format($orders->total()) }}</span>
+                    Orders Flagged
                 </span>
             </div>
-            <p class="text-muted small mb-0 mt-1">
+
+            <p class="orders-page-subtitle text-muted mb-0 mt-2">
                 Automated velocity throttling, multi-phone verification from same IP, and non-destructive spam hold engine
             </p>
         </div>
 
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <!-- Same IP Order Clusters Shortcut -->
-            <a href="{{ route('admin.security.orders.clusters') }}" class="btn btn-sm btn-outline-primary shadow-sm px-3" id="btn-view-clusters">
-                <i class="fas fa-layer-group me-1"></i> Same IP Clusters
+        <div class="orders-header-actions d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
+            {{-- Same IP Order Clusters Shortcut --}}
+            <a href="{{ route('admin.security.orders.clusters') }}"
+               class="btn btn-sm btn-outline-primary px-3"
+               id="btn-view-clusters">
+                <i class="fas fa-layer-group me-1"></i>
+                Same IP Clusters
             </a>
 
-            <!-- Refresh Button -->
-            <button type="button" class="btn btn-sm btn-light border shadow-sm text-secondary" id="btn-refresh-orders" title="Refresh Table">
+            {{-- Refresh Button --}}
+            <button type="button"
+                    class="btn btn-sm btn-light border text-secondary"
+                    id="btn-refresh-orders"
+                    title="Refresh Table"
+                    aria-label="Refresh suspicious orders">
                 <i class="fas fa-sync-alt" id="orders-refresh-icon"></i>
             </button>
         </div>
     </div>
 
-    <!-- SUMMARY COUNTERS BAR -->
-    <div class="row g-3 mb-4">
-        <!-- Total Flagged Suspicious -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted fw-semibold" style="font-size: 11px;">Total Flagged</span>
-                    <i class="fas fa-triangle-exclamation text-danger"></i>
+    {{-- Summary Counters --}}
+    <div class="row g-3 mb-3">
+
+        {{-- Total Flagged Suspicious --}}
+        <div class="col-6 col-xl-3 col-md-6">
+            <div class="card orders-summary-card h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="orders-summary-label">Total Flagged</span>
+                    <span class="orders-summary-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </span>
                 </div>
-                <h3 class="fw-bold mb-0 text-danger" id="count-total-suspicious">{{ number_format($counters['total_suspicious'] ?? 0) }}</h3>
-                <small class="text-muted" style="font-size: 10.5px;">Orders with security flags</small>
+                <h3 class="orders-summary-value fw-bold text-danger" id="count-total-suspicious">
+                    {{ number_format($counters['total_suspicious'] ?? 0) }}
+                </h3>
+                <small class="orders-summary-caption">Orders with security flags</small>
             </div>
         </div>
 
-        <!-- Under Review / Verification Hold -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted fw-semibold" style="font-size: 11px;">Under Review</span>
-                    <i class="fas fa-clock text-warning"></i>
+        {{-- Under Review / Verification Hold --}}
+        <div class="col-6 col-xl-3 col-md-6">
+            <div class="card orders-summary-card h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="orders-summary-label">Under Review</span>
+                    <span class="orders-summary-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-clock"></i>
+                    </span>
                 </div>
-                <h3 class="fw-bold mb-0 text-warning" id="count-under-review">{{ number_format($counters['under_review'] ?? 0) }}</h3>
-                <small class="text-muted" style="font-size: 10.5px;">Awaiting staff verification</small>
+                <h3 class="orders-summary-value fw-bold text-warning" id="count-under-review">
+                    {{ number_format($counters['under_review'] ?? 0) }}
+                </h3>
+                <small class="orders-summary-caption">Awaiting staff verification</small>
             </div>
         </div>
 
-        <!-- Confirmed Spam / Cancelled -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted fw-semibold" style="font-size: 11px;">Confirmed Spam</span>
-                    <i class="fas fa-ban text-dark"></i>
+        {{-- Confirmed Spam / Cancelled --}}
+        <div class="col-6 col-xl-3 col-md-6">
+            <div class="card orders-summary-card h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="orders-summary-label">Confirmed Spam</span>
+                    <span class="orders-summary-icon bg-dark bg-opacity-10 text-dark">
+                        <i class="fas fa-ban"></i>
+                    </span>
                 </div>
-                <h3 class="fw-bold mb-0 text-dark" id="count-flagged-spam">{{ number_format($counters['flagged_spam'] ?? 0) }}</h3>
-                <small class="text-muted" style="font-size: 10.5px;">Marked as fraudulent traffic</small>
+                <h3 class="orders-summary-value fw-bold text-dark" id="count-flagged-spam">
+                    {{ number_format($counters['flagged_spam'] ?? 0) }}
+                </h3>
+                <small class="orders-summary-caption">Marked as fraudulent traffic</small>
             </div>
         </div>
 
-        <!-- Approved by Admin -->
-        <div class="col-xl-3 col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <span class="text-muted fw-semibold" style="font-size: 11px;">Approved Clean</span>
-                    <i class="fas fa-check-circle text-success"></i>
+        {{-- Approved by Admin --}}
+        <div class="col-6 col-xl-3 col-md-6">
+            <div class="card orders-summary-card h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <span class="orders-summary-label">Approved Clean</span>
+                    <span class="orders-summary-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </span>
                 </div>
-                <h3 class="fw-bold mb-0 text-success" id="count-approved-clean">{{ number_format($counters['approved_clean'] ?? 0) }}</h3>
-                <small class="text-muted" style="font-size: 10.5px;">Cleared for delivery</small>
+                <h3 class="orders-summary-value fw-bold text-success" id="count-approved-clean">
+                    {{ number_format($counters['approved_clean'] ?? 0) }}
+                </h3>
+                <small class="orders-summary-caption">Cleared for delivery</small>
             </div>
         </div>
     </div>
 
-    <!-- FILTER TOOLBAR CARD -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white">
-        <div class="card-body p-3">
-            <form id="orderFilterForm" class="row g-2 align-items-end">
-                <!-- Search Box -->
-                <div class="col-xl-3 col-md-6">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Search Order / Phone / IP</label>
+    {{-- Filter Toolbar --}}
+    <div class="card orders-filter-card mb-3">
+        <div class="card-body">
+            <form id="orderFilterForm" class="row g-3 align-items-end">
+
+                {{-- Search Box --}}
+                <div class="col-12 col-xl-3 col-md-6">
+                    <label for="filter_order_search" class="form-label mb-1">Search Order / Phone / IP</label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" class="form-control form-control-sm border-start-0" id="filter_order_search" name="search" placeholder="#ORD-1001, 01700000000..." value="{{ request('search') }}">
+                        <span class="input-group-text border-end-0">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control border-start-0"
+                               id="filter_order_search"
+                               name="search"
+                               placeholder="#ORD-1001, 01700000000..."
+                               value="{{ request('search') }}">
                     </div>
                 </div>
 
-                <!-- Review Status -->
-                <div class="col-xl-2 col-md-3 col-sm-6">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Review Status</label>
+                {{-- Review Status --}}
+                <div class="col-6 col-xl-2 col-md-3">
+                    <label for="filter_review_status" class="form-label mb-1">Review Status</label>
                     <select class="form-select form-select-sm" id="filter_review_status" name="review_status">
                         <option value="">All Review Statuses</option>
                         <option value="under_review" {{ request('review_status') === 'under_review' ? 'selected' : '' }}>Under Review</option>
@@ -109,9 +493,9 @@
                     </select>
                 </div>
 
-                <!-- Risk Level -->
-                <div class="col-xl-2 col-md-3 col-sm-6">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Risk Level</label>
+                {{-- Risk Level --}}
+                <div class="col-6 col-xl-2 col-md-3">
+                    <label for="filter_order_risk_level" class="form-label mb-1">Risk Level</label>
                     <select class="form-select form-select-sm" id="filter_order_risk_level" name="risk_level">
                         <option value="">All Risk Levels</option>
                         <option value="critical" {{ request('risk_level') === 'critical' ? 'selected' : '' }}>Critical (75 - 100)</option>
@@ -121,9 +505,9 @@
                     </select>
                 </div>
 
-                <!-- Order Source -->
-                <div class="col-xl-2 col-md-3 col-sm-6">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Channel Source</label>
+                {{-- Order Source --}}
+                <div class="col-6 col-xl-2 col-md-3">
+                    <label for="filter_order_source" class="form-label mb-1">Channel Source</label>
                     <select class="form-select form-select-sm" id="filter_order_source" name="order_source">
                         <option value="">All Channels</option>
                         <option value="online" {{ request('order_source') === 'online' ? 'selected' : '' }}>Online Store</option>
@@ -131,9 +515,9 @@
                     </select>
                 </div>
 
-                <!-- Per Page -->
-                <div class="col-xl-1 col-md-3 col-sm-6">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Show</label>
+                {{-- Per Page --}}
+                <div class="col-6 col-xl-1 col-md-3">
+                    <label for="filter_order_per_page" class="form-label mb-1">Show</label>
                     <select class="form-select form-select-sm" id="filter_order_per_page" name="per_page">
                         <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
                         <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
@@ -142,24 +526,26 @@
                     </select>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="col-xl-2 col-md-6 d-flex gap-2">
+                {{-- Action Buttons --}}
+                <div class="col-12 col-xl-2 col-md-6 d-flex gap-2 orders-filter-actions">
                     <button type="button" class="btn btn-sm btn-light border w-100" id="btn-reset-order-filters">
-                        <i class="fas fa-rotate-left me-1"></i> Reset
+                        <i class="fas fa-rotate-left me-1"></i>
+                        Reset
                     </button>
                     <button type="submit" class="btn btn-sm btn-primary w-100">
-                        <i class="fas fa-filter me-1"></i> Apply
+                        <i class="fas fa-filter me-1"></i>
+                        Apply
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MAIN SUSPICIOUS ORDERS TABLE CARD -->
-    <div class="card border-0 shadow-sm rounded-3 bg-white overflow-hidden">
+    {{-- Main Suspicious Orders Table --}}
+    <div class="card orders-table-card">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="main-orders-security-table" style="font-size: 12.5px;">
-                <thead class="table-light text-muted border-bottom" style="font-size: 11px;">
+            <table class="table table-hover align-middle mb-0" id="main-orders-security-table">
+                <thead>
                     <tr>
                         <th class="ps-3" style="width: 170px;">Order #</th>
                         <th>Customer Info</th>
@@ -177,11 +563,14 @@
             </table>
         </div>
 
-        <!-- Table Footer / Pagination -->
-        <div class="card-footer bg-white border-0 py-3 px-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-top">
-            <span class="small text-muted" id="orders-showing-text">
-                Showing <strong>{{ $orders->firstItem() ?? 0 }}</strong> to <strong>{{ $orders->lastItem() ?? 0 }}</strong> of <strong>{{ number_format($orders->total()) }}</strong> orders
+        {{-- Table Footer / Pagination --}}
+        <div class="card-footer bg-white border-0 orders-table-footer d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <span class="text-muted" id="orders-showing-text">
+                Showing <strong class="text-dark">{{ $orders->firstItem() ?? 0 }}</strong>
+                to <strong class="text-dark">{{ $orders->lastItem() ?? 0 }}</strong>
+                of <strong class="text-dark">{{ number_format($orders->total()) }}</strong> orders
             </span>
+
             <div id="order-pagination-container">
                 {{ $orders->links('pagination::bootstrap-5') }}
             </div>
@@ -189,55 +578,85 @@
     </div>
 </div>
 
-<!-- MODAL: QUICK STATUS REASON NOTE -->
+{{-- Modal: Quick Status Reason Note --}}
 <div class="modal fade" id="modalOrderStatusUpdate" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header py-2.5 px-3 bg-light">
-                <h6 class="modal-title fw-bold text-dark"><i class="fas fa-pen-to-square me-2 text-primary"></i> Review Reason</h6>
+        <div class="modal-content shadow">
+
+            <div class="modal-header py-3 px-3">
+                <h6 class="modal-title fw-bold text-dark mb-0">
+                    <i class="fas fa-pen-to-square me-2 text-primary"></i>
+                    Review Reason
+                </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <form id="formSubmitOrderStatus">
                 <input type="hidden" id="status_order_id">
                 <input type="hidden" id="status_target_review">
                 <input type="hidden" id="status_target_order">
-                
-                <div class="modal-body p-3">
-                    <p class="small text-muted mb-2" id="status_modal_text">Apply security review decision to order?</p>
-                    <label class="form-label small fw-semibold text-secondary">Internal Note (Optional)</label>
-                    <textarea class="form-control form-control-sm" id="status_admin_note" rows="2" placeholder="Audit reasoning..."></textarea>
+
+                <div class="modal-body">
+                    <p class="small text-muted mb-3" id="status_modal_text">
+                        Apply security review decision to order?
+                    </p>
+
+                    <label for="status_admin_note" class="form-label small fw-semibold text-secondary">
+                        Internal Note (Optional)
+                    </label>
+                    <textarea class="form-control form-control-sm"
+                              id="status_admin_note"
+                              rows="2"
+                              placeholder="Audit reasoning..."></textarea>
                 </div>
-                <div class="modal-footer py-2 px-3 bg-light">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-primary px-3" id="btn-confirm-status-update">Confirm Decision</button>
+
+                <div class="modal-footer py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="btn btn-sm btn-primary px-3"
+                            id="btn-confirm-status-update">
+                        Confirm Decision
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- MODAL: QUICK BLOCK (IP / USER / NETWORK) -->
+{{-- Modal: Quick Block (IP / User / Network) --}}
 <div class="modal fade" id="modalQuickBlockTarget" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header py-2.5 px-3 bg-light">
-                <h6 class="modal-title fw-bold text-danger" id="quickBlockModalTitle">
-                    <i class="fas fa-shield-virus me-2"></i> Security Restriction Enforcement
+        <div class="modal-content shadow">
+
+            <div class="modal-header py-3 px-3">
+                <h6 class="modal-title fw-bold text-danger mb-0" id="quickBlockModalTitle">
+                    <i class="fas fa-shield-virus me-2"></i>
+                    Security Restriction Enforcement
                 </h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <form id="formExecuteQuickBlock">
                 <input type="hidden" id="quick_block_action_type" name="action_type">
                 <input type="hidden" id="quick_block_target" name="target">
 
-                <div class="modal-body p-3">
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Target Entity</label>
-                        <input type="text" class="form-control form-control-sm font-monospace bg-light" id="display_target_entity" readonly>
+                        <label for="display_target_entity" class="form-label small fw-semibold text-secondary">
+                            Target Entity
+                        </label>
+                        <input type="text"
+                               class="form-control form-control-sm font-monospace bg-light"
+                               id="display_target_entity"
+                               readonly>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-secondary">Restriction Duration</label>
+                        <label for="quick_block_duration" class="form-label small fw-semibold text-secondary">
+                            Restriction Duration
+                        </label>
                         <select class="form-select form-select-sm" id="quick_block_duration" name="duration">
                             <option value="60">1 Hour</option>
                             <option value="360">6 Hours</option>
@@ -248,13 +667,27 @@
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label small fw-semibold text-secondary">Reason <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control form-control-sm" id="quick_block_reason" name="reason" required value="Repeated fraudulent order attempts">
+                        <label for="quick_block_reason" class="form-label small fw-semibold text-secondary">
+                            Reason <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control form-control-sm"
+                               id="quick_block_reason"
+                               name="reason"
+                               required
+                               value="Repeated fraudulent order attempts">
                     </div>
                 </div>
-                <div class="modal-footer py-2 px-3 bg-light">
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-danger px-3" id="btn-submit-quick-block">Enforce Restriction</button>
+
+                <div class="modal-footer py-2 px-3">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="btn btn-sm btn-danger px-3"
+                            id="btn-submit-quick-block">
+                        Enforce Restriction
+                    </button>
                 </div>
             </form>
         </div>

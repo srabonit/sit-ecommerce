@@ -26,6 +26,7 @@ use App\Http\Middleware\EnsureBranchAccess;
 */
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\SocialAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,11 +44,17 @@ use App\Http\Controllers\Admin\CourierSettingController as AdminCourierSettingCo
 use App\Http\Controllers\Admin\CourierManagementController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\StaffUserController;
+use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\SessionMonitorController;
 use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\BranchProductController;
+use App\Http\Controllers\Admin\BranchPOSController;
+use App\Http\Controllers\Admin\BranchDailyClosingController;
+use App\Http\Controllers\Admin\BranchReportController;
 use App\Http\Controllers\Admin\PosController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AuthSettingController;
 use App\Http\Controllers\Admin\SiteContentController;
 use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\Admin\PaymentTransactionController;
@@ -70,6 +77,22 @@ use App\Http\Controllers\Admin\AccountLedgerController;
 use App\Http\Controllers\Admin\EmailMarketingController;
 use App\Http\Controllers\Admin\AdminProductReviewController;
 use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\ImageThumbnailController;
+
+/*
+|--------------------------------------------------------------------------
+| Procurement & Inventory Management Controllers Imports
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\PurchaseReceiptController;
+use App\Http\Controllers\Admin\SupplierPaymentController;
+use App\Http\Controllers\Admin\PurchaseReturnController;
+use App\Http\Controllers\Admin\SupplierExchangeController;
+use App\Http\Controllers\Admin\SupplierDebitCreditNoteController;
+use App\Http\Controllers\Admin\AssetProcurementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -191,8 +214,18 @@ Route::middleware(['throttle:custom-rate-limit'])->group(function () {
         Route::get('/track-order', [UserDashboardController::class, 'trackOrder'])->name('track.order');
         Route::get('/profile', [UserDashboardController::class, 'profile'])->name('profile');
         Route::post('/profile/update', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
-
         Route::post('/password/update', [UserDashboardController::class, 'updatePassword'])->name('password.update');
+
+        // Customer Identity Updates via OTP
+        Route::post('/phone/change-otp', [UserDashboardController::class, 'requestPhoneChangeOtp'])->name('phone.change.otp');
+        Route::post('/phone/change-confirm', [UserDashboardController::class, 'confirmPhoneChange'])->name('phone.change.confirm');
+        Route::post('/email/change-otp', [UserDashboardController::class, 'requestEmailChangeOtp'])->name('email.change.otp');
+        Route::post('/email/change-confirm', [UserDashboardController::class, 'confirmEmailChange'])->name('email.change.confirm');
+
+        // Two-Factor Authentication & Session Termination
+        Route::post('/two-factor/toggle', [UserDashboardController::class, 'toggleTwoFactor'])->name('two_factor.toggle');
+        Route::post('/sessions/logout-others', [UserDashboardController::class, 'logoutOtherDevices'])->name('sessions.logout_others');
+
         Route::get('/addresses', [UserDashboardController::class, 'addresses'])->name('addresses');
         Route::post('/addresses/update', [UserDashboardController::class, 'updateAddress'])->name('addresses.update');
         Route::get('/wishlist', [UserDashboardController::class, 'wishlist'])->name('wishlist');
@@ -288,23 +321,89 @@ Route::prefix('payment')->name('payment.')->group(function () {
 
 /*
 |==========================================================================
-| SECTION 4: AUTHENTICATION (CUSTOMER & ADMIN)
+| SECTION 4: AUTHENTICATION (CUSTOMER, OTP, OAUTH, 2FA & ADMIN)
 |==========================================================================
 */
 Route::middleware('guest')->group(function () {
+    // 4.1 Standard & Dynamic Credentials Login
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-limiter');
+
+    // 4.2 Registration with Live OTP Verification Support (Phone & Email)
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth-limiter');
+    
+    // Registration Phone OTP
+    Route::post('/auth/otp/register/send', [AuthController::class, 'sendRegistrationOtp'])
+        ->name('auth.otp.register.send')
+        ->middleware('throttle:auth-limiter');
+    Route::post('/auth/otp/register/verify', [AuthController::class, 'verifyRegistrationOtp'])
+        ->name('auth.otp.register.verify')
+        ->middleware('throttle:auth-limiter');
+
+    // Registration Email OTP
+    Route::post('/auth/email-otp/register/send', [AuthController::class, 'sendRegistrationEmailOtp'])
+        ->name('auth.email_otp.register.send')
+        ->middleware('throttle:auth-limiter');
+    Route::post('/auth/email-otp/register/verify', [AuthController::class, 'verifyRegistrationEmailOtp'])
+        ->name('auth.email_otp.register.verify')
+        ->middleware('throttle:auth-limiter');
+
+    // 4.3 Passwordless Phone Number + OTP Login
+    Route::post('/auth/otp/login/send', [AuthController::class, 'sendLoginOtp'])
+        ->name('auth.otp.login.send')
+        ->middleware('throttle:auth-limiter');
+    Route::post('/auth/otp/login/verify', [AuthController::class, 'verifyLoginOtp'])
+        ->name('auth.otp.login.verify')
+        ->middleware('throttle:auth-limiter');
+
+    // 4.4 Passwordless Email + OTP Login
+    Route::post('/auth/email-otp/login/send', [AuthController::class, 'sendEmailLoginOtp'])
+        ->name('auth.email_otp.login.send')
+        ->middleware('throttle:auth-limiter');
+    Route::post('/auth/email-otp/login/verify', [AuthController::class, 'verifyEmailLoginOtp'])
+        ->name('auth.email_otp.login.verify')
+        ->middleware('throttle:auth-limiter');
+
+    // 4.5 Google OAuth 2.0 Redirection & Callback
+    Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
+    // 4.6 Dual Password Reset Pipeline (Email Link & Phone SMS Link)
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email')->middleware('throttle:auth-limiter');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('password.email')
+        ->middleware('throttle:auth-limiter');
     Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.update')->middleware('throttle:auth-limiter');
+    Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])
+        ->name('password.update')
+        ->middleware('throttle:auth-limiter');
+
+    Route::post('/forgot-password/phone/send-otp', [ForgotPasswordController::class, 'sendPhoneResetOtp'])
+        ->name('password.phone.send_otp')
+        ->middleware('throttle:auth-limiter');
+    Route::post('/forgot-password/phone/verify-otp', [ForgotPasswordController::class, 'verifyPhoneResetOtp'])
+        ->name('password.phone.verify_otp')
+        ->middleware('throttle:auth-limiter');
+    Route::get('/reset-password/phone/{token}', [ForgotPasswordController::class, 'showPhoneResetForm'])->name('password.reset.phone');
+    Route::post('/reset-password/phone', [ForgotPasswordController::class, 'resetWithPhone'])
+        ->name('password.phone.update')
+        ->middleware('throttle:auth-limiter');
 });
 
+// 4.7 Two-Factor Authentication (2FA) Challenge Pipeline
+Route::get('/auth/2fa/challenge', [AuthController::class, 'showTwoFactorChallenge'])->name('auth.2fa.challenge');
+Route::post('/auth/2fa/verify', [AuthController::class, 'verifyTwoFactor'])
+    ->name('auth.2fa.verify')
+    ->middleware('throttle:auth-limiter');
+Route::post('/auth/2fa/resend', [AuthController::class, 'resendTwoFactorOtp'])
+    ->name('auth.2fa.resend')
+    ->middleware('throttle:auth-limiter');
+
+// 4.8 Universal Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
-// Admin Dedicated Authentication
+// 4.9 Dedicated Admin Authentication
 Route::prefix('dashboard/auth')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'showLogin'])->name('login');
     Route::post('/', [AdminDashboardController::class, 'login'])->name('login.submit')->middleware('throttle:auth-limiter');
@@ -359,12 +458,36 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/update-stock/{id}', [BranchController::class, 'updateProductStock'])->name('stock.update');
         Route::get('/orders', [BranchController::class, 'branchOrders'])->name('orders');
         Route::get('/search-products-ajax', [BranchController::class, 'searchProductsAjax'])->name('search.products');
+
+        // Multi-Branch Staff & Permissions Management
+        Route::get('/manage-staff/{id}', [BranchController::class, 'manageStaff'])->name('staff.manage');
+        Route::post('/assign-staff/{id}', [BranchController::class, 'assignStaff'])->name('staff.assign');
+        Route::delete('/remove-staff/{branchId}/{userId}', [BranchController::class, 'removeStaff'])->name('staff.remove');
+
+        // Branch Operational Settings & Context Switching
+        Route::post('/update-settings/{id}', [BranchController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/switch-context/{id}', [BranchController::class, 'switchContext'])->name('switch');
+    });
+
+
+    
+
+    /* --- 6.3.1 Branch Product Availability & Pricing --- */
+    Route::prefix('branch-products')->name('branch_product.')->group(function () {
+        Route::get('/', [BranchProductController::class, 'index'])->name('index');
+        Route::get('/availability/{productId}', [BranchProductController::class, 'editAvailability'])->name('availability');
+        Route::post('/availability/{productId}', [BranchProductController::class, 'updateAvailability'])->name('availability.update');
+        Route::get('/pricing/{branchId}/{productId}', [BranchProductController::class, 'editPricing'])->name('pricing');
+        Route::post('/pricing/{branchId}/{productId}', [BranchProductController::class, 'updatePricing'])->name('pricing.update');
+        Route::post('/toggle-pos/{branchId}/{productId}', [BranchProductController::class, 'togglePosStatus'])->name('toggle_pos');
+        Route::post('/toggle-can-sell/{branchId}/{productId}', [BranchProductController::class, 'toggleCanSell'])->name('toggle_can_sell');
+        Route::post('/bulk-assign', [BranchProductController::class, 'bulkAssign'])->name('bulk_assign');
     });
 
     /* --- 6.4 Contacts (Customer & Supplier) --- */
     Route::prefix('contact')->name('contact.')->group(function () {
         Route::get('/customer', fn() => view('admin.modules.placeholder', ['title' => 'Customer List']))->name('customer');
-        Route::get('/supplier', fn() => view('admin.modules.placeholder', ['title' => 'Supplier List']))->name('supplier');
+        Route::get('/supplier', fn() => redirect()->route('admin.suppliers.index'))->name('supplier');
     });
 
     /* --- 6.5 Product Management & Product Reviews --- */
@@ -375,7 +498,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/category/edit/{id}', [AdminCategoryController::class, 'edit'])->name('category.edit');
         Route::post('/category/update/{id}', [AdminCategoryController::class, 'update'])->name('category.update');
         Route::delete('/category/delete/{id}', [AdminCategoryController::class, 'destroy'])->name('category.destroy');
-        Route::post('/category/toggle-status/{id}', [AdminCategoryController::class, 'toggleStatus'])->name('category.toggle.status');
+        Route::post('/category/toggle-status/{id}', [AdminCategoryController::class, 'toggleStatus'])->name('toggle.status');
 
         Route::post('/brand/quick-store-ajax', [AdminBrandController::class, 'quickStoreAjax'])->name('brand.quick_store');
         Route::get('/brand', [AdminBrandController::class, 'index'])->name('brand');
@@ -385,7 +508,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::delete('/brand/delete/{id}', [AdminBrandController::class, 'destroy'])->name('brand.destroy');
         Route::post('/brand/toggle-status/{id}', [AdminBrandController::class, 'toggleStatus'])->name('brand.toggle.status');
 
-        Route::get('/tags/most-used', [AdminProductController::class, 'getMostUsedTagsAjax'])->name('tags.most_used');
+        Route::get('/tags/most-used', [AdminProductController::class, 'getMostUsedTagsTagsAjax'])->name('tags.most_used');
         Route::get('/tags/search-ajax', [AdminProductController::class, 'searchTagsAjax'])->name('tags.search');
 
         Route::get('/barcode-print', [AdminBarcodeController::class, 'index'])->name('barcode');
@@ -464,25 +587,95 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/reply/{id}', [AdminSupportController::class, 'replyTicket'])->name('reply');
     });
 
-    /* --- 6.8 Purchase Management --- */
-    Route::prefix('purchase')->name('purchase.')->group(function () {
-        Route::get('/all', fn() => redirect()->route('admin.inventory.stock_in'))->name('index');
-        Route::get('/add', fn() => redirect()->route('admin.inventory.stock_in'))->name('create');
+    /*
+    |--------------------------------------------------------------------------
+    | 6.8 ENTERPRISE PROCUREMENT & SUPPLY CHAIN MANAGEMENT HUB
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('procurement')->group(function () {
+
+        // Suppliers & Running Ledger Statements
+        Route::get('suppliers/{supplier}/ledger', [SupplierController::class, 'ledger'])->name('suppliers.ledger');
+        Route::resource('suppliers', SupplierController::class);
+
+        // Purchase Orders AJAX Endpoints
+        Route::get('purchase-orders/search-products-ajax', [PurchaseOrderController::class, 'searchProductsAjax'])->name('purchase-orders.search-products');
+        Route::get('purchase-orders/find-product-by-sku-ajax', [PurchaseOrderController::class, 'findProductBySkuAjax'])->name('purchase-orders.find-by-sku');
+        Route::post('purchase-orders/quick-store-product-ajax', [PurchaseOrderController::class, 'quickStoreProductAjax'])->name('purchase-orders.quick-store-product');
+
+        // Purchase Orders (Requisition & Approval Pipeline)
+        Route::post('purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
+        Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
+        Route::resource('purchase-orders', PurchaseOrderController::class)->except(['edit', 'update', 'destroy']);
+        Route::delete('purchase-orders/{id}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
+
+        // Purchase Invoices / Bills
+        Route::get('purchases/po-items/{purchaseOrder}', [PurchaseController::class, 'getPoItems'])->name('purchases.po-items');
+        Route::resource('purchases', PurchaseController::class)->except(['edit', 'update', 'destroy']);
+
+        // Goods Received Notes (GRN & Quality Inspection)
+        Route::resource('purchase-receipts', PurchaseReceiptController::class)->except(['edit', 'update', 'destroy']);
+
+        // Supplier Payment Vouchers & Advance Fund Allocations
+        Route::get('supplier-payments/unpaid-purchases/{supplier}', [SupplierPaymentController::class, 'getUnpaidPurchases'])->name('supplier-payments.unpaid-purchases');
+        Route::post('supplier-payments/{supplierPayment}/allocate-advance', [SupplierPaymentController::class, 'allocateAdvance'])->name('supplier-payments.allocate-advance');
+        Route::post('supplier-payments/{supplierPayment}/cancel', [SupplierPaymentController::class, 'cancel'])->name('supplier-payments.cancel');
+        Route::resource('supplier-payments', SupplierPaymentController::class)->except(['edit', 'update', 'destroy']);
+
+        // Purchase Returns (RTV - Return to Vendor)
+        Route::post('purchase-returns/{purchaseReturn}/approve', [PurchaseReturnController::class, 'approve'])->name('purchase-returns.approve');
+        Route::resource('purchase-returns', PurchaseReturnController::class)->except(['edit', 'update', 'destroy']);
+
+        // Supplier Product Exchanges (Defective/Replacement Swaps)
+        Route::post('supplier-exchanges/{supplierExchange}/approve', [SupplierExchangeController::class, 'approve'])->name('supplier-exchanges.approve');
+        Route::resource('supplier-exchanges', SupplierExchangeController::class)->except(['edit', 'update', 'destroy']);
+
+        // Debit & Credit Notes (Adjustments, Claims & Discounts)
+        Route::post('supplier-debit-credit-notes/{supplierDebitCreditNote}/approve', [SupplierDebitCreditNoteController::class, 'approve'])->name('supplier-debit-credit-notes.approve');
+        Route::post('supplier-debit-credit-notes/{supplierDebitCreditNote}/cancel', [SupplierDebitCreditNoteController::class, 'cancel'])->name('supplier-debit-credit-notes.cancel');
+        Route::resource('supplier-debit-credit-notes', SupplierDebitCreditNoteController::class)->except(['edit', 'update', 'destroy']);
+
+        // Fixed Asset Procurement & Capitalization
+        Route::post('procurement-assets/{asset}/transfer', [AssetProcurementController::class, 'transfer'])->name('procurement-assets.transfer');
+        Route::post('procurement-assets/{asset}/depreciate', [AssetProcurementController::class, 'depreciate'])->name('procurement-assets.depreciate');
+        Route::post('procurement-assets/{asset}/dispose', [AssetProcurementController::class, 'dispose'])->name('procurement-assets.dispose');
+        Route::resource('procurement-assets', AssetProcurementController::class)->except(['edit', 'update', 'destroy']);
     });
 
-    /* --- 6.9 POS Terminal Module --- */
+   /* --- 6.9 Advanced Multi-Branch POS Terminal Module --- */
     Route::prefix('pos')->name('pos.')->group(function () {
-        Route::get('/', [PosController::class, 'index'])->name('index');
-        Route::get('/terminal/{branch_id}', [PosController::class, 'terminal'])
+        Route::get('/', [BranchPOSController::class, 'terminal'])->name('index');
+        Route::get('/terminal/{branch_id?}', [BranchPOSController::class, 'terminal'])
             ->name('terminal')
             ->middleware(EnsureBranchAccess::class);
-        Route::get('/filter-products', [PosController::class, 'filterProductsAjax'])->name('filter.products');
-        Route::get('/scan-barcode-ajax', [PosController::class, 'scanBarcodeAjax'])->name('scan.barcode');
-        Route::get('/search-customers-ajax', [PosController::class, 'searchCustomersAjax'])->name('search.customers');
-        Route::post('/create-customer-ajax', [PosController::class, 'createCustomerAjax'])->name('customer.create');
-        Route::post('/place-order', [PosController::class, 'placeOrder'])->name('order.place');
-        Route::get('/print-pos-receipt/{id}', [PosController::class, 'printPosThermal'])->name('print.thermal');
-        Route::get('/print-a5-memo/{id}', [PosController::class, 'printA5Memo'])->name('print.a5');
+        Route::get('/filter-products', [BranchPOSController::class, 'searchProducts'])->name('filter.products');
+        Route::get('/scan-barcode-ajax', [BranchPOSController::class, 'scanBarcode'])->name('scan.barcode');
+        Route::get('/search-customers-ajax', [BranchPOSController::class, 'searchCustomers'])->name('search.customers');
+        Route::post('/create-customer-ajax', [BranchPOSController::class, 'quickCustomer'])->name('customer.create');
+        Route::post('/place-order', [BranchPOSController::class, 'checkout'])->name('order.place');
+        Route::post('/checkout', [BranchPOSController::class, 'checkout'])->name('checkout');
+
+        // Multi-Format Thermal & Invoice Print Routes (2-inch, 3-inch, A5, A4)
+        Route::get('/print-pos-receipt/{id}', [BranchPOSController::class, 'printThermal'])->name('print.thermal');
+        Route::get('/print-pos-receipt-58mm/{id}', [BranchPOSController::class, 'printThermal58'])->name('print.thermal58');
+        Route::get('/print-a5-memo/{id}', [BranchPOSController::class, 'printA5'])->name('print.a5');
+        Route::get('/print-a4-memo/{id}', [BranchPOSController::class, 'printA4'])->name('print.a4');
+        Route::get('/print-receipt/{id}/{format?}', [BranchPOSController::class, 'printReceipt'])->name('print.receipt');
+
+        Route::get('/stats-ajax', [BranchPOSController::class, 'getStats'])->name('stats');
+    });
+
+    /* --- 6.9.1 Branch Daily Cash Register & Closing --- */
+    Route::prefix('daily-closing')->name('daily_closing.')->group(function () {
+        Route::get('/', [BranchDailyClosingController::class, 'index'])->name('index');
+        Route::get('/session/{branch_id?}', [BranchDailyClosingController::class, 'currentSession'])
+            ->name('session')
+            ->middleware(EnsureBranchAccess::class);
+        Route::post('/open', [BranchDailyClosingController::class, 'open'])->name('open');
+        Route::post('/close', [BranchDailyClosingController::class, 'close'])->name('close');
+        Route::post('/verify/{id}', [BranchDailyClosingController::class, 'verify'])->name('verify');
+        Route::get('/show/{id}', [BranchDailyClosingController::class, 'show'])->name('show');
+        Route::get('/print/{id}', [BranchDailyClosingController::class, 'printSummary'])->name('print');
     });
 
     /* --- 6.10 Advanced Courier Management --- */
@@ -648,7 +841,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/history', fn() => redirect()->route('admin.tax.reports.index', ['report_type' => 'all_transactions']))->name('history');
         Route::get('/adjustments', fn() => redirect()->route('admin.tax.reports.index', ['report_type' => 'adjustment_history']))->name('adjustments');
         
-        // Dedicated Tax Audit Log Route
         Route::get('/audit-logs', [TaxReportController::class, 'auditLogs'])->name('audit_logs');
     });
 
@@ -658,11 +850,8 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
     |--------------------------------------------------------------------------
     */
     Route::prefix('security')->name('security.')->group(function () {
-
-        // [SEC-1] Security Dashboard & Live Analytics
         Route::get('/dashboard', [SecurityDashboardController::class, 'index'])->name('dashboard');
 
-        // [SEC-2] All IP Addresses, Telemetry Directory & Inspector
         Route::prefix('ips')->name('ips.')->group(function () {
             Route::get('/', [SecurityIpManagementController::class, 'index'])->name('index');
             Route::get('/export-csv', [SecurityIpManagementController::class, 'export'])->name('export');
@@ -671,7 +860,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/unblock', [SecurityIpManagementController::class, 'unblock'])->name('unblock');
         });
 
-        // [SEC-3] Suspicious Orders & Multiple Order Detection
         Route::prefix('orders')->name('orders.')->group(function () {
             Route::get('/', [SecuritySuspiciousOrderController::class, 'index'])->name('index');
             Route::get('/clusters', [SecuritySuspiciousOrderController::class, 'clusters'])->name('clusters');
@@ -680,7 +868,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/quick-block', [SecuritySuspiciousOrderController::class, 'quickBlockAction'])->name('quick_block');
         });
 
-        // [SEC-4] URL Attack Monitoring & Scanner Protection
         Route::prefix('urls')->name('urls.')->group(function () {
             Route::get('/', [SecurityUrlMonitoringController::class, 'index'])->name('index');
             Route::get('/show/{id}', [SecurityUrlMonitoringController::class, 'show'])->name('show');
@@ -689,29 +876,23 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::delete('/reset/{id}', [SecurityUrlMonitoringController::class, 'resetMetrics'])->name('reset');
         });
 
-        // [SEC-5] Blocking Controls (Single IP, CIDR Network, User Lockout)
         Route::prefix('blocking')->name('blocking.')->group(function () {
-            // Single Blocked IPs
             Route::get('/ips', [SecurityBlockingManagementController::class, 'blockedIps'])->name('ips');
             Route::post('/ips/store', [SecurityBlockingManagementController::class, 'storeBlockedIp'])->name('ips.store');
             Route::post('/ips/unblock/{id}', [SecurityBlockingManagementController::class, 'unblockIp'])->name('ips.unblock');
             Route::post('/ips/update/{id}', [SecurityBlockingManagementController::class, 'updateBlockedIp'])->name('ips.update');
 
-            // Blocked CIDR Networks
             Route::get('/networks', [SecurityBlockingManagementController::class, 'blockedNetworks'])->name('networks');
             Route::post('/networks/store', [SecurityBlockingManagementController::class, 'storeBlockedNetwork'])->name('networks.store');
             Route::post('/networks/unblock/{id}', [SecurityBlockingManagementController::class, 'unblockNetwork'])->name('networks.unblock');
 
-            // Customer User Restrictions
             Route::get('/users', [SecurityBlockingManagementController::class, 'userRestrictions'])->name('users');
             Route::post('/users/store', [SecurityBlockingManagementController::class, 'storeUserRestriction'])->name('users.store');
             Route::post('/users/lift/{id}', [SecurityBlockingManagementController::class, 'liftUserRestriction'])->name('users.lift');
 
-            // Emergency Recovery Flush
             Route::post('/emergency-flush', [SecurityBlockingManagementController::class, 'emergencyFlush'])->name('emergency_flush');
         });
 
-        // [SEC-6] Security Rules, Firewall Thresholds & Allowlist Settings
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/', [SecurityRulesAndSettingsController::class, 'index'])->name('index');
             Route::post('/update', [SecurityRulesAndSettingsController::class, 'updateSettings'])->name('update');
@@ -720,7 +901,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::match(['delete', 'post'], '/allowlist/{id}', [SecurityRulesAndSettingsController::class, 'destroyAllowlist'])->name('allowlist.destroy');
         });
 
-        // [SEC-7] Activity Logs & Security Alerts Center
         Route::prefix('logs')->name('logs.')->group(function () {
             Route::get('/', [SecurityLogsAndAlertsController::class, 'logs'])->name('index');
             Route::get('/export-csv', [SecurityLogsAndAlertsController::class, 'exportLogs'])->name('export');
@@ -809,7 +989,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::match(['delete', 'post'], '/delete/{id}', [InvestmentController::class, 'destroy'])->name('destroy');
             Route::get('/export-csv', [InvestmentController::class, 'exportCsv'])->name('export');
         });
-        Route::get('/investment', [InvestmentController::class, 'index'])->name('investment');
+        Route::get('/investment', [IncomeController::class, 'index'])->name('investment');
 
         Route::prefix('assets')->name('assets.')->group(function () {
             Route::get('/', [AssetController::class, 'index'])->name('index');
@@ -834,6 +1014,34 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
 
         Route::get('/cash-flow', [FinancialReportController::class, 'cashFlow'])->name('cash_flow');
         Route::get('/export-cash-flow', [FinancialReportController::class, 'exportCashFlow'])->name('export_cash_flow');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | 6.18.1 STAFF PAYROLL & SALARY DISBURSEMENT (30TH OF MONTH AUTO-CALC)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('payroll')->name('payroll.')->group(function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::post('/generate', [PayrollController::class, 'generate'])->name('generate');
+        Route::post('/disburse', [PayrollController::class, 'disburse'])->name('disburse');
+        Route::post('/adjust', [PayrollController::class, 'adjust'])->name('adjust');
+        Route::get('/history/{userId}', [PayrollController::class, 'staffSalaryHistory'])->name('history');
+        Route::get('/payslip/{id}', [PayrollController::class, 'printSlip'])->name('payslip');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | 6.18.2 BRANCH FINANCIAL & ANALYTICS REPORTS
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('branch-report')->name('branch_report.')->group(function () {
+        Route::get('/dashboard', [BranchReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/sales', [BranchReportController::class, 'salesReport'])->name('sales');
+        Route::get('/sales-person', [BranchReportController::class, 'salesPersonReport'])->name('sales_person');
+        Route::get('/comparison', [BranchReportController::class, 'comparisonReport'])->name('comparison');
+        Route::get('/inventory', [BranchReportController::class, 'inventoryReport'])->name('inventory');
+        Route::get('/export-sales-csv', [BranchReportController::class, 'exportSalesCsv'])->name('export_sales_csv');
     });
 
     /* --- 6.19 Advanced Email Marketing System --- */
@@ -941,7 +1149,7 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::delete('/suppression/delete/{id}', [EmailMarketingController::class, 'suppressionDestroy'])->name('suppression.destroy');
 
         Route::get('/providers', [EmailMarketingController::class, 'providersIndex'])->name('providers');
-        Route::post('/providers/store', [EmailMarketingController::class, 'providerStore'])->name('providers.store');
+        Route::post('/providers/store', [EmailMarketingController::class, 'providerStore'])->name('store');
         Route::match(['put', 'post'], '/providers/update/{id}', [EmailMarketingController::class, 'providerUpdate'])->name('providers.update');
         Route::match(['put', 'post'], '/providers/{id}', [EmailMarketingController::class, 'providerUpdate']);
         Route::match(['delete', 'post'], '/providers/delete/{id}', [EmailMarketingController::class, 'providerDestroy'])->name('providers.destroy');
@@ -957,14 +1165,8 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::post('/settings/update', [EmailMarketingController::class, 'updateSettings'])->name('settings.update');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | 6.20 SMS GATEWAY, MARKETING & NOTIFICATION MANAGEMENT SYSTEM (NEW)
-    |--------------------------------------------------------------------------
-    */
+    /* --- 6.20 SMS Gateway, Marketing & Notifications --- */
     Route::prefix('sms')->name('sms.')->group(function () {
-
-        // 1. Settings & Provider Configuration
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/', [SmsSettingController::class, 'index'])->name('index');
             Route::post('/update', [SmsSettingController::class, 'update'])->name('update');
@@ -973,7 +1175,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/sync-balance', [SmsSettingController::class, 'syncBalance'])->name('sync_balance');
         });
 
-        // 2. Dynamic Templates Management
         Route::prefix('templates')->name('templates.')->group(function () {
             Route::get('/', [SmsTemplateController::class, 'index'])->name('index');
             Route::get('/create', [SmsTemplateController::class, 'create'])->name('create');
@@ -985,7 +1186,6 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::post('/preview-metrics', [SmsTemplateController::class, 'previewMetrics'])->name('preview_metrics');
         });
 
-        // 3. Bulk SMS Marketing Campaigns & Audience Targeting
         Route::prefix('campaigns')->name('campaigns.')->group(function () {
             Route::get('/', [SmsCampaignController::class, 'index'])->name('index');
             Route::get('/create', [SmsCampaignController::class, 'create'])->name('create');
@@ -993,18 +1193,21 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
             Route::get('/show/{campaign}', [SmsCampaignController::class, 'show'])->name('show');
             Route::post('/cancel/{campaign}', [SmsCampaignController::class, 'cancel'])->name('cancel');
             Route::post('/retry-failed/{campaign}', [SmsCampaignController::class, 'retryFailed'])->name('retry_failed');
+            Route::post('/dispatch-now/{campaign}', [SmsCampaignController::class, 'dispatchNow'])->name('dispatch_now');    
+            Route::match(['get', 'post'], '/filter-recipients-ajax', [SmsCampaignController::class, 'filterRecipientsAjax'])->name('filter_recipients_ajax');
+            Route::get('/cron-run', [SmsCampaignController::class, 'cronRunScheduled'])->name('cron_run');
         });
 
-        // 4. SMS Delivery Logs, Audit Trail & CSV Export
         Route::prefix('logs')->name('logs.')->group(function () {
             Route::get('/', [SmsLogController::class, 'index'])->name('index');
+            Route::post('/bulk-delete', [SmsLogController::class, 'bulkDelete'])->name('bulk_delete');
             Route::get('/show/{log}', [SmsLogController::class, 'show'])->name('show');
             Route::post('/check-status/{log}', [SmsLogController::class, 'checkStatus'])->name('check_status');
             Route::post('/resend/{log}', [SmsLogController::class, 'resend'])->name('resend');
             Route::get('/export-csv', [SmsLogController::class, 'exportCsv'])->name('export');
+            Route::delete('/{log}', [SmsLogController::class, 'destroy'])->name('destroy');
         });
 
-        // 5. Multi-Level SMS Blacklist Management (Phone, IP, Keyword)
         Route::prefix('blacklist')->name('blacklist.')->group(function () {
             Route::get('/', [SmsBlacklistController::class, 'index'])->name('index');
             Route::post('/store', [SmsBlacklistController::class, 'store'])->name('store');
@@ -1139,6 +1342,9 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
         Route::get('/trash', [StaffUserController::class, 'trash'])->name('trash');
         Route::post('/trash/restore/{id}', [StaffUserController::class, 'restore'])->name('trash.restore');
         Route::post('/trash/force-delete/{id}', [StaffUserController::class, 'forceDelete'])->name('trash.force_delete');
+
+        // Staff Salary History Link within RBAC Users Management
+        Route::get('/users/salary-history/{id}', [PayrollController::class, 'staffSalaryHistory'])->name('users.salary_history');
     });
 
     /* --- 6.26 Activity Logs & User Sessions --- */
@@ -1189,48 +1395,70 @@ Route::middleware(['auth', 'admin', CheckPermission::class])->prefix('admin')->n
 
     /* --- 6.29 Content Management (CMS) --- */
     Route::prefix('content')->name('content.')->group(function () {
-        Route::get('/pages', [SiteContentController::class, 'pagesIndex'])->name('pages.index');
-        Route::get('/pages/create', [SiteContentController::class, 'pagesCreate'])->name('pages.create');
-        Route::post('/pages', [SiteContentController::class, 'pagesStore'])->name('pages.store');
-        Route::get('/pages/{id}/edit', [SiteContentController::class, 'pagesEdit'])->name('edit');
-        Route::match(['put', 'post'], '/pages/{id}', [SiteContentController::class, 'pagesUpdate'])->name('pages.update');
-        Route::delete('/pages/{id}', [SiteContentController::class, 'pagesDestroy'])->name('pages.destroy');
-
-        Route::get('/blogs', [SiteContentController::class, 'blogsIndex'])->name('blogs.index');
-        Route::get('/blogs/create', [SiteContentController::class, 'blogsCreate'])->name('blogs.create');
-        Route::post('/blogs', [SiteContentController::class, 'blogsStore'])->name('blogs.store');
-        Route::get('/blogs/{id}/edit', [SiteContentController::class, 'blogsEdit'])->name('edit');
-        Route::match(['put', 'post'], '/blogs/{id}', [SiteContentController::class, 'blogsUpdate'])->name('blogs.update');
-        Route::delete('/blogs/{id}', [SiteContentController::class, 'blogsDestroy'])->name('blogs.destroy');
-        Route::post('/blogs/{id}/toggle-comments', [SiteContentController::class, 'blogsToggleComments'])->name('blogs.toggleComments');
         
-        Route::get('/blogs/comments', [SiteContentController::class, 'blogCommentsIndex'])->name('blogs.comments');
-        Route::post('/blogs/comment/{id}/status', [SiteContentController::class, 'blogCommentStatus'])->name('blogs.comment.status');
-        Route::delete('/blogs/comment/{id}', [SiteContentController::class, 'blogCommentDestroy'])->name('blogs.comment.destroy');
-        Route::post('/blogs/comment/{id}/reply', [SiteContentController::class, 'blogCommentReply'])->name('blogs.comment.reply');
-        Route::post('/blogs/comments/toggle-auto-approve', [SiteContentController::class, 'blogToggleAutoApprove'])->name('blogs.comments.toggleAutoApprove');
+        // Pages Management Routes
+        Route::prefix('pages')->name('pages.')->group(function () {
+            Route::get('/', [SiteContentController::class, 'pagesIndex'])->name('index');
+            Route::get('/create', [SiteContentController::class, 'pagesCreate'])->name('create');
+            Route::post('/', [SiteContentController::class, 'pagesStore'])->name('store');
+            Route::get('/{id}/edit', [SiteContentController::class, 'pagesEdit'])->name('edit');
+            Route::match(['put', 'post'], '/{id}', [SiteContentController::class, 'pagesUpdate'])->name('update');
+            Route::delete('/{id}', [SiteContentController::class, 'pagesDestroy'])->name('destroy');
+        });
 
-        Route::get('/menus', [SiteContentController::class, 'menusIndex'])->name('menus.index');
-        Route::get('/menus/create', [SiteContentController::class, 'menusCreate'])->name('menus.create');
-        Route::post('/menus/save', [SiteContentController::class, 'menusSave'])->name('menus.save');
-        Route::delete('/menus/{id}', [SiteContentController::class, 'menusDelete'])->name('menus.delete');
+        // Blog Posts & Comments Routes
+        Route::prefix('blogs')->name('blogs.')->group(function () {
+            Route::get('/', [SiteContentController::class, 'blogsIndex'])->name('index');
+            Route::get('/create', [SiteContentController::class, 'blogsCreate'])->name('create');
+            Route::post('/', [SiteContentController::class, 'blogsStore'])->name('store');
+            Route::get('/{id}/edit', [SiteContentController::class, 'blogsEdit'])->name('edit');
+            Route::match(['put', 'post'], '/{id}', [SiteContentController::class, 'blogsUpdate'])->name('update');
+            Route::delete('/{id}', [SiteContentController::class, 'blogsDestroy'])->name('destroy');
+            Route::post('/{id}/toggle-comments', [SiteContentController::class, 'blogsToggleComments'])->name('toggleComments');
+            
+            Route::get('/comments', [SiteContentController::class, 'blogCommentsIndex'])->name('comments');
+            Route::post('/comment/{id}/status', [SiteContentController::class, 'blogCommentStatus'])->name('comment.status');
+            Route::delete('/comment/{id}', [SiteContentController::class, 'blogCommentDestroy'])->name('comment.destroy');
+            Route::post('/comment/{id}/reply', [SiteContentController::class, 'blogCommentReply'])->name('comment.reply');
+            Route::post('/comments/toggle-auto-approve', [SiteContentController::class, 'blogToggleAutoApprove'])->name('comments.toggleAutoApprove');
+        });
 
-        Route::get('/widgets', [SiteContentController::class, 'widgetsIndex'])->name('widgets.index');
-        Route::post('/widgets', [SiteContentController::class, 'widgetsStore'])->name('widgets.store');
-        Route::post('/widgets/{id}/update', [SiteContentController::class, 'widgetsUpdate'])->name('widgets.update');
-        Route::delete('/widgets/{id}', [SiteContentController::class, 'widgetsDestroy'])->name('widgets.destroy');
-        Route::post('/widgets/{id}/toggle', [SiteContentController::class, 'widgetsToggle'])->name('widgets.toggle');
+        // Menus Routes
+        Route::prefix('menus')->name('menus.')->group(function () {
+            Route::get('/', [SiteContentController::class, 'menusIndex'])->name('index');
+            Route::get('/create', [SiteContentController::class, 'menusCreate'])->name('create');
+            Route::post('/save', [SiteContentController::class, 'menusSave'])->name('save');
+            Route::delete('/{id}', [SiteContentController::class, 'menusDelete'])->name('delete');
+        });
 
-        Route::get('/media', [AdminMediaController::class, 'index'])->name('media.index');
-        Route::post('/media/upload', [AdminMediaController::class, 'upload'])->name('media.upload');
-        Route::post('/media/{id}/update', [AdminMediaController::class, 'updateMeta'])->name('update');
-        Route::delete('/media/{id}', [AdminMediaController::class, 'destroy'])->name('destroy');
+        // Widgets Routes
+        Route::prefix('widgets')->name('widgets.')->group(function () {
+            Route::get('/', [SiteContentController::class, 'widgetsIndex'])->name('index');
+            Route::post('/', [SiteContentController::class, 'widgetsStore'])->name('store');
+            Route::post('/{id}/update', [SiteContentController::class, 'widgetsUpdate'])->name('update');
+            Route::delete('/{id}', [SiteContentController::class, 'widgetsDestroy'])->name('destroy');
+            Route::post('/{id}/toggle', [SiteContentController::class, 'widgetsToggle'])->name('toggle');
+        });
+
+        // Media Library Routes
+        Route::prefix('media')->name('media.')->group(function () {
+            Route::get('/', [AdminMediaController::class, 'index'])->name('index');
+            Route::post('/upload', [AdminMediaController::class, 'upload'])->name('upload');
+            Route::post('/{id}/update', [AdminMediaController::class, 'updateMeta'])->name('update');
+            Route::delete('/{id}', [AdminMediaController::class, 'destroy'])->name('destroy');
+        });
     });
 
-    /* --- 6.30 General Settings --- */
+    /* --- 6.30 General & Authentication Settings --- */
     Route::prefix('settings')->name('setting.')->group(function () {
         Route::get('/general', [SettingController::class, 'general'])->name('general');
         Route::post('/general/update', [SettingController::class, 'updateGeneral'])->name('general.update');
+    });
+
+    // Central Dynamic Authentication Settings Management Panel
+    Route::prefix('settings/auth')->name('settings.auth.')->group(function () {
+        Route::get('/', [AuthSettingController::class, 'index'])->name('index');
+        Route::post('/', [AuthSettingController::class, 'update'])->name('update');
     });
 
     /* --- 6.31 System Settings (Courier, Balance, Webhooks & Fraud Check) --- */
@@ -1313,6 +1541,10 @@ Route::get('/products/{path}', fn($path) => $serveMediaFallback('products/' . $p
 Route::get('/sliders/{filename}', fn($filename) => $serveMediaFallback('sliders/' . $filename))->where('filename', '.*');
 Route::get('/theme/offers/{filename}', fn($filename) => $serveMediaFallback('theme/offers/' . $filename))->where('filename', '.*');
 
+// On-the-fly Dynamic Image Thumbnail Resizer
+Route::get('/thumb/{path}', [\App\Http\Controllers\Admin\ImageThumbnailController::class, 'thumb'])
+    ->where('path', '.*')
+    ->name('image.thumb');
 /*
 |==========================================================================
 | SECTION 8: PUBLIC DYNAMIC CATCH-ALL ROUTE
@@ -1321,5 +1553,5 @@ Route::get('/theme/offers/{filename}', fn($filename) => $serveMediaFallback('the
 Route::middleware(['throttle:custom-rate-limit'])->group(function () {
     Route::get('/{slug}', [PageController::class, 'show'])
         ->name('pages.show')
-        ->where('slug', '^(?!admin|user|dashboard|cart|checkout|payment|api|wishlist|login|register|logout|blogs|shop|category|product|products|order|forms|digital-download|webhook|storage|uploads|sliders|theme|test-500|email).*$');
+        ->where('slug', '^(?!admin|user|dashboard|cart|checkout|payment|api|wishlist|login|register|logout|auth|forgot-password|reset-password|blogs|shop|category|product|products|order|forms|digital-download|webhook|storage|uploads|sliders|theme|test-500|email|thumb).*$');
 });

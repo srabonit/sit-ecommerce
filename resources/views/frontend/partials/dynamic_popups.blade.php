@@ -20,6 +20,18 @@
     $pageSlugKey = ($freqScope === 'per_page') ? '_' . md5(request()->path()) : '';
     $cookieName  = 'popup_viewed_' . $activePopup->id . $pageSlugKey;
 
+    // ঘণ্টাভিত্তিক ফ্রিকোয়েন্সি ক্যালকুলেশন
+    $frequencyHours = 0;
+    if (isset($popupSettings['frequency_hours'])) {
+        $frequencyHours = (float) $popupSettings['frequency_hours'];
+    } elseif (isset($popupSettings['frequency_value'])) {
+        $val = (float) $popupSettings['frequency_value'];
+        $unit = $popupSettings['frequency_unit'] ?? 'hours';
+        $frequencyHours = ($unit === 'days') ? ($val * 24) : $val;
+    } else {
+        $frequencyHours = ((float) ($activePopup->frequency_days ?? 0)) * 24;
+    }
+
     // Shortcode & dynamic form parser
     $renderedContent = $activePopup->content ?? '';
     if (str_contains($renderedContent, '[form') && class_exists(\App\Services\ShortcodeParser::class)) {
@@ -191,7 +203,7 @@
         const overlay = document.getElementById('dynamicPopupOverlay');
         const closeBtn = document.getElementById('dynamicPopupCloseBtn');
         const cookieName = '{{ $cookieName }}';
-        const frequencyDays = {{ (int) $activePopup->frequency_days }};
+        const frequencyHours = {{ (float) $frequencyHours }};
         const triggerType = '{{ $activePopup->trigger_type }}';
         const triggerValue = {{ (int) $activePopup->trigger_value }};
 
@@ -199,11 +211,11 @@
             return document.cookie.split(';').some(c => c.trim().startsWith(name + '='));
         }
 
-        function setCookie(name, val, days) {
+        function setCookie(name, val, hours) {
             let expires = '';
-            if (days > 0) {
+            if (hours > 0) {
                 const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
                 expires = '; expires=' + date.toUTCString();
             }
             document.cookie = name + '=' + (val || '') + expires + '; path=/; SameSite=Lax';
@@ -212,12 +224,16 @@
         function showPopup() {
             if (hasCookie(cookieName)) return;
             overlay.classList.add('show');
+            // পপআপ ডিসপ্লে হওয়ার সাথে সাথেই নির্ধারিত ঘণ্টার কুকি সেট হয়ে যাবে (রিলোড দিলে আর আসবে না)
+            if (frequencyHours > 0) {
+                setCookie(cookieName, '1', frequencyHours);
+            }
         }
 
         function closePopup() {
             overlay.classList.remove('show');
-            if (frequencyDays > 0) {
-                setCookie(cookieName, '1', frequencyDays);
+            if (frequencyHours > 0) {
+                setCookie(cookieName, '1', frequencyHours);
             }
         }
 

@@ -5,14 +5,19 @@
 @php
     $abandonedCarts = $abandonedCarts ?? collect();
     $stats = $stats ?? [];
-    $totalCartsCount = $stats['total'] ?? (method_exists($abandonedCarts, 'total') ? $abandonedCarts->total() : $abandonedCarts->count());
 
-    $automationsIndexRoute = Route::has('admin.email_marketing.automations.index') 
-        ? route('admin.email_marketing.automations.index') 
+    $totalCartsCount = $stats['total'] ?? (
+        method_exists($abandonedCarts, 'total')
+            ? $abandonedCarts->total()
+            : $abandonedCarts->count()
+    );
+
+    $automationsIndexRoute = Route::has('admin.email_marketing.automations.index')
+        ? route('admin.email_marketing.automations.index')
         : url('admin/email-marketing/automations');
 
-    $dashboardRoute = Route::has('admin.email_marketing.dashboard') 
-        ? route('admin.email_marketing.dashboard') 
+    $dashboardRoute = Route::has('admin.email_marketing.dashboard')
+        ? route('admin.email_marketing.dashboard')
         : url('admin/email-marketing/dashboard');
 
     $indexUrl = Route::has('admin.email_marketing.cart_wishlist_marketing')
@@ -24,17 +29,39 @@
         : url('admin/email-marketing/cart-wishlist/export-csv');
 
     $sendRecoveryBaseUrl = url('admin/email-marketing/cart-wishlist/send-recovery');
-    $bulkSendUrl        = url('admin/email-marketing/cart-wishlist/bulk-send');
+    $bulkSendUrl         = url('admin/email-marketing/cart-wishlist/bulk-send');
     $deleteBaseUrl       = url('admin/email-marketing/cart-wishlist/delete');
     $bulkDeleteUrl       = url('admin/email-marketing/cart-wishlist/bulk-delete');
 @endphp
 
 @section('admin_content')
+
 <style>
-    /* Strict 5px Element Radius Across All Controls */
+    /* =========================================================
+       CART & ABANDONED RECOVERY - MODERN ADMIN UI
+    ========================================================= */
+
+    #email-marketing-cart-wishlist-root {
+        --cart-primary: #2563eb;
+        --cart-warning: #f59e0b;
+        --cart-success: #059669;
+        --cart-danger: #dc2626;
+        --cart-text: #1e293b;
+        --cart-muted: #64748b;
+        --cart-border: #e2e8f0;
+        --cart-soft: #f8fafc;
+        --cart-radius: 5px;
+        color: var(--cart-text);
+    }
+
+    #email-marketing-cart-wishlist-root *,
+    .recovery-modal-scope * {
+        box-sizing: border-box;
+    }
+
+    /* Strict 5px Radius */
+
     #email-marketing-cart-wishlist-root .btn,
-    #email-marketing-cart-wishlist-root .btn-sm,
-    #email-marketing-cart-wishlist-root button,
     #email-marketing-cart-wishlist-root .form-control,
     #email-marketing-cart-wishlist-root .form-select,
     #email-marketing-cart-wishlist-root .badge,
@@ -54,107 +81,221 @@
         border-top-right-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
     }
+
     #email-marketing-cart-wishlist-root .input-group > .form-control,
     #email-marketing-cart-wishlist-root .input-group > .form-select {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
 
-    /* Safe Monospace & Bengali Digit Typography */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    /* Typography */
+
+    #email-marketing-cart-wishlist-root .font-monospace,
+    #email-marketing-cart-wishlist-root .bn-digit {
+        font-weight: 600;
     }
 
-    /* Compact Sleek Button Styling */
-    .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+    /* Main Header */
+
+    .cart-header-wrap {
+        min-width: 0;
+    }
+
+    .cart-page-title {
+        font-size: 19px;
+        font-weight: 750;
+        letter-spacing: -0.45px;
+        color: #0f172a;
+    }
+
+    .cart-page-subtitle {
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .cart-header-icon {
+        width: 35px;
+        height: 35px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        white-space: nowrap;
-        transition: all 0.15s ease;
+        background: #fff7ed;
+        color: #ea580c;
+        border: 1px solid #fed7aa;
+        border-radius: 5px;
+        flex-shrink: 0;
     }
 
-    /* Collapsible Trigger Buttons & Rotating Chevron */
+    /* Compact Buttons */
+
+    #email-marketing-cart-wishlist-root .btn-compact {
+        min-height: 32px;
+        padding: 5px 11px !important;
+        font-size: 11.5px !important;
+        line-height: 1.35 !important;
+        font-weight: 650 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        white-space: nowrap;
+        transition: all .18s ease;
+    }
+
+    #email-marketing-cart-wishlist-root .btn-compact:hover {
+        transform: translateY(-1px);
+    }
+
+    #email-marketing-cart-wishlist-root .btn:focus,
+    #email-marketing-cart-wishlist-root .form-control:focus,
+    #email-marketing-cart-wishlist-root .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .10) !important;
+    }
+
+    /* General Cards */
+
+    #email-marketing-cart-wishlist-root .card {
+        background: #ffffff;
+        border: 1px solid var(--cart-border) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+
+    .section-header-wrap {
+        min-height: 43px;
+        padding: 9px 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffff;
+        border-bottom: 1px solid var(--cart-border);
+    }
+
+    .section-heading {
+        font-size: 12px;
+        font-weight: 700;
+        color: #334155;
+        margin: 0;
+    }
+
     .collapse-toggle-btn {
-        width: 24px;
-        height: 24px;
+        width: 27px;
+        height: 27px;
         padding: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        color: #475569;
-        transition: all 0.2s ease;
+        background: #ffffff;
+        border: 1px solid #dbe3ed;
+        color: #64748b;
+        transition: all .2s ease;
     }
+
     .collapse-toggle-btn:hover {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
+        background: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
     }
+
+    .collapse-icon {
+        font-size: 10px;
+        transition: transform .25s ease;
+    }
+
     .collapse-toggle-btn[aria-expanded="true"] .collapse-icon {
         transform: rotate(180deg);
     }
-    .collapse-icon {
-        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        font-size: 10px;
-    }
 
-    /* Enterprise Surface Cards */
-    #email-marketing-cart-wishlist-root .card {
-        border: 1px solid #e2e8f0;
-        background-color: #ffffff;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        margin-bottom: 16px;
-    }
-    .section-header-wrap {
-        padding: 10px 14px;
-        background: #ffffff;
-        border-bottom: 1px solid #e2e8f0;
-    }
+    /* =========================================================
+       ANALYTICS CARDS
+    ========================================================= */
 
-    /* Metric Cards - Zero Overflow Architecture */
     .metric-card {
-        padding: 12px 14px;
-        position: relative;
-        overflow: hidden;
+        min-height: 108px;
+        height: 100%;
+        padding: 12px 13px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        position: relative;
+        overflow: hidden;
+        transition: transform .2s ease, box-shadow .2s ease;
     }
+
     .metric-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 5px 14px rgba(15, 23, 42, .07);
     }
+
+    .metric-card::after {
+        content: "";
+        position: absolute;
+        width: 65px;
+        height: 65px;
+        right: -25px;
+        bottom: -30px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .55);
+        pointer-events: none;
+    }
+
+    .metric-card-amber {
+        background: linear-gradient(135deg, #ffffff, #fffbeb);
+        border-left: 3px solid #f59e0b !important;
+    }
+
+    .metric-card-green {
+        background: linear-gradient(135deg, #ffffff, #f0fdf4);
+        border-left: 3px solid #10b981 !important;
+    }
+
+    .metric-card-blue {
+        background: linear-gradient(135deg, #ffffff, #eff6ff);
+        border-left: 3px solid #3b82f6 !important;
+    }
+
+    .metric-card-cyan {
+        background: linear-gradient(135deg, #ffffff, #ecfeff);
+        border-left: 3px solid #06b6d4 !important;
+    }
+
+    .metric-card-emerald {
+        background: linear-gradient(135deg, #ffffff, #ecfdf5);
+        border-left: 3px solid #059669 !important;
+    }
+
     .stat-label-title {
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 700;
-        letter-spacing: 0.02em;
-        line-height: 1.2;
+        color: #64748b;
+        letter-spacing: .025em;
+        text-transform: uppercase;
+        line-height: 1.35;
     }
+
     .stat-val-num {
-        font-size: 18px;
-        line-height: 1.25;
-        letter-spacing: -0.02em;
+        font-size: 19px;
+        font-weight: 750;
+        letter-spacing: -.5px;
+        line-height: 1.3;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: #0f172a;
     }
+
     .stat-sub-text {
         font-size: 10px;
-        margin-top: 2px;
+        margin-top: 3px;
+        color: #94a3b8;
     }
+
     .metric-icon-square {
         width: 32px;
         height: 32px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         font-size: 13px;
@@ -162,106 +303,161 @@
         border-radius: 5px !important;
     }
 
-    .metric-card-amber  { background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%); border-left: 3.5px solid #f59e0b !important; }
-    .metric-card-green  { background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%); border-left: 3.5px solid #10b981 !important; }
-    .metric-card-blue   { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); border-left: 3.5px solid #2563eb !important; }
-    .metric-card-cyan   { background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%); border-left: 3.5px solid #06b6d4 !important; }
-    .metric-card-emerald{ background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%); border-left: 3.5px solid #059669 !important; }
+    /* =========================================================
+       FILTER TOOLBAR
+    ========================================================= */
 
-    /* Form Controls */
-    .cart-filter-control {
-        font-size: 12px !important;
-        height: 32px !important;
-        padding: 4px 8px !important;
-        border: 1px solid #cbd5e1 !important;
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: none !important;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    .cart-filter-card {
+        background: #f8fafc !important;
     }
+
+    .cart-filter-control {
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 5px 9px !important;
+        border: 1px solid #dbe3ed !important;
+        background-color: #ffffff !important;
+        color: #334155 !important;
+        font-size: 11.5px !important;
+        font-weight: 500;
+        box-shadow: none !important;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .cart-filter-control::placeholder {
+        color: #94a3b8;
+    }
+
     .cart-filter-control:focus {
         border-color: #f59e0b !important;
-        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
-        outline: none;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, .12) !important;
     }
 
     .cart-addon-text {
-        height: 32px !important;
-        background-color: #f8fafc !important;
-        border-color: #cbd5e1 !important;
+        height: 34px !important;
+        background: #f1f5f9 !important;
+        border-color: #dbe3ed !important;
         color: #64748b !important;
-        font-size: 11px !important;
+        font-size: 10.5px !important;
+        white-space: nowrap;
     }
 
-    /* Quick Tag Insertion Chips */
+    .filter-label {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    /* Quick Placeholder Chips */
+
     .tag-chip {
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        padding: 2px 7px;
+        gap: 4px;
+        padding: 4px 8px;
         font-size: 10px;
-        font-weight: 600;
+        font-weight: 650;
         color: #475569;
-        background-color: #f1f5f9;
+        background: #f1f5f9;
         border: 1px solid #e2e8f0;
         cursor: pointer;
         user-select: none;
-        transition: all 0.15s ease;
-    }
-    .tag-chip:hover {
-        background-color: #f59e0b;
-        border-color: #f59e0b;
-        color: #ffffff;
+        transition: all .15s ease;
     }
 
-    /* Table Architecture: 100% Fit Screen on PC with Zero Horizontal Scroll */
+    .tag-chip:hover {
+        background: #fff7ed;
+        border-color: #fdba74;
+        color: #c2410c;
+    }
+
+    /* =========================================================
+       TABLE
+    ========================================================= */
+
     .cart-table-container {
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 5px !important;
         overflow: hidden;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, .035);
     }
+
     .custom-carts-table {
         width: 100%;
         margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
     }
+
     .custom-carts-table thead th {
-        font-size: 10.5px;
-        letter-spacing: 0.03em;
+        padding: 11px 8px;
+        background: #f8fafc;
+        color: #64748b;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: .035em;
         text-transform: uppercase;
-        color: #475569;
-        background-color: #f8fafc;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 9px 8px;
-        white-space: nowrap;
-    }
-    .custom-carts-table tbody td {
-        padding: 8px 8px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 12px;
         vertical-align: middle;
         white-space: nowrap;
     }
+
+    .custom-carts-table tbody td {
+        padding: 10px 8px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 11.5px;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .custom-carts-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .custom-carts-table tbody tr {
+        transition: background .15s ease;
+    }
+
     .custom-carts-table tbody tr:hover td {
-        background-color: #fafbfc;
+        background: #f8fafc;
+    }
+
+    .custom-carts-table .form-check-input {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        cursor: pointer;
+        border-color: #cbd5e1;
+        border-radius: 4px !important;
+        box-shadow: none !important;
+    }
+
+    .custom-carts-table .form-check-input:checked {
+        background-color: #2563eb;
+        border-color: #2563eb;
     }
 
     @media (min-width: 992px) {
         .custom-carts-table {
             table-layout: fixed !important;
-            width: 100% !important;
         }
+
         .pc-fit-container {
             overflow-x: hidden !important;
         }
+
         .custom-carts-table th,
         .custom-carts-table td {
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* 9 Columns Proportional Distribution Summing to Exactly 100% */
         .col-cb-select { width: 3% !important; }
         .col-cb-id     { width: 5% !important; }
         .col-cb-user   { width: 22% !important; }
@@ -273,7 +469,10 @@
         .col-cb-action { width: 11% !important; }
     }
 
-    /* Bulletproof Responsive Pagination */
+    /* =========================================================
+       PAGINATION
+    ========================================================= */
+
     #carts-pagination-links nav {
         display: flex !important;
         align-items: center !important;
@@ -281,6 +480,7 @@
         width: auto !important;
         margin: 0 !important;
     }
+
     #carts-pagination-links nav > div.d-sm-none,
     #carts-pagination-links nav > .d-sm-none,
     #carts-pagination-links nav p,
@@ -288,6 +488,7 @@
     #carts-pagination-links nav div:has(> p) {
         display: none !important;
     }
+
     #carts-pagination-links .pagination {
         margin: 0 !important;
         display: flex !important;
@@ -298,579 +499,1303 @@
         padding: 0 !important;
         list-style: none !important;
     }
+
     #carts-pagination-links .page-item {
         display: inline-flex !important;
     }
+
     #carts-pagination-links .page-item .page-link,
     #carts-pagination-links .page-item span {
+        min-width: 27px !important;
+        height: 27px !important;
+        padding: 0 7px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        min-width: 25px !important;
-        height: 25px !important;
-        padding: 0 6px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
+        background: #ffffff !important;
         color: #475569 !important;
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
+        border: 1px solid #e2e8f0 !important;
         border-radius: 5px !important;
-        text-decoration: none !important;
+        font-size: 10.5px !important;
+        font-weight: 650 !important;
         line-height: 1 !important;
-        transition: all 0.12s ease !important;
+        text-decoration: none !important;
     }
+
     #carts-pagination-links .page-item .page-link:hover {
-        background-color: #f1f5f9 !important;
-        border-color: #94a3b8 !important;
-        color: #0f172a !important;
+        background: #eff6ff !important;
+        border-color: #bfdbfe !important;
+        color: #2563eb !important;
     }
+
     #carts-pagination-links .page-item.active .page-link,
     #carts-pagination-links .page-item.active span {
-        background-color: #f59e0b !important;
-        border-color: #f59e0b !important;
+        background: #2563eb !important;
+        border-color: #2563eb !important;
         color: #ffffff !important;
-        font-weight: 700 !important;
-        box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25) !important;
     }
+
     #carts-pagination-links .page-item.disabled .page-link,
     #carts-pagination-links .page-item.disabled span {
-        opacity: 0.45 !important;
-        background-color: #f8fafc !important;
-        border-color: #e2e8f0 !important;
+        opacity: .45 !important;
         cursor: not-allowed !important;
     }
 
-    /* Floating Toast Box */
-    .admin-cart-toast {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 108000;
-        min-width: 280px;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
-        animation: slideInRight 0.25s ease;
-    }
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    /* =========================================================
+       MODALS
+    ========================================================= */
+
+    .recovery-modal-scope .modal-content {
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 15px 45px rgba(15, 23, 42, .16);
     }
 
-    /* 100/100 Mobile Responsiveness Tuning (< 768px) */
-    @media (max-width: 767.98px) {
-        .cart-header-wrap h5 {
-            font-size: 16px !important;
+    .recovery-modal-scope .modal-header,
+    .recovery-modal-scope .modal-footer {
+        background: #f8fafc;
+        border-color: #e2e8f0 !important;
+    }
+
+    .recovery-modal-scope .modal-title {
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .recovery-modal-scope .form-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    .recovery-modal-scope .form-control {
+        font-size: 12px;
+        border-color: #dbe3ed;
+        box-shadow: none;
+    }
+
+    .recovery-modal-scope .form-control:focus {
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .09);
+    }
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    .admin-cart-toast {
+        position: relative;
+        width: 100%;
+        min-width: 260px;
+        max-width: 380px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, .18);
+        animation: cartToastIn .25s ease;
+    }
+
+    #custom-toast-holder {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        z-index: 108000;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        max-width: calc(100vw - 36px);
+    }
+
+    @keyframes cartToastIn {
+        from {
+            transform: translateX(25px);
+            opacity: 0;
         }
-        .header-actions-wrap {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
+        to {
+            transform: translateX(0);
+            opacity: 1;
         }
-        .header-actions-wrap .btn {
-            width: 100%;
-            padding: 8px 6px !important;
-            font-size: 11px !important;
-            justify-content: center;
+    }
+
+    /* Loading */
+
+    .cart-loading {
+        opacity: .45;
+        pointer-events: none;
+        transition: opacity .2s ease;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 991.98px) {
+        .custom-carts-table {
+            min-width: 820px;
+            table-layout: auto !important;
         }
-        .metric-card {
-            padding: 10px !important;
-            min-height: 84px !important;
-        }
-        .stat-label-title {
-            font-size: 10px !important;
-        }
-        .stat-val-num {
-            font-size: 14px !important;
-        }
-        .stat-sub-text {
-            font-size: 9px !important;
-        }
-        .metric-icon-square {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 11px !important;
-        }
+
         .pc-fit-container {
-            width: 100%;
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch;
         }
-        .custom-carts-table {
-            min-width: 820px !important;
-            table-layout: auto !important;
+    }
+
+    @media (max-width: 767.98px) {
+        #email-marketing-cart-wishlist-root {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
-        #email-marketing-cart-wishlist-root .card {
-            margin-bottom: 12px !important;
+
+        .cart-page-title {
+            font-size: 16px;
+        }
+
+        .cart-page-subtitle {
+            font-size: 11px;
+        }
+
+        .cart-header-icon {
+            width: 31px;
+            height: 31px;
+        }
+
+        .header-actions-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            gap: 7px;
+        }
+
+        .header-actions-wrap .btn {
+            width: 100%;
+            min-height: 34px;
+            font-size: 10.5px !important;
+        }
+
+        .metric-card {
+            min-height: 88px;
+            padding: 9px !important;
+        }
+
+        .stat-label-title {
+            font-size: 9px;
+        }
+
+        .stat-val-num {
+            font-size: 15px;
+        }
+
+        .stat-sub-text {
+            font-size: 9px;
+        }
+
+        .metric-icon-square {
+            width: 27px;
+            height: 27px;
+            font-size: 11px;
+        }
+
+        .section-header-wrap {
+            padding: 9px 10px;
+        }
+
+        .section-heading {
+            font-size: 10.5px;
+        }
+
+        .bulk-actions-wrap {
+            width: 100%;
+        }
+
+        .bulk-actions-wrap .btn {
+            flex: 1;
+            font-size: 10px !important;
+            padding: 6px 7px !important;
+        }
+
+        .bulk-summary {
+            width: 100%;
+            text-align: right;
+        }
+
+        #carts-pagination-links nav {
+            justify-content: center !important;
+        }
+
+        #custom-toast-holder {
+            left: 10px;
+            right: 10px;
+            bottom: 12px;
+            max-width: none;
+        }
+
+        .admin-cart-toast {
+            min-width: 0;
+            max-width: none;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .metric-card {
+            min-height: 82px;
+        }
+
+        .stat-val-num {
+            font-size: 13px;
+        }
+
+        .cart-filter-control {
+            font-size: 10.5px !important;
+        }
+
+        .custom-carts-table {
+            min-width: 780px;
         }
     }
 </style>
 
-<div class="container-fluid py-3 px-2 px-md-4 position-relative" id="email-marketing-cart-wishlist-root">
-    
-    {{-- 1. Header & Navigation (Original Clean Light Theme) --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3 cart-header-wrap">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 18px;">
-                    <i class="fas fa-cart-shopping text-warning"></i>
-                    <span>Abandoned Cart Recovery Engine</span>
-                </h5>
-                <span class="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace px-2 py-1" id="carts-total-badge" style="font-size: 10px;">
-                    {{ number_format($totalCartsCount) }} Sessions
-                </span>
+<div class="container-fluid py-3 px-2 px-md-4 position-relative"
+     id="email-marketing-cart-wishlist-root">
+
+    {{-- =====================================================
+         1. PAGE HEADER
+    ====================================================== --}}
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3 cart-header-wrap">
+
+        <div class="d-flex align-items-center gap-2">
+
+            <div class="cart-header-icon">
+                <i class="fas fa-cart-shopping"></i>
             </div>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Track checkout abandonments, trigger precision recovery emails, and monitor converted revenue.
-            </small>
+
+            <div class="min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="cart-page-title mb-0">
+                        Abandoned Cart Recovery
+                    </h5>
+
+                    <span class="badge bg-warning-subtle text-dark border border-warning-subtle font-monospace px-2 py-1"
+                          id="carts-total-badge"
+                          style="font-size: 10px;">
+                        {{ number_format($totalCartsCount) }} Sessions
+                    </span>
+                </div>
+
+                <p class="cart-page-subtitle mb-0 mt-1">
+                    Monitor abandoned carts, send recovery emails and track converted revenue.
+                </p>
+            </div>
         </div>
 
         <div class="d-flex gap-2 header-actions-wrap">
-            <button type="button" class="btn btn-sm btn-outline-success btn-compact bg-white shadow-xs fw-semibold" onclick="exportCartsCsv()" title="Export current filtered cart list to CSV">
-                <i class="fas fa-file-csv me-1 text-success"></i> <span>Export CSV</span>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-success btn-compact bg-white shadow-sm"
+                    onclick="exportCartsCsv()">
+                <i class="fas fa-file-csv"></i>
+                Export CSV
             </button>
-            <a href="{{ $automationsIndexRoute }}" class="btn btn-sm btn-outline-primary btn-compact shadow-xs fw-semibold bg-white">
-                <i class="fas fa-robot me-1"></i> <span>Automations</span>
+
+            <a href="{{ $automationsIndexRoute }}"
+               class="btn btn-sm btn-outline-primary btn-compact bg-white shadow-sm">
+                <i class="fas fa-robot"></i>
+                Automations
             </a>
-            <a href="{{ $dashboardRoute }}" class="btn btn-sm btn-outline-secondary btn-compact shadow-xs fw-semibold bg-white">
-                <i class="fas fa-chart-pie me-1"></i> <span>Dashboard</span>
+
+            <a href="{{ $dashboardRoute }}"
+               class="btn btn-sm btn-outline-secondary btn-compact bg-white shadow-sm">
+                <i class="fas fa-chart-pie"></i>
+                Dashboard
             </a>
+
         </div>
     </div>
 
-    {{-- 2. Live Analytics Stat Badges (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-chart-pie text-warning me-1"></i> Abandoned Cart Pipeline &amp; Recovery Performance
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCartKpis" aria-expanded="true" aria-controls="collapseCartKpis" title="Toggle Section">
+    {{-- =====================================================
+         2. ANALYTICS
+    ====================================================== --}}
+
+    <div class="card mb-3">
+
+        <div class="section-header-wrap">
+
+            <h6 class="section-heading">
+                <i class="fas fa-chart-line text-warning me-1"></i>
+                Recovery Performance Overview
+            </h6>
+
+            <button type="button"
+                    class="collapse-toggle-btn shadow-sm"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseCartKpis"
+                    aria-expanded="true"
+                    aria-controls="collapseCartKpis"
+                    title="Toggle Analytics">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
+
         </div>
+
         <div class="collapse show" id="collapseCartKpis">
+
             <div class="p-3">
+
                 <div class="row g-2">
+
                     {{-- Total Abandoned --}}
+
                     <div class="col-6 col-xl">
-                        <div class="card metric-card metric-card-amber h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Total Abandoned</span>
-                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis shadow-xs">
+
+                        <div class="card metric-card metric-card-amber mb-0">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+
+                                <span class="stat-label-title text-truncate">
+                                    Total Abandoned
+                                </span>
+
+                                <div class="metric-icon-square bg-warning-subtle text-warning-emphasis">
                                     <i class="fas fa-cart-arrow-down"></i>
                                 </div>
+
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="stat-total-abandoned">
+
+                            <div>
+                                <h4 class="stat-val-num mb-0 font-monospace"
+                                    id="stat-total-abandoned">
                                     {{ number_format($stats['total'] ?? 0) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Recorded sessions</small>
+
+                                <small class="stat-sub-text d-block">
+                                    Recorded sessions
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
                     {{-- Recovered Orders --}}
+
                     <div class="col-6 col-xl">
-                        <div class="card metric-card metric-card-green h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Recovered Orders</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+
+                        <div class="card metric-card metric-card-green mb-0">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+
+                                <span class="stat-label-title text-truncate">
+                                    Recovered Orders
+                                </span>
+
+                                <div class="metric-icon-square bg-success-subtle text-success">
                                     <i class="fas fa-circle-check"></i>
                                 </div>
+
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-recovered-orders">
+
+                            <div>
+                                <h4 class="stat-val-num text-success mb-0 font-monospace"
+                                    id="stat-recovered-orders">
                                     {{ number_format($stats['recovered'] ?? 0) }}
                                 </h4>
-                                <small class="text-success d-block text-truncate font-monospace stat-sub-text">Successfully converted</small>
+
+                                <small class="stat-sub-text d-block text-success">
+                                    Successfully converted
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
                     {{-- Pending Recovery --}}
+
                     <div class="col-6 col-xl">
-                        <div class="card metric-card metric-card-blue h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Pending Recovery</span>
-                                <div class="metric-icon-square bg-primary-subtle text-primary shadow-xs">
+
+                        <div class="card metric-card metric-card-blue mb-0">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+
+                                <span class="stat-label-title text-truncate">
+                                    Pending Recovery
+                                </span>
+
+                                <div class="metric-icon-square bg-primary-subtle text-primary">
                                     <i class="fas fa-clock"></i>
                                 </div>
+
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-primary bn-digit font-monospace stat-val-num" id="stat-pending-recovery">
+
+                            <div>
+                                <h4 class="stat-val-num text-primary mb-0 font-monospace"
+                                    id="stat-pending-recovery">
                                     {{ number_format($stats['pending'] ?? 0) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Open opportunities</small>
+
+                                <small class="stat-sub-text d-block">
+                                    Open opportunities
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
-                    {{-- Monitored Cart Value --}}
+                    {{-- Monitored Value --}}
+
                     <div class="col-6 col-xl">
-                        <div class="card metric-card metric-card-cyan h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Monitored Value</span>
-                                <div class="metric-icon-square bg-info-subtle text-info shadow-xs">
+
+                        <div class="card metric-card metric-card-cyan mb-0">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+
+                                <span class="stat-label-title text-truncate">
+                                    Monitored Value
+                                </span>
+
+                                <div class="metric-icon-square bg-info-subtle text-info">
                                     <i class="fas fa-coins"></i>
                                 </div>
+
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-dark bn-digit font-monospace stat-val-num" id="stat-monitored-value">
+
+                            <div>
+                                <h4 class="stat-val-num mb-0 font-monospace"
+                                    id="stat-monitored-value">
                                     ৳ {{ number_format($stats['monitored_value'] ?? 0, 2) }}
                                 </h4>
-                                <small class="text-muted d-block text-truncate font-monospace stat-sub-text">Unrecovered value</small>
+
+                                <small class="stat-sub-text d-block">
+                                    Unrecovered value
+                                </small>
                             </div>
+
                         </div>
                     </div>
 
                     {{-- Recovered Revenue --}}
+
                     <div class="col-12 col-xl">
-                        <div class="card metric-card metric-card-emerald h-100 mb-0">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="text-muted stat-label-title text-truncate">Recovered Sales</span>
-                                <div class="metric-icon-square bg-success-subtle text-success shadow-xs">
+
+                        <div class="card metric-card metric-card-emerald mb-0">
+
+                            <div class="d-flex align-items-center justify-content-between gap-1 mb-2">
+
+                                <span class="stat-label-title text-truncate">
+                                    Recovered Sales
+                                </span>
+
+                                <div class="metric-icon-square bg-success-subtle text-success">
                                     <i class="fas fa-bag-shopping"></i>
                                 </div>
+
                             </div>
-                            <div class="min-w-0">
-                                <h4 class="fw-bold my-0 text-success bn-digit font-monospace stat-val-num" id="stat-recovered-revenue">
+
+                            <div>
+                                <h4 class="stat-val-num text-success mb-0 font-monospace"
+                                    id="stat-recovered-revenue">
                                     ৳ {{ number_format($stats['recovered_revenue'] ?? 0, 2) }}
                                 </h4>
-                                <small class="text-success d-block text-truncate font-monospace stat-sub-text">Direct converted sales</small>
+
+                                <small class="stat-sub-text d-block text-success">
+                                    Direct converted sales
+                                </small>
                             </div>
+
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- 3. Advanced Multi-Dimensional Filter Toolbar (Collapsible Section) --}}
-    <div class="card border-0 shadow-sm mb-3" style="border-radius: 5px !important; background: #f8fafc; border: 1px solid #e2e8f0 !important;">
-        <div class="section-header-wrap d-flex justify-content-between align-items-center bg-white">
-            <span class="fw-bold text-dark small" style="font-size: 12px;">
-                <i class="fas fa-filter text-primary me-1"></i> Multi-Dimensional Abandoned Cart Filters
-            </span>
-            <button type="button" class="collapse-toggle-btn shadow-xs no-print" data-bs-toggle="collapse" data-bs-target="#collapseCartFilters" aria-expanded="true" aria-controls="collapseCartFilters" title="Toggle Filters">
+    {{-- =====================================================
+         3. FILTER PANEL
+    ====================================================== --}}
+
+    <div class="card cart-filter-card mb-3">
+
+        <div class="section-header-wrap">
+
+            <h6 class="section-heading">
+                <i class="fas fa-filter text-primary me-1"></i>
+                Search & Advanced Filters
+            </h6>
+
+            <button type="button"
+                    class="collapse-toggle-btn shadow-sm"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseCartFilters"
+                    aria-expanded="true"
+                    aria-controls="collapseCartFilters"
+                    title="Toggle Filters">
                 <i class="fas fa-chevron-down collapse-icon"></i>
             </button>
+
         </div>
+
         <div class="collapse show" id="collapseCartFilters">
+
             <div class="p-3">
+
                 <form id="cart-filter-form" onsubmit="return false;">
-                    {{-- Row 1: Search, Recovery Status, Reminder Status, Sorting, Per Page --}}
-                    <div class="row g-2 align-items-center">
+
+                    {{-- Main Filters --}}
+
+                    <div class="row g-2">
+
                         <div class="col-12 col-md-4">
+
+                            <label class="filter-label">
+                                Search Customers
+                            </label>
+
                             <div class="input-group">
-                                <span class="input-group-text cart-addon-text border-end-0"><i class="fas fa-search text-muted" style="font-size: 11px;"></i></span>
-                                <input type="text" name="search" id="filter-search-input" class="form-control border-start-0 ps-0 cart-filter-control shadow-none font-monospace" placeholder="Search customer, email, phone...">
+
+                                <span class="input-group-text cart-addon-text border-end-0">
+                                    <i class="fas fa-search"></i>
+                                </span>
+
+                                <input type="text"
+                                       name="search"
+                                       id="filter-search-input"
+                                       class="form-control cart-filter-control border-start-0 ps-0"
+                                       placeholder="Search customer, email, phone...">
+
                             </div>
                         </div>
 
                         <div class="col-6 col-md-2">
-                            <select name="status" id="filter-status" class="form-select cart-filter-control filter-trigger font-monospace shadow-none">
-                                <option value="">Status: All Carts</option>
+
+                            <label class="filter-label">
+                                Recovery Status
+                            </label>
+
+                            <select name="status"
+                                    id="filter-status"
+                                    class="form-select cart-filter-control filter-trigger">
+
+                                <option value="">All Carts</option>
                                 <option value="pending">Pending Recovery</option>
-                                <option value="recovered">Recovered (Converted)</option>
+                                <option value="recovered">Recovered</option>
+
                             </select>
                         </div>
 
                         <div class="col-6 col-md-2">
-                            <select name="reminder_status" id="filter-reminder-status" class="form-select cart-filter-control filter-trigger font-monospace shadow-none">
-                                <option value="">Reminders: All</option>
-                                <option value="never_sent">Never Sent (0)</option>
-                                <option value="sent">Already Sent (1+)</option>
+
+                            <label class="filter-label">
+                                Reminder Status
+                            </label>
+
+                            <select name="reminder_status"
+                                    id="filter-reminder-status"
+                                    class="form-select cart-filter-control filter-trigger">
+
+                                <option value="">All Reminders</option>
+                                <option value="never_sent">Never Sent</option>
+                                <option value="sent">Already Sent</option>
+
                             </select>
                         </div>
 
                         <div class="col-6 col-md-2">
-                            <select name="sort_by" id="filter-sort-by" class="form-select cart-filter-control filter-trigger font-monospace shadow-none">
-                                <option value="latest">Newest Abandoned</option>
-                                <option value="oldest">Oldest Abandoned</option>
+
+                            <label class="filter-label">
+                                Sort By
+                            </label>
+
+                            <select name="sort_by"
+                                    id="filter-sort-by"
+                                    class="form-select cart-filter-control filter-trigger">
+
+                                <option value="latest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
                                 <option value="value_high">Value: High to Low</option>
                                 <option value="value_low">Value: Low to High</option>
-                                <option value="most_reminders">Most Reminders Sent</option>
+                                <option value="most_reminders">Most Reminders</option>
+
                             </select>
                         </div>
 
                         <div class="col-6 col-md-2">
-                            <div class="input-group">
-                                <span class="input-group-text cart-addon-text font-monospace" style="font-size: 10px;">Per Page</span>
-                                <select name="per_page" id="filter-per-page" class="form-select cart-filter-control filter-trigger fw-bold font-monospace shadow-none">
-                                    <option value="10">10</option>
-                                    <option value="25" selected>25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                    <option value="all">Show All</option>
-                                </select>
-                            </div>
+
+                            <label class="filter-label">
+                                Records Per Page
+                            </label>
+
+                            <select name="per_page"
+                                    id="filter-per-page"
+                                    class="form-select cart-filter-control filter-trigger fw-bold">
+
+                                <option value="10">10 Records</option>
+                                <option value="25" selected>25 Records</option>
+                                <option value="50">50 Records</option>
+                                <option value="100">100 Records</option>
+                                <option value="all">Show All</option>
+
+                            </select>
                         </div>
+
                     </div>
 
-                    {{-- Row 2: Date Presets & Reset --}}
-                    <div class="row g-2 align-items-center mt-2 pt-2 border-top">
+                    {{-- Date Filter --}}
+
+                    <div class="row g-2 align-items-end mt-2 pt-3 border-top">
+
                         <div class="col-12 col-md-4">
-                            <select name="date_filter" id="filter-date-select" class="form-select cart-filter-control font-monospace shadow-none">
-                                <option value="">Abandoned Date: All Time</option>
-                                <option value="today">Abandoned Today</option>
-                                <option value="yesterday">Abandoned Yesterday</option>
+
+                            <label class="filter-label">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Abandoned Date
+                            </label>
+
+                            <select name="date_filter"
+                                    id="filter-date-select"
+                                    class="form-select cart-filter-control">
+
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
                                 <option value="this_week">This Week</option>
                                 <option value="last_week">Last Week</option>
                                 <option value="this_month">This Month</option>
                                 <option value="last_month">Last Month</option>
                                 <option value="this_year">This Year</option>
-                                <option value="specific_date">Specific Single Date...</option>
-                                <option value="specific_month">Specific Month (YYYY-MM)...</option>
+                                <option value="specific_date">Specific Date...</option>
+                                <option value="specific_month">Specific Month...</option>
                                 <option value="specific_year">Specific Year...</option>
-                                <option value="custom_range">Custom Date Range (From - To)...</option>
+                                <option value="custom_range">Custom Date Range...</option>
+
                             </select>
                         </div>
 
                         <div class="col-12 col-md-8 d-flex justify-content-md-end">
-                            <button type="button" class="btn btn-light border btn-compact text-secondary shadow-xs fw-semibold" onclick="resetAllFilters()">
-                                <i class="fas fa-rotate-left me-1"></i>
-                                <span>Reset All Filters</span>
+
+                            <button type="button"
+                                    class="btn btn-light border btn-compact text-secondary shadow-sm"
+                                    onclick="resetAllFilters()">
+
+                                <i class="fas fa-rotate-left"></i>
+                                Reset All Filters
+
                             </button>
+
                         </div>
                     </div>
 
-                    {{-- Option A: Specific Single Date Panel --}}
-                    <div id="singleDateWrapper" class="row g-2 align-items-center mt-2 pt-2 border-top d-none">
-                        <div class="col-12 col-sm-auto small fw-bold text-muted font-monospace" style="font-size: 11px;">
-                            <i class="fas fa-calendar-day text-warning me-1"></i> Specific Abandoned Date:
-                        </div>
+                    {{-- Specific Date --}}
+
+                    <div id="singleDateWrapper"
+                         class="row g-2 align-items-end mt-2 pt-3 border-top d-none">
+
                         <div class="col-12 col-sm-auto">
-                            <input type="date" name="specific_date" id="filter-specific-date" class="form-control cart-filter-control font-monospace">
+
+                            <label class="filter-label">
+                                Specific Date
+                            </label>
+
+                            <input type="date"
+                                   name="specific_date"
+                                   id="filter-specific-date"
+                                   class="form-control cart-filter-control">
+
                         </div>
+
                         <div class="col-12 col-sm-auto d-flex gap-2">
-                            <button type="button" class="btn btn-warning text-dark btn-compact shadow-xs fw-bold" onclick="fetchFilteredCarts(1)">Apply Date</button>
-                            <button type="button" class="btn btn-light border btn-compact shadow-xs" onclick="resetDatePanels()">Clear</button>
+
+                            <button type="button"
+                                    class="btn btn-warning text-dark btn-compact fw-bold"
+                                    onclick="fetchFilteredCarts(1)">
+                                Apply Date
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-light border btn-compact"
+                                    onclick="resetDatePanels()">
+                                Clear
+                            </button>
+
                         </div>
                     </div>
 
-                    {{-- Option B: Specific Month Panel (YYYY-MM) --}}
-                    <div id="specificMonthWrapper" class="row g-2 align-items-center mt-2 pt-2 border-top d-none">
-                        <div class="col-12 col-sm-auto small fw-bold text-muted font-monospace" style="font-size: 11px;">
-                            <i class="fas fa-calendar-week text-warning me-1"></i> Specific Abandoned Month:
-                        </div>
+                    {{-- Specific Month --}}
+
+                    <div id="specificMonthWrapper"
+                         class="row g-2 align-items-end mt-2 pt-3 border-top d-none">
+
                         <div class="col-12 col-sm-auto">
-                            <input type="month" name="specific_month" id="filter-specific-month" class="form-control cart-filter-control font-monospace">
+
+                            <label class="filter-label">
+                                Specific Month
+                            </label>
+
+                            <input type="month"
+                                   name="specific_month"
+                                   id="filter-specific-month"
+                                   class="form-control cart-filter-control">
+
                         </div>
+
                         <div class="col-12 col-sm-auto d-flex gap-2">
-                            <button type="button" class="btn btn-warning text-dark btn-compact shadow-xs fw-bold" onclick="fetchFilteredCarts(1)">Apply Month</button>
-                            <button type="button" class="btn btn-light border btn-compact shadow-xs" onclick="resetDatePanels()">Clear</button>
+
+                            <button type="button"
+                                    class="btn btn-warning text-dark btn-compact fw-bold"
+                                    onclick="fetchFilteredCarts(1)">
+                                Apply Month
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-light border btn-compact"
+                                    onclick="resetDatePanels()">
+                                Clear
+                            </button>
+
                         </div>
                     </div>
 
-                    {{-- Option C: Specific Year Panel --}}
-                    <div id="specificYearWrapper" class="row g-2 align-items-center mt-2 pt-2 border-top d-none">
-                        <div class="col-12 col-sm-auto small fw-bold text-muted font-monospace" style="font-size: 11px;">
-                            <i class="fas fa-calendar-alt text-warning me-1"></i> Specific Abandoned Year:
-                        </div>
+                    {{-- Specific Year --}}
+
+                    <div id="specificYearWrapper"
+                         class="row g-2 align-items-end mt-2 pt-3 border-top d-none">
+
                         <div class="col-12 col-sm-auto">
-                            <input type="number" min="2020" max="2035" name="specific_year" id="filter-specific-year" class="form-control cart-filter-control font-monospace bn-digit" placeholder="{{ date('Y') }}">
+
+                            <label class="filter-label">
+                                Specific Year
+                            </label>
+
+                            <input type="number"
+                                   min="2020"
+                                   max="2035"
+                                   name="specific_year"
+                                   id="filter-specific-year"
+                                   class="form-control cart-filter-control"
+                                   placeholder="{{ date('Y') }}">
+
                         </div>
+
                         <div class="col-12 col-sm-auto d-flex gap-2">
-                            <button type="button" class="btn btn-warning text-dark btn-compact shadow-xs fw-bold" onclick="fetchFilteredCarts(1)">Apply Year</button>
-                            <button type="button" class="btn btn-light border btn-compact shadow-xs" onclick="resetDatePanels()">Clear</button>
+
+                            <button type="button"
+                                    class="btn btn-warning text-dark btn-compact fw-bold"
+                                    onclick="fetchFilteredCarts(1)">
+                                Apply Year
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-light border btn-compact"
+                                    onclick="resetDatePanels()">
+                                Clear
+                            </button>
+
                         </div>
                     </div>
 
-                    {{-- Option D: Custom Date Range Panel (From - To) --}}
-                    <div id="customRangeWrapper" class="row g-2 align-items-center mt-2 pt-2 border-top d-none">
-                        <div class="col-12 col-sm-auto small fw-bold text-muted font-monospace" style="font-size: 11px;">
-                            <i class="fas fa-calendar-check text-warning me-1"></i> Custom Abandoned Range:
-                        </div>
+                    {{-- Custom Range --}}
+
+                    <div id="customRangeWrapper"
+                         class="row g-2 align-items-end mt-2 pt-3 border-top d-none">
+
                         <div class="col-6 col-sm-auto">
-                            <div class="input-group">
-                                <span class="input-group-text cart-addon-text text-muted font-monospace" style="font-size: 10px;">From</span>
-                                <input type="date" name="start_date" id="filter-start-date" class="form-control cart-filter-control font-monospace">
-                            </div>
+
+                            <label class="filter-label">
+                                From Date
+                            </label>
+
+                            <input type="date"
+                                   name="start_date"
+                                   id="filter-start-date"
+                                   class="form-control cart-filter-control">
+
                         </div>
+
                         <div class="col-6 col-sm-auto">
-                            <div class="input-group">
-                                <span class="input-group-text cart-addon-text text-muted font-monospace" style="font-size: 10px;">To</span>
-                                <input type="date" name="end_date" id="filter-end-date" class="form-control cart-filter-control font-monospace">
-                            </div>
+
+                            <label class="filter-label">
+                                To Date
+                            </label>
+
+                            <input type="date"
+                                   name="end_date"
+                                   id="filter-end-date"
+                                   class="form-control cart-filter-control">
+
                         </div>
+
                         <div class="col-12 col-sm-auto d-flex gap-2">
-                            <button type="button" class="btn btn-warning text-dark btn-compact shadow-xs fw-bold" onclick="fetchFilteredCarts(1)">Apply Range</button>
-                            <button type="button" class="btn btn-light border btn-compact shadow-xs" onclick="resetDatePanels()">Clear</button>
+
+                            <button type="button"
+                                    class="btn btn-warning text-dark btn-compact fw-bold"
+                                    onclick="fetchFilteredCarts(1)">
+                                Apply Range
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-light border btn-compact"
+                                    onclick="resetDatePanels()">
+                                Clear
+                            </button>
+
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- 4. Bulk Action Strip --}}
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 px-1">
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-outline-warning text-dark btn-compact shadow-xs fw-bold bg-white" onclick="openBulkRecoveryModal()">
-                <i class="fas fa-paper-plane me-1 text-warning"></i> <span>Bulk Send Recovery</span>
+    {{-- =====================================================
+         4. BULK ACTIONS
+    ====================================================== --}}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 px-1">
+
+        <div class="d-flex flex-wrap align-items-center gap-2 bulk-actions-wrap">
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-warning text-dark btn-compact bg-white shadow-sm"
+                    onclick="openBulkRecoveryModal()">
+
+                <i class="fas fa-paper-plane text-warning"></i>
+                Bulk Send Recovery
+
             </button>
-            <button type="button" class="btn btn-sm btn-outline-danger btn-compact shadow-xs fw-semibold bg-white" onclick="openBulkDeleteModal()">
-                <i class="fas fa-trash-can me-1 text-danger"></i> <span>Bulk Delete</span>
+
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger btn-compact bg-white shadow-sm"
+                    onclick="openBulkDeleteModal()">
+
+                <i class="fas fa-trash-can"></i>
+                Bulk Delete
+
             </button>
-            <span class="badge bg-warning text-dark font-monospace d-none px-2 py-1 shadow-xs" id="selected-carts-badge" style="font-size: 10.5px;">
+
+            <span class="badge bg-warning text-dark font-monospace d-none px-2 py-2"
+                  id="selected-carts-badge"
+                  style="font-size: 10px;">
                 0 selected
             </span>
+
         </div>
-        <div class="text-muted font-monospace bn-digit small" style="font-size: 11px;">
-            <span id="showing-entries-text">Showing {{ method_exists($abandonedCarts, 'firstItem') ? ($abandonedCarts->firstItem() ?? 0) : 1 }} to {{ method_exists($abandonedCarts, 'lastItem') ? ($abandonedCarts->lastItem() ?? 0) : $abandonedCarts->count() }} of {{ number_format($totalCartsCount) }} carts</span>
+
+        <div class="text-muted font-monospace small bulk-summary"
+             style="font-size: 10.5px;">
+
+            <i class="fas fa-list-ul me-1"></i>
+
+            <span id="showing-entries-text">
+                Showing
+                {{ method_exists($abandonedCarts, 'firstItem') ? ($abandonedCarts->firstItem() ?? 0) : 1 }}
+                to
+                {{ method_exists($abandonedCarts, 'lastItem') ? ($abandonedCarts->lastItem() ?? 0) : $abandonedCarts->count() }}
+                of
+                {{ number_format($totalCartsCount) }} carts
+            </span>
+
         </div>
     </div>
 
-    {{-- 5. Abandoned Carts Table Container (Desktop 100% Fit Screen with Zero Horizontal Scroll) --}}
-    <div class="cart-table-container shadow-sm mb-3">
-        <div class="table-responsive pc-fit-container" style="min-height: 250px;">
-            <table class="table custom-carts-table align-middle mb-0" id="abandoned-carts-main-table">
+    {{-- =====================================================
+         5. ABANDONED CARTS TABLE
+    ====================================================== --}}
+
+    <div class="cart-table-container mb-3">
+
+        <div class="table-responsive pc-fit-container"
+             style="min-height: 250px;">
+
+            <table class="table custom-carts-table align-middle"
+                   id="abandoned-carts-main-table">
+
                 <thead>
                     <tr>
+
                         <th class="text-center col-cb-select">
-                            <input type="checkbox" class="form-check-input mt-0 shadow-none" id="check-all-carts" style="cursor: pointer; width: 14px; height: 14px; border-radius: 4px;">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="check-all-carts"
+                                   title="Select All">
                         </th>
-                        <th class="ps-2 col-cb-id text-center">#ID</th>
-                        <th class="col-cb-user">Customer / Contact</th>
-                        <th class="col-cb-items">Cart Items Overview</th>
-                        <th class="col-cb-val">Cart Value</th>
-                        <th class="text-center col-cb-status">Recovery Status</th>
-                        <th class="text-center col-cb-sent">Reminders Sent</th>
-                        <th class="col-cb-date">Abandoned Date</th>
-                        <th class="text-end pe-3 col-cb-action">Action</th>
+
+                        <th class="text-center col-cb-id">
+                            #ID
+                        </th>
+
+                        <th class="col-cb-user">
+                            Customer / Contact
+                        </th>
+
+                        <th class="col-cb-items">
+                            Cart Items
+                        </th>
+
+                        <th class="col-cb-val">
+                            Cart Value
+                        </th>
+
+                        <th class="text-center col-cb-status">
+                            Recovery Status
+                        </th>
+
+                        <th class="text-center col-cb-sent">
+                            Reminders
+                        </th>
+
+                        <th class="col-cb-date">
+                            Abandoned Date
+                        </th>
+
+                        <th class="text-end pe-3 col-cb-action">
+                            Actions
+                        </th>
+
                     </tr>
                 </thead>
+
                 <tbody id="abandoned-carts-table-tbody">
-                    @include('admin.email_marketing.cart_wishlist_partials.table_rows', ['abandonedCarts' => $abandonedCarts])
+
+                    @include('admin.email_marketing.cart_wishlist_partials.table_rows', [
+                        'abandonedCarts' => $abandonedCarts
+                    ])
+
                 </tbody>
+
             </table>
+
         </div>
     </div>
 
-    {{-- 6. Responsive Pagination Footer --}}
-    <div class="d-flex justify-content-center justify-content-md-end mb-4" id="carts-pagination-footer" style="{{ method_exists($abandonedCarts, 'hasPages') && $abandonedCarts->hasPages() ? '' : 'display: none;' }}">
+    {{-- =====================================================
+         6. PAGINATION
+    ====================================================== --}}
+
+    <div class="d-flex justify-content-center justify-content-md-end mb-4"
+         id="carts-pagination-footer"
+         style="{{ method_exists($abandonedCarts, 'hasPages') && $abandonedCarts->hasPages() ? '' : 'display: none;' }}">
+
         <div id="carts-pagination-links">
+
             @if(method_exists($abandonedCarts, 'hasPages') && $abandonedCarts->hasPages())
                 {{ $abandonedCarts->links('pagination::bootstrap-5') }}
             @endif
+
         </div>
+
     </div>
 
 </div>
 
-{{-- MODAL 1: Bulk Cart Recovery Email Modal --}}
-<div class="modal fade recovery-modal-scope" id="bulkRecoveryModal" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
+{{-- =========================================================
+     MODAL 1: BULK RECOVERY EMAIL
+========================================================= --}}
+
+<div class="modal fade recovery-modal-scope"
+     id="bulkRecoveryModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 106000;">
+
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-bottom py-2 px-3 bg-light d-flex justify-content-between align-items-center">
-                <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-1" style="font-size: 13.5px;">
-                    <i class="fas fa-paper-plane text-warning"></i> <span>Bulk Cart Recovery Email Dispatch</span>
+
+        <div class="modal-content">
+
+            <div class="modal-header py-3 px-3">
+
+                <h6 class="modal-title d-flex align-items-center gap-2 mb-0">
+
+                    <span class="text-warning">
+                        <i class="fas fa-paper-plane"></i>
+                    </span>
+
+                    Bulk Cart Recovery Email
+
                 </h6>
-                <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                <button type="button"
+                        class="btn-close shadow-none"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
             </div>
-            <form id="bulkRecoveryForm" onsubmit="submitBulkRecoveryForm(event)">
+
+            <form id="bulkRecoveryForm"
+                  onsubmit="submitBulkRecoveryForm(event)">
+
                 <div class="modal-body p-3">
-                    <div class="alert alert-warning py-2 px-3 small mb-3 border-0 text-dark d-flex align-items-center gap-2" style="border-radius: 5px; background-color: #fffbeb;">
-                        <i class="fas fa-cart-shopping text-warning fs-5"></i>
-                        <div>Selected Sessions: <strong id="bulk-modal-cart-count" class="font-monospace">0</strong> cart(s).</div>
+
+                    <div class="alert alert-warning border-0 py-2 px-3 mb-3 d-flex align-items-center gap-2">
+
+                        <i class="fas fa-cart-shopping fs-5"></i>
+
+                        <div class="small">
+                            Selected Sessions:
+                            <strong id="bulk-modal-cart-count"
+                                    class="font-monospace">
+                                0
+                            </strong>
+                            cart(s).
+                        </div>
+
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="bulk-recovery-subject">Email Subject <span class="text-danger">*</span></label>
-                        <input type="text" id="bulk-recovery-subject" class="form-control font-monospace shadow-none" placeholder="Complete your order at Shop Now BD - Items waiting in your cart!" required>
+
+                        <label class="form-label"
+                               for="bulk-recovery-subject">
+
+                            Email Subject
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        <input type="text"
+                               id="bulk-recovery-subject"
+                               class="form-control font-monospace"
+                               placeholder="Complete your order at Shop Now BD!"
+                               required>
+
                     </div>
 
                     <div class="mb-2">
-                        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
-                            <label class="form-label mb-0" for="bulk-recovery-body">Email Message (HTML / Text) <span class="text-danger">*</span></label>
+
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+
+                            <label class="form-label mb-0"
+                                   for="bulk-recovery-body">
+
+                                Email Message
+                                <span class="text-danger">*</span>
+
+                            </label>
+
                             <div class="d-flex flex-wrap gap-1">
-                                <span class="tag-chip font-monospace" onclick="insertPlaceholderToBody('{name}')" title="Insert Customer Name">+{name}</span>
-                                <span class="tag-chip font-monospace" onclick="insertPlaceholderToBody('{cart_value}')" title="Insert Total Value">+{cart_value}</span>
-                                <span class="tag-chip font-monospace" onclick="insertPlaceholderToBody('{recovery_url}')" title="Insert Recovery Link">+{recovery_url}</span>
-                                <span class="tag-chip font-monospace" onclick="insertPlaceholderToBody('{store_name}')" title="Insert Store Name">+{store_name}</span>
+
+                                <span class="tag-chip font-monospace"
+                                      onclick="insertPlaceholderToBody('{name}')">
+                                    +{name}
+                                </span>
+
+                                <span class="tag-chip font-monospace"
+                                      onclick="insertPlaceholderToBody('{cart_value}')">
+                                    +{cart_value}
+                                </span>
+
+                                <span class="tag-chip font-monospace"
+                                      onclick="insertPlaceholderToBody('{recovery_url}')">
+                                    +{recovery_url}
+                                </span>
+
+                                <span class="tag-chip font-monospace"
+                                      onclick="insertPlaceholderToBody('{store_name}')">
+                                    +{store_name}
+                                </span>
+
                             </div>
+
                         </div>
-                        <textarea id="bulk-recovery-body" rows="6" class="form-control font-monospace shadow-none" style="font-size: 11.5px;" placeholder="Hello {name},&#10;&#10;We noticed you left items in your shopping cart valued at ৳ {cart_value}.&#10;Click below to complete your purchase:&#10;{recovery_url}" required></textarea>
-                        <small class="text-muted d-block mt-1 font-monospace" style="font-size: 10px;">
-                            <i class="fas fa-info-circle text-primary me-1"></i> A stylized 'Complete Purchase' button is automatically appended if {recovery_url} is omitted.
+
+                        <textarea id="bulk-recovery-body"
+                                  rows="7"
+                                  class="form-control font-monospace"
+                                  style="font-size: 11.5px;"
+                                  placeholder="Hello {name},
+
+We noticed you left items in your shopping cart valued at ৳ {cart_value}.
+
+Complete your purchase:
+{recovery_url}"
+                                  required></textarea>
+
+                        <small class="text-muted d-block mt-2"
+                               style="font-size: 10px;">
+
+                            <i class="fas fa-circle-info text-primary me-1"></i>
+
+                            A stylized Complete Purchase button is automatically appended if {recovery_url} is omitted.
+
                         </small>
+
                     </div>
+
                 </div>
-                <div class="modal-footer border-top py-2 px-3 bg-light d-flex justify-content-between">
-                    <button type="button" class="btn btn-light btn-compact border" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning text-dark btn-compact shadow-xs fw-bold px-3" id="btn-submit-bulk-recovery">
-                        <i class="fas fa-paper-plane me-1"></i> <span>Send Reminders</span>
+
+                <div class="modal-footer py-2 px-3">
+
+                    <button type="button"
+                            class="btn btn-light border btn-compact"
+                            data-bs-dismiss="modal">
+                        Cancel
                     </button>
+
+                    <button type="submit"
+                            class="btn btn-warning text-dark btn-compact fw-bold px-3"
+                            id="btn-submit-bulk-recovery">
+
+                        <i class="fas fa-paper-plane me-1"></i>
+                        Send Reminders
+
+                    </button>
+
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>
 
-{{-- MODAL 2: Custom Confirmation Modal (Delete & Bulk Delete) --}}
-<div class="modal fade recovery-modal-scope" id="customConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+{{-- =========================================================
+     MODAL 2: DELETE CONFIRMATION
+========================================================= --}}
+
+<div class="modal fade recovery-modal-scope"
+     id="customConfirmModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3">
-            <div class="modal-body p-1">
-                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-2 bg-danger-subtle text-danger" style="width: 44px; height: 44px; border-radius: 50% !important;">
+
+        <div class="modal-content text-center p-3">
+
+            <div class="modal-body p-2">
+
+                <div class="d-inline-flex align-items-center justify-content-center mb-3 bg-danger-subtle text-danger"
+                     style="width: 48px; height: 48px; border-radius: 5px;">
+
                     <i class="fas fa-trash-can fs-4"></i>
+
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="confirm-modal-title" style="font-size: 14px;">Delete Session</h6>
-                <p class="text-secondary small mb-3" id="confirm-modal-msg" style="font-size: 11px; line-height: 1.45;">Are you sure you want to proceed?</p>
+
+                <h6 class="fw-bold text-dark mb-2"
+                    id="confirm-modal-title"
+                    style="font-size: 14px;">
+
+                    Delete Cart Session
+
+                </h6>
+
+                <p class="text-secondary small mb-3"
+                   id="confirm-modal-msg"
+                   style="font-size: 11px; line-height: 1.5;">
+
+                    Are you sure you want to proceed?
+
+                </p>
+
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-light border btn-compact" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-compact shadow-xs fw-bold" id="btn-confirm-action-execute">Yes, Delete</button>
+
+                    <button type="button"
+                            class="btn btn-light border btn-compact"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-danger btn-compact fw-bold"
+                            id="btn-confirm-action-execute">
+
+                        <i class="fas fa-trash-can me-1"></i>
+                        Yes, Delete
+
+                    </button>
+
                 </div>
+
             </div>
         </div>
     </div>
 </div>
 
-{{-- Toast Feedback Notification Holder --}}
-<div id="custom-toast-holder"></div>
+{{-- TOAST HOLDER --}}
 
-{{-- JavaScript Engine --}}
+<div id="custom-toast-holder" aria-live="polite"></div>
+
+{{-- =========================================================
+     JAVASCRIPT
+========================================================= --}}
+
 <script>
+(function () {
+    'use strict';
+
     let searchTimeout = null;
     let pendingConfirmCallback = null;
+    let isFetchingCarts = false;
 
-    const indexUrl            = "{{ $indexUrl }}";
-    const exportCsvUrl        = "{{ $exportCsvUrl }}";
-    const sendRecoveryBaseUrl = "{{ $sendRecoveryBaseUrl }}";
-    const bulkSendUrl         = "{{ $bulkSendUrl }}";
-    const deleteBaseUrl        = "{{ $deleteBaseUrl }}";
-    const bulkDeleteUrl        = "{{ $bulkDeleteUrl }}";
-    const csrfToken           = "{{ csrf_token() }}";
+    const indexUrl            = @json($indexUrl);
+    const exportCsvUrl        = @json($exportCsvUrl);
+    const sendRecoveryBaseUrl = @json($sendRecoveryBaseUrl);
+    const bulkSendUrl         = @json($bulkSendUrl);
+    const deleteBaseUrl       = @json($deleteBaseUrl);
+    const bulkDeleteUrl       = @json($bulkDeleteUrl);
+    const csrfToken           = @json(csrf_token());
 
-    // 1. Live Reload-free Fetch
+    const root = document.getElementById('email-marketing-cart-wishlist-root');
+
+    if (!root) return;
+
+    const getElement = (id) => document.getElementById(id);
+
+    /* =====================================================
+       1. FETCH FILTERED CARTS
+    ====================================================== */
+
     function fetchFilteredCarts(page = 1) {
-        const form = document.getElementById('cart-filter-form');
+
+        const form = getElement('cart-filter-form');
+
+        if (!form || isFetchingCarts) return;
+
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        params.append('page', page);
 
-        const tbody = document.getElementById('abandoned-carts-table-tbody');
-        if (tbody) tbody.style.opacity = '0.35';
+        params.set('page', page);
+
+        const tbody = getElement('abandoned-carts-table-tbody');
+
+        if (tbody) {
+            tbody.classList.add('cart-loading');
+        }
+
+        isFetchingCarts = true;
 
         fetch(indexUrl + '?' + params.toString(), {
+            method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         })
-        .then(res => res.json())
-        .then(data => {
-            if (tbody) {
-                tbody.innerHTML = data.table_html;
-                tbody.style.opacity = '1';
+        .then(async response => {
+
+            if (!response.ok) {
+                throw new Error('Unable to fetch cart records.');
             }
 
-            // Pagination Handling
-            const paginationFooter = document.getElementById('carts-pagination-footer');
-            const paginationLinks  = document.getElementById('carts-pagination-links');
-            const perPageVal       = document.getElementById('filter-per-page')?.value || '25';
+            return response.json();
+
+        })
+        .then(data => {
+
+            if (tbody) {
+                tbody.innerHTML = data.table_html || '';
+            }
+
+            /* Pagination */
+
+            const paginationFooter = getElement('carts-pagination-footer');
+            const paginationLinks = getElement('carts-pagination-links');
+
+            const perPage = getElement('filter-per-page')?.value || '25';
 
             if (paginationLinks && paginationFooter) {
-                if (perPageVal === 'all' || !data.pagination_html || data.pagination_html.trim() === '') {
+
+                if (
+                    perPage === 'all' ||
+                    !data.pagination_html ||
+                    data.pagination_html.trim() === ''
+                ) {
                     paginationLinks.innerHTML = '';
                     paginationFooter.style.display = 'none';
                 } else {
@@ -879,379 +1804,978 @@
                 }
             }
 
-            // Stats Update with Clean Taka Symbol
-            if (data.stats) {
-                const totalEl     = document.getElementById('stat-total-abandoned');
-                const recoveredEl = document.getElementById('stat-recovered-orders');
-                const pendingEl   = document.getElementById('stat-pending-recovery');
-                const valueEl     = document.getElementById('stat-monitored-value');
-                const revenueEl   = document.getElementById('stat-recovered-revenue');
-                const badgeEl     = document.getElementById('carts-total-badge');
+            /* Analytics */
 
-                if (totalEl)     totalEl.innerText = Number(data.stats.total).toLocaleString();
-                if (recoveredEl) recoveredEl.innerText = Number(data.stats.recovered).toLocaleString();
-                if (pendingEl)   pendingEl.innerText = Number(data.stats.pending).toLocaleString();
-                if (valueEl)     valueEl.innerText = '৳ ' + Number(data.stats.monitored_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                if (revenueEl)   revenueEl.innerText = '৳ ' + Number(data.stats.recovered_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                if (badgeEl)     badgeEl.innerText = Number(data.stats.total).toLocaleString() + ' Sessions';
+            if (data.stats) {
+
+                const stats = data.stats;
+
+                const totalEl = getElement('stat-total-abandoned');
+                const recoveredEl = getElement('stat-recovered-orders');
+                const pendingEl = getElement('stat-pending-recovery');
+                const valueEl = getElement('stat-monitored-value');
+                const revenueEl = getElement('stat-recovered-revenue');
+                const badgeEl = getElement('carts-total-badge');
+
+                const numberFormat = value =>
+                    Number(value || 0).toLocaleString();
+
+                const currencyFormat = value =>
+                    '৳ ' + Number(value || 0).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+
+                if (totalEl) {
+                    totalEl.textContent = numberFormat(stats.total);
+                }
+
+                if (recoveredEl) {
+                    recoveredEl.textContent = numberFormat(stats.recovered);
+                }
+
+                if (pendingEl) {
+                    pendingEl.textContent = numberFormat(stats.pending);
+                }
+
+                if (valueEl) {
+                    valueEl.textContent = currencyFormat(stats.monitored_value);
+                }
+
+                if (revenueEl) {
+                    revenueEl.textContent = currencyFormat(stats.recovered_revenue);
+                }
+
+                if (badgeEl) {
+                    badgeEl.textContent = numberFormat(stats.total) + ' Sessions';
+                }
             }
+
+            /* Entry Information */
 
             if (data.entries_text) {
-                const entriesEl = document.getElementById('showing-entries-text');
-                if (entriesEl) entriesEl.innerText = data.entries_text;
+
+                const entriesEl = getElement('showing-entries-text');
+
+                if (entriesEl) {
+                    entriesEl.textContent = data.entries_text;
+                }
             }
 
-            const checkAll = document.getElementById('check-all-carts');
-            if (checkAll) checkAll.checked = false;
+            /* Reset Select All */
+
+            const checkAll = getElement('check-all-carts');
+
+            if (checkAll) {
+                checkAll.checked = false;
+                checkAll.indeterminate = false;
+            }
+
             updateSelectionBadge();
+
         })
-        .catch(err => {
-            console.error('Fetch error:', err);
-            if (tbody) tbody.style.opacity = '1';
+        .catch(error => {
+
+            console.error('Cart fetch error:', error);
+
+            showToast(
+                'Request Failed',
+                'Unable to load cart records. Please try again.',
+                'danger'
+            );
+
+        })
+        .finally(() => {
+
+            isFetchingCarts = false;
+
+            if (tbody) {
+                tbody.classList.remove('cart-loading');
+            }
+
         });
     }
 
-    // 2. Search Debounce & Change Triggers
-    document.getElementById('filter-search-input')?.addEventListener('input', function() {
+    window.fetchFilteredCarts = fetchFilteredCarts;
+
+    /* =====================================================
+       2. SEARCH DEBOUNCE
+    ====================================================== */
+
+    getElement('filter-search-input')?.addEventListener('input', function () {
+
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => fetchFilteredCarts(1), 350);
-    });
 
-    document.querySelectorAll('.filter-trigger').forEach(el => {
-        el.addEventListener('change', () => fetchFilteredCarts(1));
-    });
-
-    // 3. Date Presets Switcher
-    document.getElementById('filter-date-select')?.addEventListener('change', function() {
-        const val = this.value;
-        const singleBox  = document.getElementById('singleDateWrapper');
-        const monthBox   = document.getElementById('specificMonthWrapper');
-        const yearBox    = document.getElementById('specificYearWrapper');
-        const rangeBox   = document.getElementById('customRangeWrapper');
-
-        singleBox?.classList.add('d-none');
-        monthBox?.classList.add('d-none');
-        yearBox?.classList.add('d-none');
-        rangeBox?.classList.add('d-none');
-
-        if (val === 'specific_date') {
-            singleBox?.classList.remove('d-none');
-        } else if (val === 'specific_month') {
-            monthBox?.classList.remove('d-none');
-        } else if (val === 'specific_year') {
-            yearBox?.classList.remove('d-none');
-        } else if (val === 'custom_range') {
-            rangeBox?.classList.remove('d-none');
-        } else {
+        searchTimeout = setTimeout(() => {
             fetchFilteredCarts(1);
-        }
+        }, 350);
+
     });
+
+    root.querySelectorAll('.filter-trigger').forEach(element => {
+
+        element.addEventListener('change', () => {
+            fetchFilteredCarts(1);
+        });
+
+    });
+
+    /* =====================================================
+       3. DATE FILTER SWITCHER
+    ====================================================== */
+
+    getElement('filter-date-select')?.addEventListener('change', function () {
+
+        const value = this.value;
+
+        const panels = {
+            specific_date: 'singleDateWrapper',
+            specific_month: 'specificMonthWrapper',
+            specific_year: 'specificYearWrapper',
+            custom_range: 'customRangeWrapper'
+        };
+
+        Object.values(panels).forEach(id => {
+            getElement(id)?.classList.add('d-none');
+        });
+
+        if (panels[value]) {
+
+            getElement(panels[value])?.classList.remove('d-none');
+
+        } else {
+
+            fetchFilteredCarts(1);
+
+        }
+
+    });
+
+    /* =====================================================
+       4. RESET DATE PANELS
+    ====================================================== */
 
     function resetDatePanels() {
-        const elDate  = document.getElementById('filter-specific-date');
-        const elMonth = document.getElementById('filter-specific-month');
-        const elYear  = document.getElementById('filter-specific-year');
-        const elStart = document.getElementById('filter-start-date');
-        const elEnd   = document.getElementById('filter-end-date');
-        const elSel   = document.getElementById('filter-date-select');
 
-        if (elDate)  elDate.value = '';
-        if (elMonth) elMonth.value = '';
-        if (elYear)  elYear.value = '';
-        if (elStart) elStart.value = '';
-        if (elEnd)   elEnd.value = '';
-        if (elSel)   elSel.value = '';
+        const fields = [
+            'filter-specific-date',
+            'filter-specific-month',
+            'filter-specific-year',
+            'filter-start-date',
+            'filter-end-date'
+        ];
 
-        document.getElementById('singleDateWrapper')?.classList.add('d-none');
-        document.getElementById('specificMonthWrapper')?.classList.add('d-none');
-        document.getElementById('specificYearWrapper')?.classList.add('d-none');
-        document.getElementById('customRangeWrapper')?.classList.add('d-none');
+        fields.forEach(id => {
+
+            const element = getElement(id);
+
+            if (element) {
+                element.value = '';
+            }
+
+        });
+
+        const dateSelect = getElement('filter-date-select');
+
+        if (dateSelect) {
+            dateSelect.value = '';
+        }
+
+        [
+            'singleDateWrapper',
+            'specificMonthWrapper',
+            'specificYearWrapper',
+            'customRangeWrapper'
+        ].forEach(id => {
+
+            getElement(id)?.classList.add('d-none');
+
+        });
 
         fetchFilteredCarts(1);
     }
 
+    window.resetDatePanels = resetDatePanels;
+
     function resetAllFilters() {
-        document.getElementById('cart-filter-form')?.reset();
+
+        getElement('cart-filter-form')?.reset();
+
+        clearTimeout(searchTimeout);
+
         resetDatePanels();
     }
 
-    // 4. Pagination Link Click Interceptor
-    document.addEventListener('click', function(e) {
-        const pageLink = e.target.closest('#carts-pagination-links .page-link');
-        if (pageLink) {
-            e.preventDefault();
-            const href = pageLink.getAttribute('href');
-            if (href && href !== '#' && !href.startsWith('javascript:')) {
-                const url = new URL(href);
-                const page = url.searchParams.get('page') || 1;
-                fetchFilteredCarts(page);
-                document.querySelector('.cart-table-container')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+    window.resetAllFilters = resetAllFilters;
+
+    /* =====================================================
+       5. PAGINATION INTERCEPTOR
+    ====================================================== */
+
+    document.addEventListener('click', function (event) {
+
+        const pageLink = event.target.closest(
+            '#carts-pagination-links .page-link'
+        );
+
+        if (!pageLink) return;
+
+        const href = pageLink.getAttribute('href');
+
+        if (!href || href === '#' || href.startsWith('javascript:')) {
+            return;
         }
+
+        event.preventDefault();
+
+        try {
+
+            const url = new URL(href, window.location.origin);
+            const page = url.searchParams.get('page') || 1;
+
+            fetchFilteredCarts(page);
+
+            document.querySelector('.cart-table-container')?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+
+        } catch (error) {
+
+            console.error('Pagination error:', error);
+
+        }
+
     });
 
-    // 5. Checkbox Selection & Badge Sync
-    document.getElementById('check-all-carts')?.addEventListener('change', function() {
-        document.querySelectorAll('.cart-select-cb').forEach(cb => cb.checked = this.checked);
+    /* =====================================================
+       6. CHECKBOX SELECTION
+    ====================================================== */
+
+    getElement('check-all-carts')?.addEventListener('change', function () {
+
+        root.querySelectorAll('.cart-select-cb').forEach(checkbox => {
+
+            checkbox.checked = this.checked;
+
+        });
+
         updateSelectionBadge();
+
     });
 
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('cart-select-cb')) {
+    document.addEventListener('change', function (event) {
+
+        if (event.target.classList.contains('cart-select-cb')) {
+
             updateSelectionBadge();
+
         }
+
     });
 
     function getSelectedCartIds() {
-        return Array.from(document.querySelectorAll('.cart-select-cb:checked')).map(cb => cb.value);
+
+        return Array.from(
+            root.querySelectorAll('.cart-select-cb:checked')
+        ).map(checkbox => checkbox.value);
+
     }
 
     function updateSelectionBadge() {
+
         const selected = getSelectedCartIds();
-        const badge = document.getElementById('selected-carts-badge');
+
+        const badge = getElement('selected-carts-badge');
+        const checkAll = getElement('check-all-carts');
+
         if (badge) {
+
             if (selected.length > 0) {
-                badge.innerText = `${selected.length} selected`;
+
+                badge.textContent = selected.length + ' selected';
+
                 badge.classList.remove('d-none');
+
             } else {
+
                 badge.classList.add('d-none');
+
             }
         }
+
+        if (checkAll) {
+
+            const allCheckboxes = root.querySelectorAll('.cart-select-cb');
+
+            const checkedCount = root.querySelectorAll(
+                '.cart-select-cb:checked'
+            ).length;
+
+            checkAll.checked =
+                allCheckboxes.length > 0 &&
+                checkedCount === allCheckboxes.length;
+
+            checkAll.indeterminate =
+                checkedCount > 0 &&
+                checkedCount < allCheckboxes.length;
+
+        }
+
     }
 
-    // 6. CSV Exporter (Exports with Current Active Filters)
+    /* =====================================================
+       7. CSV EXPORT
+    ====================================================== */
+
     function exportCartsCsv() {
-        const form = document.getElementById('cart-filter-form');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-        const url = exportCsvUrl + '?' + params.toString();
-        window.open(url, '_blank');
+
+        const form = getElement('cart-filter-form');
+
+        if (!form) return;
+
+        const params = new URLSearchParams(new FormData(form));
+
+        window.open(
+            exportCsvUrl + '?' + params.toString(),
+            '_blank',
+            'noopener,noreferrer'
+        );
+
     }
 
-    // 7. Direct Recovery Reminder Trigger AJAX
+    window.exportCartsCsv = exportCartsCsv;
+
+    /* =====================================================
+       8. SINGLE CART RECOVERY
+    ====================================================== */
+
     function sendCartRecoveryDirectAjax(cartId, email) {
-        fetch(`${sendRecoveryBaseUrl}/${cartId}`, {
+
+        fetch(`${sendRecoveryBaseUrl}/${encodeURIComponent(cartId)}`, {
+
             method: 'POST',
+
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             }
+
         })
-        .then(res => res.json())
+        .then(async response => {
+
+            if (!response.ok) {
+                throw new Error('Recovery request failed.');
+            }
+
+            return response.json();
+
+        })
         .then(data => {
+
             if (data.success) {
-                showToast('Dispatched', data.message, 'success');
+
+                showToast(
+                    'Dispatched',
+                    data.message || 'Recovery reminder sent successfully.',
+                    'success'
+                );
+
                 fetchFilteredCarts(1);
+
             } else {
-                showToast('Failed', data.message || 'Could not send reminder', 'danger');
+
+                showToast(
+                    'Failed',
+                    data.message || 'Could not send recovery reminder.',
+                    'danger'
+                );
+
             }
+
         })
-        .catch(() => {
-            showToast('Error', 'Server or mailer delivery error.', 'danger');
+        .catch(error => {
+
+            console.error(error);
+
+            showToast(
+                'Error',
+                'Server or mailer delivery error.',
+                'danger'
+            );
+
         });
+
     }
 
-    // 8. Bulk Recovery Broadcast
+    window.sendCartRecoveryDirectAjax = sendCartRecoveryDirectAjax;
+
+    /* =====================================================
+       9. BULK RECOVERY MODAL
+    ====================================================== */
+
     function openBulkRecoveryModal() {
+
         const selected = getSelectedCartIds();
+
         if (selected.length === 0) {
-            showToast('Warning', 'Please select at least one cart from the table checkbox.', 'warning');
+
+            showToast(
+                'Selection Required',
+                'Please select at least one cart from the table.',
+                'warning'
+            );
+
             return;
         }
 
-        const countEl = document.getElementById('bulk-modal-cart-count');
-        if (countEl) countEl.innerText = selected.length;
-        const modalEl = document.getElementById('bulkRecoveryModal');
-        if (modalEl && window.bootstrap) {
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        const countEl = getElement('bulk-modal-cart-count');
+
+        if (countEl) {
+            countEl.textContent = selected.length;
         }
+
+        const modalEl = getElement('bulkRecoveryModal');
+
+        if (modalEl && window.bootstrap) {
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        }
+
     }
+
+    window.openBulkRecoveryModal = openBulkRecoveryModal;
+
+    /* =====================================================
+       10. PLACEHOLDER INSERTION
+    ====================================================== */
 
     function insertPlaceholderToBody(tag) {
-        const textarea = document.getElementById('bulk-recovery-body');
-        if (textarea) {
-            const start = textarea.selectionStart || 0;
-            const end   = textarea.selectionEnd || 0;
-            const text  = textarea.value;
-            textarea.value = text.substring(0, start) + tag + text.substring(end);
-            textarea.focus();
-            textarea.selectionStart = textarea.selectionEnd = start + tag.length;
-        }
+
+        const textarea = getElement('bulk-recovery-body');
+
+        if (!textarea) return;
+
+        const start = textarea.selectionStart || 0;
+        const end = textarea.selectionEnd || 0;
+
+        const currentText = textarea.value;
+
+        textarea.value =
+            currentText.substring(0, start) +
+            tag +
+            currentText.substring(end);
+
+        textarea.focus();
+
+        const cursorPosition = start + tag.length;
+
+        textarea.setSelectionRange(
+            cursorPosition,
+            cursorPosition
+        );
+
     }
 
-    function submitBulkRecoveryForm(e) {
-        e.preventDefault();
-        const selected = getSelectedCartIds();
-        const subject = document.getElementById('bulk-recovery-subject')?.value.trim();
-        const message = document.getElementById('bulk-recovery-body')?.value.trim();
-        const btn = document.getElementById('btn-submit-bulk-recovery');
+    window.insertPlaceholderToBody = insertPlaceholderToBody;
 
-        if (!subject || !message) {
-            showToast('Warning', 'Subject and message are required.', 'warning');
+    /* =====================================================
+       11. SUBMIT BULK RECOVERY
+    ====================================================== */
+
+    function submitBulkRecoveryForm(event) {
+
+        event.preventDefault();
+
+        const selected = getSelectedCartIds();
+
+        const subject = getElement('bulk-recovery-subject')?.value.trim();
+
+        const message = getElement('bulk-recovery-body')?.value.trim();
+
+        const button = getElement('btn-submit-bulk-recovery');
+
+        if (selected.length === 0) {
+
+            showToast(
+                'Selection Required',
+                'Please select at least one cart.',
+                'warning'
+            );
+
             return;
         }
 
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Broadcasting...';
+        if (!subject || !message) {
+
+            showToast(
+                'Required Fields',
+                'Email subject and message are required.',
+                'warning'
+            );
+
+            return;
+        }
+
+        if (button) {
+
+            button.disabled = true;
+
+            button.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-1"></i> Sending...';
+
         }
 
         fetch(bulkSendUrl, {
+
             method: 'POST',
+
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
             },
+
             body: JSON.stringify({
+
                 cart_ids: selected,
                 subject: subject,
                 message: message
+
             })
+
         })
-        .then(res => res.json())
+        .then(async response => {
+
+            if (!response.ok) {
+                throw new Error('Bulk recovery request failed.');
+            }
+
+            return response.json();
+
+        })
         .then(data => {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Reminders';
-            }
+
             if (data.success) {
-                const modalEl = document.getElementById('bulkRecoveryModal');
-                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
-                document.getElementById('bulkRecoveryForm')?.reset();
-                showToast('Success', data.message, 'success');
-                fetchFilteredCarts(1);
-            } else {
-                showToast('Error', data.message || 'Failed to dispatch reminders', 'danger');
-            }
-        })
-        .catch(() => {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Reminders';
-            }
-            showToast('Error', 'Network or server error while dispatching recovery emails.', 'danger');
-        });
-    }
 
-    // 9. Single Cart Deletion
-    function deleteCartAjax(cartId, email) {
-        const titleEl = document.getElementById('confirm-modal-title');
-        const msgEl   = document.getElementById('confirm-modal-msg');
-        if (titleEl) titleEl.innerText = 'Delete Cart Session';
-        if (msgEl) msgEl.innerHTML = `Are you sure you want to delete abandoned session <strong>#${cartId}</strong> (${email})?`;
+                const modalEl = getElement('bulkRecoveryModal');
 
-        pendingConfirmCallback = function() {
-            fetch(`${deleteBaseUrl}/${cartId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
+                if (modalEl && window.bootstrap) {
+
+                    bootstrap.Modal.getInstance(modalEl)?.hide();
+
                 }
-            })
-            .then(res => res.json())
-            .then(data => {
-                const modalEl = document.getElementById('customConfirmModal');
-                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
-                showToast('Deleted', data.message, 'danger');
-                fetchFilteredCarts(1);
-            })
-            .catch(() => {
-                const modalEl = document.getElementById('customConfirmModal');
-                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
-                fetchFilteredCarts(1);
-            });
-        };
 
-        const modalEl = document.getElementById('customConfirmModal');
-        if (modalEl && window.bootstrap) {
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
-        }
+                getElement('bulkRecoveryForm')?.reset();
+
+                showToast(
+                    'Success',
+                    data.message || 'Recovery emails dispatched successfully.',
+                    'success'
+                );
+
+                fetchFilteredCarts(1);
+
+            } else {
+
+                showToast(
+                    'Dispatch Failed',
+                    data.message || 'Failed to dispatch recovery emails.',
+                    'danger'
+                );
+
+            }
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            showToast(
+                'Server Error',
+                'Network or server error while dispatching emails.',
+                'danger'
+            );
+
+        })
+        .finally(() => {
+
+            if (button) {
+
+                button.disabled = false;
+
+                button.innerHTML =
+                    '<i class="fas fa-paper-plane me-1"></i> Send Reminders';
+
+            }
+
+        });
+
     }
 
-    // 10. Bulk Cart Deletion
+    window.submitBulkRecoveryForm = submitBulkRecoveryForm;
+
+    /* =====================================================
+       12. CONFIRMATION MODAL
+    ====================================================== */
+
+    function showConfirmModal(title, message, callback) {
+
+        const titleEl = getElement('confirm-modal-title');
+        const messageEl = getElement('confirm-modal-msg');
+
+        if (titleEl) {
+            titleEl.textContent = title;
+        }
+
+        if (messageEl) {
+            messageEl.textContent = message;
+        }
+
+        pendingConfirmCallback = callback;
+
+        const modalEl = getElement('customConfirmModal');
+
+        if (modalEl && window.bootstrap) {
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+        }
+
+    }
+
+    /* =====================================================
+       13. SINGLE CART DELETE
+    ====================================================== */
+
+    function deleteCartAjax(cartId, email) {
+
+        showConfirmModal(
+
+            'Delete Cart Session',
+
+            `Are you sure you want to delete abandoned session #${cartId} (${email})?`,
+
+            function () {
+
+                const confirmButton = getElement('btn-confirm-action-execute');
+
+                if (confirmButton) {
+                    confirmButton.disabled = true;
+                }
+
+                fetch(`${deleteBaseUrl}/${encodeURIComponent(cartId)}`, {
+
+                    method: 'DELETE',
+
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+
+                })
+                .then(async response => {
+
+                    if (!response.ok) {
+                        throw new Error('Delete request failed.');
+                    }
+
+                    return response.json();
+
+                })
+                .then(data => {
+
+                    if (data.success === false) {
+
+                        showToast(
+                            'Delete Failed',
+                            data.message || 'Unable to delete cart session.',
+                            'danger'
+                        );
+
+                        return;
+                    }
+
+                    showToast(
+                        'Deleted',
+                        data.message || 'Cart session deleted successfully.',
+                        'success'
+                    );
+
+                    fetchFilteredCarts(1);
+
+                    bootstrap.Modal.getInstance(
+                        getElement('customConfirmModal')
+                    )?.hide();
+
+                })
+                .catch(error => {
+
+                    console.error(error);
+
+                    showToast(
+                        'Error',
+                        'Unable to delete cart session.',
+                        'danger'
+                    );
+
+                })
+                .finally(() => {
+
+                    if (confirmButton) {
+                        confirmButton.disabled = false;
+                    }
+
+                });
+
+            }
+
+        );
+
+    }
+
+    window.deleteCartAjax = deleteCartAjax;
+
+    /* =====================================================
+       14. BULK DELETE
+    ====================================================== */
+
     function openBulkDeleteModal() {
+
         const selected = getSelectedCartIds();
+
         if (selected.length === 0) {
-            showToast('Warning', 'Please select at least one cart session to delete.', 'warning');
+
+            showToast(
+                'Selection Required',
+                'Please select at least one cart session.',
+                'warning'
+            );
+
             return;
         }
 
-        const titleEl = document.getElementById('confirm-modal-title');
-        const msgEl   = document.getElementById('confirm-modal-msg');
-        if (titleEl) titleEl.innerText = 'Bulk Delete Sessions';
-        if (msgEl) msgEl.innerHTML = `Are you sure you want to delete <strong>${selected.length}</strong> selected abandoned session(s)?`;
+        showConfirmModal(
 
-        pendingConfirmCallback = function() {
-            fetch(bulkDeleteUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    cart_ids: selected
+            'Bulk Delete Sessions',
+
+            `Are you sure you want to delete ${selected.length} selected abandoned cart session(s)?`,
+
+            function () {
+
+                const confirmButton = getElement('btn-confirm-action-execute');
+
+                if (confirmButton) {
+                    confirmButton.disabled = true;
+                }
+
+                fetch(bulkDeleteUrl, {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        cart_ids: selected
+                    })
+
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const modalEl = document.getElementById('customConfirmModal');
-                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
-                showToast('Deleted', data.message, 'danger');
-                fetchFilteredCarts(1);
-            })
-            .catch(() => {
-                const modalEl = document.getElementById('customConfirmModal');
-                if (modalEl && window.bootstrap) bootstrap.Modal.getInstance(modalEl)?.hide();
-                fetchFilteredCarts(1);
-            });
-        };
+                .then(async response => {
 
-        const modalEl = document.getElementById('customConfirmModal');
-        if (modalEl && window.bootstrap) {
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
-        }
+                    if (!response.ok) {
+                        throw new Error('Bulk delete request failed.');
+                    }
+
+                    return response.json();
+
+                })
+                .then(data => {
+
+                    if (data.success === false) {
+
+                        showToast(
+                            'Delete Failed',
+                            data.message || 'Unable to delete selected sessions.',
+                            'danger'
+                        );
+
+                        return;
+                    }
+
+                    showToast(
+                        'Deleted',
+                        data.message || 'Selected cart sessions deleted.',
+                        'success'
+                    );
+
+                    fetchFilteredCarts(1);
+
+                    bootstrap.Modal.getInstance(
+                        getElement('customConfirmModal')
+                    )?.hide();
+
+                })
+                .catch(error => {
+
+                    console.error(error);
+
+                    showToast(
+                        'Error',
+                        'Unable to delete selected cart sessions.',
+                        'danger'
+                    );
+
+                })
+                .finally(() => {
+
+                    if (confirmButton) {
+                        confirmButton.disabled = false;
+                    }
+
+                });
+
+            }
+
+        );
+
     }
 
-    document.getElementById('btn-confirm-action-execute')?.addEventListener('click', function() {
-        if (typeof pendingConfirmCallback === 'function') {
-            pendingConfirmCallback();
-        }
-    });
+    window.openBulkDeleteModal = openBulkDeleteModal;
 
-    // 11. Floating Toast Notifications
+    /* =====================================================
+       15. CONFIRM ACTION BUTTON
+    ====================================================== */
+
+    getElement('btn-confirm-action-execute')?.addEventListener(
+        'click',
+        function () {
+
+            if (typeof pendingConfirmCallback === 'function') {
+
+                const callback = pendingConfirmCallback;
+
+                pendingConfirmCallback = null;
+
+                callback();
+
+            }
+
+        }
+    );
+
+    /* =====================================================
+       16. TOAST NOTIFICATIONS
+    ====================================================== */
+
     function showToast(title, message, type = 'success') {
-        const holder = document.getElementById('custom-toast-holder');
+
+        const holder = getElement('custom-toast-holder');
+
         if (!holder) return;
 
-        const toastId = 'toast-' + Date.now();
-        const typeConfigs = {
-            success: { icon: 'fa-check-circle', color: 'bg-success text-white' },
-            danger:  { icon: 'fa-trash-can',    color: 'bg-danger text-white' },
-            warning: { icon: 'fa-triangle-exclamation', color: 'bg-warning text-dark' },
-            info:    { icon: 'fa-circle-info',  color: 'bg-primary text-white' }
+        const configs = {
+
+            success: {
+                icon: 'fa-circle-check',
+                color: 'bg-success text-white'
+            },
+
+            danger: {
+                icon: 'fa-circle-xmark',
+                color: 'bg-danger text-white'
+            },
+
+            warning: {
+                icon: 'fa-triangle-exclamation',
+                color: 'bg-warning text-dark'
+            },
+
+            info: {
+                icon: 'fa-circle-info',
+                color: 'bg-primary text-white'
+            }
+
         };
-        const config = typeConfigs[type] || typeConfigs.success;
 
-        const html = `
-            <div id="${toastId}" class="admin-cart-toast ${config.color} p-3 d-flex align-items-center justify-content-between shadow-lg" style="border-radius: 5px !important;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fas ${config.icon} fs-5"></i>
-                    <div>
-                        <strong class="d-block" style="font-size: 13px;">${title}</strong>
-                        <small style="opacity: 0.95; font-size: 11px;">${message}</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} btn-sm ms-2 shadow-none" onclick="document.getElementById('${toastId}')?.remove()"></button>
-            </div>
-        `;
+        const config = configs[type] || configs.success;
 
-        holder.insertAdjacentHTML('beforeend', html);
+        const toast = document.createElement('div');
+
+        toast.className =
+            `admin-cart-toast ${config.color} p-3 d-flex align-items-center justify-content-between gap-2`;
+
+        toast.setAttribute('role', 'status');
+
+        const content = document.createElement('div');
+
+        content.className = 'd-flex align-items-center gap-2';
+
+        const icon = document.createElement('i');
+
+        icon.className = `fas ${config.icon} fs-5`;
+
+        const textWrapper = document.createElement('div');
+
+        const titleElement = document.createElement('strong');
+
+        titleElement.className = 'd-block';
+
+        titleElement.style.fontSize = '12px';
+
+        titleElement.textContent = title;
+
+        const messageElement = document.createElement('small');
+
+        messageElement.style.cssText = 'font-size:11px;opacity:.95;';
+
+        messageElement.textContent = message || '';
+
+        textWrapper.appendChild(titleElement);
+        textWrapper.appendChild(messageElement);
+
+        content.appendChild(icon);
+        content.appendChild(textWrapper);
+
+        const closeButton = document.createElement('button');
+
+        closeButton.type = 'button';
+
+        closeButton.className =
+            `btn-close btn-sm ${type === 'warning' ? '' : 'btn-close-white'}`;
+
+        closeButton.setAttribute('aria-label', 'Close');
+
+        closeButton.addEventListener('click', () => {
+            toast.remove();
+        });
+
+        toast.appendChild(content);
+        toast.appendChild(closeButton);
+
+        holder.appendChild(toast);
+
         setTimeout(() => {
-            const el = document.getElementById(toastId);
-            if (el) el.remove();
-        }, 3500);
+
+            if (toast.isConnected) {
+                toast.remove();
+            }
+
+        }, 4000);
+
     }
+
+    window.showToast = showToast;
+
+})();
 </script>
+
 @endsection

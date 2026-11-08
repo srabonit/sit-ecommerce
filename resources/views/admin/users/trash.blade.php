@@ -1,16 +1,41 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Trash - Users & Staff - ' . config('app.name'))
 
 @section('admin_content')
+
 <!-- Pure Text Data Table PDF Generator (jsPDF + AutoTable) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       TRASHED USERS & STAFF
+       KAIADMIN LITE v1.2.0 - CLASSIC / WHITE CLASSIC
+       Page-specific styling
+    ========================================================= */
+
+    #trashIndexRoot {
+        --trash-primary: var(--bs-primary, #1572e8);
+        --trash-danger: var(--bs-danger, #f25961);
+        --trash-success: var(--bs-success, #31ce36);
+        --trash-text: #1a2035;
+        --trash-muted: #7b8190;
+        --trash-border: #e5e7eb;
+        --trash-surface: #ffffff;
+        --trash-soft: #f8f9fc;
+        color: var(--trash-text);
+        font-size: 13px;
+    }
+
+    /* Page container */
+    #trashIndexRoot.trash-page-container {
+        padding: 18px 20px;
+    }
+
+    /* Consistent element radius */
     #trashIndexRoot .btn,
-    #trashIndexRoot .btn-sm,
     #trashIndexRoot button,
     #trashIndexRoot .form-control,
     #trashIndexRoot .form-select,
@@ -21,205 +46,547 @@
         border-radius: 5px !important;
     }
 
-    #trashIndexRoot .card,
-    #trashIndexRoot .trash-card-table,
-    #trashIndexRoot .filter-card-box,
-    #trashIndexRoot .modal-content {
-        border-radius: 8px !important;
+    /* Header */
+    #trashIndexRoot .trash-page-header {
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--trash-border);
     }
 
-    /* Page Canvas */
-    .trash-page-container {
-        padding: 18px 20px;
-    }
-
-    .filter-card-box {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        padding: 16px 18px;
-        margin-bottom: 20px;
-    }
-
-    .trash-card-table {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    /* Table Styling */
-    .custom-trash-table th {
-        background-color: #f8fafc;
-        color: #64748b;
-        font-size: 11px;
+    #trashIndexRoot .trash-page-title {
+        color: var(--trash-text);
+        font-size: 19px;
         font-weight: 700;
+        line-height: 1.4;
+        letter-spacing: -.25px;
+    }
+
+    #trashIndexRoot .trash-page-subtitle {
+        display: block;
+        margin-top: 4px;
+        color: var(--trash-muted);
+        font-size: 11.5px;
+        line-height: 1.5;
+    }
+
+    /* Header actions */
+    #trashIndexRoot .trash-top-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #trashIndexRoot .trash-top-actions .btn {
+        min-height: 34px;
+        padding: 7px 12px !important;
+        font-size: 11.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: all .18s ease;
+    }
+
+    #trashIndexRoot .trash-top-actions .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    /* Main cards */
+    #trashIndexRoot .filter-card-box,
+    #trashIndexRoot .trash-card-table {
+        position: relative;
+        background: var(--trash-surface);
+        border: 1px solid var(--trash-border);
+        border-radius: 8px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .035);
+    }
+
+    #trashIndexRoot .filter-card-box {
+        padding: 17px 18px;
+        margin-bottom: 18px;
+    }
+
+    #trashIndexRoot .trash-card-table {
+        margin-bottom: 20px;
+    }
+
+    /* Filter controls */
+    #trashIndexRoot .form-control,
+    #trashIndexRoot .form-select {
+        min-height: 34px;
+        border-color: #e4e7ec;
+        background-color: #fff;
+        color: #344054;
+        font-size: 12px;
+        box-shadow: none;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    #trashIndexRoot .form-control:focus,
+    #trashIndexRoot .form-select:focus {
+        border-color: var(--trash-primary);
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .09);
+    }
+
+    #trashIndexRoot .form-control::placeholder {
+        color: #a0a5b1;
+        opacity: 1;
+    }
+
+    #trashIndexRoot .input-group {
+        border: 1px solid #e4e7ec !important;
+        border-radius: 5px !important;
+        transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    #trashIndexRoot .input-group:focus-within {
+        border-color: var(--trash-primary) !important;
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .09);
+    }
+
+    #trashIndexRoot .input-group .form-control {
+        min-width: 0;
+    }
+
+    #trashIndexRoot .input-group-text {
+        min-width: 34px;
+        justify-content: center;
+        color: #8b909b;
+    }
+
+    #trashIndexRoot .filter-actions {
+        padding-top: 12px;
+        border-top: 1px solid #edf0f3;
+    }
+
+    #trashIndexRoot .filter-actions .btn {
+        min-height: 34px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Alert */
+    #trashIndexRoot #trashAjaxAlertBox {
+        border-radius: 6px !important;
+        font-size: 12px;
+    }
+
+    /* Table */
+    #trashIndexRoot .custom-trash-table {
+        width: 100%;
+        min-width: 760px;
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+
+    #trashIndexRoot .custom-trash-table thead th {
+        padding: 12px 14px;
+        background: #f8f9fc;
+        color: #7b8190;
+        border-top: 0;
+        border-bottom: 1px solid var(--trash-border);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .45px;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding: 11px 14px;
         white-space: nowrap;
     }
-    .custom-trash-table td {
+
+    #trashIndexRoot .custom-trash-table tbody td {
         padding: 11px 14px;
+        color: #4b5563;
+        border-bottom: 1px solid #f0f1f4;
+        font-size: 12px;
+        line-height: 1.5;
         vertical-align: middle;
-        font-size: 12.5px;
-        color: #1e293b;
-        border-bottom: 1px solid #f1f5f9;
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #trashIndexRoot .custom-trash-table tbody tr:last-child td {
+        border-bottom: 0;
     }
 
-    /* AJAX Overlay */
-    #trashLoadingOverlay {
+    #trashIndexRoot .custom-trash-table tbody tr:hover {
+        background: #fafbfe;
+    }
+
+    #trashIndexRoot .custom-trash-table .badge {
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    /* Table responsive */
+    #trashIndexRoot .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Pagination area */
+    #trashIndexRoot #trashPaginationWrapper {
+        padding: 12px 16px !important;
+        background: #fbfcfe !important;
+        border-top: 1px solid var(--trash-border) !important;
+    }
+
+    #trashIndexRoot #trashStatsText {
+        color: var(--trash-muted);
+        font-size: 11.5px;
+        font-weight: 500;
+    }
+
+    #trashIndexRoot #trashPaginationLinks {
+        max-width: 100%;
+    }
+
+    #trashIndexRoot #trashPaginationLinks .pagination {
+        margin-bottom: 0;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+
+    #trashIndexRoot #trashPaginationLinks .page-link {
+        min-width: 30px;
+        min-height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 9px;
+        color: #6b7280;
+        border-color: #e5e7eb;
+        font-size: 11px;
+        box-shadow: none;
+    }
+
+    #trashIndexRoot #trashPaginationLinks .page-item.active .page-link {
+        color: #fff;
+        background: var(--trash-primary);
+        border-color: var(--trash-primary);
+    }
+
+    #trashIndexRoot #trashPaginationLinks .page-item.disabled .page-link {
+        color: #b4b8c1;
+        background: #f8f9fc;
+    }
+
+    /* Loading overlay */
+    #trashIndexRoot #trashLoadingOverlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(2px);
+        inset: 0;
         z-index: 25;
         display: none;
         align-items: center;
         justify-content: center;
+        background: rgba(255, 255, 255, .82);
+        backdrop-filter: blur(2px);
         border-radius: 8px;
     }
 
-    /* Mobile Responsive Optimizations */
+    #trashIndexRoot #trashLoadingOverlay .spinner-border {
+        width: 2.2rem;
+        height: 2.2rem;
+    }
+
+    /* Numeric data */
+    #trashIndexRoot .bn-digit,
+    #trashIndexRoot .font-monospace {
+        font-weight: 600;
+    }
+
+    /* Modal styling */
+    #deleteConfirmDialog .modal-content,
+    #trashNoticeModal .modal-content {
+        border: 1px solid #e5e7eb;
+        border-radius: 9px !important;
+        box-shadow: 0 12px 35px rgba(15, 23, 42, .14);
+    }
+
+    #deleteConfirmDialog .modal-body,
+    #trashNoticeModal .modal-body {
+        padding: 8px 5px;
+    }
+
+    #deleteConfirmDialog .modal-body h6,
+    #trashNoticeModal .modal-body h6 {
+        color: #1a2035;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    #deleteConfirmDialog .modal-body p,
+    #trashNoticeModal .modal-body p {
+        color: #7b8190;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    #deleteConfirmDialog .btn,
+    #trashNoticeModal .btn {
+        min-height: 32px;
+        font-size: 11.5px;
+        font-weight: 600;
+        border-radius: 5px !important;
+    }
+
+    /* Mobile */
     @media (max-width: 767.98px) {
-        .trash-page-container {
+        #trashIndexRoot.trash-page-container {
             padding: 12px 10px;
         }
-        .trash-top-actions {
+
+        #trashIndexRoot .trash-page-header {
+            align-items: stretch !important;
+            padding-bottom: 12px;
+        }
+
+        #trashIndexRoot .trash-page-title {
+            font-size: 17px;
+        }
+
+        #trashIndexRoot .trash-page-subtitle {
+            font-size: 11px;
+        }
+
+        #trashIndexRoot .trash-top-actions {
             width: 100%;
             display: flex;
-            flex-wrap: wrap;
             gap: 6px;
         }
-        .trash-top-actions .btn {
+
+        #trashIndexRoot .trash-top-actions .btn {
             flex: 1 1 calc(50% - 6px);
             justify-content: center;
-            font-size: 11.5px;
-            padding: 7px 8px;
+            padding: 8px 7px !important;
+            font-size: 11px;
         }
-        .trash-top-actions .btn-back-users {
+
+        #trashIndexRoot .trash-top-actions .btn-back-users {
             flex: 1 1 100%;
         }
-        .filter-card-box {
-            padding: 12px 14px !important;
-            margin-bottom: 16px !important;
+
+        #trashIndexRoot .filter-card-box {
+            padding: 13px 12px;
+            margin-bottom: 14px;
         }
-        .custom-trash-table th, .custom-trash-table td {
+
+        #trashIndexRoot .filter-actions {
+            margin-top: 4px;
+        }
+
+        #trashIndexRoot .custom-trash-table thead th,
+        #trashIndexRoot .custom-trash-table tbody td {
             padding: 9px 10px;
-            font-size: 12px;
+            font-size: 11.5px;
+        }
+
+        #trashIndexRoot #trashPaginationWrapper {
+            align-items: flex-start !important;
+            padding: 12px !important;
+        }
+
+        #trashIndexRoot #trashPaginationLinks {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        #trashIndexRoot #trashPaginationLinks .pagination {
+            flex-wrap: nowrap;
+            width: max-content;
+        }
+    }
+
+    @media (max-width: 400px) {
+        #trashIndexRoot .trash-top-actions .btn {
+            font-size: 10.5px;
+        }
+
+        #trashIndexRoot .filter-card-box {
+            padding: 11px 10px;
         }
     }
 </style>
 
 <div class="container-fluid trash-page-container position-relative" id="trashIndexRoot">
-    <!-- Header & Action Bar -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+
+    <!-- Page Header & Actions -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3 trash-page-header">
+
         <div>
-            <h5 class="fw-bold text-dark mb-0.5 d-flex align-items-center gap-2" style="font-size: 18px;">
-                <i class="fas fa-trash-alt text-danger"></i> <span>Trashed Users & Staff</span>
+            <h5 class="trash-page-title mb-0 d-flex align-items-center gap-2">
+                <i class="fas fa-trash-alt text-danger"></i>
+                <span>Trashed Users & Staff</span>
             </h5>
-            <small class="text-muted" style="font-size: 11.5px; line-height: 1.35; display: block;">Restore accidentally removed accounts or permanently purge from database</small>
+
+            <small class="trash-page-subtitle">
+              Restore deleted accounts or permanently delete them.
+            </small>
         </div>
-        <div class="trash-top-actions d-flex flex-wrap gap-2 no-pdf">
-            <button type="button" class="btn btn-outline-success btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" onclick="exportTrashReport('excel')">
-                <i class="fas fa-file-excel text-success me-1"></i> <span>Export Excel</span>
+
+        <div class="trash-top-actions no-pdf">
+
+            <button type="button"
+                    class="btn btn-outline-success btn-sm shadow-sm d-inline-flex align-items-center"
+                    onclick="exportTrashReport('excel')">
+                <i class="fas fa-file-excel text-success me-2"></i>
+                <span>Export Excel</span>
             </button>
-            <button type="button" class="btn btn-outline-danger btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5" id="btn-export-trash-pdf" onclick="downloadTrashPdf()">
-                <i class="fas fa-file-pdf text-danger me-1"></i> <span id="trash-pdf-text">Report PDF</span>
+
+            <button type="button"
+                    class="btn btn-outline-danger btn-sm shadow-sm d-inline-flex align-items-center"
+                    id="btn-export-trash-pdf"
+                    onclick="downloadTrashPdf()">
+                <i class="fas fa-file-pdf text-danger me-2"></i>
+                <span id="trash-pdf-text">Report PDF</span>
             </button>
-            <a href="{{ route('admin.roles.users') }}" class="btn btn-outline-secondary btn-sm px-3 py-1.5 fw-semibold shadow-xs d-inline-flex align-items-center gap-1.5 btn-back-users">
-                <i class="fas fa-arrow-left me-1"></i> <span>Back to Users</span>
+
+            <a href="{{ route('admin.roles.users') }}"
+               class="btn btn-outline-secondary btn-sm shadow-sm d-inline-flex align-items-center btn-back-users">
+                <i class="fas fa-arrow-left me-2"></i>
+                <span>Back to Users</span>
             </a>
+
         </div>
     </div>
 
-    <!-- Alert Box -->
-    <div id="trashAjaxAlertBox" class="alert d-none alert-dismissible fade show mb-3 small align-items-center gap-2 shadow-xs border-0 py-2 px-3" role="alert" style="border-radius: 5px;">
+    <!-- AJAX Alert -->
+    <div id="trashAjaxAlertBox"
+         class="alert d-none alert-dismissible fade show mb-3 small align-items-center gap-2 shadow-sm border-0 py-2 px-3"
+         role="alert">
+
         <i id="trashAjaxAlertIcon" class="fas fa-circle-check fs-6 flex-shrink-0"></i>
+
         <div id="trashAjaxAlertMsg" class="fw-semibold"></div>
-        <button type="button" class="btn-close btn-sm shadow-none ms-auto py-2" onclick="document.getElementById('trashAjaxAlertBox').classList.add('d-none')"></button>
+
+        <button type="button"
+                class="btn-close btn-sm shadow-none ms-auto py-2"
+                onclick="document.getElementById('trashAjaxAlertBox').classList.add('d-none')">
+        </button>
     </div>
 
-    <!-- Multi-Filter Toolbar Card -->
+    <!-- Filter Toolbar -->
     <div class="filter-card-box no-pdf">
+
         <form id="trashFilterForm" onsubmit="event.preventDefault(); triggerTrashFilterAjax();">
+
             <div class="row g-2 align-items-center">
+
+                <!-- Search -->
                 <div class="col-12 col-md-3">
-                    <div class="input-group input-group-sm overflow-hidden border shadow-xs" style="border-radius: 5px;">
-                        <span class="input-group-text bg-white border-0 text-muted ps-2.5"><i class="fas fa-search" style="font-size: 11px;"></i></span>
-                        <input type="text" name="search" id="trashFilterSearch" class="form-control border-0 py-1.5 shadow-none" 
-                               value="{{ request('search') }}" placeholder="Search name, email, phone..." autocomplete="off" style="font-size: 12px;">
+                    <div class="input-group input-group-sm overflow-hidden">
+
+                        <span class="input-group-text bg-white border-0">
+                            <i class="fas fa-search" style="font-size: 11px;"></i>
+                        </span>
+
+                        <input type="text"
+                               name="search"
+                               id="trashFilterSearch"
+                               class="form-control border-0 py-1 shadow-none"
+                               value="{{ request('search') }}"
+                               placeholder="Search name, email, phone..."
+                               autocomplete="off">
                     </div>
                 </div>
 
+                <!-- Role -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <select name="role" id="trashFilterRole" class="form-select form-select-sm py-1.5 shadow-none" style="font-size: 12px;">
+                    <select name="role"
+                            id="trashFilterRole"
+                            class="form-select form-select-sm py-1 shadow-none">
+
                         <option value="all">All Roles</option>
+
                         @foreach($allRoles as $rName)
                             <option value="{{ $rName }}" {{ request('role') == $rName ? 'selected' : '' }}>
                                 {{ ucwords(str_replace(['_', '-'], ' ', $rName)) }}
                             </option>
                         @endforeach
+
                     </select>
                 </div>
 
+                <!-- Specific Deleted Date -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <input type="date" name="deleted_date" id="trashFilterDate" class="form-control form-control-sm py-1 shadow-none" value="{{ request('deleted_date') }}" title="Specific Deleted Date" style="font-size: 11.5px;">
+                    <input type="date"
+                           name="deleted_date"
+                           id="trashFilterDate"
+                           class="form-control form-control-sm py-1 shadow-none"
+                           value="{{ request('deleted_date') }}"
+                           title="Specific Deleted Date">
                 </div>
 
+                <!-- Deleted From -->
                 <div class="col-6 col-sm-3 col-md-2">
-                    <input type="date" name="deleted_from" id="trashFilterFrom" class="form-control form-control-sm py-1 shadow-none" placeholder="Deleted From" title="Deleted Range From" style="font-size: 11.5px;">
-                </div>
-                <div class="col-6 col-sm-3 col-md-2">
-                    <input type="date" name="deleted_to" id="trashFilterTo" class="form-control form-control-sm py-1 shadow-none" placeholder="Deleted To" title="Deleted Range To" style="font-size: 11.5px;">
+                    <input type="date"
+                           name="deleted_from"
+                           id="trashFilterFrom"
+                           class="form-control form-control-sm py-1 shadow-none"
+                           placeholder="Deleted From"
+                           title="Deleted Range From">
                 </div>
 
-                <!-- Per-Page Selector -->
+                <!-- Deleted To -->
+                <div class="col-6 col-sm-3 col-md-2">
+                    <input type="date"
+                           name="deleted_to"
+                           id="trashFilterTo"
+                           class="form-control form-control-sm py-1 shadow-none"
+                           placeholder="Deleted To"
+                           title="Deleted Range To">
+                </div>
+
+                <!-- Per Page -->
                 <div class="col-6 col-sm-3 col-md-1">
-                    <select name="per_page" id="trashFilterPerPage" class="form-select form-select-sm py-1.5 shadow-none fw-semibold" style="font-size: 12px;">
+                    <select name="per_page"
+                            id="trashFilterPerPage"
+                            class="form-select form-select-sm py-1 shadow-none fw-semibold">
+
                         <option value="20" {{ request('per_page', '20') == '20' ? 'selected' : '' }}>20 / page</option>
-                        <option value="30" {{ request('per_page', '30') == '30' ? 'selected' : '' }}>30 / page</option>
-                        <option value="50" {{ request('per_page', '50') == '50' ? 'selected' : '' }}>50 / page</option>
-                        <option value="100" {{ request('per_page', '100') == '100' ? 'selected' : '' }}>100 / page</option>
-                        <option value="200" {{ request('per_page', '200') == '200' ? 'selected' : '' }}>200 / page</option>
-                        <option value="500" {{ request('per_page', '500') == '500' ? 'selected' : '' }}>500 / page</option>
+                        <option value="30" {{ request('per_page', '20') == '30' ? 'selected' : '' }}>30 / page</option>
+                        <option value="50" {{ request('per_page', '20') == '50' ? 'selected' : '' }}>50 / page</option>
+                        <option value="100" {{ request('per_page', '20') == '100' ? 'selected' : '' }}>100 / page</option>
+                        <option value="200" {{ request('per_page', '20') == '200' ? 'selected' : '' }}>200 / page</option>
+                        <option value="500" {{ request('per_page', '20') == '500' ? 'selected' : '' }}>500 / page</option>
                         <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>All</option>
+
                     </select>
                 </div>
 
-                <div class="col-12 d-flex gap-1.5 justify-content-end mt-2 pt-2 border-top">
-                    <button type="submit" class="btn me-1 w-50 btn-primary btn-sm px-3.5 py-1.5 fw-semibold shadow-xs" style="font-size: 12px;">
+                <!-- Filter Actions -->
+                <div class="col-12 d-flex gap-2 justify-content-end mt-2 filter-actions">
+
+                    <button type="submit"
+                            class="btn btn-primary btn-sm px-4 flex-fill fw-semibold shadow-sm">
+                        <i class="fas fa-filter me-1"></i>
                         Filter
                     </button>
-                    <button type="button" class="btn ms-1 w-50 btn-light btn-sm border px-3 py-1.5 text-muted shadow-xs d-inline-flex align-items-center gap-1.5" onclick="resetTrashFilters()" title="Reset Filters" style="font-size: 12px;">
-                        <i class="fas fa-rotate-left"></i> <span>Reset</span>
+
+                    <button type="button"
+                            class="btn btn-light btn-sm border px-4 flex-fill text-muted shadow-sm d-inline-flex align-items-center justify-content-center gap-2"
+                            onclick="resetTrashFilters()"
+                            title="Reset Filters">
+                        <i class="fas fa-rotate-left"></i>
+                        <span>Reset</span>
                     </button>
+
                 </div>
+
             </div>
         </form>
     </div>
 
-    <!-- Table Card with Overlay -->
+    <!-- Trash Table Card -->
     <div class="trash-card-table overflow-hidden" id="trash-render-area">
+
+        <!-- AJAX Loading Overlay -->
         <div id="trashLoadingOverlay">
-            <div class="spinner-border text-danger" role="status" style="width: 2.2rem; height: 2.2rem;">
+            <div class="spinner-border text-danger" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
 
         <div class="table-responsive">
+
             <table class="table custom-trash-table align-middle mb-0" id="trash-table">
+
                 <thead>
                     <tr>
                         <th style="width: 45px;" class="ps-3">#</th>
@@ -229,37 +596,68 @@
                         <th class="text-end pe-3" style="width: 170px;">Actions</th>
                     </tr>
                 </thead>
+
                 <tbody id="trashTableBody">
                     @include('admin.users.partials.trash_rows', ['trashedUsers' => $trashedUsers])
                 </tbody>
+
             </table>
         </div>
 
-        <!-- Pagination with Stats -->
-        <div class="p-2.5 p-md-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50" id="trashPaginationWrapper">
-            <small class="text-muted bn-digit" id="trashStatsText" style="font-size: 11.5px;">
+        <!-- Pagination & Statistics -->
+        <div class="p-2 p-md-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 bg-light bg-opacity-50"
+             id="trashPaginationWrapper">
+
+            <small class="text-muted bn-digit" id="trashStatsText">
                 Showing {{ $trashedUsers->firstItem() ?? 0 }} to {{ $trashedUsers->lastItem() ?? 0 }} of {{$trashedUsers->total() }} trashed user(s)
             </small>
+
             <div id="trashPaginationLinks">
                 {{ $trashedUsers->links('pagination::bootstrap-5') }}
             </div>
+
         </div>
     </div>
 </div>
 
 <!-- Modal 1: Permanent Delete Confirmation -->
-<div class="modal fade" id="deleteConfirmDialog" tabindex="-1" aria-hidden="true" style="z-index: 106000;">
+<div class="modal fade"
+     id="deleteConfirmDialog"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 106000;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px;">
+
+        <div class="modal-content shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
-                <div class="text-danger mb-2">
+
+                <div class="text-danger mb-3">
                     <i class="fas fa-triangle-exclamation fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Permanent Delete?</h6>
-                <p class="text-muted small mb-3" id="deleteDialogUserText" style="font-size: 12px;"></p>
+
+                <h6 class="fw-bold text-dark mb-2">
+                    Permanent Delete?
+                </h6>
+
+                <p class="text-muted small mb-3" id="deleteDialogUserText"></p>
+
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-sm btn-light px-3 py-1 border shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Cancel</button>
-                    <button type="button" class="btn btn-sm btn-danger px-3 py-1 fw-bold shadow-xs" id="runDeleteBtn" onclick="runForceDelete()" style="font-size: 12px;">Delete Forever</button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-light px-3 py-1 border shadow-sm"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-sm btn-danger px-3 py-1 fw-bold shadow-sm"
+                            id="runDeleteBtn"
+                            onclick="runForceDelete()">
+                        Delete Forever
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -267,16 +665,38 @@
 </div>
 
 <!-- Modal 2: General Notice / Alert Dialog -->
-<div class="modal fade" id="trashNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+<div class="modal fade"
+     id="trashNoticeModal"
+     tabindex="-1"
+     aria-hidden="true"
+     style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px;">
+
+        <div class="modal-content shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
-                <div class="mb-2" id="trashNoticeModalIcon">
+
+                <div class="mb-3" id="trashNoticeModalIcon">
                     <i class="fas fa-circle-exclamation text-warning fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="trashNoticeModalTitle" style="font-size: 14px;">Notice</h6>
-                <p class="text-muted small mb-3" id="trashNoticeModalMsg" style="font-size: 12px;">Notice message.</p>
-                <button type="button" class="btn btn-primary btn-sm px-4 py-1 fw-semibold shadow-xs" data-bs-dismiss="modal" style="font-size: 12px;">Acknowledge</button>
+
+                <h6 class="fw-bold text-dark mb-2"
+                    id="trashNoticeModalTitle">
+                    Notice
+                </h6>
+
+                <p class="text-muted small mb-3"
+                   id="trashNoticeModalMsg">
+                    Notice message.
+                </p>
+
+                <button type="button"
+                        class="btn btn-primary btn-sm px-4 py-1 fw-semibold shadow-sm"
+                        data-bs-dismiss="modal">
+                    Acknowledge
+                </button>
+
             </div>
         </div>
     </div>
@@ -371,7 +791,7 @@
             if (data.success) {
                 document.getElementById('trashTableBody').innerHTML = data.html;
                 document.getElementById('trashPaginationLinks').innerHTML = data.pagination;
-                document.getElementById('trashStatsText').innerText = 
+                document.getElementById('trashStatsText').innerText =
                     `Showing ${data.firstItem} to ${data.lastItem} of ${data.total} trashed user(s)`;
 
                 window.history.replaceState({}, '', url);
@@ -606,4 +1026,5 @@
         }
     }
 </script>
+
 @endsection

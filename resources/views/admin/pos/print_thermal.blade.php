@@ -1,4 +1,6 @@
 @php
+    $branch = $branch ?? ($order->branch ?? null);
+
     $siteSettings = \Illuminate\Support\Facades\DB::table('settings')
         ->whereIn('key', [
             'footer_brand_title', 'footer_phone', 'footer_email', 
@@ -13,16 +15,24 @@
         ? $siteSettings['footer_brand_title'] 
         : ($siteTitle ?? ($siteSettings['site_title'] ?? ($siteSettings['logo_title'] ?? config('app.name', 'SHOP NOW BD ONLINE'))));
 
-    $sitePhone = !empty($order->branch_phone) ? $order->branch_phone : ($siteSettings['footer_phone'] ?? '');
-    $siteEmail = !empty($siteSettings['footer_email']) ? $siteSettings['footer_email'] : '';
-    $branchAddress = !empty($order->branch_address) ? $order->branch_address : ($siteSettings['company_address'] ?? ($siteSettings['contact_address'] ?? ''));
+    $sitePhone = !empty($order->branch_phone) 
+        ? $order->branch_phone 
+        : ($branch->phone ?? ($siteSettings['footer_phone'] ?? ''));
+
+    $siteEmail = !empty($branch->email) 
+        ? $branch->email 
+        : (!empty($siteSettings['footer_email']) ? $siteSettings['footer_email'] : '');
+
+    $branchAddress = !empty($order->branch_address) 
+        ? $order->branch_address 
+        : ($branch->address ?? ($siteSettings['company_address'] ?? ($siteSettings['contact_address'] ?? '')));
 
     // Central & Branch BIN Resolver
     $companyBin = !empty($companyBin) 
         ? $companyBin 
         : (!empty($order->branch_bin) 
             ? $order->branch_bin 
-            : ($order->bin_number ?? ($siteSettings['company_bin'] ?? ($siteSettings['bin_number'] ?? '001293847-0101'))));
+            : ($order->bin_number ?? ($branch->bin_number ?? ($siteSettings['company_bin'] ?? ($siteSettings['bin_number'] ?? '')))));
 
     $vatLabelText = !empty($vatLabel) ? $vatLabel : (!empty($siteSettings['vat_label']) ? $siteSettings['vat_label'] : 'Govt. VAT');
     $posVatDisplayMode = $siteSettings['pos_vat_display_mode'] ?? 'item_breakdown';
@@ -30,7 +40,7 @@
     $subtotalAmt   = (float)($order->subtotal ?? ($order->sub_total ?? 0));
     $grandTotalAmt = (float)($order->grand_total ?? ($order->total_amount ?? ($order->total ?? 0)));
     $discountAmt   = (float)($order->discount_amount ?? ($order->discount ?? 0));
-    $itemsList     = !empty($items) ? $items : [];
+    $itemsList     = !empty($items) ? $items : ($order->items ?? []);
 
     // ১. Delivery Charge (Strict: Input > 0 thaklei asbe, noyto 0)
     $deliveryFee = 0.0;
@@ -68,9 +78,11 @@
         }
     }
 
-    $customerName    = $order->customer_name ?? ($order->name ?? ($order->shipping_name ?? 'Walk-in Customer'));
-    $customerPhone   = $order->customer_phone ?? ($order->phone ?? ($order->shipping_phone ?? ''));
-    $customerAddress = $order->customer_address ?? ($order->address ?? ($order->shipping_address ?? ($order->bio ?? '')));
+    $customerName    = $order->customer_name ?? ($order->user?->name ?? ($order->name ?? ($order->shipping_name ?? 'Walk-in Customer')));
+    $customerPhone   = $order->customer_phone ?? ($order->user?->phone ?? ($order->phone ?? ($order->shipping_phone ?? '')));
+    $customerAddress = $order->customer_address ?? ($order->user?->address ?? ($order->address ?? ($order->shipping_address ?? '')));
+
+    $salesPersonName = $order->salesPerson?->name ?? ($order->creator?->name ?? null);
 
     $cleanInvoiceNo = preg_replace('/[^A-Za-z0-9_-]/', '', $order->invoice_no ?? ('POS-' . $order->id));
     $verifyUrl      = \Illuminate\Support\Facades\Route::has('order.confirmation') 
@@ -229,7 +241,7 @@
             </h3>
 
             <div style="font-size: 9.5px; color: #334155; margin-top: 2px;">
-                {{ !empty($order->branch_name) ? $order->branch_name : 'Main Outlet' }}
+                {{ !empty($order->branch_name) ? $order->branch_name : ($branch->name ?? 'Main Outlet') }}
                 @if(!empty($branchAddress)) | {{ $branchAddress }} @endif
             </div>
 
@@ -264,6 +276,11 @@
                     Address: {{ $customerAddress }}
                 </div>
             @endif
+            @if(!empty($salesPersonName))
+                <div style="font-size: 9px; color: #475569; margin-top: 2px;">
+                    Served By: <strong class="font-monospace">{{ $salesPersonName }}</strong>
+                </div>
+            @endif
         </div>
 
         <div class="dashed-line"></div>
@@ -280,15 +297,15 @@
             <tbody>
                 @foreach($itemsList as $it)
                     @php
-                        $title = $it->product_title ?? ($it->title ?? ($it->main_title ?? ($it->product_name ?? 'Product')));
-                        $sku = $it->pv_sku ?? ($it->sku ?? ($it->product_code ?? ($it->main_sku ?? '')));
+                        $title = $it->product_title ?? ($it->title ?? ($it->main_title ?? ($it->product_name ?? ($it->product->name ?? ($it->product->title ?? 'Product')))));
+                        $sku = $it->pv_sku ?? ($it->sku ?? ($it->product_code ?? ($it->main_sku ?? ($it->variant?->sku ?? ($it->product?->sku ?? '')))));
                         $qty = (int)($it->quantity ?? ($it->qty ?? 1));
                         $unitPrice = (float)($it->unit_price ?? ($it->price ?? 0));
                         $subtotal = (float)($it->subtotal ?? ($it->total ?? ($unitPrice * $qty)));
 
                         $varParts = array_filter([
-                            $it->color ?? ($it->pv_color ?? null),
-                            $it->size ?? ($it->pv_size ?? null)
+                            $it->color ?? ($it->pv_color ?? ($it->variant?->color ?? null)),
+                            $it->size ?? ($it->pv_size ?? ($it->variant?->size ?? null))
                         ]);
                         $varText = !empty($it->variant_title) ? $it->variant_title : (count($varParts) > 0 ? implode(' / ', $varParts) : null);
                         $lineTaxRate = isset($it->tax_rate) ? (float)$it->tax_rate : 0.0;
@@ -359,7 +376,7 @@
                 <span>{{ number_format($grandTotalAmt, 2) }} ৳</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 1.5px 0;">
-                <span>Paid ({{ $order->payment_method ?? 'Cash' }}):</span>
+                <span>Paid ({{ ucfirst($order->payment_method ?? 'Cash') }}):</span>
                 <span class="fw-bold" style="color: #16a34a;">{{ number_format($paidAmt, 2) }} ৳</span>
             </div>
             @if($dueAmt > 0)
@@ -381,7 +398,6 @@
 
         <div class="text-center" style="font-size: 8.5px; color: #64748b; margin-top: 6px; line-height: 1.3;">
             Thank you for shopping with <strong>{{ $siteName }}</strong>!<br>
-            Please keep receipt for warranty/exchange.
         </div>
 
     </div>

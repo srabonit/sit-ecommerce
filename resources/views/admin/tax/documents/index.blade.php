@@ -3,30 +3,32 @@
 @section('title', 'Tax Documents Vault')
 
 @section('admin_content')
-<div class="container-fluid px-2 px-md-3 py-2 tax-documents-wrapper">
-    <!-- Header & Action Controls -->
-    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2 mb-3">
-        <div>
-            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-                <h4 class="fw-bold mb-0 text-dark fs-5 fs-md-4 d-flex align-items-center gap-2">
-                    <i class="fas fa-file-shield text-primary"></i> Tax Documents Vault
-                </h4>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 fw-medium" style="font-size: 11px;">
-                    {{ $documents->total() }} Documents
-                </span>
+<div class="container-fluid px-2 px-md-3 py-3 tax-documents-wrapper">
+  <!-- Header & Action Controls -->
+<div class="tax-documents-header d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3 min-w-0">
+        <span class="d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; background: #e0f2fe; color: #0284c7; border-radius: 8px; font-size: 16px;">
+            <i class="fas fa-file-shield"></i>
+        </span>
+        <div class="min-w-0 lh-sm">
+            <h4 class="fw-bold mb-1 text-dark text-truncate" style="font-size: 16px;">
+                Tax Documents
+            </h4>
+            <div class="text-secondary text-truncate m-0 p-0" style="font-size: 11.5px;">
+                NBR Audits &amp; Legal Documents.
             </div>
-            <p class="text-secondary small mb-0">Secure repository for NBR audits, BIN certificates, trade licenses, purchase vouchers, and tax exemptions.</p>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 w-100 w-sm-auto justify-content-start justify-content-sm-end page-actions">
-            <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
-                <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
-            </a>
-            <button type="button" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                <i class="fas fa-upload"></i> <span>Upload Document</span>
-            </button>
         </div>
     </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap flex-lg-nowrap justify-content-start justify-content-lg-end page-actions w-100 w-lg-auto">
+        <a href="{{ route('admin.tax.dashboard') }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 text-nowrap flex-shrink-0" style="height: 34px;">
+            <i class="fas fa-arrow-left"></i> <span>Dashboard</span>
+        </a>
+        <button type="button" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center gap-1 text-nowrap flex-shrink-0" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" style="height: 34px;">
+            <i class="fas fa-upload"></i> <span>Upload Document</span>
+        </button>
+    </div>
+</div>
 
     <!-- Alert Notifications -->
     @if(session('success'))
@@ -68,7 +70,7 @@
     <div class="row g-2 mb-3">
         <!-- 1. Total Documents -->
         <div class="col-6 col-md-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
+            <div class="card tax-metric-card border-0 shadow-sm bg-white h-100">
                 <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
                         <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Total Documents</span>
@@ -83,7 +85,7 @@
 
         <!-- 2. Valid Documents -->
         <div class="col-6 col-md-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
+            <div class="card tax-metric-card border-0 shadow-sm bg-white h-100">
                 <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
                         <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Valid Records</span>
@@ -100,7 +102,7 @@
 
         <!-- 3. Expiring Soon -->
         <div class="col-6 col-md-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
+            <div class="card tax-metric-card border-0 shadow-sm bg-white h-100">
                 <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
                         <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Expiring (30 Days)</span>
@@ -117,7 +119,7 @@
 
         <!-- 4. Expired Records -->
         <div class="col-6 col-md-3">
-            <div class="card border border-light-subtle shadow-sm bg-white h-100">
+            <div class="card tax-metric-card border-0 shadow-sm bg-white h-100">
                 <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between gap-2">
                     <div class="overflow-hidden">
                         <span class="text-secondary small fw-semibold text-uppercase text-truncate d-block" style="font-size: 11px; letter-spacing: 0.5px;">Expired Records</span>
@@ -134,7 +136,7 @@
     </div>
 
     <!-- Search & Filter Bar -->
-    <div class="card border border-light-subtle shadow-sm bg-white mb-3">
+    <div class="card tax-documents-filter-card border-0 shadow-sm bg-white mb-4">
         <div class="card-body p-2 p-md-3">
             <form action="{{ route('admin.tax.documents.index') }}" method="GET" class="row g-2 align-items-center">
                 <!-- Search Keyword -->
@@ -181,9 +183,9 @@
     </div>
 
     <!-- Documents Data Table Card -->
-    <div class="card border border-light-subtle shadow-sm bg-white mb-3">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 text-nowrap" style="font-size: 12.5px;">
+    <div class="card tax-documents-table-card border-0 shadow-sm bg-white mb-4">
+        <div class="table-responsive tax-documents-table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap tax-documents-table">
                 <thead class="table-light text-secondary">
                     <tr>
                         <th class="ps-3 py-2" style="width: 45px;">#</th>
@@ -304,8 +306,8 @@
 <!-- Modal 1: Upload Document -->
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-document-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="uploadDocumentModalLabel">
                     <i class="fas fa-upload text-primary"></i> Upload Compliance Document
                 </h6>
@@ -313,7 +315,7 @@
             </div>
             <form action="{{ route('admin.tax.documents.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-body p-3">
+                <div class="modal-body p-4">
                     <div class="row g-2 g-md-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-semibold text-dark small mb-1">Document Type <span class="text-danger">*</span></label>
@@ -327,7 +329,7 @@
 
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-semibold text-dark small mb-1">Document Title <span class="text-danger">*</span></label>
-                            <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g. BIN Certificate 2026" required>
+                            <input type="text" name="title" class="form-control form-control-sm" placeholder="BIN Certificate 2026" required>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -369,7 +371,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 px-3 pb-3">
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold d-inline-flex align-items-center gap-1">
                         <i class="fas fa-save"></i> <span>Save Document</span>
@@ -383,8 +385,8 @@
 <!-- Modal 2: Edit Document -->
 <div class="modal fade" id="editDocumentModal" tabindex="-1" aria-labelledby="editDocumentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-document-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="editDocumentModalLabel">
                     <i class="fas fa-edit text-primary"></i> Edit Document Record
                 </h6>
@@ -393,7 +395,7 @@
             <form id="editDocumentForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                <div class="modal-body p-3">
+                <div class="modal-body p-4">
                     <div class="row g-2 g-md-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-semibold text-dark small mb-1">Document Type <span class="text-danger">*</span></label>
@@ -446,7 +448,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0 px-3 pb-3">
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3 fw-semibold d-inline-flex align-items-center gap-1">
                         <i class="fas fa-check-circle"></i> <span>Update Document</span>
@@ -460,17 +462,17 @@
 <!-- Modal 3: View Document Details -->
 <div class="modal fade" id="viewDocumentModal" tabindex="-1" aria-labelledby="viewDocumentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border border-light-subtle shadow">
-            <div class="modal-header border-bottom py-2 px-3">
+        <div class="modal-content tax-document-modal-content border-0 shadow">
+            <div class="modal-header border-bottom py-3 px-4">
                 <h6 class="modal-title fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="viewDocumentModalLabel">
                     <i class="fas fa-file-shield text-info"></i> Document Details
                 </h6>
                 <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-3" id="viewDocumentModalBody">
+            <div class="modal-body p-4" id="viewDocumentModalBody">
                 <div class="text-center py-4"><i class="fas fa-spinner fa-spin fs-4 text-primary"></i></div>
             </div>
-            <div class="modal-footer border-0 pt-0 px-3 pb-3">
+            <div class="modal-footer border-0 pt-0 px-4 pb-4">
                 <button type="button" class="btn btn-sm btn-light border px-3" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -484,7 +486,15 @@
 </form>
 
 <style>
-    /* Strict 5px Radius Rule */
+    /* Tax Documents Vault — Kaiadmin Lite inspired White Classic UI */
+    .tax-documents-wrapper {
+        --tax-doc-border: #e6e9ef;
+        --tax-doc-muted: #667085;
+        --tax-doc-primary: var(--bs-primary, #1572e8);
+        color: #2a2f3a;
+        min-width: 0;
+    }
+
     .tax-documents-wrapper .card,
     .tax-documents-wrapper .btn,
     .tax-documents-wrapper .form-control,
@@ -493,16 +503,141 @@
     .tax-documents-wrapper .badge,
     .tax-documents-wrapper .alert,
     .tax-documents-wrapper .rounded-1,
-    .modal-content,
-    .modal-content .btn,
-    .modal-content .form-control,
-    .modal-content .form-select,
-    .modal-content .input-group-text,
-    .modal-content .badge {
+    .tax-document-modal-content,
+    .tax-document-modal-content .btn,
+    .tax-document-modal-content .form-control,
+    .tax-document-modal-content .form-select,
+    .tax-document-modal-content .input-group-text,
+    .tax-document-modal-content .badge {
         border-radius: 5px !important;
     }
 
-    /* Button Group Radius */
+    .tax-documents-wrapper .card,
+    .tax-document-modal-content {
+        border: 1px solid var(--tax-doc-border) !important;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(28, 39, 60, .045) !important;
+        overflow: hidden;
+    }
+
+    .tax-documents-wrapper .tax-documents-header h4 {
+        font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+        letter-spacing: -.025em;
+    }
+
+    .tax-documents-wrapper .tax-documents-header p {
+        line-height: 1.55;
+        max-width: 760px;
+    }
+
+    .tax-documents-wrapper .btn,
+    .tax-document-modal-content .btn {
+        min-height: 34px;
+        font-weight: 600;
+        letter-spacing: .005em;
+        transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .tax-documents-wrapper .btn:focus-visible,
+    .tax-document-modal-content .btn:focus-visible,
+    .tax-documents-wrapper .form-control:focus,
+    .tax-documents-wrapper .form-select:focus,
+    .tax-document-modal-content .form-control:focus,
+    .tax-document-modal-content .form-select:focus {
+        box-shadow: 0 0 0 .2rem rgba(21, 114, 232, .12);
+    }
+
+    .tax-documents-wrapper .form-control,
+    .tax-documents-wrapper .form-select,
+    .tax-document-modal-content .form-control,
+    .tax-document-modal-content .form-select {
+        min-height: 38px;
+        border-color: #dfe3eb;
+        color: #344054;
+        font-size: .875rem;
+    }
+
+    .tax-documents-wrapper .form-control::placeholder,
+    .tax-document-modal-content .form-control::placeholder {
+        color: #98a2b3;
+        opacity: 1;
+    }
+
+    .tax-documents-wrapper .input-group-text {
+        border-color: #dfe3eb;
+    }
+
+    .tax-documents-wrapper .tax-metric-card {
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .tax-documents-wrapper .tax-metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 14px rgba(28, 39, 60, .075) !important;
+    }
+
+    .tax-documents-wrapper .metric-value {
+        font-size: clamp(1.2rem, 1.8vw, 1.55rem);
+        line-height: 1.2;
+        letter-spacing: -.025em;
+    }
+
+    .tax-documents-wrapper .tax-documents-filter-card .card-body {
+        padding: 1rem;
+    }
+
+    .tax-documents-wrapper .tax-documents-table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tax-documents-wrapper .tax-documents-table {
+        width: 100%;
+        min-width: 1050px;
+        font-size: 12.5px;
+        color: #475467;
+        border-color: #edf0f4;
+    }
+
+    .tax-documents-wrapper .tax-documents-table thead th {
+        padding: .8rem .7rem;
+        background: #f8f9fc;
+        color: #667085;
+        font-size: .7rem;
+        font-weight: 700;
+        letter-spacing: .045em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--tax-doc-border);
+    }
+
+    .tax-documents-wrapper .tax-documents-table tbody td {
+        padding: .75rem .7rem;
+        vertical-align: middle;
+        border-color: #edf0f4;
+    }
+
+    .tax-documents-wrapper .tax-documents-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .tax-documents-wrapper .tax-documents-table tbody tr:hover {
+        --bs-table-accent-bg: #f8faff;
+    }
+
+    .tax-documents-wrapper .tax-documents-table .badge {
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+
+    .tax-documents-wrapper .tax-documents-table .btn-group .btn {
+        min-height: 30px;
+        padding: .25rem .5rem;
+    }
+
     .tax-documents-wrapper .btn-group .btn:first-child {
         border-top-left-radius: 5px !important;
         border-bottom-left-radius: 5px !important;
@@ -513,48 +648,137 @@
         border-bottom-right-radius: 5px !important;
     }
 
-    /* Fluid Typographic Metric Value */
-    .tax-documents-wrapper .metric-value {
-        font-size: clamp(1.15rem, 1.8vw, 1.45rem);
-        line-height: 1.2;
+    .tax-documents-wrapper .tax-documents-table-card .card-footer {
+        border-top: 1px solid var(--tax-doc-border) !important;
     }
 
-    /* Modal Max Height */
-    .tax-documents-wrapper .modal-body {
-        max-height: 75vh;
+    .tax-documents-wrapper .pagination {
+        gap: .25rem;
+        margin-bottom: 0;
+    }
+
+    .tax-documents-wrapper .page-link {
+        border-radius: 5px !important;
+        font-size: .8rem;
+    }
+
+    .tax-document-modal-content {
+        overflow: hidden;
+    }
+
+    .tax-document-modal-content .modal-header {
+        background: #fff;
+        border-color: var(--tax-doc-border) !important;
+    }
+
+    .tax-document-modal-content .modal-title {
+        font-size: 1rem;
+    }
+
+    .tax-document-modal-content .modal-body {
+        max-height: 72vh;
         overflow-y: auto;
     }
 
-    /* Responsive Mobile Optimization */
-    @media (max-width: 575.98px) {
-        .tax-documents-wrapper {
-            padding-left: 6px !important;
-            padding-right: 6px !important;
+    .tax-document-modal-content .form-label {
+        font-size: .8rem;
+        margin-bottom: .4rem;
+    }
+
+    .tax-document-modal-content .form-control {
+        min-height: 40px;
+    }
+
+    .tax-document-modal-content textarea.form-control {
+        min-height: 88px;
+    }
+
+    .tax-document-modal-content .list-group-item {
+        border-color: #edf0f4;
+        gap: .75rem;
+    }
+
+    .tax-document-modal-content .list-group-item > :last-child {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+    @media (min-width: 1200px) {
+        .tax-documents-wrapper .tax-documents-table {
+            min-width: 0;
         }
 
-        .tax-documents-wrapper .metric-value {
-            font-size: 1.15rem;
+        .tax-documents-wrapper .tax-documents-table thead th,
+        .tax-documents-wrapper .tax-documents-table tbody td {
+            padding-left: .55rem;
+            padding-right: .55rem;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .tax-documents-wrapper {
+            padding-left: .5rem !important;
+            padding-right: .5rem !important;
+        }
+
+        .tax-documents-wrapper .tax-documents-header {
+            align-items: stretch !important;
+        }
+
+        .tax-documents-wrapper .page-actions {
+            width: 100%;
+        }
+
+        .tax-documents-wrapper .tax-documents-filter-card .card-body {
+            padding: .85rem;
+        }
+
+        .tax-documents-wrapper .tax-documents-table {
+            min-width: 1050px;
+        }
+
+        .tax-documents-wrapper .tax-documents-table-card .card-footer {
+            padding: .75rem !important;
+        }
+
+        .tax-documents-wrapper .tax-metric-card .card-body {
+            padding: .8rem !important;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .tax-documents-wrapper .tax-documents-header .page-actions .btn {
+            flex: 1 1 0;
+            justify-content: center;
+            white-space: nowrap;
         }
 
         #uploadDocumentModal .modal-dialog,
         #editDocumentModal .modal-dialog,
         #viewDocumentModal .modal-dialog {
-            margin: 0.5rem;
+            margin: .5rem;
         }
 
-        #uploadDocumentModal .modal-body,
-        #editDocumentModal .modal-body,
-        #viewDocumentModal .modal-body {
-            padding: 0.75rem !important;
+        #uploadDocumentModal .tax-document-modal-content .modal-body,
+        #editDocumentModal .tax-document-modal-content .modal-body,
+        #viewDocumentModal .tax-document-modal-content .modal-body {
+            padding: 1rem !important;
         }
 
-        #viewDocumentModal .list-group-item.d-flex {
-            gap: 0.75rem;
+        #uploadDocumentModal .tax-document-modal-content .modal-header,
+        #editDocumentModal .tax-document-modal-content .modal-header,
+        #viewDocumentModal .tax-document-modal-content .modal-header {
+            padding: .85rem 1rem !important;
         }
 
-        #viewDocumentModal .list-group-item.d-flex > :last-child {
-            text-align: right;
-            overflow-wrap: anywhere;
+        #uploadDocumentModal .tax-document-modal-content .modal-footer,
+        #editDocumentModal .tax-document-modal-content .modal-footer,
+        #viewDocumentModal .tax-document-modal-content .modal-footer {
+            padding: 0 1rem 1rem !important;
+        }
+
+        .tax-documents-wrapper .metric-value {
+            font-size: 1.15rem;
         }
     }
 </style>

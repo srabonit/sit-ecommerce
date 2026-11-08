@@ -52,9 +52,9 @@ class InventoryController extends Controller
                 SUM(CASE WHEN quantity_change > 0 THEN quantity_change * COALESCE(unit_cost, 0) ELSE 0 END) as stock_in_val,
                 SUM(CASE WHEN quantity_change < 0 THEN ABS(quantity_change) ELSE 0 END) as stock_out_units,
                 SUM(CASE WHEN quantity_change < 0 THEN ABS(quantity_change) * COALESCE(unit_cost, 0) ELSE 0 END) as stock_out_val,
-                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(quantity_change) ELSE 0 END) as sales_units,
-                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(quantity_change) * COALESCE(unit_price, 0) ELSE 0 END) as sales_rev,
-                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(quantity_change) * COALESCE(unit_cost, 0) ELSE 0 END) as sales_cogs
+                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(quantity_change) ELSE 0 END) as sales_units,
+                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(quantity_change) * COALESCE(unit_price, 0) ELSE 0 END) as sales_rev,
+                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(quantity_change) * COALESCE(unit_cost, 0) ELSE 0 END) as sales_cogs
             ")
             ->first();
 
@@ -111,6 +111,9 @@ class InventoryController extends Controller
             ->take(8)
             ->get();
 
+        $warehouses = Schema::hasTable('warehouses') ? DB::table('warehouses')->get() : collect();
+        $branches   = Schema::hasTable('branches') ? DB::table('branches')->get() : collect();
+
         return view('admin.inventory.dashboard', compact(
             'valuation',
             'todayMovements',
@@ -118,7 +121,9 @@ class InventoryController extends Controller
             'totalVariants',
             'lowStockCount',
             'outOfStockCount',
-            'recentMovements'
+            'recentMovements',
+            'warehouses',
+            'branches'
         ));
     }
 
@@ -133,9 +138,12 @@ class InventoryController extends Controller
         }
         $suppliers = Schema::hasTable('suppliers') ? $suppliersQuery->orderBy('name', 'asc')->get() : collect();
 
+        $warehouses = Schema::hasTable('warehouses') ? DB::table('warehouses')->get() : collect();
+        $branches   = Schema::hasTable('branches') ? DB::table('branches')->get() : collect();
+
         $defaultPoNumber = 'PO-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
-        return view('admin.inventory.stock_in', compact('suppliers', 'defaultPoNumber'));
+        return view('admin.inventory.stock_in', compact('suppliers', 'warehouses', 'branches', 'defaultPoNumber'));
     }
 
     public function storeStockIn(Request $request)
@@ -147,6 +155,10 @@ class InventoryController extends Controller
             'purchase_cost'       => 'nullable|numeric|min:0',
             'selling_price'       => 'nullable|numeric|min:0',
             'supplier_id'         => 'nullable|integer',
+            'warehouse_id'        => 'nullable|integer',
+            'branch_id'           => 'nullable|integer',
+            'batch_no'            => 'nullable|string|max:100',
+            'expiry_date'         => 'nullable|date',
             'supplier_invoice_no' => 'nullable|string|max:100',
             'reference_id'        => 'nullable|string|max:100',
             'movement_type'       => 'required|string|in:purchase_in,opening_stock,customer_return,supplier_replacement,stock_correction,other_addition',
@@ -155,13 +167,21 @@ class InventoryController extends Controller
             'notes'               => 'nullable|string|max:1000',
         ]);
 
-        $productId = (int) $request->product_id;
-        $variantId = $request->filled('variant_id') ? (int) $request->variant_id : null;
-        $quantity  = (int) $request->quantity;
-        $cost      = $request->filled('purchase_cost') ? (float) $request->purchase_cost : null;
-        $selling   = $request->filled('selling_price') ? (float) $request->selling_price : null;
-        $refId     = $request->filled('reference_id') ? trim($request->reference_id) : ('IN-' . date('Ymd') . '-' . strtoupper(Str::random(5)));
-        $token     = 'STKIN-' . md5($productId . '-' . ($variantId ?? 0) . '-' . $refId . '-' . $quantity . '-' . ($cost ?? 0));
+        $productId   = (int) $request->product_id;
+        $variantId   = $request->filled('variant_id') ? (int) $request->variant_id : null;
+        $quantity    = (int) $request->quantity;
+        $cost        = $request->filled('purchase_cost') ? (float) $request->purchase_cost : null;
+        $selling     = $request->filled('selling_price') ? (float) $request->selling_price : null;
+        $warehouseId = $request->filled('warehouse_id') ? (int) $request->warehouse_id : null;
+        $branchId    = $request->filled('branch_id') ? (int) $request->branch_id : null;
+        $batchNo     = $request->input('batch_no');
+        $expiryDate  = $request->input('expiry_date');
+
+        $refId = $request->filled('reference_id') 
+            ? trim($request->reference_id) 
+            : ('IN-' . date('Ymd') . '-' . strtoupper(Str::random(5)));
+            
+        $token = 'STKIN-' . md5($productId . '-' . ($variantId ?? 0) . '-' . $refId . '-' . $quantity . '-' . ($cost ?? 0));
 
         try {
             $result = InventoryService::stockIn(
@@ -177,12 +197,17 @@ class InventoryController extends Controller
                 Auth::id(),
                 $request->input('notes'),
                 $request->boolean('update_wac', true),
-                $token
+                $token,
+                $warehouseId,
+                $branchId,
+                $batchNo,
+                $expiryDate
             );
 
+            // Optional automated Purchase entry if supplier selected
             if (Schema::hasTable('purchases') && Schema::hasTable('purchase_items') && $request->filled('supplier_id')) {
-                $purchaseId = DB::table('purchases')->insertGetId([
-                    'purchase_no'         => $refId,
+                $purchaseCols = Schema::getColumnListing('purchases');
+                $purchaseData = [
                     'supplier_id'         => (int) $request->supplier_id,
                     'supplier_invoice_no' => $request->input('supplier_invoice_no'),
                     'purchase_date'       => $request->input('stock_in_date', now()->toDateString()),
@@ -196,9 +221,25 @@ class InventoryController extends Controller
                     'created_by'          => Auth::id(),
                     'created_at'          => now(),
                     'updated_at'          => now(),
-                ]);
+                ];
 
-                DB::table('purchase_items')->insert([
+                if (in_array('purchase_number', $purchaseCols)) {
+                    $purchaseData['purchase_number'] = $refId;
+                }
+                if (in_array('purchase_no', $purchaseCols)) {
+                    $purchaseData['purchase_no'] = $refId;
+                }
+                if (in_array('warehouse_id', $purchaseCols)) {
+                    $purchaseData['warehouse_id'] = $warehouseId;
+                }
+                if (in_array('branch_id', $purchaseCols)) {
+                    $purchaseData['branch_id'] = $branchId;
+                }
+
+                $purchaseId = DB::table('purchases')->insertGetId($purchaseData);
+
+                $itemCols = Schema::getColumnListing('purchase_items');
+                $itemData = [
                     'purchase_id' => $purchaseId,
                     'product_id'  => $productId,
                     'variant_id'  => $variantId,
@@ -207,7 +248,16 @@ class InventoryController extends Controller
                     'subtotal'    => round(($cost ?? 0) * $quantity, 2),
                     'created_at'  => now(),
                     'updated_at'  => now(),
-                ]);
+                ];
+
+                if (in_array('batch_no', $itemCols)) {
+                    $itemData['batch_no'] = $batchNo;
+                }
+                if (in_array('expiry_date', $itemCols)) {
+                    $itemData['expiry_date'] = $expiryDate;
+                }
+
+                DB::table('purchase_items')->insert($itemData);
             }
 
             if ($request->ajax()) {
@@ -233,7 +283,10 @@ class InventoryController extends Controller
     public function stockOut(Request $request)
     {
         $defaultOutRef = 'OUT-' . date('Ymd') . '-' . strtoupper(Str::random(4));
-        return view('admin.inventory.stock_out', compact('defaultOutRef'));
+        $warehouses    = Schema::hasTable('warehouses') ? DB::table('warehouses')->get() : collect();
+        $branches      = Schema::hasTable('branches') ? DB::table('branches')->get() : collect();
+
+        return view('admin.inventory.stock_out', compact('defaultOutRef', 'warehouses', 'branches'));
     }
 
     public function storeStockOut(Request $request)
@@ -242,16 +295,26 @@ class InventoryController extends Controller
             'product_id'    => 'required|integer|exists:products,id',
             'variant_id'    => 'nullable|integer',
             'quantity'      => 'required|integer|min:1',
+            'warehouse_id'  => 'nullable|integer',
+            'branch_id'     => 'nullable|integer',
+            'batch_no'      => 'nullable|string|max:100',
             'movement_type' => 'required|string|in:damage_out,expired_out,supplier_return,internal_use,lost_stock,adjustment_out,other_removal',
             'reference_id'  => 'nullable|string|max:100',
             'notes'         => 'nullable|string|max:1000',
         ]);
 
-        $productId = (int) $request->product_id;
-        $variantId = $request->filled('variant_id') ? (int) $request->variant_id : null;
-        $quantity  = (int) $request->quantity;
-        $refId     = $request->filled('reference_id') ? trim($request->reference_id) : ('OUT-' . date('Ymd') . '-' . strtoupper(Str::random(5)));
-        $token     = 'STKOUT-' . md5($productId . '-' . ($variantId ?? 0) . '-' . $refId . '-' . $quantity);
+        $productId   = (int) $request->product_id;
+        $variantId   = $request->filled('variant_id') ? (int) $request->variant_id : null;
+        $quantity    = (int) $request->quantity;
+        $warehouseId = $request->filled('warehouse_id') ? (int) $request->warehouse_id : null;
+        $branchId    = $request->filled('branch_id') ? (int) $request->branch_id : null;
+        $batchNo     = $request->input('batch_no');
+
+        $refId = $request->filled('reference_id') 
+            ? trim($request->reference_id) 
+            : ('OUT-' . date('Ymd') . '-' . strtoupper(Str::random(5)));
+            
+        $token = 'STKOUT-' . md5($productId . '-' . ($variantId ?? 0) . '-' . $refId . '-' . $quantity);
 
         try {
             $result = InventoryService::stockOut(
@@ -263,7 +326,10 @@ class InventoryController extends Controller
                 'stock_out_form',
                 Auth::id(),
                 $request->input('notes'),
-                $token
+                $token,
+                $warehouseId,
+                $branchId,
+                $batchNo
             );
 
             if ($request->ajax()) {
@@ -482,6 +548,14 @@ class InventoryController extends Controller
             $query->where('inventory_movements.product_id', (int) $request->product_id);
         }
 
+        if ($request->filled('warehouse_id') && Schema::hasColumn('inventory_movements', 'warehouse_id')) {
+            $query->where('inventory_movements.warehouse_id', (int) $request->warehouse_id);
+        }
+
+        if ($request->filled('branch_id') && Schema::hasColumn('inventory_movements', 'branch_id')) {
+            $query->where('inventory_movements.branch_id', (int) $request->branch_id);
+        }
+
         if ($request->filled('search')) {
             $search = trim($request->search);
             $cleanRef = ltrim($search, '#');
@@ -581,6 +655,24 @@ class InventoryController extends Controller
             ? DB::table('product_variants')->where('product_id', $product->id)->get()
             : collect();
 
+        // Warehouse & Branch breakdowns if product_stocks table exists
+        $warehouseStocks = collect();
+        if (Schema::hasTable('product_stocks')) {
+            $wsQuery = DB::table('product_stocks')
+                ->where('product_stocks.product_id', $product->id);
+
+            if (Schema::hasTable('warehouses')) {
+                $wsQuery->leftJoin('warehouses', 'product_stocks.warehouse_id', '=', 'warehouses.id')
+                        ->addSelect('warehouses.name as warehouse_name');
+            }
+            if (Schema::hasTable('branches')) {
+                $wsQuery->leftJoin('branches', 'product_stocks.branch_id', '=', 'branches.id')
+                        ->addSelect('branches.name as branch_name');
+            }
+
+            $warehouseStocks = $wsQuery->addSelect('product_stocks.*')->get();
+        }
+
         $selectedVariantId = $request->filled('variant_id') ? (int) $request->variant_id : null;
 
         $movementsQuery = DB::table('inventory_movements')
@@ -605,14 +697,15 @@ class InventoryController extends Controller
             ->selectRaw("
                 SUM(CASE WHEN quantity_change > 0 THEN quantity_change ELSE 0 END) as total_in,
                 SUM(CASE WHEN quantity_change < 0 THEN ABS(quantity_change) ELSE 0 END) as total_out,
-                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(quantity_change) ELSE 0 END) as total_sold,
-                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(quantity_change) * COALESCE(unit_price, 0) ELSE 0 END) as total_revenue
+                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(quantity_change) ELSE 0 END) as total_sold,
+                SUM(CASE WHEN movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(quantity_change) * COALESCE(unit_price, 0) ELSE 0 END) as total_revenue
             ")
             ->first();
 
         return view('admin.inventory.product_stock_details', compact(
             'product',
             'variants',
+            'warehouseStocks',
             'movements',
             'aggregates',
             'selectedVariantId'
@@ -691,9 +784,9 @@ class InventoryController extends Controller
                 DB::raw("SUM(CASE WHEN inventory_movements.quantity_change > 0 THEN inventory_movements.quantity_change ELSE 0 END) as stock_in_qty"),
                 DB::raw("SUM(CASE WHEN inventory_movements.quantity_change > 0 THEN inventory_movements.quantity_change * COALESCE(inventory_movements.unit_cost, 0) ELSE 0 END) as stock_in_val"),
                 DB::raw("SUM(CASE WHEN inventory_movements.quantity_change < 0 THEN ABS(inventory_movements.quantity_change) ELSE 0 END) as stock_out_qty"),
-                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(inventory_movements.quantity_change) ELSE 0 END) as sales_qty"),
-                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(inventory_movements.quantity_change) * COALESCE(inventory_movements.unit_price, 0) ELSE 0 END) as sales_rev"),
-                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale') THEN ABS(inventory_movements.quantity_change) * COALESCE(inventory_movements.unit_cost, 0) ELSE 0 END) as sales_cogs")
+                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(inventory_movements.quantity_change) ELSE 0 END) as sales_qty"),
+                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(inventory_movements.quantity_change) * COALESCE(inventory_movements.unit_price, 0) ELSE 0 END) as sales_rev"),
+                DB::raw("SUM(CASE WHEN inventory_movements.movement_type IN ('checkout_sale', 'pos_sale', 'order_processing_deduct') THEN ABS(inventory_movements.quantity_change) * COALESCE(inventory_movements.unit_cost, 0) ELSE 0 END) as sales_cogs")
             )
             ->groupBy(
                 'products.id', 'products.title', 'products.product_code',
@@ -791,6 +884,8 @@ class InventoryController extends Controller
             'new_stock'     => 'required|integer|min:0',
             'purchase_cost' => 'nullable|numeric|min:0',
             'apply_wac'     => 'nullable|boolean',
+            'warehouse_id'  => 'nullable|integer',
+            'branch_id'     => 'nullable|integer',
             'movement_type' => 'required|string|in:adjustment,purchase_receive,damage_loss,inventory_audit',
             'notes'         => 'nullable|string|max:500',
         ]);
@@ -806,7 +901,10 @@ class InventoryController extends Controller
                 'ADJ-' . strtoupper(uniqid()),
                 'admin_manual_adjustment',
                 Auth::id(),
-                $request->notes ?? 'Manual stock adjustment applied from inventory dashboard'
+                $request->notes ?? 'Manual stock adjustment applied from inventory dashboard',
+                null,
+                $request->filled('warehouse_id') ? (int) $request->warehouse_id : null,
+                $request->filled('branch_id') ? (int) $request->branch_id : null
             );
 
             if ($request->ajax()) {

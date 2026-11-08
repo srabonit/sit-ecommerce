@@ -3,15 +3,337 @@
 @section('title', 'SMS Settings & Gateway')
 
 @section('admin_content')
-<div class="container-fluid px-3 px-md-4 py-4">
+
+<style>
+/* SMS Settings — Kaiadmin-inspired Classic White UI
+   All rules are scoped to this page to avoid affecting other admin screens. */
+.sms-settings-page {
+    --sms-primary: var(--bs-primary, #1572e8);
+    --sms-primary-rgb: var(--bs-primary-rgb, 21, 114, 232);
+    --sms-page-bg: #f5f7fb;
+    --sms-card-bg: #ffffff;
+    --sms-border: #e7eaf0;
+    --sms-heading: #1d2635;
+    --sms-text: #596579;
+    --sms-muted: #8993a4;
+    --sms-radius: 10px;
+    color: var(--sms-heading);
+    min-width: 0;
+}
+.sms-settings-page,
+.sms-settings-page * { box-sizing: border-box; }
+.sms-settings-page .sms-page-heading h4 {
+    color: var(--sms-heading);
+    font-size: clamp(1.15rem, 1.6vw, 1.45rem);
+    letter-spacing: -.025em;
+}
+.sms-settings-page .sms-page-heading p {
+    color: var(--sms-muted) !important;
+    font-size: .84rem;
+}
+.sms-settings-page .btn {
+    min-height: 36px;
+    border-radius: 7px;
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .005em;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.sms-settings-page .btn:focus-visible,
+.sms-settings-page .form-control:focus,
+.sms-settings-page .form-select:focus,
+.sms-settings-page .form-check-input:focus {
+    box-shadow: 0 0 0 .2rem rgba(var(--sms-primary-rgb), .14);
+}
+.sms-settings-page .btn-primary {
+    background: var(--sms-primary);
+    border-color: var(--sms-primary);
+}
+.sms-settings-page .btn-primary:hover { filter: brightness(.94); transform: translateY(-1px); }
+.sms-settings-page .btn-outline-secondary {
+    color: #596579;
+    border-color: #dce1e9;
+    background: #fff;
+}
+.sms-settings-page .btn-outline-secondary:hover { background: #f5f7fa; color: #263247; }
+.sms-settings-page .card {
+    border: 1px solid var(--sms-border) !important;
+    border-radius: var(--sms-radius);
+    background: var(--sms-card-bg);
+    box-shadow: 0 2px 8px rgba(25, 42, 70, .035) !important;
+    overflow: hidden;
+}
+.sms-settings-page .card-header {
+    min-height: 49px;
+    padding: 13px 18px !important;
+    background: #fff !important;
+    border-color: var(--sms-border) !important;
+}
+.sms-settings-page .card-header h6 {
+    color: var(--sms-heading) !important;
+    font-size: .9rem;
+    font-weight: 650 !important;
+    letter-spacing: -.01em;
+}
+.sms-settings-page .card-body { min-width: 0; }
+.sms-settings-page .row { min-width: 0; }
+.sms-settings-page .col-12,
+.sms-settings-page [class*="col-"] { min-width: 0; }
+.sms-settings-page .row.g-3 { --bs-gutter-y: 1rem; }
+.sms-settings-page .row.g-4 { --bs-gutter-y: 1.25rem; }
+
+/* Overview metric cards */
+.sms-settings-page .sms-metric-card {
+    position: relative;
+    min-height: 112px;
+    transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.sms-settings-page .sms-metric-card:hover {
+    border-color: #d5deec !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(25, 42, 70, .065) !important;
+}
+.sms-settings-page .sms-metric-card .card-body { padding: 16px !important; }
+.sms-settings-page .sms-metric-card .sms-metric-label {
+    color: var(--sms-muted);
+    font-size: .76rem;
+    font-weight: 600;
+    letter-spacing: .015em;
+}
+.sms-settings-page .sms-metric-card h5 {
+    font-size: clamp(1.08rem, 1.5vw, 1.32rem);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.sms-settings-page .sms-metric-card .sms-metric-meta {
+    display: block;
+    margin-top: 5px;
+    color: var(--sms-muted);
+    font-size: .7rem !important;
+    line-height: 1.4;
+}
+
+/* Tabs */
+.sms-settings-page .sms-settings-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    width: 100%;
+    padding: 5px;
+    overflow-x: auto;
+    border: 1px solid var(--sms-border);
+    border-radius: 9px;
+    background: #fff;
+    scrollbar-width: thin;
+}
+.sms-settings-page .sms-settings-nav .nav-item { flex: 0 0 auto; }
+.sms-settings-page .sms-settings-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 14px !important;
+    border: 0 !important;
+    border-radius: 6px;
+    color: #687487 !important;
+    background: transparent;
+    font-size: .82rem;
+    font-weight: 600 !important;
+    white-space: nowrap;
+}
+.sms-settings-page .sms-settings-nav .nav-link:hover { background: #f5f7fb; color: var(--sms-heading) !important; }
+.sms-settings-page .sms-settings-nav .nav-link.active {
+    color: var(--sms-primary) !important;
+    background: rgba(var(--sms-primary-rgb), .09);
+    box-shadow: inset 0 0 0 1px rgba(var(--sms-primary-rgb), .08);
+}
+.sms-settings-page .tab-content { min-width: 0; }
+.sms-settings-page .tab-pane { min-width: 0; }
+
+/* Forms and switches */
+.sms-settings-page .form-label,
+.sms-settings-page .form-check-label {
+    color: #354155;
+    font-size: .8rem;
+}
+.sms-settings-page .form-label { margin-bottom: 6px; font-weight: 600 !important; }
+.sms-settings-page .form-control,
+.sms-settings-page .form-select {
+    min-height: 39px;
+    padding: 8px 11px;
+    border: 1px solid #dfe4ec;
+    border-radius: 7px;
+    color: #344054;
+    background-color: #fff;
+    font-size: .82rem;
+}
+.sms-settings-page textarea.form-control { min-height: 88px; }
+.sms-settings-page .form-control::placeholder { color: #a2aaba; opacity: 1; }
+.sms-settings-page .form-text {
+    margin-top: 5px;
+    color: var(--sms-muted) !important;
+    font-size: .72rem !important;
+    line-height: 1.45;
+}
+.sms-settings-page .form-check-input {
+    width: 2.15em;
+    height: 1.15em;
+    margin-top: .15em;
+    cursor: pointer;
+    border-color: #cbd3df;
+}
+.sms-settings-page .form-check-input:checked {
+    background-color: var(--sms-primary);
+    border-color: var(--sms-primary);
+}
+.sms-settings-page .form-check-label { cursor: pointer; }
+.sms-settings-page .form-switch { min-height: 22px; }
+.sms-settings-page .border-bottom { border-color: var(--sms-border) !important; }
+.sms-settings-page hr { border-color: var(--sms-border); opacity: 1; }
+
+/* Setting rows */
+.sms-settings-page .sms-setting-row {
+    gap: 16px;
+    min-width: 0;
+}
+.sms-settings-page .sms-setting-row > div:first-child { min-width: 0; }
+.sms-settings-page .sms-setting-row .form-check { flex: 0 0 auto; }
+.sms-settings-page .sms-setting-row label { line-height: 1.35; }
+.sms-settings-page .sms-setting-row .text-muted { color: var(--sms-muted) !important; }
+
+/* Order automation tiles */
+.sms-settings-page .sms-trigger-card {
+    height: 100%;
+    padding: 13px;
+    border: 1px solid var(--sms-border) !important;
+    border-radius: 8px;
+    background: #fff !important;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.sms-settings-page .sms-trigger-card:hover {
+    border-color: #cfd9e8 !important;
+    box-shadow: 0 4px 12px rgba(25, 42, 70, .05);
+    transform: translateY(-1px);
+}
+.sms-settings-page .sms-trigger-card .form-check {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.sms-settings-page .sms-trigger-card .form-check-input {
+    flex: 0 0 auto;
+    margin: 0;
+}
+.sms-settings-page .sms-trigger-card .form-check-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+.sms-settings-page .sms-trigger-card > span { line-height: 1.45; color: var(--sms-muted) !important; }
+
+/* Badges and alerts */
+.sms-settings-page .badge {
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: .68rem;
+    font-weight: 650;
+    letter-spacing: .01em;
+}
+.sms-settings-page .alert {
+    border-radius: 8px;
+    border-width: 1px;
+}
+.sms-settings-page .bg-light-subtle { background: #f8f9fc !important; }
+
+/* API reference panel */
+.sms-settings-page .sms-reference-card {
+    background: #f8faff !important;
+    border-color: #e4eaf4 !important;
+}
+.sms-settings-page .sms-reference-card .card-body { padding: 20px !important; }
+.sms-settings-page .sms-reference-card li { line-height: 1.5; }
+
+/* Collapse header remains clickable */
+.sms-settings-page [data-bs-toggle="collapse"] { cursor: pointer; }
+.sms-settings-page #orderSettingsGroupCollapse .card-body { min-width: 0; }
+
+/* Modals */
+#testSmsModal .modal-content,
+#appAlertModal .modal-content {
+    border: 1px solid var(--sms-border, #e7eaf0) !important;
+    border-radius: 12px;
+    overflow: hidden;
+}
+#testSmsModal .modal-header,
+#testSmsModal .modal-footer { background: #fff; border-color: #e7eaf0 !important; }
+#testSmsModal .modal-title { color: #1d2635; font-size: .95rem; }
+#testSmsModal .modal-body { padding: 20px !important; }
+#testSmsModal .modal-footer { gap: 8px; }
+
+/* The project uses this custom 5-column utility for ten lifecycle triggers. */
+@media (min-width: 1200px) {
+    .sms-settings-page .col-xl-2-4 {
+        flex: 0 0 auto;
+        width: 20%;
+    }
+}
+@media (max-width: 1199.98px) {
+    .sms-settings-page .col-xl-2-4 {
+        flex: 0 0 auto;
+        width: 33.33333333%;
+    }
+}
+@media (max-width: 767.98px) {
+    .sms-settings-page { padding-top: 1rem !important; }
+    .sms-settings-page .sms-page-heading { width: 100%; }
+    .sms-settings-page .sms-page-actions { width: 100%; }
+    .sms-settings-page .sms-page-actions .btn { flex: 1 1 0; }
+    .sms-settings-page .sms-metric-card { min-height: 104px; }
+    .sms-settings-page .sms-metric-card .card-body { padding: 13px !important; }
+    .sms-settings-page .card-header { padding: 12px 14px !important; }
+    .sms-settings-page .card-body { padding: 14px !important; }
+    .sms-settings-page .sms-settings-nav { margin-bottom: 1rem !important; }
+    .sms-settings-page .sms-setting-row { align-items: flex-start !important; }
+    .sms-settings-page .sms-trigger-card { padding: 11px; }
+    .sms-settings-page .sms-trigger-card .form-check-label { font-size: .76rem; }
+    .sms-settings-page .sms-trigger-card > span { font-size: .7rem !important; }
+    .sms-settings-page .text-end .btn { width: 100%; }
+}
+@media (max-width: 575.98px) {
+    .sms-settings-page .sms-page-actions { flex-direction: column; }
+    .sms-settings-page .sms-page-actions .btn { width: 100%; }
+    .sms-settings-page .col-xl-2-4 { width: 100%; }
+    .sms-settings-page .sms-settings-nav .nav-link { padding: 8px 11px !important; font-size: .76rem; }
+    .sms-settings-page .sms-metric-card .sms-metric-label { font-size: .7rem; }
+    .sms-settings-page .sms-metric-card h5 { font-size: 1rem; }
+    #testSmsModal .modal-dialog { margin: 12px; }
+    #testSmsModal .modal-body { padding: 16px !important; }
+}
+@media (max-width: 359.98px) {
+    .sms-settings-page .col-xl-2-4 { width: 100%; }
+    .sms-settings-page .sms-page-actions .btn { font-size: .76rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .sms-settings-page *,
+    #testSmsModal *,
+    #appAlertModal * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+</style>
+
+<div class="container-fluid px-3 px-md-4 py-4 sms-settings-page">
 
     {{-- Top Header & Quick Actions --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 sms-page-heading">
         <div>
             <h4 class="fw-bold mb-1">SMS Settings</h4>
             <p class="text-muted small mb-0">Configure Onecodesoft gateway, automated notifications, and OTP policies.</p>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 sms-page-actions">
             <button type="button" class="btn btn-outline-secondary btn-sm px-3" id="btnSyncBalance" onclick="handleSyncBalance(this)">
                 <i class="fas fa-sync-alt me-1" id="syncIcon"></i> <span id="syncBtnText">Sync Balance</span>
             </button>
@@ -44,7 +366,7 @@
     {{-- Live Overview Metrics --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 sms-metric-card">
                 <div class="card-body p-3">
                     <span class="text-muted small d-block">Gateway Balance</span>
                     <h5 class="fw-bold text-dark mt-1 mb-0" id="cardBalanceText">
@@ -58,7 +380,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 sms-metric-card">
                 <div class="card-body p-3">
                     <span class="text-muted small d-block">Est. Remaining SMS</span>
                     <h5 class="fw-bold text-primary mt-1 mb-0" id="cardEstSms">
@@ -70,7 +392,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 sms-metric-card">
                 <div class="card-body p-3">
                     <span class="text-muted small d-block">Gateway Status</span>
                     <div class="mt-1">
@@ -89,7 +411,7 @@
         </div>
 
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 sms-metric-card">
                 <div class="card-body p-3">
                     <span class="text-muted small d-block">Master Toggle</span>
                     <h5 class="fw-bold mt-1 mb-0">
@@ -106,7 +428,7 @@
     </div>
 
     {{-- Main Settings Navigation --}}
-    <ul class="nav nav-tabs nav-tabs-bordered mb-4" id="smsSettingsTabs" role="tablist">
+    <ul class="nav nav-tabs nav-tabs-bordered mb-4 sms-settings-nav" id="smsSettingsTabs" role="tablist">
         <li class="nav-item">
             <button class="nav-link active fw-medium px-3 py-2 text-dark" id="general-tab" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">
                 <i class="fas fa-sliders-h me-1"></i> General &amp; Triggers
@@ -252,8 +574,9 @@
                                     
                                     <div class="row g-3 mb-4">
                                         <div class="col-12 col-md-6 col-lg-3">
-                                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                            <div class="border rounded p-3 h-100 bg-light-subtle sms-trigger-card">
                                                 <div class="form-check form-switch">
+                                                    {{-- Checkout Confirmation Switch --}}
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_placed_customer" value="1" {{ (string)($settings['auto_sms_order_placed_customer'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small">Order Placed SMS</label>
                                                 </div>
@@ -262,7 +585,7 @@
                                         </div>
 
                                         <div class="col-12 col-md-6 col-lg-3">
-                                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                            <div class="border rounded p-3 h-100 bg-light-subtle sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="manual_order_sms_enabled" value="1" {{ (string)($settings['manual_order_sms_enabled'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small">Instant Manual SMS</label>
@@ -272,7 +595,7 @@
                                         </div>
 
                                         <div class="col-12 col-md-6 col-lg-3">
-                                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                            <div class="border rounded p-3 h-100 bg-light-subtle sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_admin_new_order" value="1" {{ (string)($settings['auto_sms_admin_new_order'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small">Admin Order Alert</label>
@@ -282,7 +605,7 @@
                                         </div>
 
                                         <div class="col-12 col-md-6 col-lg-3">
-                                            <div class="border rounded p-3 h-100 bg-light-subtle">
+                                            <div class="border rounded p-3 h-100 bg-light-subtle sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_email_order_status" value="1" {{ (string)($settings['auto_email_order_status'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small">Order Status Email</label>
@@ -300,20 +623,20 @@
                                     </h6>
 
                                     <div class="row g-3">
-                                        {{-- 1. Pending --}}
+                                        {{-- 1. Pending (Now independent: auto_sms_order_pending) --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" name="auto_sms_order_placed_customer" value="1" {{ (string)($settings['auto_sms_order_placed_customer'] ?? '1') === '1' ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="auto_sms_order_pending" value="1" {{ (string)($settings['auto_sms_order_pending'] ?? ($settings['auto_sms_order_placed_customer'] ?? '1')) === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-danger">1. Pending</label>
                                                 </div>
-                                                <span class="text-muted d-block small mt-1">When order is created or waiting verification.</span>
+                                                <span class="text-muted d-block small mt-1">When order is marked pending or awaiting review.</span>
                                             </div>
                                         </div>
 
                                         {{-- 2. Received --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_received" value="1" {{ (string)($settings['auto_sms_order_received'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-info-emphasis">2. Received</label>
@@ -324,7 +647,7 @@
 
                                         {{-- 3. Confirmed --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_confirmed" value="1" {{ (string)($settings['auto_sms_order_confirmed'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-primary">3. Confirmed</label>
@@ -335,9 +658,9 @@
 
                                         {{-- 4. Processing (Packed) --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" name="auto_sms_order_processing" value="1" {{ (string)($settings['auto_sms_order_processing'] ?? '1') === '1' ? 'checked' : '' }}>
+                                                    <input class="form-check-input" type="checkbox" name="auto_sms_order_processing" value="1" {{ (string)($settings['auto_sms_order_processing'] ?? '0') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-dark">4. Processing</label>
                                                 </div>
                                                 <span class="text-muted d-block small mt-1">Warehouse packaging &amp; stock deduction.</span>
@@ -346,7 +669,7 @@
 
                                         {{-- 5. Shipped --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_shipped" value="1" {{ (string)($settings['auto_sms_order_shipped'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-warning-emphasis">5. Shipped</label>
@@ -357,7 +680,7 @@
 
                                         {{-- 6. Attempt to Deliver --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_attempt_to_deliver" value="1" {{ (string)($settings['auto_sms_order_attempt_to_deliver'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-secondary">6. Attempt to Deliver</label>
@@ -368,7 +691,7 @@
 
                                         {{-- 7. Delivered --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_delivered" value="1" {{ (string)($settings['auto_sms_order_delivered'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-success">7. Delivered</label>
@@ -379,7 +702,7 @@
 
                                         {{-- 8. Exchange --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_exchange" value="1" {{ (string)($settings['auto_sms_order_exchange'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-info">8. Exchange</label>
@@ -390,7 +713,7 @@
 
                                         {{-- 9. Returned --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_returned" value="1" {{ (string)($settings['auto_sms_order_returned'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-muted">9. Returned</label>
@@ -401,7 +724,7 @@
 
                                         {{-- 10. Cancelled --}}
                                         <div class="col-12 col-sm-6 col-md-4 col-xl-2-4">
-                                            <div class="border rounded p-3 h-100">
+                                            <div class="border rounded p-3 h-100 sms-trigger-card">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" name="auto_sms_order_cancelled" value="1" {{ (string)($settings['auto_sms_order_cancelled'] ?? '1') === '1' ? 'checked' : '' }}>
                                                     <label class="form-check-label fw-semibold small text-danger">10. Cancelled</label>
@@ -453,7 +776,7 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label fw-medium small text-dark">Business / Brand Name</label>
-                                        <input type="text" class="form-control form-control-sm" name="business_name" value="{{ old('business_name', $provider->business_name ?? '') }}" placeholder="e.g. SHOP NOW BD">
+                                        <input type="text" class="form-control form-control-sm" name="business_name" value="{{ old('business_name', $provider->business_name ?? '') }}" placeholder="SHOP NOW BD">
                                     </div>
                                 </div>
 
@@ -486,7 +809,7 @@
 
                 <div class="col-12 col-lg-4">
                     <div class="card border-0 shadow-sm bg-light">
-                        <div class="card-body p-3 p-md-4">
+                        <div class="card-body p-3 p-md-4 sms-reference-card">
                             <h6 class="fw-semibold text-dark mb-2">Driver Reference</h6>
                             <p class="text-muted small mb-3">Onecodesoft is pre-configured with auto-routing for Bangladeshi numbers (GP, Robi, BL, Teletalk).</p>
                             <ul class="list-unstyled small mb-0 text-muted">

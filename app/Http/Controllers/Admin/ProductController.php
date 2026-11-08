@@ -120,7 +120,7 @@ class ProductController extends Controller
             });
         }
 
-        // 6. Products Table Digital, Cost & Optional VAT Columns
+        // 6. Products Table Digital, Cost, VAT, Branch Availability & Online Sellable Columns
         if (Schema::hasTable('products')) {
             Schema::table('products', function ($table) {
                 if (!Schema::hasColumn('products', 'is_virtual')) {
@@ -139,10 +139,31 @@ class ProductController extends Controller
                 if (!Schema::hasColumn('products', 'vat_amount')) {
                     $table->decimal('vat_amount', 10, 2)->nullable()->default(null)->after('vat_type');
                 }
+                if (!Schema::hasColumn('products', 'branch_availability_mode')) {
+                    $table->string('branch_availability_mode', 50)->default('all')->nullable();
+                }
+                if (!Schema::hasColumn('products', 'is_sellable_online')) {
+                    $table->boolean('is_sellable_online')->default(true);
+                }
             });
         }
 
-        // 7. Product Variants Table Columns (Stock, Purchase Cost, Image, Alert Qty)
+        // 7. Branch Product Pivot Table Schema Guard
+        if (!Schema::hasTable('branch_product')) {
+            Schema::create('branch_product', function ($table) {
+                $table->id();
+                $table->unsignedBigInteger('branch_id')->index();
+                $table->unsignedBigInteger('product_id')->index();
+                $table->boolean('is_active')->default(true);
+                $table->boolean('can_sell')->default(true);
+                $table->boolean('is_pos_enabled')->default(true);
+                $table->integer('low_stock_alert')->default(5);
+                $table->string('branch_sku', 100)->nullable();
+                $table->timestamps();
+            });
+        }
+
+        // 8. Product Variants Table Columns (Stock, Purchase Cost, Image, Alert Qty)
         if (Schema::hasTable('product_variants')) {
             Schema::table('product_variants', function ($table) {
                 if (!Schema::hasColumn('product_variants', 'image')) {
@@ -471,6 +492,40 @@ class ProductController extends Controller
         }
 
         return $varImgPath;
+    }
+
+    /**
+     * Sync branch assignment pivot records for selected branches
+     */
+    protected function syncBranchProductAssignments(int $productId, array $branchIds, array $pivotSettings = [])
+    {
+        if (!Schema::hasTable('branch_product')) {
+            return;
+        }
+
+        DB::table('branch_product')->where('product_id', $productId)->delete();
+
+        foreach ($branchIds as $bId) {
+            $branchId = (int)$bId;
+            if ($branchId <= 0) continue;
+
+            $insertPivot = [
+                'branch_id'       => $branchId,
+                'product_id'      => $productId,
+                'is_active'       => isset($pivotSettings['is_active']) ? (bool)$pivotSettings['is_active'] : true,
+                'can_sell'        => isset($pivotSettings['can_sell']) ? (bool)$pivotSettings['can_sell'] : true,
+                'is_pos_enabled'  => isset($pivotSettings['is_pos_enabled']) ? (bool)$pivotSettings['is_pos_enabled'] : true,
+                'low_stock_alert' => isset($pivotSettings['low_stock_alert']) ? (int)$pivotSettings['low_stock_alert'] : 5,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ];
+
+            if (Schema::hasColumn('branch_product', 'branch_sku') && !empty($pivotSettings['branch_sku'])) {
+                $insertPivot['branch_sku'] = $pivotSettings['branch_sku'];
+            }
+
+            DB::table('branch_product')->insert($insertPivot);
+        }
     }
 
     /**
@@ -843,8 +898,9 @@ class ProductController extends Controller
         $categories = Schema::hasTable('categories') ? DB::table('categories')->orderBy('name', 'asc')->get() : collect();
         $subCategories = Schema::hasTable('sub_categories') ? DB::table('sub_categories')->orderBy('name', 'asc')->get() : collect();
         $brands = Schema::hasTable('brands') ? DB::table('brands')->orderBy('name', 'asc')->get() : collect();
+        $branches = Schema::hasTable('branches') ? DB::table('branches')->where('is_active', true)->orderBy('name', 'asc')->get() : collect();
 
-        return view('admin.product.create', compact('categories', 'subCategories', 'brands'));
+        return view('admin.product.create', compact('categories', 'subCategories', 'brands', 'branches'));
     }
 
     public function store(Request $request)
@@ -893,6 +949,20 @@ class ProductController extends Controller
             $resolvedProductStruct = ($request->product_struct === 'variable' || $hasVariantRows) ? 'variable' : ($request->product_struct ?? 'simple');
 
             $rawPurchaseCost = $request->filled('purchase_cost') ? $request->purchase_cost : ($request->filled('purchase_price') ? $request->purchase_price : null);
+
+            // Online Sellable & Branch Availability Mode Resolution
+            $branchAvailMode = $request->input('branch_availability_mode', 'all');
+            if (empty($branchAvailMode)) {
+                $branchAvailMode = 'all';
+            }
+
+            $isSellableOnline = $request->has('has_branch_controls')
+                ? ($request->has('is_sellable_online') ? 1 : 0)
+                : ($request->has('is_sellable_online') ? 1 : ($request->filled('is_sellable_online') ? (int)$request->is_sellable_online : 1));
+
+            if (in_array($branchAvailMode, ['pos_only', 'branch_only'], true)) {
+                $isSellableOnline = 0;
+            }
 
             $productInsertData = [
                 'category_id'              => $primaryCatId,
@@ -944,6 +1014,14 @@ class ProductController extends Controller
                 $productInsertData['sku'] = $request->sku ?? null;
             }
 
+            if (Schema::hasColumn('products', 'branch_availability_mode')) {
+                $productInsertData['branch_availability_mode'] = $branchAvailMode;
+            }
+
+            if (Schema::hasColumn('products', 'is_sellable_online')) {
+                $productInsertData['is_sellable_online'] = (bool)$isSellableOnline;
+            }
+
             $productId = DB::table('products')->insertGetId($productInsertData);
 
             // ক্যাটাগরি ও ব্র্যান্ড পিভট ম্যাপিং
@@ -973,6 +1051,12 @@ class ProductController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            }
+
+            // ব্রাঞ্চ পিভট অ্যাসাইনমেন্ট সিঙ্ক
+            $selectedBranchIds = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('branch_ids', [])))));
+            if (!empty($selectedBranchIds) || in_array($branchAvailMode, ['selected', 'restricted', 'branch_only', 'pos_only'], true)) {
+                $this->syncBranchProductAssignments($productId, $selectedBranchIds);
             }
 
             $tagsInput = (array) $request->input('tags', []);
@@ -1083,6 +1167,7 @@ class ProductController extends Controller
         $categories = Schema::hasTable('categories') ? DB::table('categories')->orderBy('name', 'asc')->get() : collect();
         $subCategories = Schema::hasTable('sub_categories') ? DB::table('sub_categories')->orderBy('name', 'asc')->get() : collect();
         $brands = Schema::hasTable('brands') ? DB::table('brands')->orderBy('name', 'asc')->get() : collect();
+        $branches = Schema::hasTable('branches') ? DB::table('branches')->where('is_active', true)->orderBy('name', 'asc')->get() : collect();
 
         $pivotCats = DB::table('product_category')->where('product_id', $id)->get();
         $selectedCatIds = $pivotCats->where('type', 'parent')->pluck('category_id')->map(fn($v) => (int)$v)->toArray();
@@ -1100,6 +1185,10 @@ class ProductController extends Controller
             $selectedBrandIds[] = (int)$product->brand_id;
         }
 
+        $selectedBranchIds = Schema::hasTable('branch_product')
+            ? DB::table('branch_product')->where('product_id', $id)->pluck('branch_id')->map(fn($v) => (int)$v)->toArray()
+            : [];
+
         $productTags = DB::table('tags')
             ->join('product_tag', 'tags.id', '=', 'product_tag.tag_id')
             ->where('product_tag.product_id', $id)
@@ -1110,7 +1199,8 @@ class ProductController extends Controller
         $licenses = DB::table('product_licenses')->where('product_id', $id)->get();
 
         return view('admin.product.edit', compact(
-            'product', 'galleries', 'variants', 'categories', 'subCategories', 'brands', 'selectedCatIds', 'selectedSubCatIds', 'selectedBrandIds', 'productTags', 'downloadFiles', 'licenses'
+            'product', 'galleries', 'variants', 'categories', 'subCategories', 'brands', 'branches', 
+            'selectedCatIds', 'selectedSubCatIds', 'selectedBrandIds', 'selectedBranchIds', 'productTags', 'downloadFiles', 'licenses'
         ));
     }
 
@@ -1176,6 +1266,20 @@ class ProductController extends Controller
 
             $rawPurchaseCost = $request->filled('purchase_cost') ? $request->purchase_cost : ($request->filled('purchase_price') ? $request->purchase_price : null);
 
+            // Online Sellable & Branch Availability Mode Resolution
+            $branchAvailMode = $request->input('branch_availability_mode', $product->branch_availability_mode ?? 'all');
+            if (empty($branchAvailMode)) {
+                $branchAvailMode = 'all';
+            }
+
+            $isSellableOnline = $request->has('has_branch_controls')
+                ? ($request->has('is_sellable_online') ? 1 : 0)
+                : ($request->has('is_sellable_online') ? 1 : ($product->is_sellable_online ?? 1));
+
+            if (in_array($branchAvailMode, ['pos_only', 'branch_only'], true)) {
+                $isSellableOnline = 0;
+            }
+
             $productUpdateData = [
                 'category_id'              => $primaryCatId,
                 'sub_category_id'          => $primarySubCatId,
@@ -1223,6 +1327,14 @@ class ProductController extends Controller
                 $productUpdateData['sku'] = $request->sku ?? $product->sku;
             }
 
+            if (Schema::hasColumn('products', 'branch_availability_mode')) {
+                $productUpdateData['branch_availability_mode'] = $branchAvailMode;
+            }
+
+            if (Schema::hasColumn('products', 'is_sellable_online')) {
+                $productUpdateData['is_sellable_online'] = (bool)$isSellableOnline;
+            }
+
             DB::table('products')->where('id', $id)->update($productUpdateData);
 
             // ক্যাটাগরি ও ব্র্যান্ড পিভট আপডেট
@@ -1254,6 +1366,12 @@ class ProductController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            }
+
+            // ব্রাঞ্চ পিভট অ্যাসাইনমেন্ট আপডেট
+            $selectedBranchIds = array_values(array_unique(array_filter(array_map('intval', (array) $request->input('branch_ids', [])))));
+            if ($request->has('has_branch_controls') || !empty($selectedBranchIds) || in_array($branchAvailMode, ['selected', 'restricted', 'branch_only', 'pos_only'], true)) {
+                $this->syncBranchProductAssignments($id, $selectedBranchIds);
             }
 
             $tagsInput = (array) $request->input('tags', []);
@@ -1437,6 +1555,15 @@ class ProductController extends Controller
             if (Schema::hasTable('product_licenses')) {
                 DB::table('product_licenses')->where('product_id', $id)->delete();
             }
+            if (Schema::hasTable('branch_product')) {
+                DB::table('branch_product')->where('product_id', $id)->delete();
+            }
+            if (Schema::hasTable('branch_product_prices')) {
+                DB::table('branch_product_prices')->where('product_id', $id)->delete();
+            }
+            if (Schema::hasTable('product_stocks')) {
+                DB::table('product_stocks')->where('product_id', $id)->delete();
+            }
         }
 
         if (request()->ajax() || request()->wantsJson()) {
@@ -1496,6 +1623,15 @@ class ProductController extends Controller
             }
             if (Schema::hasTable('product_tag')) {
                 DB::table('product_tag')->whereIn('product_id', $ids)->delete();
+            }
+            if (Schema::hasTable('branch_product')) {
+                DB::table('branch_product')->whereIn('product_id', $ids)->delete();
+            }
+            if (Schema::hasTable('branch_product_prices')) {
+                DB::table('branch_product_prices')->whereIn('product_id', $ids)->delete();
+            }
+            if (Schema::hasTable('product_stocks')) {
+                DB::table('product_stocks')->whereIn('product_id', $ids)->delete();
             }
             return response()->json(['success' => true, 'message' => count($ids) . ' products deleted successfully.']);
         }

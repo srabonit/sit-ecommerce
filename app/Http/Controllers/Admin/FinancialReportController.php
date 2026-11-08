@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\PayrollService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -108,6 +109,11 @@ class FinancialReportController extends Controller
 
     /**
      * Comprehensive Profit & Loss (P&L) Statement & Financial KPI Dashboard
+     * Formula:
+     * 1. Customer Total Bill = Product Sale Price + Delivery Charge + VAT (Minus Discounts)
+     * 2. Direct Costs = VAT (Govt Liability) + Courier Actual Costs + Product Purchase Cost (COGS) + Damages
+     * 3. Estimated Gross Profit = Customer Total Bill - Direct Costs
+     * 4. Real Net Profit = Estimated Gross Profit + Other Income - Shop/Operating Expenses - Staff Salaries
      */
     public function profitLoss(Request $request)
     {
@@ -163,8 +169,8 @@ class FinancialReportController extends Controller
 
         $deliveredOrderIds = $deliveredOrders->pluck('id')->toArray();
 
-        // 3. Sales & Revenue Calculations (Fail-Safe via Collection)
-        $grossSales = (float) $deliveredOrders->sum(function ($o) {
+        // 3. Sales & Customer Total Billing Breakdown
+        $grossProductSales = (float) $deliveredOrders->sum(function ($o) {
             return (float) ($o->product_subtotal ?? ($o->subtotal ?? ($o->grand_total ?? 0)));
         });
 
@@ -172,9 +178,20 @@ class FinancialReportController extends Controller
             return (float) ($o->discount ?? ($o->discount_amount ?? 0));
         });
 
-        $netProductSales = max(0.00, $grossSales - $discounts);
+        $netProductSales = max(0.00, $grossProductSales - $discounts);
 
-        // 4. Safe Cost of Goods Sold (COGS) Calculation from Order Items
+        $shippingCollected = (float) $deliveredOrders->sum(function ($o) {
+            return (float) ($o->delivery_charge ?? ($o->shipping_charge ?? 0));
+        });
+
+        $collectedVat = (float) $deliveredOrders->sum(function ($o) {
+            return (float) ($o->vat_amount ?? ($o->tax_amount ?? ($o->vat ?? ($o->tax ?? 0))));
+        });
+
+        // 1. Total Customer Bill (All Sales Inflow)
+        $totalCustomerBill = $netProductSales + $shippingCollected + $collectedVat;
+
+        // 4. Safe Cost of Goods Sold (COGS) Calculation from Order Items (WAC purchase price)
         $cols = $this->getOrderItemColumnExpressions();
         $cogs = 0.00;
 
@@ -184,15 +201,7 @@ class FinancialReportController extends Controller
                 ->sum(DB::raw($cols['cogs']));
         }
 
-        // Gross Profit from Products
-        $grossProfit = max(0.00, $netProductSales - $cogs);
-        $grossMargin = $netProductSales > 0 ? round(($grossProfit / $netProductSales) * 100, 2) : 0.00;
-
-        // 5. Logistics / Courier Shipping Balance
-        $shippingCollected = (float) $deliveredOrders->sum(function ($o) {
-            return (float) ($o->delivery_charge ?? ($o->shipping_charge ?? 0));
-        });
-
+        // 5. Logistics / Courier Actual Costs Paid
         $courierCostSpent   = 0.00;
         $courierCodCharges  = 0.00;
         $courierReturnCosts = 0.00;
@@ -211,7 +220,8 @@ class FinancialReportController extends Controller
             }
         }
 
-        $logisticsNetProfit = $shippingCollected - ($courierCostSpent + $courierCodCharges + $courierReturnCosts);
+        $totalActualCourierCost = $courierCostSpent + $courierCodCharges + $courierReturnCosts;
+        $logisticsNetProfit = $shippingCollected - $totalActualCourierCost;
 
         // 6. Damaged / Scrapped Product Losses
         $damageLoss = 0.00;
@@ -232,8 +242,40 @@ class FinancialReportController extends Controller
             }
         }
 
-        // 7. Operational Expenses & Overheads Calculation (from expenses table)
-        $operatingExpenses = 0.00;
+        // 2 & 3. Estimated Gross Profit:
+        // Customer Total Bill - (VAT + Actual Courier Cost + Product Purchase Cost COGS + Damages)
+        $estimatedGrossProfit = ($totalCustomerBill - $collectedVat - $totalActualCourierCost - $cogs) - $damageLoss;
+        $grossMargin = $totalCustomerBill > 0 ? round(($estimatedGrossProfit / $totalCustomerBill) * 100, 2) : 0.00;
+
+        // 7. Staff Salary & Payroll Expense (Distinct from shop general expenses)
+        $salaryCategoryIds = [];
+        if (Schema::hasTable('expense_categories')) {
+            $salaryCategoryIds = DB::table('expense_categories')
+                ->where(function ($q) {
+                    $q->where('name', 'LIKE', '%Salary%')
+                      ->orWhere('name', 'LIKE', '%Payroll%')
+                      ->orWhere('name', 'LIKE', '%বেতন%');
+                })
+                ->pluck('id')
+                ->toArray();
+        }
+
+        $staffSalaryExpense = 0.00;
+        if (class_exists(PayrollService::class)) {
+            $staffSalaryExpense = PayrollService::getTotalSalaryExpense($start, $end);
+        }
+
+        // If payroll table records don't exist yet, fallback to checking expenses table for salary
+        if ($staffSalaryExpense <= 0 && Schema::hasTable('expenses') && !empty($salaryCategoryIds)) {
+            $dateCol = Schema::hasColumn('expenses', 'expense_date') ? 'expense_date' : 'created_at';
+            $staffSalaryExpense = (float) DB::table('expenses')
+                ->whereBetween($dateCol, [$start->toDateString(), $end->toDateString()])
+                ->whereIn('category_id', $salaryCategoryIds)
+                ->sum('amount');
+        }
+
+        // 8. General Operational Expenses (Shop Rent, Transport, Utility, Food, Ads, etc. excluding Salary)
+        $generalExpenses = 0.00;
         $expenseCategoryBreakdown = collect();
 
         if (Schema::hasTable('expenses')) {
@@ -241,13 +283,17 @@ class FinancialReportController extends Controller
             $expenseQuery = DB::table('expenses')
                 ->whereBetween($dateCol, [$start->toDateString(), $end->toDateString()]);
 
-            $operatingExpenses = (float) (clone $expenseQuery)->sum('amount');
+            if (!empty($salaryCategoryIds)) {
+                $expenseQuery->whereNotIn('category_id', $salaryCategoryIds);
+            }
+
+            $generalExpenses = (float) (clone $expenseQuery)->sum('amount');
 
             if (Schema::hasTable('expense_categories')) {
                 $expenseCategoryBreakdown = (clone $expenseQuery)
                     ->leftJoin('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
                     ->select(
-                        DB::raw("COALESCE(expense_categories.name, 'Uncategorized') as category_name"),
+                        DB::raw("COALESCE(expense_categories.name, 'Shop & Operational') as category_name"),
                         DB::raw("SUM(expenses.amount) as total_amount")
                     )
                     ->groupBy('expense_categories.name')
@@ -256,7 +302,7 @@ class FinancialReportController extends Controller
             }
         }
 
-        // 8. Other Business Inflows / Income (from incomes table)
+        // 9. Other Business Inflows / Extra Income
         $otherIncome = 0.00;
         $incomeCategoryBreakdown = collect();
 
@@ -280,12 +326,13 @@ class FinancialReportController extends Controller
             }
         }
 
-        // 9. Net Bottom-Line Profit Calculation
-        $grossOperatingProfit = ($grossProfit + $logisticsNetProfit) - $damageLoss;
-        $netOperatingProfit = ($grossOperatingProfit + $otherIncome) - $operatingExpenses;
-        $netOperatingMargin = $netProductSales > 0 ? round(($netOperatingProfit / $netProductSales) * 100, 2) : 0.00;
+        // 10. REAL NET PROFIT (প্রকৃত নিট মুনাফা)
+        // Estimated Gross Profit + Extra Income - General Shop Expenses - Staff Salary
+        $totalOperatingExpenses = $generalExpenses + $staffSalaryExpense;
+        $realNetProfit = ($estimatedGrossProfit + $otherIncome) - $totalOperatingExpenses;
+        $netOperatingMargin = $totalCustomerBill > 0 ? round(($realNetProfit / $totalCustomerBill) * 100, 2) : 0.00;
 
-        // 10. Dynamic Channel Performance Breakdown
+        // 11. Dynamic Channel Performance Breakdown
         $webQuery = clone $ordersQuery;
         $manualQuery = clone $ordersQuery;
         $posQuery = clone $ordersQuery;
@@ -318,7 +365,7 @@ class FinancialReportController extends Controller
             ],
         ];
 
-        // 11. Top 8 High-Margin Products
+        // 12. Top 8 High-Margin Products
         $topProfitableProducts = collect();
         if (!empty($deliveredOrderIds) && Schema::hasTable('order_items')) {
             $topProfitableProducts = DB::table('order_items')
@@ -344,22 +391,26 @@ class FinancialReportController extends Controller
         $summary = [
             'period_label'            => $start->format('d M Y') . ' — ' . $end->format('d M Y'),
             'delivered_orders'        => count($deliveredOrders),
-            'gross_sales'             => $grossSales,
+            'gross_sales'             => $grossProductSales,
             'discounts'               => $discounts,
             'net_sales'               => $netProductSales,
-            'cogs'                    => $cogs,
-            'gross_profit'            => $grossProfit,
-            'gross_margin'            => $grossMargin,
             'shipping_collected'      => $shippingCollected,
+            'collected_vat'           => $collectedVat,
+            'total_customer_bill'     => $totalCustomerBill,
+            'cogs'                    => $cogs,
             'courier_cost_spent'      => $courierCostSpent,
             'courier_cod_fee'         => $courierCodCharges,
             'courier_return_loss'     => $courierReturnCosts,
+            'total_courier_cost'      => $totalActualCourierCost,
             'logistics_balance'       => $logisticsNetProfit,
             'damage_loss'             => $damageLoss,
+            'estimated_gross_profit'  => $estimatedGrossProfit,
+            'gross_margin'            => $grossMargin,
             'other_income'            => $otherIncome,
-            'operating_expenses'      => $operatingExpenses,
-            'gross_operating_profit'  => $grossOperatingProfit,
-            'net_profit'              => $netOperatingProfit,
+            'general_expenses'        => $generalExpenses,
+            'staff_salary_expense'    => $staffSalaryExpense,
+            'total_operating_expenses'=> $totalOperatingExpenses,
+            'net_profit'              => $realNetProfit,
             'net_margin'              => $netOperatingMargin,
         ];
 
@@ -381,7 +432,7 @@ class FinancialReportController extends Controller
     public function exportPnl(Request $request)
     {
         [$start, $end] = $this->resolveDateRange($request);
-        $filename = "PnL_Statement_" . $start->format('Y_m_d') . "_to_" . $end->format('Y_m_d') . ".csv";
+        $filename = "Real_PnL_Statement_" . $start->format('Y_m_d') . "_to_" . $end->format('Y_m_d') . ".csv";
 
         $headers = [
             "Content-type"        => "text/csv; charset=UTF-8",
@@ -395,9 +446,9 @@ class FinancialReportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            fputcsv($file, ['STATEMENT OF PROFIT AND LOSS (P&L AUDIT REPORT)', $start->format('d M Y') . ' — ' . $end->format('d M Y')]);
+            fputcsv($file, ['STATEMENT OF REAL PROFIT AND LOSS (P&L AUDIT REPORT)', $start->format('d M Y') . ' — ' . $end->format('d M Y')]);
             fputcsv($file, []);
-            fputcsv($file, ['Financial Ledger Account / Performance Metric', 'Accounting Impact', 'Amount (BDT)']);
+            fputcsv($file, ['Accounting Ledger / Performance Metric', 'Impact Type', 'Amount (BDT)']);
 
             $deliveredOrders = DB::table('orders')
                 ->whereBetween('created_at', [$start, $end])
@@ -407,6 +458,9 @@ class FinancialReportController extends Controller
             $grossSales = (float) $deliveredOrders->sum(fn($o) => (float)($o->product_subtotal ?? ($o->subtotal ?? ($o->grand_total ?? 0))));
             $discounts  = (float) $deliveredOrders->sum(fn($o) => (float)($o->discount ?? ($o->discount_amount ?? 0)));
             $netSales   = max(0.00, $grossSales - $discounts);
+            $shipping   = (float) $deliveredOrders->sum(fn($o) => (float)($o->delivery_charge ?? ($o->shipping_charge ?? 0)));
+            $vat        = (float) $deliveredOrders->sum(fn($o) => (float)($o->vat_amount ?? ($o->tax_amount ?? ($o->vat ?? ($o->tax ?? 0)))));
+            $totalBilled = $netSales + $shipping + $vat;
 
             $deliveredIds = $deliveredOrders->pluck('id')->toArray();
             $cols = $this->getOrderItemColumnExpressions();
@@ -414,13 +468,11 @@ class FinancialReportController extends Controller
             if (!empty($deliveredIds) && Schema::hasTable('order_items')) {
                 $cogs = (float) DB::table('order_items')->whereIn('order_id', $deliveredIds)->sum(DB::raw($cols['cogs']));
             }
-            $grossProfit = max(0.00, $netSales - $cogs);
 
-            $shippingCollected = (float) $deliveredOrders->sum(fn($o) => (float)($o->delivery_charge ?? ($o->shipping_charge ?? 0)));
-            $courierCost = Schema::hasTable('courier_bookings') 
-                ? (float) DB::table('courier_bookings')->whereBetween('created_at', [$start, $end])->sum('courier_cost') 
-                : 0.00;
-            $netLogistics = $shippingCollected - $courierCost;
+            $courierCost = 0.00;
+            if (Schema::hasTable('courier_bookings')) {
+                $courierCost = (float) DB::table('courier_bookings')->whereBetween('created_at', [$start, $end])->sum('courier_cost');
+            }
 
             $damageLoss = 0.00;
             if (Schema::hasTable('inventory_movements')) {
@@ -432,28 +484,36 @@ class FinancialReportController extends Controller
                     ->sum(DB::raw("ABS(COALESCE({$qtyField}, 0)) * COALESCE({$costField}, 0)"));
             }
 
+            $estimatedGross = ($totalBilled - $vat - $courierCost - $cogs) - $damageLoss;
+
             $otherIncome = Schema::hasTable('incomes')
                 ? (float) DB::table('incomes')->whereBetween(Schema::hasColumn('incomes', 'income_date') ? 'income_date' : 'created_at', [$start->toDateString(), $end->toDateString()])->sum('amount')
                 : 0.00;
+
+            $salaryExpense = class_exists(PayrollService::class) ? PayrollService::getTotalSalaryExpense($start, $end) : 0.00;
 
             $operatingExpenses = Schema::hasTable('expenses')
                 ? (float) DB::table('expenses')->whereBetween(Schema::hasColumn('expenses', 'expense_date') ? 'expense_date' : 'created_at', [$start->toDateString(), $end->toDateString()])->sum('amount')
                 : 0.00;
 
-            $netProfit = ($grossProfit + $netLogistics + $otherIncome) - ($damageLoss + $operatingExpenses);
+            $realNetProfit = ($estimatedGross + $otherIncome) - ($operatingExpenses + $salaryExpense);
 
-            fputcsv($file, ['1. Gross Sales (Product Subtotals)', 'Revenue (+)', number_format($grossSales, 2, '.', '')]);
-            fputcsv($file, ['2. Special Discounts Granted', 'Deduction (-)', number_format($discounts, 2, '.', '')]);
-            fputcsv($file, ['3. Net Sales Revenue', 'Net Sales', number_format($netSales, 2, '.', '')]);
-            fputcsv($file, ['4. Cost of Goods Sold (COGS)', 'Product Cost (-)', number_format($cogs, 2, '.', '')]);
-            fputcsv($file, ['5. Gross Product Profit', 'Gross Margin', number_format($grossProfit, 2, '.', '')]);
-            fputcsv($file, ['6. Customer Shipping Fees Collected', 'Logistics (+)', number_format($shippingCollected, 2, '.', '')]);
-            fputcsv($file, ['7. Courier Dispatch Charges Paid', 'Logistics (-)', number_format($courierCost, 2, '.', '')]);
-            fputcsv($file, ['8. Damaged & Written-Off Inventory Loss', 'Loss (-)', number_format($damageLoss, 2, '.', '')]);
-            fputcsv($file, ['9. Other Business Inflow / Income', 'Inflow (+)', number_format($otherIncome, 2, '.', '')]);
-            fputcsv($file, ['10. Operational Expenses (Rent, Ads, Salary, etc.)', 'Overheads (-)', number_format($operatingExpenses, 2, '.', '')]);
+            fputcsv($file, ['1. Product Net Sales Revenue', 'Commercial Revenue (+)', number_format($netSales, 2, '.', '')]);
+            fputcsv($file, ['2. Customer Shipping Charge Collected', 'Logistics Collected (+)', number_format($shipping, 2, '.', '')]);
+            fputcsv($file, ['3. Output VAT Collected from Customers', 'Tax Liability (Pass-through)', number_format($vat, 2, '.', '')]);
+            fputcsv($file, ['TOTAL CUSTOMER INVOICED BILL', 'Total Inflow (+)', number_format($totalBilled, 2, '.', '')]);
             fputcsv($file, []);
-            fputcsv($file, ['FINAL NET BOTTOM-LINE PROFIT (EBIT)', 'Net Operating Income', number_format($netProfit, 2, '.', '') . ' BDT']);
+            fputcsv($file, ['4. Less: Output VAT Payable to Govt', 'Deduction (-)', number_format($vat, 2, '.', '')]);
+            fputcsv($file, ['5. Less: Actual Courier Dispatch & COD Fee', 'Logistics Cost (-)', number_format($courierCost, 2, '.', '')]);
+            fputcsv($file, ['6. Less: Product Purchase Cost (WAC COGS)', 'Direct Cost (-)', number_format($cogs, 2, '.', '')]);
+            fputcsv($file, ['7. Less: Damaged / Written-Off Stock Loss', 'Inventory Loss (-)', number_format($damageLoss, 2, '.', '')]);
+            fputcsv($file, ['ESTIMATED GROSS OPERATING PROFIT', 'Gross Margin', number_format($estimatedGross, 2, '.', '') . ' BDT']);
+            fputcsv($file, []);
+            fputcsv($file, ['8. Plus: Other Business Inflows', 'Extra Income (+)', number_format($otherIncome, 2, '.', '')]);
+            fputcsv($file, ['9. Less: Shop, Utility, Transport & Operational Expenses', 'Overheads (-)', number_format($operatingExpenses, 2, '.', '')]);
+            fputcsv($file, ['10. Less: Staff Monthly Salaries Paid', 'Payroll Expense (-)', number_format($salaryExpense, 2, '.', '')]);
+            fputcsv($file, []);
+            fputcsv($file, ['REAL NET BOTTOM-LINE PROFIT / LOSS', 'Net Income', number_format($realNetProfit, 2, '.', '') . ' BDT']);
 
             fclose($file);
         };
@@ -508,25 +568,54 @@ class FinancialReportController extends Controller
 
         $totalCurrentAssets = $totalBankCash + $inventoryValuation + $courierReceivables;
 
-        // 2. Non-Current (Fixed) Assets
+        // 2. Non-Current (Fixed) Assets (Schema Safe)
         $fixedAssets = collect();
         $totalFixedAssets = 0.00;
 
         if (Schema::hasTable('assets')) {
-            $fixedAssetQuery = DB::table('assets')
-                ->where('purchase_date', '<=', $asOfDate);
+            $dateCol = Schema::hasColumn('assets', 'purchase_date') ? 'purchase_date' : (Schema::hasColumn('assets', 'acquired_date') ? 'acquired_date' : 'created_at');
+            $costCol = Schema::hasColumn('assets', 'purchase_cost') ? 'purchase_cost' : (Schema::hasColumn('assets', 'cost') ? 'cost' : (Schema::hasColumn('assets', 'purchase_price') ? 'purchase_price' : '0'));
 
-            $totalFixedAssets = (float) (clone $fixedAssetQuery)->sum('purchase_cost');
+            $fixedAssetQuery = DB::table('assets');
+            if (Schema::hasColumn('assets', $dateCol)) {
+                $fixedAssetQuery->where($dateCol, '<=', $asOfDate);
+            }
 
-            $fixedAssets = (clone $fixedAssetQuery)
-                ->select('asset_type', DB::raw('SUM(purchase_cost) as total_cost'), DB::raw('COUNT(id) as count'))
-                ->groupBy('asset_type')
-                ->get();
+            $totalFixedAssets = (float) (clone $fixedAssetQuery)->sum(DB::raw("COALESCE({$costCol}, 0)"));
+
+            $typeCol = match(true) {
+                Schema::hasColumn('assets', 'asset_type') => 'asset_type',
+                Schema::hasColumn('assets', 'type') => 'type',
+                Schema::hasColumn('assets', 'category') => 'category',
+                Schema::hasColumn('assets', 'asset_category') => 'asset_category',
+                Schema::hasColumn('assets', 'name') => 'name',
+                Schema::hasColumn('assets', 'title') => 'title',
+                default => null
+            };
+
+            if ($typeCol) {
+                $fixedAssets = (clone $fixedAssetQuery)
+                    ->select(
+                        DB::raw("{$typeCol} as asset_type"),
+                        DB::raw("SUM(COALESCE({$costCol}, 0)) as total_cost"),
+                        DB::raw('COUNT(id) as count')
+                    )
+                    ->groupBy($typeCol)
+                    ->get();
+            } else {
+                $fixedAssets = (clone $fixedAssetQuery)
+                    ->select(
+                        DB::raw("'General Asset' as asset_type"),
+                        DB::raw("SUM(COALESCE({$costCol}, 0)) as total_cost"),
+                        DB::raw('COUNT(id) as count')
+                    )
+                    ->get();
+            }
         }
 
         $totalAssets = $totalCurrentAssets + $totalFixedAssets;
 
-        // 3. Liabilities
+        // 3. Liabilities (Tax / VAT liabilities + Due Payables)
         $currentLiabilities = 0.00;
 
         // 4. Equity & Capital Reserves
@@ -534,19 +623,25 @@ class FinancialReportController extends Controller
         $investorBreakdown = collect();
 
         if (Schema::hasTable('investments')) {
-            $invQuery = DB::table('investments')
-                ->where('investment_date', '<=', $asOfDate);
+            $invDateCol = Schema::hasColumn('investments', 'investment_date') ? 'investment_date' : 'created_at';
+            $invQuery = DB::table('investments');
+            if (Schema::hasColumn('investments', $invDateCol)) {
+                $invQuery->where($invDateCol, '<=', $asOfDate);
+            }
 
             $totalInvestedCapital = (float) (clone $invQuery)->sum('amount');
 
-            $investorBreakdown = (clone $invQuery)
-                ->select('investor_name', DB::raw('SUM(amount) as total_capital'))
-                ->groupBy('investor_name')
-                ->orderByDesc('total_capital')
-                ->get();
+            $investorNameCol = Schema::hasColumn('investments', 'investor_name') ? 'investor_name' : (Schema::hasColumn('investments', 'name') ? 'name' : null);
+            if ($investorNameCol) {
+                $investorBreakdown = (clone $invQuery)
+                    ->select($investorNameCol . ' as investor_name', DB::raw('SUM(amount) as total_capital'))
+                    ->groupBy($investorNameCol)
+                    ->orderByDesc('total_capital')
+                    ->get();
+            }
         }
 
-        // Retained Earnings (Accumulated Net Operating Profit)
+        // Retained Earnings (Accumulated Real Net Profit)
         $cols = $this->getOrderItemColumnExpressions();
 
         $allDeliveredOrders = DB::table('orders')
@@ -575,21 +670,31 @@ class FinancialReportController extends Controller
 
         $lifetimeDamageLoss = 0.00;
         if (Schema::hasTable('inventory_movements')) {
+            $qtyField = Schema::hasColumn('inventory_movements', 'quantity_change') ? 'quantity_change' : 'quantity';
+            $costField = Schema::hasColumn('inventory_movements', 'unit_cost') ? 'unit_cost' : 'cost';
             $lifetimeDamageLoss = (float) DB::table('inventory_movements')
                 ->where('created_at', '<=', $asOfCarbon)
                 ->whereIn('movement_type', ['damaged_writeoff', 'damage_out'])
-                ->sum(DB::raw('ABS(quantity_change) * unit_cost'));
+                ->sum(DB::raw("ABS(COALESCE({$qtyField}, 0)) * COALESCE({$costField}, 0)"));
         }
 
-        $lifetimeOtherIncome = Schema::hasTable('incomes')
-            ? (float) DB::table('incomes')->where('income_date', '<=', $asOfDate)->sum('amount')
+        $lifetimeOtherIncome = 0.00;
+        if (Schema::hasTable('incomes')) {
+            $incDateCol = Schema::hasColumn('incomes', 'income_date') ? 'income_date' : 'created_at';
+            $lifetimeOtherIncome = (float) DB::table('incomes')->where($incDateCol, '<=', $asOfDate)->sum('amount');
+        }
+
+        $lifetimeExpenses = 0.00;
+        if (Schema::hasTable('expenses')) {
+            $expDateCol = Schema::hasColumn('expenses', 'expense_date') ? 'expense_date' : 'created_at';
+            $lifetimeExpenses = (float) DB::table('expenses')->where($expDateCol, '<=', $asOfDate)->sum('amount');
+        }
+
+        $lifetimeSalaryPaid = class_exists(PayrollService::class) 
+            ? PayrollService::getTotalSalaryExpense('2020-01-01', $asOfDate) 
             : 0.00;
 
-        $lifetimeExpenses = Schema::hasTable('expenses')
-            ? (float) DB::table('expenses')->where('expense_date', '<=', $asOfDate)->sum('amount')
-            : 0.00;
-
-        $retainedEarnings = ($lifetimeNetSales - $lifetimeCogs) + $lifetimeLogistics + $lifetimeOtherIncome - ($lifetimeDamageLoss + $lifetimeExpenses);
+        $retainedEarnings = ($lifetimeNetSales - $lifetimeCogs) + $lifetimeLogistics + $lifetimeOtherIncome - ($lifetimeDamageLoss + $lifetimeExpenses + $lifetimeSalaryPaid);
 
         $totalEquity = $totalInvestedCapital + $retainedEarnings;
         $totalLiabilitiesAndEquity = $currentLiabilities + $totalEquity;
@@ -645,8 +750,19 @@ class FinancialReportController extends Controller
             fputcsv($file, ['Account Classification', 'Ledger Particulars', 'Amount (BDT)']);
 
             $cash = Schema::hasTable('bank_accounts') ? (float) DB::table('bank_accounts')->where('is_active', true)->sum('current_balance') : 0;
-            $assetsVal = Schema::hasTable('assets') ? (float) DB::table('assets')->where('purchase_date', '<=', $asOfDate)->sum('purchase_cost') : 0;
-            $capital = Schema::hasTable('investments') ? (float) DB::table('investments')->where('investment_date', '<=', $asOfDate)->sum('amount') : 0;
+            
+            $assetsVal = 0.00;
+            if (Schema::hasTable('assets')) {
+                $costCol = Schema::hasColumn('assets', 'purchase_cost') ? 'purchase_cost' : (Schema::hasColumn('assets', 'cost') ? 'cost' : (Schema::hasColumn('assets', 'purchase_price') ? 'purchase_price' : '0'));
+                $dateCol = Schema::hasColumn('assets', 'purchase_date') ? 'purchase_date' : 'created_at';
+                $assetsVal = (float) DB::table('assets')->where($dateCol, '<=', $asOfDate)->sum(DB::raw("COALESCE({$costCol}, 0)"));
+            }
+
+            $capital = 0.00;
+            if (Schema::hasTable('investments')) {
+                $invDateCol = Schema::hasColumn('investments', 'investment_date') ? 'investment_date' : 'created_at';
+                $capital = (float) DB::table('investments')->where($invDateCol, '<=', $asOfDate)->sum('amount');
+            }
 
             fputcsv($file, ['CURRENT ASSETS', 'Liquid Cash & Bank Accounts', number_format($cash, 2, '.', '')]);
             fputcsv($file, ['NON-CURRENT ASSETS', 'Fixed Assets & Physical Property', number_format($assetsVal, 2, '.', '')]);
@@ -699,7 +815,9 @@ class FinancialReportController extends Controller
             $operatingExpensesPaid = (float) DB::table('expenses')->whereBetween($expCol, [$start->toDateString(), $end->toDateString()])->sum('amount');
         }
 
-        $netOperatingCash = ($customerCashReceived + $operatingInflows) - ($courierCostPaid + $operatingExpensesPaid);
+        $salaryPaid = class_exists(PayrollService::class) ? PayrollService::getTotalSalaryExpense($start, $end) : 0.00;
+
+        $netOperatingCash = ($customerCashReceived + $operatingInflows) - ($courierCostPaid + $operatingExpensesPaid + $salaryPaid);
 
         // ==========================================
         // 2. CASH FLOWS FROM INVESTING ACTIVITIES
@@ -707,7 +825,8 @@ class FinancialReportController extends Controller
         $assetPurchases = 0.00;
         if (Schema::hasTable('assets')) {
             $astCol = Schema::hasColumn('assets', 'purchase_date') ? 'purchase_date' : 'created_at';
-            $assetPurchases = (float) DB::table('assets')->whereBetween($astCol, [$start->toDateString(), $end->toDateString()])->sum('purchase_cost');
+            $costCol = Schema::hasColumn('assets', 'purchase_cost') ? 'purchase_cost' : (Schema::hasColumn('assets', 'cost') ? 'cost' : (Schema::hasColumn('assets', 'purchase_price') ? 'purchase_price' : '0'));
+            $assetPurchases = (float) DB::table('assets')->whereBetween($astCol, [$start->toDateString(), $end->toDateString()])->sum(DB::raw("COALESCE({$costCol}, 0)"));
         }
 
         $netInvestingCash = -1 * $assetPurchases;
@@ -740,6 +859,7 @@ class FinancialReportController extends Controller
             'operating_inflows'       => $operatingInflows,
             'courier_cost_paid'       => $courierCostPaid,
             'operating_expenses_paid' => $operatingExpensesPaid,
+            'salary_paid'             => $salaryPaid,
             'net_operating_cash'      => $netOperatingCash,
             'asset_purchases'         => $assetPurchases,
             'net_investing_cash'      => $netInvestingCash,
@@ -798,12 +918,15 @@ class FinancialReportController extends Controller
             $courier = Schema::hasTable('courier_bookings') ? (float) DB::table('courier_bookings')->whereBetween('created_at', [$start, $end])->sum('courier_cost') : 0.00;
 
             $astCol = Schema::hasColumn('assets', 'purchase_date') ? 'purchase_date' : 'created_at';
-            $assets = Schema::hasTable('assets') ? (float) DB::table('assets')->whereBetween($astCol, [$start->toDateString(), $end->toDateString()])->sum('purchase_cost') : 0.00;
+            $costCol = Schema::hasColumn('assets', 'purchase_cost') ? 'purchase_cost' : (Schema::hasColumn('assets', 'cost') ? 'cost' : (Schema::hasColumn('assets', 'purchase_price') ? 'purchase_price' : '0'));
+            $assets = Schema::hasTable('assets') ? (float) DB::table('assets')->whereBetween($astCol, [$start->toDateString(), $end->toDateString()])->sum(DB::raw("COALESCE({$costCol}, 0)")) : 0.00;
 
             $invCol = Schema::hasColumn('investments', 'investment_date') ? 'investment_date' : 'created_at';
             $capital = Schema::hasTable('investments') ? (float) DB::table('investments')->whereBetween($invCol, [$start->toDateString(), $end->toDateString()])->sum('amount') : 0.00;
 
-            $netCFO = ($ordersCash + $incomes) - ($expenses + $courier);
+            $salary = class_exists(PayrollService::class) ? PayrollService::getTotalSalaryExpense($start, $end) : 0.00;
+
+            $netCFO = ($ordersCash + $incomes) - ($expenses + $courier + $salary);
             $netCFI = -1 * $assets;
             $netCFF = $capital;
 
@@ -811,6 +934,7 @@ class FinancialReportController extends Controller
             fputcsv($file, ['Cash from Other Business Inflows', 'Operating (+)', number_format($incomes, 2, '.', '')]);
             fputcsv($file, ['Operating Overheads & Expenses Paid', 'Operating (-)', number_format($expenses, 2, '.', '')]);
             fputcsv($file, ['Courier Delivery Charges Paid', 'Operating (-)', number_format($courier, 2, '.', '')]);
+            fputcsv($file, ['Staff Salary & Wages Paid', 'Operating (-)', number_format($salary, 2, '.', '')]);
             fputcsv($file, ['NET CASH FROM OPERATING ACTIVITIES (CFO)', 'Net CFO', number_format($netCFO, 2, '.', '')]);
             fputcsv($file, []);
             fputcsv($file, ['Acquisition of Fixed Assets & Equipment', 'Investing (-)', number_format($assets, 2, '.', '')]);

@@ -14,13 +14,13 @@ return new class extends Migration
         // 1. Dynamic Event-driven SMS Templates
         Schema::create('sms_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('template_key')->unique(); // e.g. 'order_confirmation', 'login_otp', 'order_shipped'
+            $table->string('template_key')->unique(); // 'order_confirmation', 'login_otp', 'order_shipped'
             $table->string('name');
             $table->string('event_type')->index(); // customer, order, support, admin, auth
             $table->string('sender_id')->nullable();
             $table->enum('sender_type', ['auto', 'masking', 'non_masking'])->default('auto');
             $table->text('message');
-            $table->json('available_variables')->nullable(); // e.g. ["customer_name", "order_id", "order_total"]
+            $table->json('available_variables')->nullable(); // ["customer_name", "order_id", "order_total"]
             $table->boolean('is_active')->default(true);
             $table->boolean('is_unicode')->default(false);
             $table->timestamps();

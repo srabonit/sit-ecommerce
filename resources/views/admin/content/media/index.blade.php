@@ -13,11 +13,53 @@
 @endphp
 
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       MEDIA LIBRARY — KAIADMIN CLASSIC DESIGN SYSTEM
+       Scoped CSS | Bootstrap 5 Compatible
+    ========================================================= */
+
+    #mediaLibraryRoot {
+        /* Theme Variables */
+        --ml-primary: var(--bs-primary, #1572e8);
+        --ml-secondary: #6c757d;
+        --ml-success: var(--bs-success, #31ce36);
+        --ml-danger: var(--bs-danger, #f25961);
+        --ml-warning: var(--bs-warning, #ffad46);
+        --ml-info: var(--bs-info, #48abf7);
+
+        --ml-body-bg: #f8f9fa;
+        --ml-card-bg: #ffffff;
+        --ml-heading: #1a2035;
+        --ml-text: #495057;
+        --ml-muted: #8d9498;
+        --ml-border: #ebedf2;
+        --ml-input-border: #e8e8e8;
+
+        --ml-radius: 5px;
+        --ml-card-radius: 7px;
+
+        --ml-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+        --ml-shadow-hover: 0 4px 12px rgba(0, 0, 0, .07);
+
+        color: var(--ml-text);
+        min-width: 0;
+        width: 100%;
+        font-size: 13px;
+    }
+
+    /* ==============================
+       GLOBAL ELEMENTS
+    ============================== */
+
+    #mediaLibraryRoot *,
+    #replaceMediaModal *,
+    #usageTrackingModal *,
+    #mediaNoticeModal *,
+    #mediaConfirmModal * {
+        box-sizing: border-box;
+    }
+
     #mediaLibraryRoot .btn,
-    #mediaLibraryRoot .btn-sm,
-    #mediaLibraryRoot .btn-xs,
-    #mediaLibraryRoot button,
     #mediaLibraryRoot .form-control,
     #mediaLibraryRoot .form-select,
     #mediaLibraryRoot .badge,
@@ -27,373 +69,1006 @@
     #usageTrackingModal .btn,
     #mediaNoticeModal .btn,
     #mediaConfirmModal .btn {
-        border-radius: 5px !important;
+        border-radius: var(--ml-radius);
     }
 
-    #mediaLibraryRoot .input-group > .form-control {
-        border-top-right-radius: 0 !important;
-        border-bottom-right-radius: 0 !important;
-    }
-    #mediaLibraryRoot .input-group > .btn {
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
+    #mediaLibraryRoot .btn:focus,
+    #mediaLibraryRoot .form-control:focus,
+    #mediaLibraryRoot .form-select:focus {
+        outline: none;
     }
 
-    /* Compact & Sleek Button Sizing */
+    #mediaLibraryRoot .btn {
+        font-weight: 600;
+        transition: background-color .18s ease,
+                    border-color .18s ease,
+                    box-shadow .18s ease;
+    }
+
     #mediaLibraryRoot .btn-compact,
     #replaceMediaModal .btn-compact,
     #usageTrackingModal .btn-compact,
     #mediaNoticeModal .btn-compact,
     #mediaConfirmModal .btn-compact {
-        font-size: 11.5px !important;
-        padding: 5px 12px !important;
-        line-height: 1.3 !important;
-        font-weight: 600 !important;
+        min-height: 32px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
         white-space: nowrap;
-        transition: all 0.15s ease;
     }
 
-    /* Enterprise Card Surface */
-    .media-panel-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    #mediaLibraryRoot .btn-compact i {
+        font-size: 11px;
     }
 
-    /* Category Section Tabs (Site Content vs User Submitted) */
-    .media-section-tabs {
+    #mediaLibraryRoot .btn-primary,
+    #mediaLibraryRoot .btn-success,
+    #mediaLibraryRoot .btn-danger,
+    #mediaLibraryRoot .btn-warning {
+        box-shadow: none;
+    }
+
+    #mediaLibraryRoot .btn-primary:hover {
+        box-shadow: 0 3px 8px rgba(21, 114, 232, .16);
+    }
+
+    #mediaLibraryRoot .btn:disabled {
+        opacity: .65;
+        cursor: not-allowed;
+    }
+
+    /* ==============================
+       PAGE HEADER
+    ============================== */
+
+    #mediaLibraryRoot .media-page-header {
+        margin-bottom: 20px;
+    }
+
+    #mediaLibraryRoot .media-page-title {
+        color: var(--ml-heading);
+        font-size: clamp(17px, 1.5vw, 20px);
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -.35px;
+    }
+
+    #mediaLibraryRoot .media-page-title i {
+        font-size: 19px;
+    }
+
+    #mediaLibraryRoot .media-page-description {
+        color: var(--ml-muted);
+        font-size: 12px;
+        line-height: 1.6;
+        max-width: 680px;
+    }
+
+    #mediaLibraryRoot .header-top-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 14px;
-    }
-    .media-section-tab {
-        padding: 8px 16px;
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #475569;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px !important;
-        text-decoration: none;
-        display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: all 0.15s ease;
-    }
-    .media-section-tab:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    .media-section-tab.active-site {
-        background: #03172e;
-        color: #ffffff !important;
-        border-color: #03172e;
-        box-shadow: 0 2px 6px rgba(3, 23, 46, 0.15);
-    }
-    .media-section-tab.active-user {
-        background: #0f766e;
-        color: #ffffff !important;
-        border-color: #0f766e;
-        box-shadow: 0 2px 6px rgba(15, 118, 110, 0.18);
     }
 
-    /* Form Controls */
-    #mediaLibraryRoot .form-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #475569;
-        margin-bottom: 4px;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-    #mediaLibraryRoot .form-control,
-    #mediaLibraryRoot .form-select {
-        font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 6px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
-        box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    #mediaLibraryRoot .form-control:focus,
-    #mediaLibraryRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-        outline: none;
+    /* ==============================
+       PANEL / CARD
+    ============================== */
+
+    #mediaLibraryRoot .media-panel-card {
+        background: var(--ml-card-bg);
+        border: 1px solid var(--ml-border);
+        border-radius: var(--ml-card-radius);
+        box-shadow: var(--ml-shadow);
+        min-width: 0;
     }
 
-    /* Collapsible Upload Dropzone */
-    .wp-upload-collapsible {
-        border: 2px dashed #94a3b8;
-        border-radius: 8px !important;
-        padding: 28px 20px;
-        text-align: center;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    /* ==============================
+       CATEGORY NAVIGATION
+    ============================== */
+
+    #mediaLibraryRoot .media-section-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 8px;
         margin-bottom: 16px;
-        transition: all 0.2s ease;
-        position: relative;
     }
-    .wp-upload-collapsible:hover,
-    .wp-upload-collapsible.dragover {
-        border-color: #2563eb;
-        background: #eff6ff;
-    }
-    .upload-icon-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #e0f2fe;
-        color: #2563eb;
+
+    #mediaLibraryRoot .media-section-tab {
+        min-height: 40px;
+        padding: 9px 13px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        margin-bottom: 10px;
+        gap: 8px;
+
+        background: #ffffff;
+        color: #5c6573;
+        border: 1px solid var(--ml-border);
+        border-radius: var(--ml-radius);
+
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.4;
+
+        transition: all .18s ease;
     }
 
-    /* Media Grid System */
-    .media-card-grid {
+    #mediaLibraryRoot .media-section-tab:hover {
+        background: #f8f9fc;
+        color: var(--ml-primary);
+        border-color: #c9dafa;
+    }
+
+    #mediaLibraryRoot .media-section-tab.active-site {
+        background: #eaf2ff;
+        color: var(--ml-primary) !important;
+        border-color: #c8dcff;
+    }
+
+    #mediaLibraryRoot .media-section-tab.active-user {
+        background: #e8f7f2;
+        color: #159d75 !important;
+        border-color: #bde9d9;
+    }
+
+    #mediaLibraryRoot .media-section-tab > i {
+        font-size: 14px;
+    }
+
+    #mediaLibraryRoot .media-section-tab .badge {
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 23px;
+        padding: 4px 6px;
+    }
+
+    /* ==============================
+       UPLOAD DROPZONE
+    ============================== */
+
+    #mediaLibraryRoot .wp-upload-collapsible {
+        position: relative;
+        padding: 32px 20px;
+        margin-bottom: 16px;
+
+        text-align: center;
+        background: #ffffff;
+        border: 2px dashed #d6dce5;
+        border-radius: var(--ml-card-radius);
+
+        transition: background .2s ease, border-color .2s ease;
+    }
+
+    #mediaLibraryRoot .wp-upload-collapsible:hover,
+    #mediaLibraryRoot .wp-upload-collapsible.dragover {
+        background: #f4f8ff;
+        border-color: var(--ml-primary);
+    }
+
+    #mediaLibraryRoot .upload-icon-circle {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        margin-bottom: 12px;
+        border-radius: 50%;
+
+        background: #eaf2ff;
+        color: var(--ml-primary);
+        font-size: 21px;
+    }
+
+    #mediaLibraryRoot .upload-heading {
+        color: var(--ml-heading);
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    #mediaLibraryRoot .upload-description {
+        color: var(--ml-muted);
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    #mediaLibraryRoot #upload-target-category {
+        min-height: 36px;
+        width: 100%;
+    }
+
+    #mediaLibraryRoot #wp-collapsible-upload-box .btn-compact {
+        min-height: 36px;
+    }
+
+    #mediaLibraryRoot #upload-progress-indicator {
+        font-size: 12px;
+    }
+
+    /* ==============================
+       FILTER TOOLBAR
+    ============================== */
+
+    #mediaLibraryRoot .media-filter-panel {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    #mediaLibraryRoot .form-control,
+    #mediaLibraryRoot .form-select {
+        min-height: 36px;
+        padding: 7px 10px;
+
+        color: var(--ml-heading);
+        background-color: #ffffff;
+        border: 1px solid var(--ml-input-border);
+
+        font-size: 12.5px;
+        line-height: 1.4;
+
+        box-shadow: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    #mediaLibraryRoot .form-control::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+    }
+
+    #mediaLibraryRoot .form-control:focus,
+    #mediaLibraryRoot .form-select:focus {
+        border-color: var(--ml-primary);
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .10);
+    }
+
+    #mediaLibraryRoot .input-group > .form-control {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    #mediaLibraryRoot .input-group > .btn {
+        min-width: 42px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    #mediaLibraryRoot .form-select-sm,
+    #mediaLibraryRoot .form-control-sm {
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    /* ==============================
+       BULK ACTION TOOLBAR
+    ============================== */
+
+    #mediaLibraryRoot .bulk-toolbar-strip {
+        padding: 11px 13px;
+        background: #fff5f5;
+        border: 1px solid #f8d7da;
+        border-radius: var(--ml-radius);
+    }
+
+    #mediaLibraryRoot .bulk-toolbar-strip > span {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    #mediaLibraryRoot .bulk-checkbox {
+        position: absolute;
+        top: 7px;
+        left: 7px;
+        z-index: 6;
+
+        width: 19px;
+        height: 19px;
+        margin: 0;
+
+        display: none;
+        cursor: pointer;
+
+        border: 1px solid #aab2bd;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+    }
+
+    #mediaLibraryRoot .bulk-select-active .bulk-checkbox {
+        display: block;
+    }
+
+    /* ==============================
+       MEDIA GRID
+    ============================== */
+
+    #mediaLibraryRoot .media-card-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
-        gap: 10px;
+        gap: 12px;
+
         max-height: 72vh;
         overflow-y: auto;
-        padding: 2px;
-    }
-    .media-card-grid::-webkit-scrollbar {
-        width: 5px;
-    }
-    .media-card-grid::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
-        border-radius: 4px;
+        overflow-x: hidden;
+
+        padding: 3px;
+        scrollbar-width: thin;
+        scrollbar-color: #d5dbe3 transparent;
     }
 
-    .media-card-item {
+    #mediaLibraryRoot .media-card-grid::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #mediaLibraryRoot .media-card-grid::-webkit-scrollbar-thumb {
+        background: #d5dbe3;
+        border-radius: 5px;
+    }
+
+    #mediaLibraryRoot .media-card-item {
+        position: relative;
         aspect-ratio: 1 / 1;
-        border: 2px solid #e2e8f0;
-        border-radius: 6px !important;
+        min-width: 0;
+
         overflow: hidden;
         cursor: pointer;
-        position: relative;
-        background: #f8fafc;
-        transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+        background: #f7f8fa;
+        border: 1px solid #e5e8ed;
+        border-radius: 6px;
+
+        transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
     }
-    .media-card-item:hover {
-        border-color: #94a3b8;
-        transform: translateY(-1px);
+
+    #mediaLibraryRoot .media-card-item:hover {
+        border-color: #aabbd5;
+        transform: translateY(-2px);
+        box-shadow: var(--ml-shadow-hover);
     }
-    .media-card-item.selected {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+
+    #mediaLibraryRoot .media-card-item.selected {
+        border: 2px solid var(--ml-primary) !important;
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, .12);
     }
-    .media-card-item.selected::after {
+
+    #mediaLibraryRoot .media-card-item.selected::after {
         content: "\f00c";
         font-family: "Font Awesome 6 Free";
         font-weight: 900;
+
         position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 20px;
-        height: 20px;
-        background: #2563eb;
-        color: #ffffff;
-        border-radius: 4px;
-        font-size: 10px;
+        top: 7px;
+        right: 7px;
+        z-index: 4;
+
+        width: 21px;
+        height: 21px;
+
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        z-index: 4;
+
+        color: #ffffff;
+        background: var(--ml-primary);
+        border-radius: 4px;
+
+        font-size: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .15);
     }
-    .bulk-select-active .media-card-item.selected::after {
+
+    #mediaLibraryRoot .bulk-select-active .media-card-item.selected::after {
         display: none;
     }
-    .media-card-item img {
+
+    #mediaLibraryRoot .media-card-item img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
         display: block;
+        object-fit: cover;
     }
-    .media-card-source-badge {
+
+    #mediaLibraryRoot .media-card-source-badge {
         position: absolute;
-        bottom: 4px;
-        left: 4px;
-        right: 4px;
-        background: rgba(15, 23, 42, 0.72);
+        bottom: 0;
+        left: 0;
+        right: 0;
+
+        padding: 5px 7px;
+
         color: #ffffff;
-        font-size: 9.5px;
-        padding: 2px 5px;
-        border-radius: 4px;
-        text-overflow: ellipsis;
+        background: rgba(26, 32, 53, .78);
+
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.4;
+
         overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
         pointer-events: none;
     }
 
-    /* Bulk Checkbox */
-    .bulk-checkbox {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        width: 18px;
-        height: 18px;
-        display: none;
-        z-index: 6;
-        cursor: pointer;
-        border: 1.5px solid #475569;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-    .bulk-select-active .bulk-checkbox {
-        display: block;
+    #mediaLibraryRoot .media-card-item > div.bg-light {
+        background: #f5f6fa !important;
     }
 
-    /* Bulk Action Bar */
-    .bulk-toolbar-strip {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 6px;
-        padding: 8px 12px;
+    #mediaLibraryRoot .media-card-item > div.bg-light i {
+        font-size: 27px;
     }
 
-    /* Attachment Details Sidebar */
-    .attachment-details-sidebar {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px !important;
-        padding: 16px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    /* ==============================
+       ATTACHMENT INSPECTOR
+    ============================== */
+
+    #mediaLibraryRoot .attachment-details-sidebar {
         position: sticky;
         top: 76px;
-    }
-    .sidebar-preview-stage {
-        background-color: #f8fafc;
-        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-        background-size: 10px 10px;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 10px;
-        text-align: center;
-    }
-    .sidebar-meta-list {
-        background: #f8fafc;
-        border: 1px solid #f1f5f9;
-        border-radius: 6px;
-        padding: 10px 12px;
-        font-size: 11.5px;
+
+        padding: 16px;
+        min-width: 0;
+
+        background: #ffffff;
+        border: 1px solid var(--ml-border);
+        border-radius: var(--ml-card-radius);
+        box-shadow: var(--ml-shadow);
     }
 
-    /* Pagination Styling */
-    .media-pagination-wrap nav {
+    #mediaLibraryRoot .attachment-details-sidebar h6 {
+        color: var(--ml-heading);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .035em;
+    }
+
+    #mediaLibraryRoot .sidebar-preview-stage {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 155px;
+        padding: 12px;
+
+        background-color: #f8f9fc;
+        background-image: radial-gradient(#dce1e9 1px, transparent 1px);
+        background-size: 12px 12px;
+
+        border: 1px solid var(--ml-border);
+        border-radius: 5px;
+    }
+
+    #mediaLibraryRoot .sidebar-preview-stage img {
+        max-width: 100%;
+        max-height: 165px;
+        object-fit: contain;
+    }
+
+    #mediaLibraryRoot .sidebar-meta-list {
+        padding: 11px 12px;
+
+        color: #78818d;
+        background: #f8f9fc;
+
+        border: 1px solid #edf0f4;
+        border-radius: 5px;
+
+        font-size: 11.5px;
+        line-height: 1.8;
+
+        overflow-wrap: anywhere;
+    }
+
+    #mediaLibraryRoot .sidebar-meta-list strong {
+        color: var(--ml-heading);
+        font-weight: 700;
+    }
+
+    #mediaLibraryRoot .sidebar-meta-list .text-primary {
+        color: var(--ml-primary) !important;
+    }
+
+    /* Inspector Form */
+
+    #mediaLibraryRoot .attachment-details-sidebar .form-label {
+        display: block;
+        margin-bottom: 5px;
+
+        color: #596273;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    #mediaLibraryRoot .attachment-details-sidebar .form-control,
+    #mediaLibraryRoot .attachment-details-sidebar .form-select {
+        width: 100%;
+        min-height: 35px;
+        font-size: 12px;
+    }
+
+    #mediaLibraryRoot .attachment-details-sidebar textarea.form-control {
+        min-height: 58px;
+        resize: vertical;
+    }
+
+    #mediaLibraryRoot .attachment-details-sidebar .input-group .form-control {
+        min-width: 0;
+    }
+
+    #mediaLibraryRoot .attachment-details-sidebar .btn-compact {
+        min-height: 32px;
+    }
+
+    #mediaLibraryRoot .attachment-details-sidebar .row {
+        --bs-gutter-x: 6px;
+        --bs-gutter-y: 6px;
+    }
+
+    /* Empty Inspector */
+
+    #mediaLibraryRoot #sidebar-placeholder {
+        padding: 35px 20px !important;
+        border: 1px solid var(--ml-border);
+        background: #ffffff;
+    }
+
+    #mediaLibraryRoot #sidebar-placeholder i {
+        color: #b6beca;
+    }
+
+    #mediaLibraryRoot #sidebar-placeholder p {
+        color: #89919d;
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    /* ==============================
+       PAGINATION
+    ============================== */
+
+    #mediaLibraryRoot .media-pagination-wrap {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #mediaLibraryRoot .media-pagination-wrap nav {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px;
+        gap: 10px;
         width: 100% !important;
     }
-    @media (min-width: 768px) {
-        .media-pagination-wrap nav {
-            flex-direction: row !important;
-            justify-content: space-between !important;
-        }
-    }
-    .media-pagination-wrap .pagination {
-        margin: 0 !important;
-        gap: 4px;
+
+    #mediaLibraryRoot .media-pagination-wrap .pagination {
+        display: flex;
         flex-wrap: wrap;
         justify-content: center;
+        gap: 4px;
+        margin: 0;
     }
-    .media-pagination-wrap .page-link {
-        border-radius: 5px !important;
+
+    #mediaLibraryRoot .media-pagination-wrap .page-link {
+        min-width: 30px;
+        padding: 5px 10px;
+
+        color: #596273;
+        background: #ffffff;
+        border: 1px solid var(--ml-border);
+        border-radius: 5px;
+
         font-size: 12px;
-        padding: 4px 10px;
-        color: #475569;
-        border-color: #e2e8f0;
+        text-align: center;
     }
-    .media-pagination-wrap .page-item.active .page-link {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
+
+    #mediaLibraryRoot .media-pagination-wrap .page-item.active .page-link {
         color: #ffffff !important;
+        background: var(--ml-primary) !important;
+        border-color: var(--ml-primary) !important;
         font-weight: 700;
     }
 
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    #mediaLibraryRoot .media-pagination-wrap .page-item.disabled .page-link {
+        color: #b6beca;
+        background: #f8f9fa;
     }
 
+    /* ==============================
+       TYPOGRAPHY & DATA
+    ============================== */
+
+    #mediaLibraryRoot .bn-digit,
+    #mediaLibraryRoot .font-monospace {
+        font-weight: 600 !important;
+    }
+
+    #mediaLibraryRoot .text-muted {
+        color: #8d9498 !important;
+    }
+
+    #mediaLibraryRoot .shadow-xs {
+        box-shadow: var(--ml-shadow);
+    }
+
+    /* ==============================
+       MODAL DESIGN
+    ============================== */
+
+    #replaceMediaModal .modal-content,
+    #usageTrackingModal .modal-content,
+    #mediaNoticeModal .modal-content,
+    #mediaConfirmModal .modal-content {
+        border: 1px solid var(--ml-border) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .12) !important;
+    }
+
+    #replaceMediaModal .modal-content,
+    #usageTrackingModal .modal-content {
+        padding: 20px !important;
+    }
+
+    #replaceMediaModal .modal-content h6,
+    #usageTrackingModal .modal-content h6 {
+        color: var(--ml-heading);
+        font-weight: 700;
+    }
+
+    #replaceMediaModal .modal-content p,
+    #usageTrackingModal .modal-content p {
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    #replaceMediaModal .form-control {
+        min-height: 38px;
+        font-size: 12px;
+    }
+
+    #usageTrackingModal #usage-list-container {
+        max-height: 320px !important;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #usageTrackingModal .list-group-item {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+        border-color: var(--ml-border);
+        gap: 8px;
+    }
+
+    #usageTrackingModal .list-group-item > div {
+        min-width: 0;
+    }
+
+    #mediaNoticeModal .modal-content,
+    #mediaConfirmModal .modal-content {
+        padding: 22px !important;
+    }
+
+    #mediaNoticeModal .modal-body,
+    #mediaConfirmModal .modal-body {
+        padding: 5px !important;
+    }
+
+    #mediaNoticeTitle,
+    #mediaConfirmTitle {
+        color: var(--ml-heading);
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    #mediaNoticeMsg,
+    #mediaConfirmMsg {
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+    #mediaLibraryRoot .btn-close,
+    #replaceMediaModal .btn-close,
+    #usageTrackingModal .btn-close {
+        flex-shrink: 0;
+    }
+
+    /* ==============================
+       RESPONSIVE — LARGE DESKTOP
+    ============================== */
+
+    @media (min-width: 1400px) {
+        #mediaLibraryRoot .media-card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 13px;
+        }
+    }
+
+    /* ==============================
+       RESPONSIVE — TABLET LANDSCAPE
+    ============================== */
+
+    @media (max-width: 1199.98px) {
+        #mediaLibraryRoot .media-card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 10px;
+        }
+
+        #mediaLibraryRoot .attachment-details-sidebar {
+            padding: 14px;
+        }
+    }
+
+    /* ==============================
+       RESPONSIVE — TABLET PORTRAIT
+    ============================== */
+
+    @media (max-width: 991.98px) {
+        #mediaLibraryRoot .attachment-details-sidebar {
+            position: static;
+            top: auto;
+        }
+
+        #mediaLibraryRoot .media-card-grid {
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            max-height: 65vh;
+        }
+
+        #mediaLibraryRoot .media-page-header {
+            align-items: flex-start !important;
+        }
+    }
+
+    /* ==============================
+       RESPONSIVE — MOBILE
+    ============================== */
+
     @media (max-width: 767.98px) {
-        .header-top-actions {
+        #mediaLibraryRoot {
+            font-size: 12px;
+        }
+
+        #mediaLibraryRoot .media-page-header {
+            margin-bottom: 16px;
+        }
+
+        #mediaLibraryRoot .media-page-title {
+            font-size: 17px;
+        }
+
+        #mediaLibraryRoot .media-page-description {
+            font-size: 11.5px;
+        }
+
+        #mediaLibraryRoot .header-top-actions {
             width: 100%;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 7px;
         }
-        .header-top-actions .btn-compact {
+
+        #mediaLibraryRoot .header-top-actions .btn {
             flex: 1 1 auto;
-            padding: 7px 10px !important;
+            min-height: 36px;
+            padding: 7px 9px;
+            font-size: 11px;
         }
-        .media-card-grid {
-            grid-template-columns: repeat(3, 1fr);
+
+        #mediaLibraryRoot .media-section-tabs {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 7px;
+        }
+
+        #mediaLibraryRoot .media-section-tab {
+            width: 100%;
+            justify-content: flex-start;
+            min-height: 40px;
+            padding: 9px 11px;
+            font-size: 11.5px;
+        }
+
+        #mediaLibraryRoot .media-filter-panel {
+            padding: 12px;
+        }
+
+        #mediaLibraryRoot .media-card-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 8px;
-            max-height: 55vh;
+            max-height: 58vh;
         }
-        .attachment-details-sidebar {
-            position: static;
-            padding: 14px;
+
+        #mediaLibraryRoot .media-card-item {
+            border-radius: 5px;
         }
-        .wp-upload-collapsible {
-            padding: 20px 14px;
+
+        #mediaLibraryRoot .media-card-source-badge {
+            padding: 4px 5px;
+            font-size: 9px;
+        }
+
+        #mediaLibraryRoot .attachment-details-sidebar {
+            padding: 13px;
+        }
+
+        #mediaLibraryRoot .wp-upload-collapsible {
+            padding: 22px 13px;
+        }
+
+        #mediaLibraryRoot #wp-collapsible-upload-box > .d-flex {
+            flex-wrap: wrap;
+        }
+
+        #mediaLibraryRoot #wp-collapsible-upload-box > .d-flex > * {
+            max-width: 100%;
+        }
+
+        #mediaLibraryRoot .bulk-toolbar-strip {
+            padding: 10px;
+        }
+
+        #mediaLibraryRoot .bulk-toolbar-strip .btn {
+            width: 100%;
+        }
+
+        #mediaLibraryRoot .media-panel-card {
+            padding: 12px !important;
+        }
+
+        #mediaLibraryRoot .media-pagination-wrap nav {
+            flex-direction: column !important;
+        }
+    }
+
+    /* ==============================
+       RESPONSIVE — SMALL MOBILE
+    ============================== */
+
+    @media (max-width: 420px) {
+        #mediaLibraryRoot .container-fluid {
+            padding-left: 9px !important;
+            padding-right: 9px !important;
+        }
+
+        #mediaLibraryRoot .media-card-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        #mediaLibraryRoot .media-section-tab {
+            gap: 6px;
+            font-size: 10.5px;
+        }
+
+        #mediaLibraryRoot .media-section-tab .badge {
+            margin-left: auto;
+        }
+
+        #mediaLibraryRoot .header-top-actions {
+            gap: 6px;
+        }
+
+        #mediaLibraryRoot .header-top-actions .btn {
+            font-size: 10.5px;
+            padding: 7px 6px;
+        }
+
+        #mediaLibraryRoot .media-filter-panel {
+            padding: 10px;
+        }
+
+        #mediaLibraryRoot .media-panel-card {
+            padding: 10px !important;
+        }
+
+        #mediaLibraryRoot .sidebar-meta-list {
+            font-size: 10.5px;
+        }
+
+        #replaceMediaModal .modal-dialog,
+        #usageTrackingModal .modal-dialog,
+        #mediaNoticeModal .modal-dialog,
+        #mediaConfirmModal .modal-dialog {
+            margin: 10px;
+        }
+    }
+
+    /* ==============================
+       MODAL VIEWPORT SAFETY
+    ============================== */
+
+    @media (max-width: 575.98px) {
+        #replaceMediaModal .modal-dialog,
+        #usageTrackingModal .modal-dialog,
+        #mediaNoticeModal .modal-dialog,
+        #mediaConfirmModal .modal-dialog {
+            max-width: calc(100% - 20px);
+            margin: 10px auto;
+        }
+
+        #replaceMediaModal .modal-content,
+        #usageTrackingModal .modal-content,
+        #mediaNoticeModal .modal-content,
+        #mediaConfirmModal .modal-content {
+            max-height: calc(100dvh - 30px);
+            overflow-y: auto;
+        }
+
+        #mediaLibraryRoot .media-pagination-wrap .pagination {
+            gap: 3px;
+        }
+
+        #mediaLibraryRoot .media-pagination-wrap .page-link {
+            padding: 5px 8px;
+            font-size: 11px;
+        }
+    }
+
+    /* ==============================
+       REDUCED MOTION
+    ============================== */
+
+    @media (prefers-reduced-motion: reduce) {
+        #mediaLibraryRoot *,
+        #replaceMediaModal *,
+        #usageTrackingModal *,
+        #mediaNoticeModal *,
+        #mediaConfirmModal * {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
         }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4" id="mediaLibraryRoot">
-    <!-- Header -->
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3 media-page-header">
         <div>
-            <h5 class="fw-bold mb-1 text-dark d-flex align-items-center" style="font-size: 18px;">
+            <h5 class="fw-bold mb-1 text-dark d-flex align-items-center media-page-title">
                 <i class="fas fa-photo-video text-primary me-2"></i>
-                <span>Central Media &amp; File Library</span>
+                <span>Media & File Library</span>
             </h5>
-            <small class="text-muted d-block" style="font-size: 12px; line-height: 1.35;">
-                Control all store images, product variants, banners, and user-submitted files (payment proofs, forms, profiles) from one place.
+            <small class="d-block media-page-description">
+                Manage store images, variants, banners & uploads.
             </small>
         </div>
-        <div class="header-top-actions d-flex gap-2">
-            <a href="{{ route('admin.media.index', ['category' => $currentCategory, 'resync' => 1]) }}" class="btn btn-outline-primary btn-compact bg-white shadow-xs" title="Scan & Sync All Site Folders">
+
+        <div class="header-top-actions">
+            <a href="{{ route('admin.media.index', ['category' => $currentCategory, 'resync' => 1]) }}"
+               class="btn btn-outline-primary btn-compact bg-white shadow-xs"
+               title="Scan & Sync All Site Folders">
                 <i class="fas fa-arrows-rotate me-1"></i>
                 <span>Sync All Files</span>
             </a>
+
             <button type="button" class="btn btn-primary btn-compact shadow-xs" onclick="toggleUploadBox()">
-                <i class="fas fa-plus me-1" style="font-size: 10px;"></i>
+                <i class="fas fa-plus me-1"></i>
                 <span>Add New Media</span>
             </button>
+
             <button type="button" id="btn-bulk-toggle" class="btn btn-outline-secondary btn-compact bg-white shadow-xs" onclick="toggleBulkMode()">
                 <span>Bulk Select</span>
             </button>
         </div>
     </div>
 
-    <!-- Separate Sections: Site Content Media vs User Submitted Files -->
+    <!-- Media Category Navigation -->
     <div class="media-section-tabs">
+
         <a href="{{ route('admin.media.index', ['category' => 'site_content']) }}"
            class="media-section-tab {{ $currentCategory === 'site_content' ? 'active-site' : '' }}">
             <i class="fas fa-images text-info"></i>
-            <span>Site Content Media (Products, Variants, Theme, Pages)</span>
+            <span>Site Content Media</span>
             <span class="badge bg-primary text-white px-2 py-0.5">{{ $counts['site_content'] ?? 0 }}</span>
         </a>
 
         <a href="{{ route('admin.media.index', ['category' => 'user_submitted']) }}"
            class="media-section-tab {{ $currentCategory === 'user_submitted' ? 'active-user' : '' }}">
             <i class="fas fa-file-shield text-warning"></i>
-            <span>User Submitted Files (Payment Proofs, Forms, Profiles)</span>
+            <span>User Submitted Files </span>
             <span class="badge bg-warning text-dark px-2 py-0.5">{{ $counts['user_submitted'] ?? 0 }}</span>
         </a>
 
@@ -403,37 +1078,51 @@
             <span>All Site Files</span>
             <span class="badge bg-secondary text-white px-2 py-0.5">{{ $counts['all'] ?? 0 }}</span>
         </a>
+
     </div>
 
-    <!-- Collapsible Dropzone -->
+    <!-- Upload Dropzone -->
     <div id="wp-collapsible-upload-box" class="wp-upload-collapsible shadow-xs" style="display: none;">
+
         <div class="upload-icon-circle">
             <i class="fas fa-cloud-upload-alt"></i>
         </div>
-        <h6 class="fw-bold text-dark mb-1" style="font-size: 15px;">Drop files anywhere to upload</h6>
-        <p class="text-muted small mb-2" style="font-size: 12px;">
-            Duplicate filenames are automatically renamed as <strong>(1), (2)</strong> — no file is ever rejected!
+
+        <h6 class="fw-bold text-dark mb-1 upload-heading">Drop Files to Upload</h6>
+
+        <p class="text-muted small mb-3 upload-description">
+            Duplicate filenames are automatically renamed as <strong>(1), (2)</strong>. No file is ever rejected!
         </p>
+
         <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
             <select id="upload-target-category" class="form-select form-select-sm" style="max-width: 220px;">
                 <option value="site_content" {{ $currentCategory !== 'user_submitted' ? 'selected' : '' }}>Upload to: Site Content Media</option>
                 <option value="user_submitted" {{ $currentCategory === 'user_submitted' ? 'selected' : '' }}>Upload to: User Submitted Files</option>
             </select>
+
             <label class="btn btn-primary btn-compact px-4 py-2 shadow-xs mb-0" style="cursor: pointer;">
                 <i class="fas fa-folder-open me-1"></i>
                 <span>Select Files</span>
                 <input type="file" multiple class="d-none" accept="image/*,.pdf" onchange="uploadDashboardMedia(this.files)">
             </label>
         </div>
-        <div class="text-muted bn-digit" style="font-size: 11px;">Maximum upload file size: 20 MB (JPG, PNG, WEBP, GIF, SVG, PDF).</div>
-        <div id="upload-progress-indicator" class="d-none mt-2 text-primary small fw-semibold">
-            <i class="fas fa-spinner fa-spin me-1"></i> Uploading media files, please wait...
+
+        <div class="text-muted bn-digit" style="font-size: 11px;">
+            Maximum upload file size: 20 MB (JPG, PNG, WEBP, GIF, SVG, PDF).
         </div>
+
+        <div id="upload-progress-indicator" class="d-none mt-2 text-primary small fw-semibold">
+            <i class="fas fa-spinner fa-spin me-1"></i>
+            Uploading media files, please wait...
+        </div>
+
     </div>
 
-    <!-- Filters & Search Toolbar -->
-    <div class="media-panel-card p-3 mb-3">
+    <!-- Filters & Search -->
+    <div class="media-panel-card media-filter-panel">
+
         <form method="GET" action="{{ route('admin.media.index') }}" class="row g-2 align-items-center">
+
             <input type="hidden" name="category" value="{{ $currentCategory }}">
 
             <div class="col-6 col-md-2">
@@ -447,6 +1136,7 @@
             <div class="col-6 col-md-3">
                 <select name="source_module" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="all">All Modules / Folders</option>
+
                     @if($currentCategory === 'user_submitted')
                         <option value="payment_proof" {{ request('source_module') == 'payment_proof' ? 'selected' : '' }}>Payment Proofs (Checkout / Manual)</option>
                         <option value="form_submission" {{ request('source_module') == 'form_submission' ? 'selected' : '' }}>Form Submissions</option>
@@ -464,130 +1154,181 @@
                         <option value="blog" {{ request('source_module') == 'blog' ? 'selected' : '' }}>Blog Posts</option>
                         <option value="page" {{ request('source_module') == 'page' ? 'selected' : '' }}>Pages</option>
                     @endif
+
                 </select>
             </div>
 
             <div class="col-6 col-md-2">
                 <select name="date" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="all">All Dates</option>
+
                     @foreach($dates as $d)
                         <option value="{{ $d->date_val }}" {{ request('date') == $d->date_val ? 'selected' : '' }}>{{ $d->date_label }}</option>
                     @endforeach
+
                 </select>
             </div>
 
             <div class="col-12 col-md-5 ms-auto">
                 <div class="input-group input-group-sm">
                     <input type="text" name="search" class="form-control" value="{{ request('search') }}" placeholder="Search by file name, title, order ref, or path...">
+
                     <button class="btn btn-primary px-3" type="submit" title="Search">
-                        <i class="fas fa-search" style="font-size: 11px;"></i>
+                        <i class="fas fa-search"></i>
                     </button>
                 </div>
             </div>
+
         </form>
 
         <!-- Bulk Action Bar -->
         <div id="bulk-action-bar" class="d-none mt-3 bulk-toolbar-strip d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+
             <span class="small fw-semibold text-danger">
-                <span id="bulk-selected-count" class="bn-digit">0</span> media item(s) selected for bulk action
+                <span id="bulk-selected-count" class="bn-digit">0</span>
+                media item(s) selected for bulk action
             </span>
+
             <button type="button" class="btn btn-danger btn-compact shadow-xs" onclick="executeBulkDelete()">
                 <i class="fas fa-trash-alt me-1"></i>
                 <span>Delete Selected</span>
             </button>
+
         </div>
+
     </div>
 
-    <!-- Main Content Area: Grid + Sidebar -->
+    <!-- Main Content: Media Grid & Inspector -->
     <div class="row g-3">
-        <!-- Left Column: Media Grid -->
+
+        <!-- Media Grid -->
         <div class="col-12 col-lg-8 col-xl-9">
+
             <div class="media-panel-card p-3">
+
                 <div class="media-card-grid" id="main-media-grid">
+
                     @forelse($files as $file)
+
                         <div class="media-card-item" data-id="{{ $file->id }}" onclick="openDashboardDetails({{ json_encode($file) }}, this)">
+
                             <input type="checkbox" class="bulk-checkbox form-check-input mt-0" value="{{ $file->id }}" onclick="event.stopPropagation(); updateBulkCount();">
+
                             @if(str_starts_with($file->file_type ?? '', 'image/'))
+
                                 <img src="{{ $file->url }}" alt="{{ $file->alt_text }}" loading="lazy" onerror="this.src='https://placehold.co/300x300?text=Missing'">
+
                             @else
+
                                 <div class="h-100 d-flex flex-column align-items-center justify-content-center p-2 text-center bg-light">
                                     <i class="fas fa-file-pdf fa-2x text-danger mb-1"></i>
                                     <small class="text-truncate w-100 fw-semibold text-dark px-1" style="font-size: 10px;">{{ $file->file_name }}</small>
                                 </div>
+
                             @endif
+
                             <div class="media-card-source-badge">
                                 {{ $file->title ?: $file->file_name }}
                             </div>
+
                         </div>
+
                     @empty
+
                         <div class="col-12 text-center text-muted py-5" style="grid-column: 1 / -1;">
                             <i class="far fa-images fa-2x mb-2 d-block opacity-25"></i>
                             <span class="small fw-semibold">No media files found in this section.</span>
                         </div>
+
                     @endforelse
+
                 </div>
 
                 @if($files->hasPages())
+
                     <div class="mt-3 pt-3 border-top media-pagination-wrap">
                         {{ $files->links('pagination::bootstrap-5') }}
                     </div>
+
                 @endif
+
             </div>
+
         </div>
 
-        <!-- Right Column: Attachment Details Inspector -->
+        <!-- Attachment Details Inspector -->
         <div class="col-12 col-lg-4 col-xl-3" id="inspector-column-anchor">
+
             <div class="attachment-details-sidebar" id="dashboard-sidebar-panel" style="display: none;">
+
                 <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
-                    <h6 class="fw-bold mb-0 text-uppercase text-dark" style="font-size: 12px; letter-spacing: 0.04em;">Attachment Details</h6>
+
+                    <h6 class="fw-bold mb-0 text-uppercase text-dark">
+                        Attachment Details
+                    </h6>
+
                     <button type="button" class="btn-close btn-sm d-lg-none shadow-none" onclick="closeSidebarPanel()" aria-label="Close"></button>
+
                 </div>
-                
+
+                <!-- Preview -->
                 <div class="sidebar-preview-stage mb-3">
                     <img id="sidebar-preview-img" src="" class="img-fluid rounded" style="max-height: 165px; object-fit: contain;">
                 </div>
 
+                <!-- File Information -->
                 <div class="sidebar-meta-list text-muted lh-base mb-3">
-                    <div class="text-truncate"><strong class="text-dark" id="sidebar-meta-name"></strong></div>
+
+                    <div class="text-truncate">
+                        <strong class="text-dark" id="sidebar-meta-name"></strong>
+                    </div>
+
                     <div id="sidebar-meta-module" class="text-primary fw-semibold"></div>
                     <div id="sidebar-meta-date" class="bn-digit"></div>
                     <div id="sidebar-meta-size" class="bn-digit"></div>
                     <div id="sidebar-meta-dims" class="bn-digit"></div>
+
                 </div>
 
-                <!-- Actions: Download, Open, Replace & Usage Check -->
-                <div class="row g-1.5 mb-3">
+                <!-- File Actions -->
+                <div class="row g-1 mb-3">
+
                     <div class="col-6">
                         <a href="#" id="sidebar-download-btn" class="btn btn-success btn-compact w-100 shadow-xs text-decoration-none">
                             <i class="fas fa-download me-1"></i>
                             <span>Download</span>
                         </a>
                     </div>
+
                     <div class="col-6">
                         <a href="#" target="_blank" id="sidebar-open-btn" class="btn btn-outline-dark btn-compact w-100 shadow-xs text-decoration-none">
                             <i class="fas fa-external-link-alt me-1"></i>
                             <span>View Full</span>
                         </a>
                     </div>
-                    <div class="col-6 mt-1.5">
+
+                    <div class="col-6 mt-1">
                         <button type="button" class="btn btn-outline-primary btn-compact w-100 shadow-xs" onclick="openReplaceModal()">
                             <i class="fas fa-sync-alt me-1"></i>
                             <span>Replace</span>
                         </button>
                     </div>
-                    <div class="col-6 mt-1.5">
+
+                    <div class="col-6 mt-1">
                         <button type="button" class="btn btn-outline-info btn-compact w-100 shadow-xs" onclick="checkMediaUsage()">
                             <i class="fas fa-link me-1"></i>
                             <span>Usage</span>
                         </button>
                     </div>
+
                 </div>
 
                 <!-- Metadata Form -->
                 <form id="sidebar-metadata-form" onsubmit="saveDashboardMeta(event)">
+
                     <input type="hidden" id="sidebar-media-id">
 
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label">Section / Category</label>
                         <select id="sidebar-category" class="form-select form-select-sm">
                             <option value="site_content">Site Content Media</option>
@@ -595,122 +1336,210 @@
                         </select>
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label">Title</label>
                         <input type="text" id="sidebar-title" class="form-control form-control-sm" placeholder="Media title">
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label">Alternative Text (Alt)</label>
                         <textarea id="sidebar-alt" class="form-control form-control-sm" rows="2" placeholder="Describe image for SEO..."></textarea>
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label">Caption</label>
                         <textarea id="sidebar-caption" class="form-control form-control-sm" rows="2" placeholder="Optional caption..."></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">File URL</label>
+
                         <div class="input-group input-group-sm">
                             <input type="text" id="sidebar-url" class="form-control font-monospace bg-light" style="font-size: 11px;" readonly>
-                            <button type="button" class="btn btn-outline-secondary btn-compact" onclick="copySidebarUrl()">Copy</button>
+
+                            <button type="button" class="btn btn-outline-secondary btn-compact" onclick="copySidebarUrl()">
+                                Copy
+                            </button>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top gap-2">
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top gap-2">
+
                         <button type="submit" class="btn btn-primary btn-compact shadow-xs" id="btn-save-meta">
                             <span>Save Metadata</span>
                         </button>
+
                         <button type="button" class="btn btn-outline-danger btn-compact" onclick="deleteDashboardMedia()">
                             <span>Delete</span>
                         </button>
+
                     </div>
+
                 </form>
+
             </div>
 
             <!-- Empty Inspector Placeholder -->
             <div class="media-panel-card p-4 text-center text-muted" id="sidebar-placeholder">
+
                 <i class="far fa-image fa-2x mb-2 d-block opacity-25"></i>
-                <p class="small mb-0" style="font-size: 12px;">Select any file from the grid to view, download, replace, or edit its metadata.</p>
+
+                <p class="small mb-0">
+                    Select a file to view, download, replace, or edit its metadata.
+                </p>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <!-- Modal 1: Replace Media -->
 <div class="modal fade" id="replaceMediaModal" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 8px !important;">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+
+        <div class="modal-content border-0 shadow-lg p-3">
+
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+
                 <h6 class="fw-bold mb-0 text-dark d-flex align-items-center" style="font-size: 13.5px;">
                     <i class="fas fa-sync-alt text-primary me-2"></i>
                     <span>Replace Media File</span>
                 </h6>
+
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
+
             </div>
-            <p class="small text-muted mb-2" style="font-size: 11.5px; line-height: 1.45;">Upload a new file to replace this item. All existing products and variants will display the new image immediately.</p>
+
+            <p class="small text-muted mb-3" style="font-size: 11.5px; line-height: 1.55;">
+                Upload a new file to replace this item. All existing products and variants will display the new image immediately.
+            </p>
+
             <input type="file" id="replace-file-input" class="form-control form-control-sm mb-3" accept="image/*,.pdf">
+
             <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-light border btn-compact" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary btn-compact shadow-xs" id="btn-exec-replace" onclick="executeFileReplace()">Replace</button>
+
+                <button type="button" class="btn btn-light border btn-compact" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="button" class="btn btn-primary btn-compact shadow-xs" id="btn-exec-replace" onclick="executeFileReplace()">
+                    Replace
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <!-- Modal 2: Usage Tracking -->
 <div class="modal fade" id="usageTrackingModal" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg p-3" style="border-radius: 8px !important;">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+
+        <div class="modal-content border-0 shadow-lg p-3">
+
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+
                 <h6 class="fw-bold mb-0 text-dark d-flex align-items-center" style="font-size: 14px;">
                     <i class="fas fa-link text-info me-2"></i>
                     <span>Media Usage Locations</span>
                 </h6>
+
                 <button type="button" class="btn-close btn-sm shadow-none" data-bs-dismiss="modal"></button>
+
             </div>
+
             <div id="usage-list-container" class="my-2" style="max-height: 260px; overflow-y: auto;"></div>
-            <div class="text-end pt-2 border-top">
-                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">Close</button>
+
+            <div class="text-end pt-3 border-top">
+
+                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">
+                    Close
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <!-- Modal 3: Notice / Alert Dialog -->
 <div class="modal fade" id="mediaNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px !important;">
+
+        <div class="modal-content border-0 shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
+
                 <div class="mb-2 text-success" id="mediaNoticeIcon">
                     <i class="fas fa-check-circle fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="mediaNoticeTitle" style="font-size: 14px;">Notice</h6>
+
+                <h6 class="fw-bold text-dark mb-1" id="mediaNoticeTitle" style="font-size: 14px;">
+                    Notice
+                </h6>
+
                 <p class="text-muted small mb-3" id="mediaNoticeMsg" style="font-size: 12px;"></p>
-                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">OK</button>
+
+                <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">
+                    OK
+                </button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <!-- Modal 4: Confirmation Dialog -->
 <div class="modal fade" id="mediaConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
+
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px !important;">
+
+        <div class="modal-content border-0 shadow-lg text-center p-3">
+
             <div class="modal-body p-1">
+
                 <div class="mb-2 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x"></i>
                 </div>
-                <h6 class="fw-bold text-dark mb-1" id="mediaConfirmTitle" style="font-size: 14px;">Confirm Delete</h6>
+
+                <h6 class="fw-bold text-dark mb-1" id="mediaConfirmTitle" style="font-size: 14px;">
+                    Confirm Delete
+                </h6>
+
                 <p class="text-muted small mb-3" id="mediaConfirmMsg" style="font-size: 12px; line-height: 1.45;"></p>
+
                 <div class="d-flex justify-content-center gap-2">
-                    <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger btn-compact px-3 shadow-xs" id="btnMediaConfirmProceed">Delete</button>
+
+                    <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-compact px-3 shadow-xs" id="btnMediaConfirmProceed">
+                        Delete
+                    </button>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
 <script>

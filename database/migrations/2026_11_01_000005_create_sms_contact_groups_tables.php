@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. SMS Contact Groups (e.g. VIP Customers, Wholesalers, Event Attendees)
+        // 1. SMS Contact Groups (VIP Customers, Wholesalers, Event Attendees)
         Schema::create('sms_contact_groups', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->unsignedBigInteger('group_id')->index();
             $table->string('phone_number', 20)->index();
             $table->string('name')->nullable();
-            $table->json('custom_attributes')->nullable(); // Extra variables for personalization: e.g. {"company":"ABC"}
+            $table->json('custom_attributes')->nullable(); // Extra variables for personalization: {"company":"ABC"}
             $table->boolean('is_valid')->default(true);
             $table->timestamps();
 

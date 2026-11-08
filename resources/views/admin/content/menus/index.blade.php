@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Navigation Menus - ' . config('app.name'))
@@ -9,10 +10,44 @@
 @endphp
 
 <style>
-    /* Global Strict 5px Element Radius */
+    /* =========================================================
+       KAIADMIN LITE v1.2.0 — CLASSIC WHITE
+       Navigation Menu Management
+       Scoped CSS | Bootstrap 5 Compatible
+    ========================================================= */
+
+    #navMenusRoot {
+        --nav-primary: var(--bs-primary, #1572e8);
+        --nav-secondary: #6c757d;
+        --nav-success: #31ce36;
+        --nav-danger: #f25961;
+        --nav-warning: #ffad46;
+        --nav-info: #48abf7;
+
+        --nav-body: #f5f7fd;
+        --nav-card: #ffffff;
+        --nav-surface: #f8f9fc;
+        --nav-heading: #2a2f5b;
+        --nav-text: #495057;
+        --nav-muted: #8d9498;
+        --nav-border: #e6e9ef;
+
+        --nav-radius: 7px;
+        --nav-shadow: 0 1px 3px rgba(0, 0, 0, .035);
+
+        color: var(--nav-text);
+        font-size: 13px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    #navMenusRoot *,
+    #menuNoticeModal *,
+    #deleteMenuConfirmModal * {
+        box-sizing: border-box;
+    }
+
     #navMenusRoot .btn,
-    #navMenusRoot .btn-sm,
-    #navMenusRoot button,
     #navMenusRoot .form-control,
     #navMenusRoot .form-select,
     #menuNoticeModal .btn,
@@ -20,274 +55,847 @@
         border-radius: 5px !important;
     }
 
-    /* Compact & Sleek Button Sizing */
+    #navMenusRoot .btn {
+        min-height: 33px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 12px;
+        transition: all .18s ease;
+    }
+
     #navMenusRoot .btn-compact,
     #menuNoticeModal .btn-compact,
     #deleteMenuConfirmModal .btn-compact {
+        min-height: 30px;
+        padding: 5px 11px !important;
         font-size: 11.5px !important;
-        padding: 4px 10px !important;
-        line-height: 1.3 !important;
+        line-height: 1.35 !important;
         font-weight: 600 !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 4px;
         white-space: nowrap;
-        transition: all 0.15s ease;
+        transition: all .18s ease;
     }
 
-    /* Navigation Tabs */
-    .wp-nav-tab-wrapper {
-        border-bottom: 1px solid #cbd5e1;
-        margin-bottom: 16px;
+    #navMenusRoot .btn-primary {
+        background: var(--nav-primary);
+        border-color: var(--nav-primary);
+    }
+
+    #navMenusRoot .btn-primary:hover {
+        filter: brightness(.93);
+    }
+
+    #navMenusRoot .btn:focus-visible,
+    #navMenusRoot input:focus-visible,
+    #navMenusRoot button:focus-visible {
+        outline: 2px solid var(--nav-primary);
+        outline-offset: 2px;
+    }
+
+    /* Page Navigation Tabs */
+
+    #navMenusRoot .wp-nav-tab-wrapper {
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 5px;
+        border-bottom: 1px solid var(--nav-border);
+        margin-bottom: 16px;
     }
-    .wp-nav-tab {
-        border: 1px solid #cbd5e1;
-        border-bottom: none;
-        background: #f1f5f9;
-        color: #475569;
-        padding: 7px 16px;
-        display: inline-block;
-        font-weight: 600;
-        font-size: 12.5px;
-        text-decoration: none;
-        border-radius: 6px 6px 0 0;
+
+    #navMenusRoot .wp-nav-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 17px;
         margin-bottom: -1px;
-        transition: all 0.15s ease;
+        background: transparent;
+        border: 1px solid transparent;
+        border-bottom: 2px solid transparent;
+        color: var(--nav-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .18s ease;
     }
-    .wp-nav-tab:hover {
-        background: #e2e8f0;
-        color: #0f172a;
+
+    #navMenusRoot .wp-nav-tab:hover {
+        color: var(--nav-primary);
+        background: #f8faff;
     }
-    .wp-nav-tab.active {
-        background: #ffffff;
-        border-bottom: 1px solid #ffffff;
-        color: #2563eb;
+
+    #navMenusRoot .wp-nav-tab.active {
+        color: var(--nav-primary);
+        background: #fff;
+        border-bottom-color: var(--nav-primary);
         font-weight: 700;
     }
 
-    /* Menu Selector Bar */
-    .wp-menu-select-bar {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        padding: 12px 16px;
-        border-radius: 8px;
+    /* Menu Selector */
+
+    #navMenusRoot .wp-menu-select-bar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 16px;
         margin-bottom: 18px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+        background: var(--nav-card);
+        border: 1px solid var(--nav-border);
+        border-radius: var(--nav-radius);
+        box-shadow: var(--nav-shadow);
+    }
+
+    #navMenusRoot .wp-menu-select-bar > label {
+        color: var(--nav-heading) !important;
+        font-size: 12.5px !important;
+    }
+
+    #navMenusRoot .wp-menu-select-bar form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    #navMenusRoot .wp-menu-select-bar form select {
+        min-width: 220px;
+    }
+
+    #navMenusRoot .wp-menu-select-bar > span {
+        font-size: 12px !important;
     }
 
     /* Form Controls */
+
     #navMenusRoot .form-control,
     #navMenusRoot .form-select {
-        font-size: 12.5px;
-        border: 1px solid #cbd5e1;
-        padding: 5px 10px;
-        color: #0f172a;
-        background-color: #ffffff;
+        min-height: 36px;
+        padding: 7px 11px;
+        color: var(--nav-heading);
+        background-color: #fff;
+        border: 1px solid #e0e4eb;
         box-shadow: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        font-size: 12.5px;
+        font-weight: 400;
+        transition: border-color .18s ease, box-shadow .18s ease;
     }
+
+    #navMenusRoot .form-control::placeholder {
+        color: #aab0b7;
+        opacity: 1;
+    }
+
     #navMenusRoot .form-control:focus,
     #navMenusRoot .form-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        border-color: var(--nav-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .10);
         outline: none;
     }
 
-    /* Left Column Accordions */
-    .wp-accordion-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background: #ffffff;
+    #navMenusRoot .form-label {
+        display: block;
+        color: var(--nav-heading);
+        font-size: 11.5px !important;
+        font-weight: 600;
+    }
+
+    #navMenusRoot .form-control-sm,
+    #navMenusRoot .form-select-sm {
+        min-height: 34px;
+        font-size: 12px;
+    }
+
+    /* Main Content Headings */
+
+    #navMenusRoot .col-lg-4 > h6 {
+        color: var(--nav-heading) !important;
+        font-size: 14px !important;
+        margin-bottom: 12px !important;
+    }
+
+    #navMenusRoot h6 {
+        color: var(--nav-heading);
+    }
+
+    /* Left Accordion Cards */
+
+    #navMenusRoot .wp-accordion-card {
+        background: var(--nav-card);
+        border: 1px solid var(--nav-border);
+        border-radius: var(--nav-radius);
         margin-bottom: 10px;
         overflow: hidden;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+        box-shadow: var(--nav-shadow);
+        transition: border-color .18s ease;
     }
-    .wp-accordion-header {
-        background: #f8fafc;
+
+    #navMenusRoot .wp-accordion-card:hover {
+        border-color: #d7dce5;
+    }
+
+    #navMenusRoot .wp-accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        min-height: 43px;
+        padding: 11px 14px;
+        background: #fff;
         border-bottom: 1px solid transparent;
-        padding: 10px 14px;
-        font-weight: 600;
-        font-size: 13px;
-        color: #1e293b;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        user-select: none;
-        transition: background-color 0.15s ease;
-    }
-    .wp-accordion-header:hover {
-        background: #f1f5f9;
-    }
-    .wp-accordion-body {
-        padding: 12px 14px;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    /* Right Column Structure Box */
-    .wp-structure-box {
-        border: 1px solid #e2e8f0;
-        background: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        overflow: hidden;
-    }
-    .wp-structure-header {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 12px 16px;
-    }
-    .wp-structure-footer {
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        padding: 12px 16px;
-    }
-
-    /* Multi-level Indentation & Depth Styling */
-    .menu-item-bar {
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-        transition: margin-left 0.2s ease, border-color 0.15s ease;
-        overflow: hidden;
-    }
-    .menu-item-bar:hover {
-        border-color: #94a3b8;
-    }
-    .menu-item-bar.depth-0 { margin-left: 0px; }
-    .menu-item-bar.depth-1 { margin-left: 28px; border-left: 3px solid #2563eb; }
-    .menu-item-bar.depth-2 { margin-left: 56px; border-left: 3px solid #10b981; }
-    .menu-item-bar.depth-3 { margin-left: 84px; border-left: 3px solid #f59e0b; }
-
-    .menu-item-handle {
-        padding: 9px 12px;
-        background: #f8fafc;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        color: var(--nav-heading);
         font-size: 12.5px;
-        color: #0f172a;
+        font-weight: 700;
         cursor: pointer;
         user-select: none;
-    }
-    .menu-item-handle:hover {
-        background: #f1f5f9;
-    }
-    .menu-item-settings {
-        background: #ffffff;
-        border-top: 1px solid #e2e8f0;
-        padding: 12px;
-        display: none;
-    }
-    .menu-item-bar.is-open .menu-item-settings {
-        display: block;
+        transition: background .18s ease;
     }
 
-    /* Inner Tabs & Scrollable Lists */
-    .tab-content-nav .nav-link {
-        color: #64748b;
+    #navMenusRoot .wp-accordion-header:hover {
+        background: #f8faff;
+    }
+
+    #navMenusRoot .wp-accordion-header i {
+        font-size: 11px;
+    }
+
+    #navMenusRoot .wp-accordion-body {
+        padding: 13px 14px;
+        border-top: 1px solid var(--nav-border);
+        background: #fff;
+    }
+
+    /* Inner Tabs */
+
+    #navMenusRoot .tab-content-nav {
+        gap: 5px;
+        border-bottom: 1px solid var(--nav-border) !important;
+    }
+
+    #navMenusRoot .tab-content-nav .nav-link {
+        padding: 7px 11px;
+        color: var(--nav-muted);
         font-size: 11.5px;
         font-weight: 600;
-        padding: 4px 10px;
         border: none;
         border-bottom: 2px solid transparent;
-    }
-    .tab-content-nav .nav-link.active {
-        color: #2563eb;
-        font-weight: 700;
-        border-bottom: 2px solid #2563eb;
+        border-radius: 0;
         background: transparent;
     }
-    .accordion-scroll-list {
-        max-height: 175px;
+
+    #navMenusRoot .tab-content-nav .nav-link:hover {
+        color: var(--nav-primary);
+    }
+
+    #navMenusRoot .tab-content-nav .nav-link.active {
+        color: var(--nav-primary);
+        font-weight: 700;
+        border-bottom: 2px solid var(--nav-primary);
+        background: transparent;
+    }
+
+    /* Scrollable Item Lists */
+
+    #navMenusRoot .accordion-scroll-list {
+        max-height: 190px;
         overflow-y: auto;
-        padding-right: 4px;
+        overflow-x: hidden;
+        padding: 3px 5px 3px 0;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd2dd transparent;
     }
-    .accordion-scroll-list::-webkit-scrollbar {
-        width: 4px;
+
+    #navMenusRoot .accordion-scroll-list::-webkit-scrollbar {
+        width: 5px;
     }
-    .accordion-scroll-list::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
+
+    #navMenusRoot .accordion-scroll-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #navMenusRoot .accordion-scroll-list::-webkit-scrollbar-thumb {
+        background: #cbd2dd;
+        border-radius: 10px;
+    }
+
+    #navMenusRoot .accordion-scroll-list label {
+        min-height: 29px;
+        padding: 5px 6px !important;
+        margin: 0;
         border-radius: 4px;
+        font-size: 12px !important;
+        line-height: 1.5;
+        transition: background .15s ease;
+    }
+
+    #navMenusRoot .accordion-scroll-list label:hover {
+        background: #f5f8ff;
+    }
+
+    #navMenusRoot .accordion-scroll-list label span {
+        min-width: 0;
     }
 
     /* Checkboxes */
-    .chk-item, .loc-check, #auto-add-pages {
-        width: 15px;
-        height: 15px;
-        accent-color: #2563eb;
+
+    #navMenusRoot .chk-item,
+    #navMenusRoot .loc-check,
+    #navMenusRoot #auto-add-pages {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        accent-color: var(--nav-primary);
         cursor: pointer;
         flex-shrink: 0;
     }
-    .cursor-pointer {
+
+    #navMenusRoot .cursor-pointer {
         cursor: pointer;
     }
 
-    /* Safe Bengali Digits */
-    .bn-digit,
-    .font-monospace {
-        font-weight: 700 !important;
+    /* Structure Builder */
+
+    #navMenusRoot .wp-structure-box {
+        background: var(--nav-card);
+        border: 1px solid var(--nav-border);
+        border-radius: var(--nav-radius);
+        overflow: hidden;
+        box-shadow: var(--nav-shadow);
+        min-width: 0;
     }
 
-    /* Mobile 100/100 Optimizations */
-    @media (max-width: 767.98px) {
-        .wp-nav-tab {
-            flex: 1 1 0;
-            text-align: center;
-            padding: 7px 10px;
-            font-size: 12px;
+    #navMenusRoot .wp-structure-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--nav-border);
+    }
+
+    #navMenusRoot .wp-structure-header .menu-name-input-group {
+        max-width: 65%;
+        width: 100%;
+        min-width: 0;
+    }
+
+    #navMenusRoot .wp-structure-header .menu-name-input-group label {
+        font-size: 12px !important;
+        color: var(--nav-heading) !important;
+    }
+
+    #navMenusRoot .wp-structure-header .menu-name-input-group input {
+        min-width: 0;
+    }
+
+    #navMenusRoot .wp-structure-header .btn-save-top {
+        flex-shrink: 0;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-light {
+        background: #f9fafc !important;
+        padding: 17px !important;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-light h6 {
+        font-size: 14px !important;
+        margin-bottom: 5px !important;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-light p {
+        font-size: 12px !important;
+        line-height: 1.65 !important;
+        color: #7c8490 !important;
+    }
+
+    /* Menu Item Cards */
+
+    #navMenusRoot .menu-item-bar {
+        position: relative;
+        min-width: 0;
+        margin-bottom: 9px;
+        background: #fff;
+        border: 1px solid #e1e5ec;
+        border-radius: 6px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .025);
+        overflow: hidden;
+        transition: border-color .18s ease, margin-left .18s ease;
+    }
+
+    #navMenusRoot .menu-item-bar:hover {
+        border-color: #b9c8dc;
+    }
+
+    #navMenusRoot .menu-item-bar.depth-0 {
+        margin-left: 0;
+        border-left: 3px solid #dce4ee;
+    }
+
+    #navMenusRoot .menu-item-bar.depth-1 {
+        margin-left: 26px;
+        border-left: 3px solid var(--nav-primary);
+    }
+
+    #navMenusRoot .menu-item-bar.depth-2 {
+        margin-left: 52px;
+        border-left: 3px solid var(--nav-success);
+    }
+
+    #navMenusRoot .menu-item-bar.depth-3 {
+        margin-left: 78px;
+        border-left: 3px solid var(--nav-warning);
+    }
+
+    #navMenusRoot .menu-item-handle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 42px;
+        padding: 9px 12px;
+        background: #fff;
+        color: var(--nav-heading);
+        font-size: 12.5px;
+        cursor: pointer;
+        user-select: none;
+        transition: background .18s ease;
+    }
+
+    #navMenusRoot .menu-item-handle:hover {
+        background: #f8faff;
+    }
+
+    #navMenusRoot .item-title-display {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+    }
+
+    #navMenusRoot .menu-item-handle > div {
+        flex-shrink: 0;
+    }
+
+    #navMenusRoot .item-type-badge {
+        display: inline-flex;
+        align-items: center;
+        color: #7c8490 !important;
+        font-size: 10.5px !important;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    #navMenusRoot .menu-item-settings {
+        display: none;
+        padding: 13px;
+        background: #fbfcfe;
+        border-top: 1px solid var(--nav-border);
+    }
+
+    #navMenusRoot .menu-item-bar.is-open .menu-item-settings {
+        display: block;
+    }
+
+    #navMenusRoot .menu-item-settings .form-control {
+        background: #fff;
+    }
+
+    #navMenusRoot .menu-item-settings .btn {
+        min-height: 30px;
+    }
+
+    /* Dragging State */
+
+    #navMenusRoot .sortable-ghost {
+        opacity: .45;
+        background: #eaf2ff !important;
+        border: 1px dashed var(--nav-primary) !important;
+    }
+
+    #navMenusRoot .sortable-drag {
+        opacity: .95;
+    }
+
+    /* Empty State */
+
+    #navMenusRoot #empty-canvas-notice {
+        padding: 28px 16px !important;
+        border: 1px dashed #cbd3df !important;
+        border-radius: 6px !important;
+        background: #fff !important;
+        color: #89919c !important;
+        line-height: 1.6;
+    }
+
+    /* Menu Settings */
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white {
+        padding: 17px !important;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white h6 {
+        font-size: 14px !important;
+        color: var(--nav-heading) !important;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white .row {
+        row-gap: 8px;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white .row > div:first-child {
+        color: #737c88 !important;
+        font-size: 12px !important;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white label {
+        min-height: 27px;
+        font-size: 12px !important;
+        line-height: 1.6;
+    }
+
+    #navMenusRoot .wp-structure-box > .p-3.bg-white label span {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    /* Footer Actions */
+
+    #navMenusRoot .wp-structure-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 13px 16px;
+        background: #f9fafc;
+        border-top: 1px solid var(--nav-border);
+    }
+
+    /* Notice and Confirmation Modals */
+
+    #menuNoticeModal .modal-content,
+    #deleteMenuConfirmModal .modal-content {
+        border: 1px solid var(--nav-border) !important;
+        border-radius: 9px !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, .12);
+    }
+
+    #menuNoticeModal .modal-body,
+    #deleteMenuConfirmModal .modal-body {
+        padding: 13px !important;
+    }
+
+    #menuNoticeModal h6,
+    #deleteMenuConfirmModal h6 {
+        color: #2a2f5b;
+        font-size: 15px !important;
+    }
+
+    #menuNoticeModal p,
+    #deleteMenuConfirmModal p {
+        color: #818a96 !important;
+        font-size: 12px !important;
+        line-height: 1.65 !important;
+    }
+
+    #menuNoticeModal .modal-body > div:first-child,
+    #deleteMenuConfirmModal .modal-body > div:first-child {
+        margin-bottom: 12px !important;
+    }
+
+    /* General Text Optimization */
+
+    #navMenusRoot .text-muted {
+        color: #89919c !important;
+    }
+
+    #navMenusRoot .text-dark {
+        color: #495057 !important;
+    }
+
+    #navMenusRoot .text-break {
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    #navMenusRoot .border-top,
+    #navMenusRoot .border-bottom {
+        border-color: var(--nav-border) !important;
+    }
+
+    #navMenusRoot .bn-digit,
+    #navMenusRoot .font-monospace {
+        font-weight: 600 !important;
+    }
+
+    /* =========================================================
+       RESPONSIVE DESIGN
+    ========================================================= */
+
+    /* Large Desktop */
+
+    @media (min-width: 1400px) {
+        #navMenusRoot .wp-structure-box > .p-3.bg-light {
+            padding: 20px !important;
         }
-        .wp-menu-select-bar {
+
+        #navMenusRoot .wp-structure-box > .p-3.bg-white {
+            padding: 20px !important;
+        }
+
+        #navMenusRoot .wp-accordion-body {
+            padding: 15px;
+        }
+    }
+
+    /* Laptop and Tablet Landscape */
+
+    @media (max-width: 1199.98px) {
+        #navMenusRoot .menu-item-bar.depth-1 {
+            margin-left: 20px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-2 {
+            margin-left: 40px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-3 {
+            margin-left: 60px;
+        }
+    }
+
+    /* Tablet Portrait */
+
+    @media (max-width: 991.98px) {
+        #navMenusRoot .wp-structure-header .menu-name-input-group {
+            max-width: 75%;
+        }
+
+        #navMenusRoot .wp-structure-box {
+            margin-top: 2px;
+        }
+
+        #navMenusRoot .col-lg-4 > h6 {
+            margin-top: 2px;
+        }
+    }
+
+    /* Mobile Landscape and Portrait */
+
+    @media (max-width: 767.98px) {
+        #navMenusRoot {
+            font-size: 12.5px;
+        }
+
+        #navMenusRoot .wp-nav-tab-wrapper {
+            gap: 4px;
+        }
+
+        #navMenusRoot .wp-nav-tab {
+            flex: 1 1 auto;
+            min-height: 38px;
+            padding: 8px 10px;
+            font-size: 11.5px;
+            text-align: center;
+        }
+
+        #navMenusRoot .wp-menu-select-bar {
             flex-direction: column;
             align-items: stretch !important;
-            gap: 8px !important;
-            padding: 12px;
+            gap: 10px !important;
+            padding: 13px;
         }
-        .wp-menu-select-bar form {
+
+        #navMenusRoot .wp-menu-select-bar form {
+            display: flex;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 6px !important;
+            gap: 7px !important;
             width: 100%;
         }
-        .wp-menu-select-bar form select {
-            min-width: 0 !important;
+
+        #navMenusRoot .wp-menu-select-bar form select {
             flex: 1 1 auto;
+            min-width: 0 !important;
+            width: 100%;
         }
-        .wp-structure-header {
+
+        #navMenusRoot .wp-menu-select-bar > span {
+            line-height: 1.6;
+        }
+
+        #navMenusRoot .wp-structure-header {
             flex-direction: column;
             align-items: stretch !important;
-            gap: 10px;
-            padding: 12px;
+            gap: 12px;
+            padding: 13px;
         }
-        .wp-structure-header .menu-name-input-group {
+
+        #navMenusRoot .wp-structure-header .menu-name-input-group {
             max-width: 100% !important;
             width: 100%;
         }
-        .wp-structure-header .btn-save-top {
+
+        #navMenusRoot .wp-structure-header .btn-save-top {
             width: 100%;
+            min-height: 36px;
         }
-        /* Compact Indentation on Small Mobile Screens */
-        .menu-item-bar.depth-1 { margin-left: 14px; }
-        .menu-item-bar.depth-2 { margin-left: 28px; }
-        .menu-item-bar.depth-3 { margin-left: 42px; }
+
+        #navMenusRoot .wp-structure-box > .p-3.bg-light {
+            padding: 13px !important;
+        }
+
+        #navMenusRoot .wp-structure-box > .p-3.bg-white {
+            padding: 14px !important;
+        }
+
+        #navMenusRoot .wp-structure-footer {
+            padding: 12px;
+        }
+
+        #navMenusRoot .wp-structure-footer .btn {
+            min-height: 34px;
+        }
+
+        /* Compact Nested Menu Indentation */
+
+        #navMenusRoot .menu-item-bar.depth-1 {
+            margin-left: 12px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-2 {
+            margin-left: 24px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-3 {
+            margin-left: 36px;
+        }
+
+        #navMenusRoot .menu-item-handle {
+            padding: 9px 9px;
+            gap: 6px;
+        }
+
+        #navMenusRoot .menu-item-settings {
+            padding: 11px;
+        }
+
+        #navMenusRoot .item-type-badge {
+            font-size: 9.5px !important;
+        }
+
+        #navMenusRoot .wp-accordion-body {
+            padding: 12px;
+        }
+
+        #navMenusRoot .accordion-scroll-list {
+            max-height: 220px;
+        }
+
+        #navMenusRoot .wp-structure-box > .p-3.bg-white .row > div:first-child {
+            margin-bottom: 3px !important;
+        }
+    }
+
+    /* Small Mobile */
+
+    @media (max-width: 400px) {
+        #navMenusRoot {
+            font-size: 12px;
+        }
+
+        #navMenusRoot .wp-nav-tab {
+            padding: 8px 6px;
+            font-size: 10.5px;
+        }
+
+        #navMenusRoot .wp-menu-select-bar {
+            padding: 10px;
+        }
+
+        #navMenusRoot .wp-menu-select-bar form {
+            flex-wrap: nowrap;
+        }
+
+        #navMenusRoot .wp-structure-header .menu-name-input-group {
+            gap: 7px !important;
+        }
+
+        #navMenusRoot .wp-structure-header .menu-name-input-group label {
+            font-size: 11px !important;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-1 {
+            margin-left: 8px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-2 {
+            margin-left: 16px;
+        }
+
+        #navMenusRoot .menu-item-bar.depth-3 {
+            margin-left: 24px;
+        }
+
+        #navMenusRoot .menu-item-handle {
+            padding: 8px 7px;
+        }
+
+        #navMenusRoot .menu-item-settings {
+            padding: 9px;
+        }
+
+        #navMenusRoot .menu-item-settings .btn-compact {
+            padding: 5px 8px !important;
+            font-size: 10.5px !important;
+        }
+
+        #navMenusRoot .wp-structure-footer {
+            padding: 10px;
+        }
+
+        #navMenusRoot .wp-structure-footer .btn {
+            padding-left: 9px !important;
+            padding-right: 9px !important;
+            font-size: 10.5px !important;
+        }
+    }
+
+    /* Prevent Unwanted Horizontal Page Overflow */
+
+    #navMenusRoot .row,
+    #navMenusRoot [class*="col-"],
+    #navMenusRoot .wp-structure-box,
+    #navMenusRoot .wp-accordion-card,
+    #navMenusRoot .menu-item-bar {
+        min-width: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #navMenusRoot *,
+        #menuNoticeModal *,
+        #deleteMenuConfirmModal * {
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+        }
     }
 </style>
 
 <div class="container-fluid py-3 px-2 px-md-4" id="navMenusRoot">
-    <!-- Top Mode Tabs -->
+
+    <!-- Page Navigation -->
     <div class="wp-nav-tab-wrapper">
         <a href="{{ route('admin.content.menus.index') }}" class="wp-nav-tab active">Edit Menus</a>
         <a href="{{ route('admin.content.menus.create') }}" class="wp-nav-tab">Create New Menu</a>
     </div>
 
-    <!-- Select Menu Dropdown Bar -->
+    <!-- Menu Selector -->
     <div class="wp-menu-select-bar d-flex align-items-center flex-wrap gap-2">
         <label class="small fw-semibold text-dark mb-0" style="font-size: 12px;">Select a menu to edit:</label>
+
         <form method="GET" action="{{ route('admin.content.menus.index') }}" class="d-flex align-items-center gap-2">
             <select name="menu" class="form-select form-select-sm fw-semibold" style="min-width: 220px;">
                 @foreach($allMenus as $m)
@@ -300,27 +908,37 @@
                     </option>
                 @endforeach
             </select>
+
             <button type="submit" class="btn btn-outline-primary btn-compact shadow-xs">Select</button>
         </form>
+
         <span class="small text-muted" style="font-size: 12px;">or <a href="{{ route('admin.content.menus.create') }}" class="text-primary text-decoration-none fw-semibold">create a new menu</a>.</span>
     </div>
 
     <div class="row g-3">
+
         <!-- Left Column: Add Menu Items -->
         <div class="col-12 col-lg-4">
-            <h6 class="fw-bold mb-2 text-dark" style="font-size: 13.5px;">Add menu items</h6>
 
-            <!-- 1. Pages Accordion -->
+            <h6 class="fw-bold mb-2 text-dark" style="font-size: 13.5px;">Add Menu Items</h6>
+
+            <!-- Pages Accordion -->
             <div class="wp-accordion-card">
                 <div class="wp-accordion-header" onclick="toggleWpAccordion(this)">
                     <span>Pages</span>
                     <i class="fas fa-chevron-up small text-muted"></i>
                 </div>
+
                 <div class="wp-accordion-body">
                     <ul class="nav nav-tabs tab-content-nav border-bottom mb-2" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pages-recent" type="button">Most Recent</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pages-all" type="button">View All</button></li>
+                        <li class="nav-item">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pages-recent" type="button">Most Recent</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pages-all" type="button">View All</button>
+                        </li>
                     </ul>
+
                     <div class="tab-content accordion-scroll-list">
                         <div class="tab-pane fade show active" id="pages-recent">
                             @forelse($pages->take(8) as $p)
@@ -332,6 +950,7 @@
                                 <div class="small text-muted py-2">No pages found.</div>
                             @endforelse
                         </div>
+
                         <div class="tab-pane fade" id="pages-all">
                             @forelse($pages as $p)
                                 <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
@@ -343,6 +962,7 @@
                             @endforelse
                         </div>
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
                         <button type="button" class="btn btn-light border btn-compact text-secondary" onclick="selectAllInAccordion(this)">Select All</button>
                         <button type="button" class="btn btn-outline-primary btn-compact shadow-xs" onclick="addCheckedItemsToMenu(this)">Add to Menu</button>
@@ -350,20 +970,41 @@
                 </div>
             </div>
 
-            <!-- 2. Store Endpoints -->
+            <!-- Store Endpoints -->
             <div class="wp-accordion-card">
                 <div class="wp-accordion-header" onclick="toggleWpAccordion(this)">
                     <span>Store Endpoints</span>
                     <i class="fas fa-chevron-down small text-muted"></i>
                 </div>
+
                 <div class="wp-accordion-body" style="display: none;">
                     <div class="accordion-scroll-list">
-                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;"><input type="checkbox" class="chk-item" data-title="Shop" data-url="{{ route('shop') }}" data-type="Store Page"><span class="text-break">Shop (Storefront)</span></label>
-                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;"><input type="checkbox" class="chk-item" data-title="Cart" data-url="{{ route('cart.index') }}" data-type="Store Page"><span class="text-break">Cart</span></label>
-                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;"><input type="checkbox" class="chk-item" data-title="Checkout" data-url="{{ route('checkout') }}" data-type="Store Page"><span class="text-break">Checkout</span></label>
-                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;"><input type="checkbox" class="chk-item" data-title="My Account" data-url="{{ route('user.dashboard') }}" data-type="Store Page"><span class="text-break">My Account</span></label>
-                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;"><input type="checkbox" class="chk-item" data-title="Track Order" data-url="{{ route('guest.track.order') }}" data-type="Store Page"><span class="text-break">Track Order</span></label>
+                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
+                            <input type="checkbox" class="chk-item" data-title="Shop" data-url="{{ route('shop') }}" data-type="Store Page">
+                            <span class="text-break">Shop (Storefront)</span>
+                        </label>
+
+                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
+                            <input type="checkbox" class="chk-item" data-title="Cart" data-url="{{ route('cart.index') }}" data-type="Store Page">
+                            <span class="text-break">Cart</span>
+                        </label>
+
+                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
+                            <input type="checkbox" class="chk-item" data-title="Checkout" data-url="{{ route('checkout') }}" data-type="Store Page">
+                            <span class="text-break">Checkout</span>
+                        </label>
+
+                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
+                            <input type="checkbox" class="chk-item" data-title="My Account" data-url="{{ route('user.dashboard') }}" data-type="Store Page">
+                            <span class="text-break">My Account</span>
+                        </label>
+
+                        <label class="d-flex align-items-center gap-2 small py-1 cursor-pointer text-dark" style="font-size: 12px;">
+                            <input type="checkbox" class="chk-item" data-title="Track Order" data-url="{{ route('guest.track.order') }}" data-type="Store Page">
+                            <span class="text-break">Track Order</span>
+                        </label>
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
                         <button type="button" class="btn btn-light border btn-compact text-secondary" onclick="selectAllInAccordion(this)">Select All</button>
                         <button type="button" class="btn btn-outline-primary btn-compact shadow-xs" onclick="addCheckedItemsToMenu(this)">Add to Menu</button>
@@ -371,12 +1012,13 @@
                 </div>
             </div>
 
-            <!-- 3. Product Categories -->
+            <!-- Product Categories -->
             <div class="wp-accordion-card">
                 <div class="wp-accordion-header" onclick="toggleWpAccordion(this)">
                     <span>Product Categories</span>
                     <i class="fas fa-chevron-down small text-muted"></i>
                 </div>
+
                 <div class="wp-accordion-body" style="display: none;">
                     <div class="accordion-scroll-list">
                         @foreach($categories as $cat)
@@ -386,6 +1028,7 @@
                             </label>
                         @endforeach
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
                         <button type="button" class="btn btn-light border btn-compact text-secondary" onclick="selectAllInAccordion(this)">Select All</button>
                         <button type="button" class="btn btn-outline-primary btn-compact shadow-xs" onclick="addCheckedItemsToMenu(this)">Add to Menu</button>
@@ -393,12 +1036,13 @@
                 </div>
             </div>
 
-            <!-- 4. Posts -->
+            <!-- Posts -->
             <div class="wp-accordion-card">
                 <div class="wp-accordion-header" onclick="toggleWpAccordion(this)">
                     <span>Posts</span>
                     <i class="fas fa-chevron-down small text-muted"></i>
                 </div>
+
                 <div class="wp-accordion-body" style="display: none;">
                     <div class="accordion-scroll-list">
                         @foreach($blogPosts as $bp)
@@ -408,6 +1052,7 @@
                             </label>
                         @endforeach
                     </div>
+
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
                         <button type="button" class="btn btn-light border btn-compact text-secondary" onclick="selectAllInAccordion(this)">Select All</button>
                         <button type="button" class="btn btn-outline-primary btn-compact shadow-xs" onclick="addCheckedItemsToMenu(this)">Add to Menu</button>
@@ -415,81 +1060,104 @@
                 </div>
             </div>
 
-            <!-- 5. Custom Links -->
+            <!-- Custom Links -->
             <div class="wp-accordion-card mb-0">
                 <div class="wp-accordion-header" onclick="toggleWpAccordion(this)">
                     <span>Custom Links</span>
                     <i class="fas fa-chevron-down small text-muted"></i>
                 </div>
+
                 <div class="wp-accordion-body" style="display: none;">
                     <div class="mb-2">
                         <label class="form-label small fw-semibold text-secondary mb-1" style="font-size: 11px;">URL</label>
                         <input type="text" id="cl-url" class="form-control form-control-sm font-monospace" placeholder="https://">
                     </div>
+
                     <div class="mb-2">
                         <label class="form-label small fw-semibold text-secondary mb-1" style="font-size: 11px;">Link Text</label>
                         <input type="text" id="cl-text" class="form-control form-control-sm" placeholder="Menu Title">
                     </div>
+
                     <div class="text-end pt-2 border-top mt-2">
                         <button type="button" class="btn btn-outline-primary btn-compact shadow-xs" onclick="addCustomLink()">Add to Menu</button>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- Right Column: Structure & Multi-level Depth Settings -->
+        <!-- Right Column: Menu Structure -->
         <div class="col-12 col-lg-8">
+
             <div class="wp-structure-box">
+
+                <!-- Menu Header -->
                 <div class="wp-structure-header d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2 menu-name-input-group" style="max-width: 65%; width: 100%;">
                         <label class="small fw-bold text-dark text-nowrap mb-0" style="font-size: 12px;">Menu Name</label>
                         <input type="text" id="menu-name" class="form-control form-control-sm fw-semibold" value="{{ optional($currentMenu)->name ?? 'Main Menu' }}" required>
                         <input type="hidden" id="menu-id" value="{{ optional($currentMenu)->id ?? '' }}">
                     </div>
+
                     <button type="button" class="btn btn-primary btn-compact px-3 shadow-xs btn-save-top" onclick="submitMenuForm()">Save Menu</button>
                 </div>
 
+                <!-- Menu Structure -->
                 <div class="p-3 bg-light bg-opacity-50 border-bottom">
-                    <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Menu structure</h6>
-                    <p class="text-muted small mb-3" style="font-size: 12px; line-height: 1.4;">Drag items to arrange order. Use <strong>Move Right</strong> (Sub item) or <strong>Move Left</strong> (Parent) to create multi-level menus.</p>
+                    <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Menu Structure</h6>
+
+                    <p class="text-muted small mb-3" style="font-size: 12px; line-height: 1.4;">
+                        Move Right for Sub Menu or Move Left for Parent menu
+                    </p>
 
                     <div id="wp-menu-items-canvas">
                         @forelse($currentItems as $item)
                             @php $depth = $item['depth'] ?? ($item['is_sub'] ?? false ? 1 : 0); @endphp
-                            <div class="menu-item-bar depth-{{ $depth }}" 
-                                 data-url="{{ $item['url'] }}" 
-                                 data-type="{{ $item['type'] ?? 'Custom' }}" 
+
+                            <div class="menu-item-bar depth-{{ $depth }}"
+                                 data-url="{{ $item['url'] }}"
+                                 data-type="{{ $item['type'] ?? 'Custom' }}"
                                  data-original="{{ $item['original_title'] ?? $item['title'] }}"
                                  data-depth="{{ $depth }}">
+
                                 <div class="menu-item-handle" onclick="toggleItemAccordion(this)">
                                     <span class="item-title-display fw-semibold text-break pe-2">{{ $item['title'] }}</span>
+
                                     <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                         <span class="text-muted small item-type-badge bn-digit" style="font-size: 11px;">{{ $depth > 0 ? 'Sub item (Depth ' . $depth . ')' : ($item['type'] ?? 'Custom') }}</span>
                                         <i class="fas fa-caret-down text-secondary"></i>
                                     </div>
                                 </div>
+
                                 <div class="menu-item-settings">
                                     <div class="mb-2">
                                         <label class="form-label small fw-semibold text-secondary mb-1" style="font-size: 11px;">Navigation Label</label>
                                         <input type="text" class="form-control form-control-sm item-nav-label" value="{{ $item['title'] }}" oninput="updateItemTitle(this)">
                                     </div>
+
                                     <div class="mb-2 d-flex flex-wrap gap-2">
                                         <button type="button" class="btn btn-outline-primary btn-compact" onclick="indentItem(this, 1)">
                                             <i class="fas fa-arrow-right me-1" style="font-size: 10px;"></i>
                                             <span>Move Right</span>
                                         </button>
+
                                         <button type="button" class="btn btn-outline-secondary btn-compact" onclick="indentItem(this, -1)">
                                             <i class="fas fa-arrow-left me-1" style="font-size: 10px;"></i>
                                             <span>Move Left</span>
                                         </button>
                                     </div>
-                                    <div class="small text-muted mb-2 text-break" style="font-size: 11.5px;">Original: <span class="fw-semibold text-dark">{{ $item['original_title'] ?? $item['title'] }}</span></div>
+
+                                    <div class="small text-muted mb-2 text-break" style="font-size: 11.5px;">
+                                        Original: <span class="fw-semibold text-dark">{{ $item['original_title'] ?? $item['title'] }}</span>
+                                    </div>
+
                                     <div class="d-flex align-items-center gap-2 pt-2 border-top">
                                         <button type="button" class="btn btn-outline-danger btn-compact" onclick="removeMenuItem(this)">Remove</button>
                                         <button type="button" class="btn btn-light border btn-compact text-secondary" onclick="toggleItemAccordion(this)">Cancel</button>
                                     </div>
                                 </div>
                             </div>
+
                         @empty
                             <div class="p-4 text-center text-muted border rounded bg-white small" id="empty-canvas-notice" style="border-style: dashed !important;">
                                 Add menu items from the column on the left.
@@ -498,12 +1166,16 @@
                     </div>
                 </div>
 
-                <!-- Menu Locations -->
+                <!-- Menu Locations and Settings -->
                 <div class="p-3 bg-white">
+
                     <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom" style="font-size: 13.5px;">Menu Settings</h6>
-                    
+
                     <div class="row mb-3 align-items-center">
-                        <div class="col-12 col-sm-3 text-muted small fw-semibold mb-1 mb-sm-0" style="font-size: 12px;">Auto add pages</div>
+                        <div class="col-12 col-sm-3 text-muted small fw-semibold mb-1 mb-sm-0" style="font-size: 12px;">
+                            Auto Add Pages
+                        </div>
+
                         <div class="col-12 col-sm-9">
                             <label class="small cursor-pointer d-flex align-items-center gap-2 text-dark" style="font-size: 12px;">
                                 <input type="checkbox" id="auto-add-pages" {{ optional($currentMenu)->auto_add_pages ? 'checked' : '' }}>
@@ -513,32 +1185,41 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-12 col-sm-3 text-muted small fw-semibold mb-1 mb-sm-0" style="font-size: 12px;">Display location</div>
+                        <div class="col-12 col-sm-3 text-muted small fw-semibold mb-1 mb-sm-0" style="font-size: 12px;">
+                            Display Location
+                        </div>
+
                         <div class="col-12 col-sm-9">
                             <div class="d-flex flex-column gap-2 small" style="font-size: 12px;">
+
                                 <label class="cursor-pointer d-flex align-items-center gap-2 text-dark">
                                     <input type="checkbox" class="loc-check" value="primary" {{ in_array('primary', $currentLocations) ? 'checked' : '' }}>
-                                    <span><strong>Primary Menu</strong> <span class="text-muted">(Main Desktop Header Navbar)</span></span>
+                                    <span><strong>Primary Menu</strong></span>
                                 </label>
+
                                 <label class="cursor-pointer d-flex align-items-center gap-2 text-dark">
                                     <input type="checkbox" class="loc-check" value="mobile" {{ in_array('mobile', $currentLocations) ? 'checked' : '' }}>
-                                    <span><strong>Mobile Menu</strong> <span class="text-muted">(Drawer Menu &amp; Pages Tab)</span></span>
+                                    <span><strong>Mobile Menu</strong></span>
                                 </label>
+
                                 <label class="cursor-pointer d-flex align-items-center gap-2 text-dark">
                                     <input type="checkbox" class="loc-check" value="mobile_categories" {{ in_array('mobile_categories', $currentLocations) ? 'checked' : '' }}>
-                                    <span><strong>Mobile Categories Menu</strong> <span class="text-muted">(Dedicated Mobile Category Drawer &amp; Shop Sidebar)</span></span>
+                                    <span><strong>Category Menu</strong></span>
                                 </label>
+
                                 <label class="cursor-pointer d-flex align-items-center gap-2 text-dark">
                                     <input type="checkbox" class="loc-check" value="footer" {{ in_array('footer', $currentLocations) ? 'checked' : '' }}>
-                                    <span><strong>Footer Menu</strong> <span class="text-muted">(Quick Links in Footer)</span></span>
+                                    <span><strong>Footer Menu</strong></span>
                                 </label>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Footer Bar -->
+                <!-- Footer Actions -->
                 <div class="wp-structure-footer d-flex justify-content-between align-items-center">
+
                     @if(!empty($currentMenu))
                         <form action="{{ route('admin.content.menus.delete', $currentMenu->id) }}" method="POST" id="deleteMenuForm" class="m-0">
                             @csrf
@@ -548,6 +1229,7 @@
                     @else
                         <span></span>
                     @endif
+
                     <button type="button" class="btn btn-primary btn-compact px-3 shadow-xs" onclick="submitMenuForm()">Save Menu</button>
                 </div>
 
@@ -556,7 +1238,7 @@
     </div>
 </div>
 
-<!-- Modal 1: Notice / Alert Dialog (Replaces browser alert()) -->
+<!-- Notice Modal -->
 <div class="modal fade" id="menuNoticeModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px !important;">
@@ -564,15 +1246,18 @@
                 <div class="mb-2 text-warning">
                     <i class="fas fa-circle-exclamation fa-2x"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" id="menuNoticeTitle" style="font-size: 14px;">Notice</h6>
+
                 <p class="text-muted small mb-3" id="menuNoticeMsg" style="font-size: 12px; line-height: 1.45;"></p>
+
                 <button type="button" class="btn btn-dark btn-compact px-4" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal 2: Delete Menu Confirmation Dialog (Replaces browser confirm()) -->
+<!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteMenuConfirmModal" tabindex="-1" aria-hidden="true" style="z-index: 106500;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 8px !important;">
@@ -580,8 +1265,13 @@
                 <div class="mb-2 text-danger">
                     <i class="fas fa-trash-alt fa-2x"></i>
                 </div>
+
                 <h6 class="fw-bold text-dark mb-1" style="font-size: 14px;">Delete Menu?</h6>
-                <p class="text-muted small mb-3" style="font-size: 12px; line-height: 1.45;">Are you sure you want to permanently delete this navigation menu?</p>
+
+                <p class="text-muted small mb-3" style="font-size: 12px; line-height: 1.45;">
+                    Are you sure you want to permanently delete this navigation menu?
+                </p>
+
                 <div class="d-flex justify-content-center gap-2">
                     <button type="button" class="btn btn-light border btn-compact px-3" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger btn-compact px-3 shadow-xs" onclick="document.getElementById('deleteMenuForm').submit()">Delete</button>
@@ -592,6 +1282,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const canvas = document.getElementById('wp-menu-items-canvas');
@@ -631,7 +1322,7 @@
         const bar = btn.closest('.menu-item-bar');
         let currentDepth = parseInt(bar.dataset.depth) || 0;
         let newDepth = currentDepth + direction;
-        
+
         if (newDepth < 0) newDepth = 0;
         if (newDepth > 3) newDepth = 3;
 

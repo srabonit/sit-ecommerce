@@ -10,8 +10,8 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $adminEmail = env('ADMIN_EMAIL', 'info.luckysignature@gmail.com');
-        $adminName = env('ADMIN_NAME', 'Lucky Signature');
+        $adminEmail = env('ADMIN_EMAIL', 'info.srabon7974@gmail.com');
+        $adminName = env('ADMIN_NAME', 'MD YEASIN');
         $adminPassword = env('ADMIN_PASSWORD', 'Captin@20212450');
 
         $exists = DB::table('users')->where('email', $adminEmail)->first();
@@ -21,7 +21,7 @@ class AdminUserSeeder extends Seeder
                 'name'       => $adminName,
                 'email'      => $adminEmail,
                 'password'   => Hash::make($adminPassword),
-                'role'       => 'admin',
+                'role'       => 'super-admin',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

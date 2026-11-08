@@ -92,12 +92,12 @@ class AssetController extends Controller
         // 1. Date Range Filter
         [$start, $end, $dateFilter] = $this->resolveDateRange($request);
 
-        if ($dateFilter !== 'all') {
+        if ($dateFilter !== 'all' && Schema::hasColumn('assets', 'purchase_date')) {
             $query->whereBetween('assets.purchase_date', [$start->toDateString(), $end->toDateString()]);
         }
 
         // 2. Asset Type / Category Filter
-        if ($request->filled('asset_type') && $request->asset_type !== 'all') {
+        if ($request->filled('asset_type') && $request->asset_type !== 'all' && Schema::hasColumn('assets', 'asset_type')) {
             $query->where('assets.asset_type', $request->asset_type);
         }
 
@@ -105,22 +105,31 @@ class AssetController extends Controller
         if ($request->filled('search')) {
             $s = trim($request->search);
             $query->where(function ($sub) use ($s) {
-                $sub->where('assets.name', 'like', "%{$s}%")
-                    ->orWhere('assets.asset_code', 'like', "%{$s}%")
-                    ->orWhere('assets.note', 'like', "%{$s}%");
+                if (Schema::hasColumn('assets', 'name')) {
+                    $sub->where('assets.name', 'like', "%{$s}%");
+                }
+                if (Schema::hasColumn('assets', 'asset_code')) {
+                    $sub->orWhere('assets.asset_code', 'like', "%{$s}%");
+                }
+                if (Schema::hasColumn('assets', 'note')) {
+                    $sub->orWhere('assets.note', 'like', "%{$s}%");
+                }
             });
         }
 
         // Summary Calculations for KPIs
         $allAssetsQuery   = DB::table('assets');
-        $totalValuation   = (float) $allAssetsQuery->sum('purchase_cost');
+        $totalValuation   = Schema::hasColumn('assets', 'purchase_cost') ? (float) $allAssetsQuery->sum('purchase_cost') : 0.00;
         $totalAssetCount  = $allAssetsQuery->count();
 
         $periodQuery      = clone $query;
-        $periodAdditions  = (float) $periodQuery->sum('assets.purchase_cost');
+        $periodAdditions  = Schema::hasColumn('assets', 'purchase_cost') ? (float) $periodQuery->sum('assets.purchase_cost') : 0.00;
         $periodCount      = $periodQuery->count();
 
-        $assets = $query->latest('assets.purchase_date')->latest('assets.id')->paginate(20)->withQueryString();
+        if (Schema::hasColumn('assets', 'purchase_date')) {
+            $query->latest('assets.purchase_date');
+        }
+        $assets = $query->latest('assets.id')->paginate(20)->withQueryString();
 
         // Active Bank / Cash Accounts for Payment Selection
         $bankAccounts = Schema::hasTable('bank_accounts')
@@ -186,24 +195,44 @@ class AssetController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Insert Asset Record
+            // 1. Insert Asset Record (Schema-Safe Mapping)
             $assetData = [
-                'name'            => trim($request->name),
-                'asset_code'      => $codeNo,
-                'asset_type'      => $request->asset_type,
-                'purchase_cost'   => $cost,
-                'purchase_date'   => $request->purchase_date,
-                'warranty_expiry' => $request->warranty_expiry,
-                'payment_method'  => $paymentMethod,
-                'voucher_receipt' => $receiptPath,
-                'created_by'      => auth()->id(),
-                'note'            => $request->note,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'name'          => trim($request->name),
+                'purchase_cost' => $cost,
+                'purchase_date' => $request->purchase_date,
+                'created_at'    => now(),
+                'updated_at'    => now(),
             ];
 
+            if (Schema::hasColumn('assets', 'asset_code')) {
+                $assetData['asset_code'] = $codeNo;
+            }
+            if (Schema::hasColumn('assets', 'asset_type')) {
+                $assetData['asset_type'] = $request->asset_type;
+            }
+            if (Schema::hasColumn('assets', 'warranty_expiry')) {
+                $assetData['warranty_expiry'] = $request->warranty_expiry;
+            } elseif (Schema::hasColumn('assets', 'warranty_expiry_date')) {
+                $assetData['warranty_expiry_date'] = $request->warranty_expiry;
+            }
+            if (Schema::hasColumn('assets', 'payment_method')) {
+                $assetData['payment_method'] = $paymentMethod;
+            }
+            if (Schema::hasColumn('assets', 'voucher_receipt')) {
+                $assetData['voucher_receipt'] = $receiptPath;
+            } elseif (Schema::hasColumn('assets', 'attachment_file')) {
+                $assetData['attachment_file'] = $receiptPath;
+            }
             if (Schema::hasColumn('assets', 'bank_account_id')) {
                 $assetData['bank_account_id'] = $bankAccountId;
+            }
+            if (Schema::hasColumn('assets', 'created_by')) {
+                $assetData['created_by'] = auth()->id() ?? 1;
+            }
+            if (Schema::hasColumn('assets', 'note')) {
+                $assetData['note'] = $request->note;
+            } elseif (Schema::hasColumn('assets', 'notes')) {
+                $assetData['notes'] = $request->note;
             }
 
             $assetId = DB::table('assets')->insertGetId($assetData);
@@ -261,8 +290,9 @@ class AssetController extends Controller
             }
 
             // 2. Remove Receipt Attachment File
-            if (!empty($asset->voucher_receipt) && file_exists(public_path($asset->voucher_receipt))) {
-                @unlink(public_path($asset->voucher_receipt));
+            $receipt = $asset->voucher_receipt ?? ($asset->attachment_file ?? null);
+            if (!empty($receipt) && file_exists(public_path($receipt))) {
+                @unlink(public_path($receipt));
             }
 
             // 3. Delete Asset Record
@@ -300,14 +330,14 @@ class AssetController extends Controller
         ];
 
         $query = DB::table('assets');
-        if ($dateFilter !== 'all') {
+        if ($dateFilter !== 'all' && Schema::hasColumn('assets', 'purchase_date')) {
             $query->whereBetween('purchase_date', [$start->toDateString(), $end->toDateString()]);
         }
-        if ($request->filled('asset_type') && $request->asset_type !== 'all') {
+        if ($request->filled('asset_type') && $request->asset_type !== 'all' && Schema::hasColumn('assets', 'asset_type')) {
             $query->where('asset_type', $request->asset_type);
         }
 
-        $records = $query->latest('purchase_date')->get();
+        $records = $query->latest('id')->get();
 
         $callback = function () use ($records, $start, $end, $dateFilter) {
             $file = fopen('php://output', 'w');
@@ -320,16 +350,20 @@ class AssetController extends Controller
 
             $total = 0;
             foreach ($records as $r) {
-                $total += (float)$r->purchase_cost;
+                $costVal = (float)($r->purchase_cost ?? 0);
+                $total += $costVal;
+                $warranty = $r->warranty_expiry ?? ($r->warranty_expiry_date ?? null);
+                $pDate = $r->purchase_date ?? null;
+
                 fputcsv($file, [
                     $r->asset_code ?? '—',
-                    $r->name,
-                    ucwords(str_replace('_', ' ', $r->asset_type)),
-                    number_format((float)$r->purchase_cost, 2, '.', ''),
-                    date('d M Y', strtotime($r->purchase_date)),
-                    !empty($r->warranty_expiry) ? date('d M Y', strtotime($r->warranty_expiry)) : 'N/A',
+                    $r->name ?? '—',
+                    ucwords(str_replace('_', ' ', $r->asset_type ?? 'N/A')),
+                    number_format($costVal, 2, '.', ''),
+                    !empty($pDate) ? date('d M Y', strtotime($pDate)) : '—',
+                    !empty($warranty) ? date('d M Y', strtotime($warranty)) : 'N/A',
                     $r->payment_method ?? '—',
-                    $r->note ?? ''
+                    $r->note ?? ($r->notes ?? '')
                 ]);
             }
 
@@ -342,7 +376,7 @@ class AssetController extends Controller
     }
 
     /**
-     * Fail-safe Auto Table & Column Creator
+     * Fail-safe Auto Table & Column Creator (100% Safe without hardcoded AFTER clauses)
      */
     protected function ensureAssetTablesExist(): void
     {
@@ -363,9 +397,41 @@ class AssetController extends Controller
                 $table->text('note')->nullable();
                 $table->timestamps();
             });
-        } elseif (!Schema::hasColumn('assets', 'bank_account_id')) {
+        } else {
             Schema::table('assets', function ($table) {
-                $table->unsignedBigInteger('bank_account_id')->nullable()->after('warranty_expiry');
+                if (!Schema::hasColumn('assets', 'bank_account_id')) {
+                    $table->unsignedBigInteger('bank_account_id')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'warranty_expiry') && !Schema::hasColumn('assets', 'warranty_expiry_date')) {
+                    $table->date('warranty_expiry')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'voucher_receipt') && !Schema::hasColumn('assets', 'attachment_file')) {
+                    $table->string('voucher_receipt')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'payment_method')) {
+                    $table->string('payment_method')->default('Cash')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'asset_type')) {
+                    $table->string('asset_type')->default('electronics')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'purchase_cost')) {
+                    $table->decimal('purchase_cost', 14, 2)->default(0.00)->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'purchase_date')) {
+                    $table->date('purchase_date')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'asset_code')) {
+                    $table->string('asset_code')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'branch_id')) {
+                    $table->unsignedBigInteger('branch_id')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'created_by')) {
+                    $table->unsignedBigInteger('created_by')->nullable();
+                }
+                if (!Schema::hasColumn('assets', 'note') && !Schema::hasColumn('assets', 'notes')) {
+                    $table->text('note')->nullable();
+                }
             });
         }
     }

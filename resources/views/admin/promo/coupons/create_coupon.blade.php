@@ -1,3 +1,4 @@
+
 @extends('layouts.admin')
 
 @section('title', 'Create New Coupon')
@@ -30,106 +31,539 @@
 
 @section('admin_content')
 <style>
-    .target-user-card {
-        border: 1.5px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 10px 14px;
+    /* =========================================
+       COUPON PAGE - KAIADMIN CLASSIC THEME
+    ========================================= */
+
+    #createCouponPage {
+        --coupon-primary: var(--bs-primary, #1572e8);
+        --coupon-border: var(--bs-border-color, #e5e7eb);
+        --coupon-text: var(--bs-body-color, #2a2f5b);
+        --coupon-muted: #8a92a6;
+        --coupon-bg: #f8f9fa;
+        --coupon-radius: 5px;
+        color: var(--coupon-text);
+        min-width: 0;
+    }
+
+    #createCouponPage,
+    #createCouponPage * {
+        box-sizing: border-box;
+    }
+
+    #createCouponPage .coupon-page-header {
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+
+    #createCouponPage .coupon-page-title {
+        font-size: clamp(18px, 2vw, 21px);
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--coupon-text);
+    }
+
+    #createCouponPage .coupon-page-subtitle {
+        font-size: 12px;
+        color: var(--coupon-muted);
+        line-height: 1.5;
+    }
+
+    /* Cards */
+
+    #createCouponPage .card {
+        background: #fff;
+        border: 1px solid var(--coupon-border) !important;
+        border-radius: 5px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .035) !important;
+        padding: 20px !important;
+        min-width: 0;
+    }
+
+    #createCouponPage .coupon-section-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--coupon-text);
+        line-height: 1.4;
+        margin-bottom: 17px;
+    }
+
+    #createCouponPage .coupon-section-title i {
+        font-size: 15px;
+        width: 17px;
+        text-align: center;
+    }
+
+    #createCouponPage .coupon-section-description {
+        color: var(--coupon-muted);
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    /* Form Controls */
+
+    #createCouponPage .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--coupon-text);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    #createCouponPage .form-control,
+    #createCouponPage .form-select {
+        min-height: 37px;
+        border: 1px solid #e1e5eb;
+        border-radius: 5px !important;
+        color: var(--coupon-text);
+        font-size: 12px;
+        padding: 8px 11px;
+        background-color: #fff;
+        box-shadow: none;
+        max-width: 100%;
+    }
+
+    #createCouponPage textarea.form-control {
+        min-height: 70px;
+        resize: vertical;
+    }
+
+    #createCouponPage .form-control:focus,
+    #createCouponPage .form-select:focus {
+        border-color: var(--coupon-primary);
+        box-shadow: 0 0 0 3px rgba(21, 114, 232, .09);
+    }
+
+    #createCouponPage .form-control::placeholder {
+        color: #a0a6b5;
+        opacity: 1;
+    }
+
+    #createCouponPage .input-group {
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+
+    #createCouponPage .input-group .form-control {
+        min-width: 0;
+    }
+
+    #createCouponPage .input-group-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        padding: 7px 10px;
+        background: #f8f9fa;
+        border-color: #e1e5eb;
+        color: #6c757d;
+        font-size: 12px;
+        border-radius: 5px;
+    }
+
+    #createCouponPage .input-group > :not(:first-child) {
+        margin-left: -1px;
+    }
+
+    #createCouponPage .input-group > :first-child {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+
+    #createCouponPage .input-group > :last-child {
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+
+    #createCouponPage .form-text,
+    #createCouponPage .text-muted {
+        color: var(--coupon-muted) !important;
+    }
+
+    #createCouponPage small.text-muted {
+        display: inline-block;
+        font-size: 11px !important;
+        line-height: 1.5;
+    }
+
+    /* Buttons */
+
+    #createCouponPage .btn {
+        min-height: 35px;
+        padding: 7px 13px;
+        border-radius: 5px !important;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: none !important;
+        transition: all .15s ease;
+    }
+
+    #createCouponPage .btn-primary {
+        background: var(--coupon-primary);
+        border-color: var(--coupon-primary);
+    }
+
+    #createCouponPage .btn:hover {
+        filter: brightness(.96);
+    }
+
+    #createCouponPage .btn:focus-visible {
+        outline: 2px solid var(--coupon-primary);
+        outline-offset: 2px;
+    }
+
+    #createCouponPage .coupon-submit-btn {
+        min-height: 41px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* Target User Selection */
+
+    #createCouponPage .target-user-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 66px;
+        padding: 11px 12px;
+        border: 1px solid var(--coupon-border);
+        border-radius: 5px;
+        background: #fff;
         cursor: pointer;
-        transition: all 0.15s ease;
-        background: #ffffff;
+        transition: border-color .15s ease, background .15s ease;
     }
-    .target-user-card:hover {
-        border-color: #2563eb;
-        background: #f8fafc;
+
+    #createCouponPage .target-user-card:hover {
+        border-color: var(--coupon-primary);
+        background: #f8faff;
     }
-    .target-user-card.active {
-        border-color: #2563eb;
-        background: #eff6ff;
+
+    #createCouponPage .target-user-card.active {
+        border-color: var(--coupon-primary);
+        background: rgba(21, 114, 232, .055);
     }
-    .search-picker-box {
+
+    #createCouponPage .target-user-card .form-check-input {
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    #createCouponPage .target-user-card strong {
+        font-size: 12px !important;
+        line-height: 1.4;
+    }
+
+    #createCouponPage .target-user-card small {
+        font-size: 10.5px !important;
+        line-height: 1.4;
+    }
+
+    /* Switches */
+
+    #createCouponPage .form-check {
+        min-height: 25px;
+        padding-left: 2.6em;
+    }
+
+    #createCouponPage .form-check-input {
+        width: 2em;
+        height: 1.05em;
+        margin-top: .2em;
+        cursor: pointer;
+        border-color: #cbd0d9;
+        box-shadow: none;
+    }
+
+    #createCouponPage .form-check-input:checked {
+        background-color: var(--coupon-primary);
+        border-color: var(--coupon-primary);
+    }
+
+    #createCouponPage .form-check-label {
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    /* Search Picker */
+
+    #createCouponPage .search-picker-box {
         position: relative;
+        width: 100%;
+        min-width: 0;
     }
-    .search-picker-dropdown {
+
+    #createCouponPage .search-picker-dropdown {
         position: absolute;
-        top: 100%;
+        top: calc(100% + 4px);
         left: 0;
         right: 0;
         z-index: 1050;
-        background: #ffffff;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        max-height: 240px;
-        overflow-y: auto;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
         display: none;
-        margin-top: 4px;
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: #fff;
+        border: 1px solid var(--coupon-border);
+        border-radius: 5px;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, .10);
     }
-    .search-picker-item {
-        padding: 8px 12px;
-        cursor: pointer;
-        border-bottom: 1px solid #f1f5f9;
+
+    #createCouponPage .search-picker-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        transition: background 0.12s ease;
-    }
-    .search-picker-item:hover {
-        background: #f8fafc;
-    }
-    .selected-tag-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e40af;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 11.5px;
-        font-weight: 600;
-        margin: 3px;
-        animation: fadeIn 0.15s ease-in;
-    }
-    .selected-tag-chip .chip-remove-btn {
-        background: transparent;
-        border: none;
-        color: #ef4444;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid #f0f1f4;
         cursor: pointer;
-        padding: 0;
-        font-size: 13px;
-        line-height: 1;
+        transition: background .15s ease;
+        min-width: 0;
+    }
+
+    #createCouponPage .search-picker-item:last-child {
+        border-bottom: 0;
+    }
+
+    #createCouponPage .search-picker-item:hover {
+        background: #f5f8fc;
+    }
+
+    #createCouponPage .search-picker-item > div {
+        min-width: 0;
+    }
+
+    #createCouponPage .search-picker-item strong {
+        font-size: 12px !important;
+        overflow-wrap: anywhere;
+    }
+
+    #createCouponPage .search-picker-item small {
+        font-size: 10.5px !important;
+    }
+
+    #createCouponPage .search-picker-item .badge {
+        flex-shrink: 0;
+    }
+
+    /* Selected Items */
+
+    #createCouponPage .coupon-chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;
+        min-height: 54px;
+        padding: 9px !important;
+        border: 1px solid var(--coupon-border) !important;
+        border-radius: 5px !important;
+        background: #f8f9fb !important;
+        overflow-wrap: anywhere;
+    }
+
+    #createCouponPage .selected-tag-chip {
         display: inline-flex;
         align-items: center;
+        gap: 7px;
+        max-width: 100%;
+        margin: 0;
+        padding: 5px 8px;
+        border: 1px solid #d7e5fa;
+        border-radius: 5px;
+        background: #edf4ff;
+        color: #2457a7;
+        font-size: 11px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+        animation: couponFadeIn .15s ease-in;
     }
-    .selected-tag-chip .chip-remove-btn:hover {
-        color: #b91c1c;
+
+    #createCouponPage .selected-tag-chip .chip-remove-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 19px;
+        height: 19px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #dc3545;
+        font-size: 15px;
+        line-height: 1;
+        cursor: pointer;
     }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.96); }
+
+    #createCouponPage .selected-tag-chip .chip-remove-btn:hover {
+        color: #a71d2a;
+    }
+
+    @keyframes couponFadeIn {
+        from { opacity: 0; transform: scale(.96); }
         to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Badges */
+
+    #createCouponPage .badge {
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 5px 7px;
+    }
+
+    /* Alerts */
+
+    #createCouponPage .alert {
+        border-radius: 5px !important;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    /* Responsive */
+
+    @media (min-width: 1200px) {
+        #createCouponPage .card {
+            padding: 21px !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        #createCouponPage .coupon-page-header {
+            margin-bottom: 18px;
+        }
+
+        #createCouponPage .card {
+            padding: 17px !important;
+        }
+
+        #createCouponPage .target-user-card {
+            min-height: 62px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        #createCouponPage {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            padding-top: 18px !important;
+        }
+
+        #createCouponPage .coupon-page-header {
+            align-items: flex-start !important;
+        }
+
+        #createCouponPage .coupon-page-header > div {
+            min-width: 0;
+            flex: 1 1 100%;
+        }
+
+        #createCouponPage .coupon-page-header > a {
+            align-self: flex-start;
+        }
+
+        #createCouponPage .card {
+            padding: 15px !important;
+            margin-bottom: 15px !important;
+        }
+
+        #createCouponPage .coupon-section-title {
+            margin-bottom: 14px;
+        }
+
+        #createCouponPage .row.g-3 {
+            --bs-gutter-y: 12px;
+        }
+
+        #createCouponPage .target-user-card {
+            min-height: 58px;
+        }
+
+        #createCouponPage .search-picker-dropdown {
+            max-height: 220px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #createCouponPage .coupon-page-title {
+            font-size: 18px;
+        }
+
+        #createCouponPage .coupon-page-subtitle {
+            font-size: 11px;
+        }
+
+        #createCouponPage .card {
+            padding: 13px !important;
+        }
+
+        #createCouponPage .coupon-section-title {
+            font-size: 13px;
+        }
+
+        #createCouponPage .form-control,
+        #createCouponPage .form-select {
+            min-height: 39px;
+            font-size: 12px;
+        }
+
+        #createCouponPage .input-group .btn {
+            padding-left: 9px;
+            padding-right: 9px;
+            white-space: nowrap;
+        }
+
+        #createCouponPage .target-user-card {
+            min-height: 55px;
+        }
+
+        #createCouponPage .coupon-submit-btn {
+            min-height: 42px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #createCouponPage {
+            padding-left: 9px !important;
+            padding-right: 9px !important;
+        }
+
+        #createCouponPage .card {
+            padding: 11px !important;
+        }
+
+        #createCouponPage .coupon-page-header > a {
+            padding-left: 9px;
+            padding-right: 9px;
+        }
     }
 </style>
 
-<div class="container-fluid px-3 py-4">
+<div class="container-fluid px-3 py-4" id="createCouponPage">
 
-    <!-- Header Section -->
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between coupon-page-header">
         <div>
-            <h4 class="fw-bold text-dark mb-1">
+            <h4 class="coupon-page-title mb-1">
                 <i class="fas fa-ticket-alt text-primary me-2"></i>Create New Coupon
             </h4>
-            <p class="text-muted small mb-0">Set up promotional discount codes for cart, drawer, and checkout pages.</p>
+            <p class="coupon-page-subtitle mb-0">Configure discounts and coupon eligibility.</p>
         </div>
-        <a href="{{ $couponIndexUrl }}" class="btn btn-outline-secondary btn-sm rounded-3 px-3">
-            <i class="fas fa-arrow-left me-1"></i> Back to Coupons
+
+        <a href="{{ $couponIndexUrl }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back
         </a>
     </div>
 
     @if ($errors->any())
-        <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4">
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
             <div class="d-flex align-items-center mb-1">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong class="small">Please fix the following errors:</strong>
+                <strong class="small">Please fix these errors:</strong>
             </div>
             <ul class="mb-0 ps-3 small">
                 @foreach ($errors->all() as $error)
@@ -142,95 +576,104 @@
     <form action="{{ $couponStoreUrl }}" method="POST" id="createCouponForm">
         @csrf
 
-        <div class="row g-4">
-            <!-- Left Side: Main Coupon Configuration -->
+        <div class="row g-3">
+
+            <!-- Left: Coupon Configuration -->
             <div class="col-12 col-lg-8">
-                <!-- Basic Info Card -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="fas fa-info-circle text-primary me-2"></i>Basic Coupon Information
+
+                <!-- Basic Information -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        Basic Information
                     </h5>
 
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold text-dark">Coupon Code <span class="text-danger">*</span></label>
+                            <label class="form-label">Coupon Code <span class="text-danger">*</span></label>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="code" id="input_coupon_code" class="form-control text-uppercase font-monospace fw-bold" placeholder="SUMMER50" value="{{ old('code') }}" required>
                                 <button type="button" class="btn btn-outline-primary" onclick="generateRandomCouponCode()">
                                     <i class="fas fa-magic me-1"></i> Generate
                                 </button>
                             </div>
-                            <small class="text-muted" style="font-size: 11px;">Customers will enter this code at checkout.</small>
+                            <small class="text-muted">Customer enters this code at checkout.</small>
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold text-dark">Coupon Name / Internal Note</label>
+                            <label class="form-label">Coupon Name / Note</label>
                             <input type="text" name="name" class="form-control form-control-sm" placeholder="Summer Mega Discount" value="{{ old('name') }}">
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-dark">Badge / Promotional Ribbon Text</label>
+                            <label class="form-label">Badge Text</label>
                             <input type="text" name="badge_text" class="form-control form-control-sm" placeholder="20% OFF or LIMITED DEAL" value="{{ old('badge_text') }}">
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-dark">Customer Facing Description</label>
+                            <label class="form-label">Customer Description</label>
                             <textarea name="customer_description" class="form-control form-control-sm" rows="2" placeholder="Get ৳150 off on minimum purchase of ৳1000">{{ old('customer_description') }}</textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Customer Target & Eligibility Rule (Requirement 2) -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="fw-bold text-dark mb-0 fs-6">
-                            <i class="fas fa-users text-primary me-2"></i>Customer Eligibility Rule
+                <!-- Customer Eligibility -->
+                <div class="card mb-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <h5 class="coupon-section-title mb-0">
+                            <i class="fas fa-users text-primary"></i>
+                            Customer Eligibility
                         </h5>
-                        <span class="badge bg-light text-muted border" style="font-size: 9.5px;">TARGET USER</span>
+                        <span class="badge bg-light text-muted border">TARGET USERS</span>
                     </div>
-                    <p class="text-muted small mb-3">Define who is allowed to apply this coupon code at checkout.</p>
+
+                    <p class="coupon-section-description">Choose who can use this coupon.</p>
 
                     @php $targetType = old('target_user_type', 'all'); @endphp
+
                     <div class="row g-2">
                         <div class="col-12 col-md-4">
-                            <label class="target-user-card w-100 d-flex align-items-center gap-2 {{ $targetType === 'all' ? 'active' : '' }}" id="card_target_all">
+                            <label class="target-user-card {{ $targetType === 'all' ? 'active' : '' }}" id="card_target_all">
                                 <input type="radio" name="target_user_type" value="all" class="form-check-input mt-0" {{ $targetType === 'all' ? 'checked' : '' }} onchange="selectTargetUserType('all')">
                                 <div>
-                                    <strong class="d-block text-dark small" style="font-size: 12px;">All Customers</strong>
-                                    <small class="text-muted d-block" style="font-size: 10px;">Registered &amp; Guest users</small>
+                                    <strong class="d-block text-dark">All Customers</strong>
+                                    <small class="text-muted d-block">Registered &amp; Guests</small>
                                 </div>
                             </label>
                         </div>
+
                         <div class="col-12 col-md-4">
-                            <label class="target-user-card w-100 d-flex align-items-center gap-2 {{ $targetType === 'registered_only' ? 'active' : '' }}" id="card_target_registered">
+                            <label class="target-user-card {{ $targetType === 'registered_only' ? 'active' : '' }}" id="card_target_registered">
                                 <input type="radio" name="target_user_type" value="registered_only" class="form-check-input mt-0" {{ $targetType === 'registered_only' ? 'checked' : '' }} onchange="selectTargetUserType('registered_only')">
                                 <div>
-                                    <strong class="d-block text-dark small" style="font-size: 12px;">Registered Users Only</strong>
-                                    <small class="text-muted d-block" style="font-size: 10px;">Must be signed in</small>
+                                    <strong class="d-block text-dark">Registered Only</strong>
+                                    <small class="text-muted d-block">Must sign in</small>
                                 </div>
                             </label>
                         </div>
+
                         <div class="col-12 col-md-4">
-                            <label class="target-user-card w-100 d-flex align-items-center gap-2 {{ $targetType === 'guest_only' ? 'active' : '' }}" id="card_target_guest">
+                            <label class="target-user-card {{ $targetType === 'guest_only' ? 'active' : '' }}" id="card_target_guest">
                                 <input type="radio" name="target_user_type" value="guest_only" class="form-check-input mt-0" {{ $targetType === 'guest_only' ? 'checked' : '' }} onchange="selectTargetUserType('guest_only')">
                                 <div>
-                                    <strong class="d-block text-dark small" style="font-size: 12px;">Guest Users Only</strong>
-                                    <small class="text-muted d-block" style="font-size: 10px;">First-time guest orders</small>
+                                    <strong class="d-block text-dark">Guests Only</strong>
+                                    <small class="text-muted d-block">Guest checkout</small>
                                 </div>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Discount Mechanics -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="fas fa-percent text-success me-2"></i>Discount Calculation
+                <!-- Discount Calculation -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="fas fa-percent text-success"></i>
+                        Discount Settings
                     </h5>
 
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
-                            <label class="form-label small fw-bold text-dark">Discount Type <span class="text-danger">*</span></label>
+                            <label class="form-label">Discount Type <span class="text-danger">*</span></label>
                             <select name="discount_type" id="select_discount_type" class="form-select form-select-sm" onchange="toggleDiscountInputs()" required>
                                 <option value="fixed" {{ old('discount_type') === 'fixed' ? 'selected' : '' }}>Fixed Amount (৳)</option>
                                 <option value="percentage" {{ old('discount_type') === 'percentage' ? 'selected' : '' }}>Percentage (%)</option>
@@ -239,7 +682,7 @@
                         </div>
 
                         <div class="col-12 col-md-4" id="wrap_discount_amount">
-                            <label class="form-label small fw-bold text-dark">Discount Amount <span class="text-danger">*</span></label>
+                            <label class="form-label">Discount Amount <span class="text-danger">*</span></label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text" id="discount_unit_symbol">৳</span>
                                 <input type="number" step="0.01" min="0" name="discount_amount" id="input_discount_amount" class="form-control" placeholder="100" value="{{ old('discount_amount', 0) }}" required>
@@ -247,25 +690,25 @@
                         </div>
 
                         <div class="col-12 col-md-4" id="wrap_max_discount">
-                            <label class="form-label small fw-bold text-dark">Max Discount Limit (Cap)</label>
+                            <label class="form-label">Max Discount Limit</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" min="0" name="max_discount_amount" class="form-control" placeholder="No limit" value="{{ old('max_discount_amount') }}">
                             </div>
-                            <small class="text-muted" style="font-size: 11px;">Useful for percentage discounts.</small>
+                            <small class="text-muted">For percentage discounts.</small>
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold text-dark">Minimum Cart Subtotal</label>
+                            <label class="form-label">Minimum Cart Subtotal</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" min="0" name="min_order_amount" class="form-control" placeholder="0" value="{{ old('min_order_amount', 0) }}">
                             </div>
-                            <small class="text-muted" style="font-size: 11px;">Minimum order amount required to apply.</small>
+                            <small class="text-muted">Minimum order amount.</small>
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold text-dark">Maximum Cart Subtotal (Optional)</label>
+                            <label class="form-label">Maximum Cart Subtotal</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" min="0" name="max_order_amount" class="form-control" placeholder="No maximum" value="{{ old('max_order_amount') }}">
@@ -274,14 +717,15 @@
                     </div>
                 </div>
 
-                <!-- Product & Category Applicability (Requirement 3 & 5: Search & Multi-Select) -->
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="fas fa-boxes text-info me-2"></i>Product Applicability Rules
+                <!-- Product Applicability -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="fas fa-boxes text-info"></i>
+                        Product Applicability
                     </h5>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Applicable To</label>
+                        <label class="form-label">Applicable To</label>
                         <select name="applicable_to" id="select_applicable_to" class="form-select form-select-sm" onchange="toggleApplicableTargets()">
                             <option value="all" {{ old('applicable_to') === 'all' ? 'selected' : '' }}>All Store Products</option>
                             <option value="specific_products" {{ old('applicable_to') === 'specific_products' ? 'selected' : '' }}>Specific Products</option>
@@ -289,113 +733,120 @@
                         </select>
                     </div>
 
-                    <!-- Searchable Product Multi-Picker Component -->
+                    <!-- Product Picker -->
                     <div id="wrap_specific_products" class="mb-3 d-none">
-                        <label class="form-label small fw-bold text-dark d-flex justify-content-between align-items-center">
-                            <span>Select Eligible Products (Search by Name, SKU or ID):</span>
+                        <label class="form-label d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <span>Select Products (Name, SKU or ID)</span>
                             <span class="badge bg-light text-muted border font-monospace" id="product_selected_counter">0 selected</span>
                         </label>
-                        
+
                         <div class="search-picker-box">
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white text-muted"><i class="fas fa-search"></i></span>
-                                <input type="text" id="product_search_input" class="form-control" placeholder="Type product title, SKU, or ID to add..." autocomplete="off">
+                                <input type="text" id="product_search_input" class="form-control" placeholder="Search products..." autocomplete="off">
                             </div>
                             <div id="product_search_dropdown" class="search-picker-dropdown"></div>
                         </div>
 
-                        <!-- Selected Products Badges/Chips Container -->
-                        <div class="p-2.5 border rounded-3 bg-light mt-2 min-h-50" id="product_chips_container" style="min-height: 54px;">
-                            <span class="text-muted small ps-1" id="product_placeholder_text" style="font-size: 11px;">No specific products selected yet. Search above to add.</span>
+                        <div class="coupon-chips-container mt-2" id="product_chips_container">
+                            <span class="text-muted small ps-1" id="product_placeholder_text" style="font-size: 11px;">No products selected. Search to add.</span>
                         </div>
+
                         <div id="product_hidden_inputs"></div>
-                        <small class="text-muted d-block mt-1" style="font-size: 11px;">Customers can only apply this coupon if their cart contains any of these selected products.</small>
+                        <small class="text-muted d-block mt-1">Coupon applies when the cart contains a selected product.</small>
                     </div>
 
-                    <!-- Searchable Category Multi-Picker Component -->
+                    <!-- Category Picker -->
                     <div id="wrap_specific_categories" class="mb-3 d-none">
-                        <label class="form-label small fw-bold text-dark d-flex justify-content-between align-items-center">
-                            <span>Select Eligible Categories (Search by Name or Slug):</span>
+                        <label class="form-label d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <span>Select Categories (Name or Slug)</span>
                             <span class="badge bg-light text-muted border font-monospace" id="category_selected_counter">0 selected</span>
                         </label>
 
                         <div class="search-picker-box">
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white text-muted"><i class="fas fa-search"></i></span>
-                                <input type="text" id="category_search_input" class="form-control" placeholder="Type category name or slug to add..." autocomplete="off">
+                                <input type="text" id="category_search_input" class="form-control" placeholder="Search categories..." autocomplete="off">
                             </div>
                             <div id="category_search_dropdown" class="search-picker-dropdown"></div>
                         </div>
 
-                        <!-- Selected Categories Badges/Chips Container -->
-                        <div class="p-2.5 border rounded-3 bg-light mt-2 min-h-50" id="category_chips_container" style="min-height: 54px;">
-                            <span class="text-muted small ps-1" id="category_placeholder_text" style="font-size: 11px;">No specific categories selected yet. Search above to add.</span>
+                        <div class="coupon-chips-container mt-2" id="category_chips_container">
+                            <span class="text-muted small ps-1" id="category_placeholder_text" style="font-size: 11px;">No categories selected. Search to add.</span>
                         </div>
+
                         <div id="category_hidden_inputs"></div>
-                        <small class="text-muted d-block mt-1" style="font-size: 11px;">Discount will only apply to items belonging to these selected categories.</small>
+                        <small class="text-muted d-block mt-1">Discount applies to selected categories.</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Side: Limits, Validity & Status -->
+            <!-- Right: Limits, Validity & Status -->
             <div class="col-12 col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="fas fa-users-cog text-warning me-2"></i>Usage Limits
+
+                <!-- Usage Limits -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="fas fa-users-cog text-warning"></i>
+                        Usage Limits
                     </h5>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Total Usage Limit</label>
+                        <label class="form-label">Total Usage Limit</label>
                         <input type="number" min="1" name="total_usage_limit" class="form-control form-control-sm" placeholder="Unlimited" value="{{ old('total_usage_limit') }}">
-                        <small class="text-muted" style="font-size: 11px;">Store-wide total redemption limit.</small>
+                        <small class="text-muted">Store-wide redemption limit.</small>
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label small fw-bold text-dark">Per Customer Limit <span class="text-danger">*</span></label>
+                        <label class="form-label">Per Customer Limit <span class="text-danger">*</span></label>
                         <input type="number" min="1" name="per_user_limit" class="form-control form-control-sm" value="{{ old('per_user_limit', 1) }}" required>
-                        <small class="text-muted" style="font-size: 11px;">How many times one individual user can apply.</small>
+                        <small class="text-muted">Uses allowed per customer.</small>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="far fa-calendar-alt text-primary me-2"></i>Validity Period
+                <!-- Validity -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="far fa-calendar-alt text-primary"></i>
+                        Validity Period
                     </h5>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Start Date</label>
+                        <label class="form-label">Start Date</label>
                         <input type="date" name="start_date" class="form-control form-control-sm" value="{{ old('start_date', date('Y-m-d')) }}">
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label small fw-bold text-dark">Expiry Date</label>
+                        <label class="form-label">Expiry Date</label>
                         <input type="date" name="expire_date" class="form-control form-control-sm" value="{{ old('expire_date') }}">
-                        <small class="text-muted" style="font-size: 11px;">Leave empty for unlimited validity.</small>
+                        <small class="text-muted">Leave empty for no expiry.</small>
                     </div>
                 </div>
 
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-                    <h5 class="fw-bold text-dark mb-3 fs-6">
-                        <i class="fas fa-toggle-on text-success me-2"></i>Status &amp; Settings
+                <!-- Status & Settings -->
+                <div class="card mb-3">
+                    <h5 class="coupon-section-title">
+                        <i class="fas fa-toggle-on text-success"></i>
+                        Status &amp; Settings
                     </h5>
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_active" id="check_is_active" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
-                        <label class="form-check-label fw-bold small text-dark" for="check_is_active">Active / Enabled</label>
+                        <label class="form-check-label fw-bold small text-dark" for="check_is_active">Active</label>
                     </div>
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_public" id="check_is_public" value="1" {{ old('is_public', 1) ? 'checked' : '' }}>
                         <label class="form-check-label fw-bold small text-dark" for="check_is_public">Publicly Visible</label>
-                        <small class="text-muted d-block" style="font-size: 10.5px;">Visible in cart drawer and checkout promo lists.</small>
+                        <small class="text-muted d-block">Show in cart and checkout.</small>
                     </div>
 
                     <div class="form-check form-switch mb-4">
                         <input class="form-check-input" type="checkbox" name="is_stackable" id="check_is_stackable" value="1" {{ old('is_stackable') ? 'checked' : '' }}>
-                        <label class="form-check-label fw-bold small text-dark" for="check_is_stackable">Allow with Vouchers (Stackable)</label>
+                        <label class="form-check-label fw-bold small text-dark" for="check_is_stackable">Allow Voucher Stacking</label>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm">
+                    <button type="submit" class="btn btn-primary w-100 coupon-submit-btn">
                         <i class="fas fa-save me-1"></i> Save Coupon
                     </button>
                 </div>

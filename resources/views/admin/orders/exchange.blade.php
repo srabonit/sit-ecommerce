@@ -273,11 +273,8 @@
                     <i class="fas fa-arrows-rotate text-info"></i>
                     <span>Exchange Orders</span>
                 </h5>
-                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-monospace bn-digit px-2 py-0.5" style="font-size: 10.5px;">
-                    {{ $orders->total() }} Exchanges
-                </span>
             </div>
-            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Product size, color, or variant replacement requests, inspection slips, and parcel exchanges.</small>
+            <small class="text-muted d-block mt-1" style="font-size: 12px; line-height: 1.35;">Product Exchange & Replacement Management</small>
         </div>
         <div>
             <a href="{{ route('admin.order.online') }}" class="btn btn-outline-secondary btn-compact shadow-xs">

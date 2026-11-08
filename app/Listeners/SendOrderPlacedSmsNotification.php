@@ -12,7 +12,7 @@ class SendOrderPlacedSmsNotification implements ShouldQueue
 {
     /**
      * Handle the event when an order is created.
-     * Works with generic order events (e.g. OrderCreated, OrderPlaced)
+     * Works with generic order events (OrderCreated, OrderPlaced)
      * expecting $event->order instance.
      */
     public function handle(object $event): void

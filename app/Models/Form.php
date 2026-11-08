@@ -52,12 +52,12 @@ class Form extends Model
 
     public function fields()
     {
-        return $this->hasMany(FormField::class)
-            ->orderBy('sort_order');
+        return $this->hasMany(FormField::class, 'form_id')
+            ->orderBy('sort_order', 'asc');
     }
 
     public function submissions()
     {
-        return $this->hasMany(FormSubmission::class);
+        return $this->hasMany(FormSubmission::class, 'form_id');
     }
 }
